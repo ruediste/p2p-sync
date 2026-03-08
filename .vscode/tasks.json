@@ -16,6 +16,13 @@
     },
     {
       "type": "npm",
+      "script": "build",
+      "group": "build",
+      "problemMatcher": [],
+      "label": "npm: build"
+    },
+    {
+      "type": "npm",
       "script": "start-add",
       "problemMatcher": [],
       "label": "npm: start-add",

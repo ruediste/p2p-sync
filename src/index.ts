@@ -1,7 +1,8 @@
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { dagJson } from "@helia/dag-json";
-import { autoNAT } from "@libp2p/autonat";
+import { autoNATv2 } from "@libp2p/autonat-v2";
+// import { autoNAT } from "@libp2p/autonat";
 import { bootstrap } from "@libp2p/bootstrap";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { identify } from "@libp2p/identify";
@@ -43,6 +44,10 @@ async function createNode() {
     await datastore.put(privateKeyKey, privateKey.raw);
   }
 
+  const dht = kadDHT({
+    // clientMode: true,
+  });
+
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
     privateKey,
@@ -52,6 +57,7 @@ async function createNode() {
         "/ip4/0.0.0.0/tcp/" + (command === "add" ? "7743" : "7744"),
         "/ip6/::/tcp/0",
       ],
+      // announce: [],
     },
     transports: [tcp(), circuitRelayTransport()],
     connectionEncrypters: [noise()],
@@ -69,12 +75,31 @@ async function createNode() {
     ],
     services: {
       identify: identify(),
-      dht: kadDHT({
-        // clientMode: false,
-      }),
+      dht,
       ping: ping(),
-      autoNAT: autoNAT(),
+      autoNATv2: autoNATv2(),
+      // autoNAT: autoNAT(),
       // uPnPNAT: uPnPNAT(),
+      log: (components) => {
+        setInterval(() => {
+          console.log(
+            "getAddresses:",
+            components.addressManager.getAddresses().map((a) => a.toString()),
+          );
+          console.log(
+            "getObservedAddrs:",
+            components.addressManager
+              .getObservedAddrs()
+              .map((a) => a.toString()),
+          );
+          console.log(
+            "announceAddrs:",
+            components.addressManager
+              .getAnnounceAddrs()
+              .map((a) => a.toString()),
+          );
+        }, 5000);
+      },
     },
   });
 
@@ -109,6 +134,12 @@ if (command === "add") {
   console.log("Added Content:", cid.toString());
 } else {
   console.log("Getting content...");
+  setInterval(async () => {
+    // const foo = node;
+    // node.libp2p.getMultiaddrs();
+    // console.log(foo);
+    // console.log(node.libp2p.getMultiaddrs().map((a) => a.toString()));
+  }, 3000);
   const j = dagJson(node);
   const cid = "baguqeerap2d52pc5kg5znbb7yocrp4keqxihhon5wgzeqmtwzcg6qkllaiaa";
   const retrieved = await j.get(CID.parse(cid));

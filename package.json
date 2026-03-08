@@ -14,10 +14,10 @@
     "dist"
   ],
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --platform=node --packages=external --outfile=dist/index.mjs --format=esm",
+    "build": "esbuild src/index.ts --bundle --platform=node --packages=external --outfile=dist/index.mjs --sourcemap --format=esm",
     "start": "concurrently \"npm run dev:build\" \"npm run dev:start\"",
     "start-add": "node dist/index.mjs add",
-    "start-get": "node dist/index.mjs get",
+    "start-get": "nodemon --watch 'dist/*.mjs' --exec \"node dist/index.mjs get\"",
     "dev:build": "esbuild src/index.ts --bundle --platform=node --packages=external --outfile=dist/index.mjs --format=esm --sourcemap --watch",
     "dev:start": "nodemon --watch 'dist/*.mjs' --exec \"node dist/index.mjs\""
   },
@@ -37,6 +37,7 @@
     "@helia/http": "^3.0.20",
     "@helia/unixfs": "^7.0.4",
     "@libp2p/autonat": "^3.0.10",
+    "@libp2p/autonat-v2": "^2.0.12",
     "@libp2p/circuit-relay-v2": "^4.1.3",
     "@libp2p/kad-dht": "^16.1.3",
     "@libp2p/mdns": "^12.0.11",
