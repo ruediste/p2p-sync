@@ -8,8 +8,8 @@ https://ipfs.io/ipfs/baguqeerap2d52pc5kg5znbb7yocrp4keqxihhon5wgzeqmtwzcg6qkllai
 https://check.ipfs.network/?cid=baguqeerap2d52pc5kg5znbb7yocrp4keqxihhon5wgzeqmtwzcg6qkllaiaa&multiaddr=&ipniIndexer=https%3A%2F%2Fcid.contact&timeoutSeconds=30&httpRetrieval=on
 
 ```
-DEBUG="*libp2p:identify*,:trace" npm run start-get 2>&1 | tee log.txt
-DEBUG="*libp2p:auto-nat-v2:client*,:trace" npm run start-get 2>&1 | tee log.txt
+npm run build && DEBUG="*libp2p:identify*,:trace" npm run start-get 2>&1 | tee log.txt
+npm run build && DEBUG="*libp2p:auto-nat-v2:client*,:trace" npm run start-get 2>&1 | tee log.txt
 ```
 
 ```

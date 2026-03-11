@@ -1,12 +1,10 @@
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { dagJson } from "@helia/dag-json";
-import { autoNATv2 } from "@libp2p/autonat-v2";
-// import { autoNAT } from "@libp2p/autonat";
 import { bootstrap } from "@libp2p/bootstrap";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { identify } from "@libp2p/identify";
-import { type PrivateKey } from "@libp2p/interface";
+import { type IdentifyResult, type PrivateKey } from "@libp2p/interface";
 import { kadDHT } from "@libp2p/kad-dht";
 import { mdns } from "@libp2p/mdns";
 import { ping } from "@libp2p/ping";
@@ -18,7 +16,9 @@ import { Key } from "interface-datastore";
 import { createLibp2p } from "libp2p";
 import { CID } from "multiformats/cid";
 
+import { autoNATv2 } from "@libp2p/autonat-v2";
 import { generateKeyPair, privateKeyFromRaw } from "@libp2p/crypto/keys";
+import { multiaddr } from "@multiformats/multiaddr";
 
 const command = process.argv[2] as "add" | "get";
 if (command !== "add" && command !== "get") {
@@ -48,15 +48,14 @@ async function createNode() {
     // clientMode: true,
   });
 
+  const listenPort = command === "add" ? 7743 : 7744;
+
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
     privateKey,
     datastore,
     addresses: {
-      listen: [
-        "/ip4/0.0.0.0/tcp/" + (command === "add" ? "7743" : "7744"),
-        "/ip6/::/tcp/0",
-      ],
+      listen: ["/ip4/0.0.0.0/tcp/" + listenPort, "/ip6/::/tcp/" + listenPort],
       // announce: [],
     },
     transports: [tcp(), circuitRelayTransport()],
@@ -80,7 +79,7 @@ async function createNode() {
       autoNATv2: autoNATv2(),
       // autoNAT: autoNAT(),
       // uPnPNAT: uPnPNAT(),
-      log: (components) => {
+      myHelper: (components) => {
         setInterval(() => {
           console.log(
             "getAddresses:",
@@ -99,6 +98,31 @@ async function createNode() {
               .map((a) => a.toString()),
           );
         }, 5000);
+        components.events.addEventListener(
+          "peer:identify",
+          ({ detail: result }: { detail: IdentifyResult }) => {
+            // console.log(
+            //   "Identified peer:",
+            //   result.peerId,
+            //   "with observed address:",
+            //   result.observedAddr,
+            // );
+            if (result.observedAddr) {
+              const addrComponents = result.observedAddr.getComponents();
+              if (
+                addrComponents.length > 0 &&
+                addrComponents[addrComponents.length - 1].name === "tcp"
+              ) {
+                addrComponents.pop();
+                const newAddr = multiaddr(addrComponents).encapsulate(
+                  multiaddr("/tcp/" + listenPort),
+                );
+                // console.log("Adding observed address:", newAddr.toString());
+                components.addressManager.addObservedAddr(newAddr);
+              }
+            }
+          },
+        );
       },
     },
   });
