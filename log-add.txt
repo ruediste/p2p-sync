@@ -1,0 +1,73 @@
+
+> tsdown-starter@0.0.0 start-add
+> node dist/index.mjs add
+
+Found existing private key, using it
+2026-03-12T18:21:21.940Z libp2p:mdns:trace query _p2p._udp.local
+peer discovery register MulticastDNS {}
+peer discovery register Bootstrap {}
+peer discovery register KadDHT {}
+2026-03-12T18:21:21.958Z libp2p:mdns:trace received incoming mDNS query via 10.60.148.237
+Node started with Peer ID: 12D3KooWGC8MQcpXSxAX8gZvawA3ya6rR6LbqQe7HfvLPe6AW5vB
+Adding content...
+Added Content: baguqeerap2d52pc5kg5znbb7yocrp4keqxihhon5wgzeqmtwzcg6qkllaiaa
+peer {
+  id: PeerId(QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN),
+  multiaddrs: [
+    Multiaddr(/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN)
+  ]
+}
+peer {
+  id: PeerId(QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa),
+  multiaddrs: [
+    Multiaddr(/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa)
+  ]
+}
+peer {
+  id: PeerId(QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb),
+  multiaddrs: [
+    Multiaddr(/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb)
+  ]
+}
+peer {
+  id: PeerId(QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt),
+  multiaddrs: [
+    Multiaddr(/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt)
+  ]
+}
+2026-03-12T18:21:31.839Z libp2p:mdns:trace received incoming mDNS query via 10.60.148.237
+2026-03-12T18:21:31.839Z libp2p:mdns:trace responding to query
+2026-03-12T18:21:31.841Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:21:31.842Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:21:31.945Z libp2p:mdns:trace query _p2p._udp.local
+2026-03-12T18:21:31.946Z libp2p:mdns:trace received incoming mDNS query via 10.60.148.237
+2026-03-12T18:21:31.946Z libp2p:mdns:trace responding to query
+2026-03-12T18:21:31.947Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:21:31.947Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:21:41.839Z libp2p:mdns:trace received incoming mDNS query via 10.60.148.237
+2026-03-12T18:21:41.839Z libp2p:mdns:trace responding to query
+2026-03-12T18:21:41.840Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:21:41.840Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:21:41.945Z libp2p:mdns:trace query _p2p._udp.local
+2026-03-12T18:21:41.946Z libp2p:mdns:trace received incoming mDNS query via 10.60.148.237
+2026-03-12T18:21:41.947Z libp2p:mdns:trace responding to query
+2026-03-12T18:21:41.948Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:21:41.948Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:21:51.838Z libp2p:mdns:trace received incoming mDNS query via 10.60.148.237
+2026-03-12T18:21:51.838Z libp2p:mdns:trace responding to query
+2026-03-12T18:21:51.839Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:21:51.839Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:21:51.946Z libp2p:mdns:trace query _p2p._udp.local
+2026-03-12T18:21:51.947Z libp2p:mdns:trace received incoming mDNS query via 10.60.148.237
+2026-03-12T18:21:51.948Z libp2p:mdns:trace responding to query
+2026-03-12T18:21:51.948Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:21:51.948Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:22:01.838Z libp2p:mdns:trace received incoming mDNS query via 10.60.148.237
+2026-03-12T18:22:01.839Z libp2p:mdns:trace responding to query
+2026-03-12T18:22:01.839Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:22:01.839Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:22:01.946Z libp2p:mdns:trace query _p2p._udp.local
+2026-03-12T18:22:01.947Z libp2p:mdns:trace received incoming mDNS query via 10.60.148.237
+2026-03-12T18:22:01.947Z libp2p:mdns:trace responding to query
+2026-03-12T18:22:01.947Z libp2p:mdns:trace received mDNS query response
+2026-03-12T18:22:01.948Z libp2p:mdns:trace received mDNS query response

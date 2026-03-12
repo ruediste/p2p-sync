@@ -10,6 +10,8 @@ https://check.ipfs.network/?cid=baguqeerap2d52pc5kg5znbb7yocrp4keqxihhon5wgzeqmt
 ```
 npm run build && DEBUG="*libp2p:identify*,:trace" npm run start-get 2>&1 | tee log.txt
 npm run build && DEBUG="*libp2p:auto-nat-v2:client*,:trace" npm run start-get 2>&1 | tee log.txt
+npm run build && DEBUG="*libp2p:mdns*,:trace" npm run start-get 2>&1 | tee log-get.txt
+npm run build && DEBUG="*libp2p:mdns*,:trace" npm run start-add 2>&1 | tee log-add.txt
 ```
 
 ```

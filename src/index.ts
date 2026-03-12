@@ -4,9 +4,20 @@ import { dagJson } from "@helia/dag-json";
 import { bootstrap } from "@libp2p/bootstrap";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { identify } from "@libp2p/identify";
-import { type IdentifyResult, type PrivateKey } from "@libp2p/interface";
-import { kadDHT } from "@libp2p/kad-dht";
-import { mdns } from "@libp2p/mdns";
+import {
+  peerDiscoverySymbol,
+  type IdentifyResult,
+  type Libp2pEvents,
+  type PeerInfo,
+  type PrivateKey,
+  type Startable,
+  type TypedEventTarget,
+} from "@libp2p/interface";
+import {
+  kadDHT,
+  removePrivateAddressesMapper,
+  removePublicAddressesMapper,
+} from "@libp2p/kad-dht";
 import { ping } from "@libp2p/ping";
 import { tcp } from "@libp2p/tcp";
 import { FsBlockstore } from "blockstore-fs";
@@ -15,15 +26,80 @@ import { createHelia } from "helia";
 import { Key } from "interface-datastore";
 import { createLibp2p } from "libp2p";
 import { CID } from "multiformats/cid";
+// import { mdns } from "@libp2p/mdns";
+import { mdns } from "./mdns";
 
 import { autoNATv2 } from "@libp2p/autonat-v2";
 import { generateKeyPair, privateKeyFromRaw } from "@libp2p/crypto/keys";
+import type { AddressManager } from "@libp2p/interface-internal";
 import { multiaddr } from "@multiformats/multiaddr";
 
 const command = process.argv[2] as "add" | "get";
 if (command !== "add" && command !== "get") {
   console.error("Please provide a command: 'add' or 'get'");
   process.exit(1);
+}
+const useAmino = false;
+const listenPort = command === "add" ? 7743 : 7744;
+
+interface MyHelperComponents {
+  addressManager: AddressManager;
+  events: TypedEventTarget<Libp2pEvents>;
+}
+class MyHelper implements Startable {
+  constructor(private components: MyHelperComponents) {}
+  start(): void | Promise<void> {
+    // setInterval(() => {
+    //   console.log(
+    //     "getAddresses:",
+    //     components.addressManager.getAddresses().map((a) => a.toString()),
+    //   );
+    //   console.log(
+    //     "getObservedAddrs:",
+    //     components.addressManager
+    //       .getObservedAddrs()
+    //       .map((a) => a.toString()),
+    //   );
+    //   console.log(
+    //     "announceAddrs:",
+    //     components.addressManager
+    //       .getAnnounceAddrs()
+    //       .map((a) => a.toString()),
+    //   );
+    // }, 5000);
+    const components = (this.components as any).components;
+    Object.values(components).forEach((c: any) => {
+      if (c != null && c[peerDiscoverySymbol] != null) {
+        console.log("peer discovery register", c);
+        c[peerDiscoverySymbol].addEventListener?.(
+          "peer",
+          (evt: CustomEvent<PeerInfo>) => {
+            console.log("peer", evt.detail);
+          },
+        );
+      }
+    });
+    this.components.events.addEventListener(
+      "peer:identify",
+      ({ detail: result }: { detail: IdentifyResult }) => {
+        if (result.observedAddr) {
+          const addrComponents = result.observedAddr.getComponents();
+          if (
+            addrComponents.length > 0 &&
+            addrComponents[addrComponents.length - 1].name === "tcp"
+          ) {
+            addrComponents.pop();
+            const newAddr = multiaddr(addrComponents).encapsulate(
+              multiaddr("/tcp/" + listenPort),
+            );
+            // console.log("Adding observed address:", newAddr.toString());
+            this.components.addressManager.addObservedAddr(newAddr);
+          }
+        }
+      },
+    );
+  }
+  stop(): void | Promise<void> {}
 }
 
 async function createNode() {
@@ -44,12 +120,6 @@ async function createNode() {
     await datastore.put(privateKeyKey, privateKey.raw);
   }
 
-  const dht = kadDHT({
-    // clientMode: true,
-  });
-
-  const listenPort = command === "add" ? 7743 : 7744;
-
   // libp2p is the networking layer that underpins Helia
   const libp2p = await createLibp2p({
     privateKey,
@@ -62,7 +132,7 @@ async function createNode() {
     connectionEncrypters: [noise()],
     streamMuxers: [yamux()],
     peerDiscovery: [
-      mdns(),
+      mdns({ broadcast: true }),
       bootstrap({
         list: [
           "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
@@ -74,56 +144,28 @@ async function createNode() {
     ],
     services: {
       identify: identify(),
-      dht,
+      lanDHT: kadDHT({
+        protocol: "/ipfs/lan/kad/1.0.0",
+        peerInfoMapper: removePublicAddressesMapper,
+        clientMode: false,
+        logPrefix: "libp2p:dht-lan",
+        datastorePrefix: "/dht-lan",
+        metricsPrefix: "libp2p_dht_lan",
+      }),
+      ...(useAmino
+        ? {
+            aminoDHT: kadDHT({
+              protocol: "/ipfs/kad/1.0.0",
+              peerInfoMapper: removePrivateAddressesMapper,
+              logPrefix: "libp2p:dht-amino",
+              datastorePrefix: "/dht-amino",
+              metricsPrefix: "libp2p_dht_amino",
+            }),
+          }
+        : {}),
       ping: ping(),
       autoNATv2: autoNATv2(),
-      // autoNAT: autoNAT(),
-      // uPnPNAT: uPnPNAT(),
-      myHelper: (components) => {
-        setInterval(() => {
-          console.log(
-            "getAddresses:",
-            components.addressManager.getAddresses().map((a) => a.toString()),
-          );
-          console.log(
-            "getObservedAddrs:",
-            components.addressManager
-              .getObservedAddrs()
-              .map((a) => a.toString()),
-          );
-          console.log(
-            "announceAddrs:",
-            components.addressManager
-              .getAnnounceAddrs()
-              .map((a) => a.toString()),
-          );
-        }, 5000);
-        components.events.addEventListener(
-          "peer:identify",
-          ({ detail: result }: { detail: IdentifyResult }) => {
-            // console.log(
-            //   "Identified peer:",
-            //   result.peerId,
-            //   "with observed address:",
-            //   result.observedAddr,
-            // );
-            if (result.observedAddr) {
-              const addrComponents = result.observedAddr.getComponents();
-              if (
-                addrComponents.length > 0 &&
-                addrComponents[addrComponents.length - 1].name === "tcp"
-              ) {
-                addrComponents.pop();
-                const newAddr = multiaddr(addrComponents).encapsulate(
-                  multiaddr("/tcp/" + listenPort),
-                );
-                // console.log("Adding observed address:", newAddr.toString());
-                components.addressManager.addObservedAddr(newAddr);
-              }
-            }
-          },
-        );
-      },
+      myHelper: (components: MyHelperComponents) => new MyHelper(components),
     },
   });
 
@@ -135,11 +177,7 @@ async function createNode() {
 }
 
 const node = await createNode();
-console.log(
-  "Node started with Peer ID:",
-  node.libp2p.peerId.toString(),
-  node.libp2p.getMultiaddrs().map((a) => a.toString()),
-);
+console.log("Node started with Peer ID:", node.libp2p.peerId.toString());
 
 node.libp2p.addEventListener("peer:discovery", (evt) => {
   //   node.libp2p.dial(evt.detail.multiaddrs); // dial discovered peers
@@ -166,6 +204,7 @@ if (command === "add") {
   }, 3000);
   const j = dagJson(node);
   const cid = "baguqeerap2d52pc5kg5znbb7yocrp4keqxihhon5wgzeqmtwzcg6qkllaiaa";
+  console.log("Fetching content with CID:", cid);
   const retrieved = await j.get(CID.parse(cid));
   console.log("Fetched object:", retrieved);
   process.exit(0);
