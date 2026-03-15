@@ -5,10 +5,8 @@ import { bootstrap } from "@libp2p/bootstrap";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { identify } from "@libp2p/identify";
 import {
-  peerDiscoverySymbol,
   type IdentifyResult,
   type Libp2pEvents,
-  type PeerInfo,
   type PrivateKey,
   type Startable,
   type TypedEventTarget,
@@ -26,12 +24,14 @@ import { createHelia } from "helia";
 import { Key } from "interface-datastore";
 import { createLibp2p } from "libp2p";
 import { CID } from "multiformats/cid";
-// import { mdns } from "@libp2p/mdns";
 import { mdns } from "./mdns";
 
 import { autoNATv2 } from "@libp2p/autonat-v2";
 import { generateKeyPair, privateKeyFromRaw } from "@libp2p/crypto/keys";
-import type { AddressManager } from "@libp2p/interface-internal";
+import type {
+  AddressManager,
+  TransportManager,
+} from "@libp2p/interface-internal";
 import { multiaddr } from "@multiformats/multiaddr";
 
 const command = process.argv[2] as "add" | "get";
@@ -45,40 +45,35 @@ const listenPort = command === "add" ? 7743 : 7744;
 interface MyHelperComponents {
   addressManager: AddressManager;
   events: TypedEventTarget<Libp2pEvents>;
+  transportManager: TransportManager;
 }
 class MyHelper implements Startable {
   constructor(private components: MyHelperComponents) {}
   start(): void | Promise<void> {
-    // setInterval(() => {
-    //   console.log(
-    //     "getAddresses:",
-    //     components.addressManager.getAddresses().map((a) => a.toString()),
-    //   );
-    //   console.log(
-    //     "getObservedAddrs:",
-    //     components.addressManager
-    //       .getObservedAddrs()
-    //       .map((a) => a.toString()),
-    //   );
-    //   console.log(
-    //     "announceAddrs:",
-    //     components.addressManager
-    //       .getAnnounceAddrs()
-    //       .map((a) => a.toString()),
-    //   );
-    // }, 5000);
-    const components = (this.components as any).components;
-    Object.values(components).forEach((c: any) => {
-      if (c != null && c[peerDiscoverySymbol] != null) {
-        console.log("peer discovery register", c);
-        c[peerDiscoverySymbol].addEventListener?.(
-          "peer",
-          (evt: CustomEvent<PeerInfo>) => {
-            console.log("peer", evt.detail);
-          },
-        );
-      }
-    });
+    // If a system has many network interfaces, such as when using docker, it makes little sense to announce them. Instead, wait for another peer to
+    // observe us and then add the observed address, for example via identify or with the modified mdns.
+    this.components.transportManager.getAddrs = () => [];
+
+    setInterval(() => {
+      console.log(
+        "getAddresses:",
+        this.components.addressManager.getAddresses().map((a) => a.toString()),
+      );
+      console.log(
+        "getObservedAddrs:",
+        this.components.addressManager
+          .getObservedAddrs()
+          .map((a) => a.toString()),
+      );
+      console.log(
+        "announceAddrs:",
+        this.components.addressManager
+          .getAnnounceAddrs()
+          .map((a) => a.toString()),
+      );
+    }, 5000);
+
+    // When identifying a peer, it tells us the observed address. Combine this with the listen port to get an address to announce.
     this.components.events.addEventListener(
       "peer:identify",
       ({ detail: result }: { detail: IdentifyResult }) => {
@@ -126,21 +121,24 @@ async function createNode() {
     datastore,
     addresses: {
       listen: ["/ip4/0.0.0.0/tcp/" + listenPort, "/ip6/::/tcp/" + listenPort],
-      // announce: [],
     },
     transports: [tcp(), circuitRelayTransport()],
     connectionEncrypters: [noise()],
     streamMuxers: [yamux()],
     peerDiscovery: [
-      mdns({ broadcast: true }),
-      bootstrap({
-        list: [
-          "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-          "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-          "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
-          "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
-        ],
-      }),
+      mdns({ listenPort }),
+      ...(useAmino
+        ? [
+            bootstrap({
+              list: [
+                "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+                "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+                "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+                "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+              ],
+            }),
+          ]
+        : []),
     ],
     services: {
       identify: identify(),
@@ -181,18 +179,20 @@ console.log("Node started with Peer ID:", node.libp2p.peerId.toString());
 
 node.libp2p.addEventListener("peer:discovery", (evt) => {
   //   node.libp2p.dial(evt.detail.multiaddrs); // dial discovered peers
-  // console.log(
-  //   "found peer: ",
-  //   evt.detail.id,
-  //   // evt.detail.multiaddrs.map((a) => a.toString()),
-  // );
+  console.log(
+    "found peer: ",
+    evt.detail.id,
+    // evt.detail.multiaddrs.map((a) => a.toString()),
+  );
 });
 
 if (command === "add") {
   console.log("Adding content...");
   const j = dagJson(node);
   const cid = await j.add({ message: "Hello World 301" });
-  node.routing.provide(cid);
+  setInterval(async () => {
+    node.routing.provide(cid);
+  }, 3000);
   console.log("Added Content:", cid.toString());
 } else {
   console.log("Getting content...");
@@ -207,6 +207,6 @@ if (command === "add") {
   console.log("Fetching content with CID:", cid);
   const retrieved = await j.get(CID.parse(cid));
   console.log("Fetched object:", retrieved);
-  process.exit(0);
-  node.stop();
+  // process.exit(0);
+  // node.stop();
 }

@@ -3,11 +3,17 @@ import type {
   Logger,
   PeerDiscovery,
   PeerDiscoveryEvents,
+  PeerId,
   PeerInfo,
+  PeerStore,
   Startable,
 } from "@libp2p/interface";
 import { peerDiscoverySymbol, serviceCapabilities } from "@libp2p/interface";
-import type { AddressManager } from "@libp2p/interface-internal";
+import type {
+  AddressManager,
+  ConnectionManager,
+} from "@libp2p/interface-internal";
+import { multiaddr } from "@multiformats/multiaddr";
 import type { RemoteInfo } from "dgram";
 import { TypedEventEmitter } from "main-event";
 import multicastDNS from "multicast-dns";
@@ -21,11 +27,15 @@ export interface MulticastDNSInit {
   peerName?: string;
   port?: number;
   ip?: string;
+  listenPort: number;
 }
 
 export interface MulticastDNSComponents {
+  peerId: PeerId;
   addressManager: AddressManager;
   logger: ComponentLogger;
+  peerStore: PeerStore;
+  connectionManager: ConnectionManager;
 }
 
 export class MulticastDNS
@@ -40,18 +50,20 @@ export class MulticastDNS
   private readonly serviceTag: string;
   private readonly peerName: string;
   private readonly port: number;
+  private readonly listenPort: number;
   private readonly ip: string;
   private _queryInterval: ReturnType<typeof setInterval> | null;
   private readonly components: MulticastDNSComponents;
 
-  constructor(components: MulticastDNSComponents, init: MulticastDNSInit = {}) {
+  constructor(components: MulticastDNSComponents, init: MulticastDNSInit) {
     super();
 
-    this.log = components.logger.forComponent("libp2p:mdns");
+    this.log = components.logger.forComponent("libp2p:mdns2");
     this.broadcast = init.broadcast !== false;
     this.interval = init.interval ?? 1e3 * 10;
-    this.serviceTag = init.serviceTag ?? "_p2p._udp.local";
+    this.serviceTag = init.serviceTag ?? "_p2p2._udp.local";
     this.ip = init.ip ?? "224.0.0.251";
+    this.listenPort = init.listenPort;
     this.peerName = init.peerName ?? stringGen(63);
     // 63 is dns label limit
     if (this.peerName.length >= 64) {
@@ -94,6 +106,7 @@ export class MulticastDNS
 
     this._queryInterval = query.queryLAN(
       this.mdns,
+      this.peerName,
       this.serviceTag,
       this.interval,
       {
@@ -107,14 +120,16 @@ export class MulticastDNS
       return;
     }
 
-    this.log.trace("received incoming mDNS query via " + rInfo.address);
+    this.log.trace(
+      "received incoming mDNS query from " + rInfo.address + ":" + rInfo.port,
+    );
     query.gotQuery(
       event,
       this.mdns,
       this.peerName,
-      this.components.addressManager.getObservedAddrs(),
+      this.components.addressManager.getAddresses(),
       this.serviceTag,
-      this.broadcast,
+      rInfo,
       {
         log: this.log,
       },
@@ -122,10 +137,15 @@ export class MulticastDNS
   }
 
   _onMdnsResponse(event: multicastDNS.ResponsePacket, rinfo: RemoteInfo): void {
-    this.log.trace("received mDNS query response");
+    this.log.trace(
+      "received incoming mDNS response from " +
+        rinfo.address +
+        ":" +
+        rinfo.port,
+    );
 
     try {
-      const foundPeer = query.gotResponse(
+      const { peer: foundPeer, observed } = query.gotResponse(
         event,
         this.peerName,
         this.serviceTag,
@@ -142,6 +162,23 @@ export class MulticastDNS
             detail: foundPeer,
           }),
         );
+        if (this.components.connectionManager.getConnectionsMap().size < 3) {
+          this.components.connectionManager.openConnection(foundPeer.id, {
+            priority: 10,
+          });
+        }
+      }
+      if (observed != null) {
+        this.log("observed address in mDNS query response %s", observed);
+        var addr = multiaddr(
+          "/ip4/" + observed.addr + "/tcp/" + this.listenPort,
+        );
+        addr = addr.encapsulate("/p2p/" + this.components.peerId.toString());
+
+        this.components.addressManager.addObservedAddr(addr);
+        this.components.addressManager.confirmObservedAddr(addr, {
+          type: "observed",
+        });
       }
     } catch (err) {
       this.log.error("error processing peer response - %e", err);
