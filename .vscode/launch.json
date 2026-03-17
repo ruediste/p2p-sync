@@ -9,7 +9,10 @@
       "program": "${workspaceFolder}/dist/index.mjs",
       "args": ["add"],
       "outFiles": ["${workspaceFolder}/**/*.js"],
-      "preLaunchTask": "npm: build"
+      "preLaunchTask": "npm: build",
+      "env": {
+        "DEBUG": "*"
+      }
     }
   ]
 }
