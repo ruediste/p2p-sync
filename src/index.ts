@@ -1,317 +1,140 @@
-import { noise } from "@chainsafe/libp2p-noise";
-import { yamux } from "@chainsafe/libp2p-yamux";
-import { dagJson } from "@helia/dag-json";
-import { ipns } from "@helia/ipns";
-import { bootstrap } from "@libp2p/bootstrap";
-import {
-  circuitRelayServer,
-  circuitRelayTransport,
-} from "@libp2p/circuit-relay-v2";
-import { identify, identifyPush } from "@libp2p/identify";
-import {
-  type IdentifyResult,
-  type Libp2pEvents,
-  type PrivateKey,
-  type Startable,
-  type TypedEventTarget,
-} from "@libp2p/interface";
-import {
-  kadDHT,
-  removePrivateAddressesMapper,
-  removePublicAddressesMapper,
-} from "@libp2p/kad-dht";
-import { ping } from "@libp2p/ping";
-import { tcp } from "@libp2p/tcp";
-import { FsBlockstore } from "blockstore-fs";
-import { FsDatastore } from "datastore-fs";
-import { createHelia } from "helia";
-import { Key } from "interface-datastore";
-import { ipnsSelector } from "ipns/selector";
-import { ipnsValidator } from "ipns/validator";
-import { createLibp2p } from "libp2p";
-import { mdns } from "./mdns";
-
-import { autoNATv2 } from "@libp2p/autonat-v2";
-import { generateKeyPair, privateKeyFromRaw } from "@libp2p/crypto/keys";
-import type {
-  AddressManager,
-  TransportManager,
-} from "@libp2p/interface-internal";
-import { keychain } from "@libp2p/keychain";
-import { multiaddr } from "@multiformats/multiaddr";
 import { CID } from "multiformats";
+import { sha256 } from "multiformats/hashes/sha2";
+import type {
+  Component,
+  Components,
+  InstanceComponents,
+  LifecycleComponents,
+} from "./components";
+import { createNode } from "./createNode";
+import { loadOrCreateUserKeys } from "./userKeysManagement";
+import { UserNodeController, UserNodeManager } from "./UserNodeController";
+import { UserController } from "./UsersController";
+import { sleep } from "./utils";
 
-const command = process.argv[2] as "add" | "get";
-if (command !== "add" && command !== "get") {
-  console.error("Please provide a command: 'add' or 'get'");
-  process.exit(1);
-}
-const useAmino = false;
-const useLan = true;
-const listenPort = command === "add" ? 7743 : 7744;
+const userKeys = await loadOrCreateUserKeys();
 
-interface MyHelperComponents {
-  addressManager: AddressManager;
-  events: TypedEventTarget<Libp2pEvents>;
-  transportManager: TransportManager;
-}
-class MyHelper implements Startable {
-  constructor(private components: MyHelperComponents) {}
-  start(): void | Promise<void> {
-    // If a system has many network interfaces, such as when using docker, it makes little sense to announce them. Instead, wait for another peer to
-    // observe us and then add the observed address, for example via identify or with the modified mdns.
-    try {
-      const transport = this.components.transportManager;
-      var orig = transport.getAddrs;
-      transport.getAddrs = () => {
-        return orig.call(transport).filter((addr) => {
-          const components = addr.getComponents();
-          if (
-            components.length === 2 &&
-            (components[0].name === "ip4" || components[0].name === "ip6") &&
-            components[1].name === "tcp"
-          ) {
-            return false;
-          }
-          return true;
-        });
-      };
-    } catch (e) {
-      console.error(
-        "Failed to monkey-patch transport getAddrs, observed address functionality may not work:",
-        e,
-      );
-    }
-
-    setInterval(() => {
-      console.log(
-        "getAddresses:",
-        this.components.addressManager.getAddresses().map((a) => a.toString()),
-      );
-      console.log(
-        "getObservedAddrs:",
-        this.components.addressManager
-          .getObservedAddrs()
-          .map((a) => a.toString()),
-      );
-      console.log(
-        "announceAddrs:",
-        this.components.addressManager
-          .getAnnounceAddrs()
-          .map((a) => a.toString()),
-      );
-    }, 5000);
-
-    // When identifying a peer, it tells us the observed address. Combine this with the listen port to get an address to announce.
-    this.components.events.addEventListener(
-      "peer:identify",
-      ({ detail: result }: { detail: IdentifyResult }) => {
-        if (result.observedAddr) {
-          const addrComponents = result.observedAddr.getComponents();
-          if (
-            addrComponents.length > 0 &&
-            addrComponents[addrComponents.length - 1].name === "tcp"
-          ) {
-            addrComponents.pop();
-            const newAddr = multiaddr(addrComponents).encapsulate(
-              multiaddr("/tcp/" + listenPort),
-            );
-            // console.log("Adding observed address:", newAddr.toString());
-            this.components.addressManager.addObservedAddr(newAddr);
-          }
-        }
-      },
-    );
-  }
-  stop(): void | Promise<void> {}
-}
-
-function sleep(ms: number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
-async function createNode() {
-  // the blockstore is where we store the blocks that make up files
-  const blockstore = new FsBlockstore("data/blocks-" + command);
-
-  // application-specific data lives in the datastore
-  const datastore = new FsDatastore("data/data-" + command);
-
-  const privateKeyKey = new Key("privateKey");
-  let privateKey: PrivateKey;
-  if (await datastore.has(privateKeyKey)) {
-    privateKey = await privateKeyFromRaw(await datastore.get(privateKeyKey));
-    console.log("Found existing private key, using it");
-  } else {
-    console.log("No existing private key found, generating a new one");
-    privateKey = await generateKeyPair("Ed25519");
-    await datastore.put(privateKeyKey, privateKey.raw);
-  }
-
-  // libp2p is the networking layer that underpins Helia
-  const libp2p = await createLibp2p({
-    privateKey,
-    datastore,
-    addresses: {
-      listen: ["/ip4/0.0.0.0/tcp/" + listenPort, "/ip6/::/tcp/" + listenPort],
-    },
-    transports: [tcp(), circuitRelayTransport()],
-    connectionEncrypters: [noise()],
-    streamMuxers: [yamux()],
-    peerDiscovery: [
-      ...(useLan ? [mdns({ listenPort })] : []),
-      ...(useAmino
-        ? [
-            bootstrap({
-              list: [
-                "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-                "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-                "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
-                "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
-              ],
-            }),
-          ]
-        : []),
-    ],
-    services: {
-      identify: identify(),
-      identifyPush: identifyPush(),
-      circuitRelay: circuitRelayServer(),
-      ping: ping(),
-      ...(useLan
-        ? {
-            lanDHT: kadDHT({
-              protocol: "/ipfs/lan/kad/1.0.0",
-              peerInfoMapper: removePublicAddressesMapper,
-              clientMode: false,
-              logPrefix: "libp2p:dht-lan",
-              datastorePrefix: "/dht-lan",
-              metricsPrefix: "libp2p_dht_lan",
-              validators: {
-                ipns: ipnsValidator,
-              },
-              selectors: {
-                ipns: ipnsSelector,
-              },
-            }),
-          }
-        : {}),
-      ...(useAmino
-        ? {
-            aminoDHT: kadDHT({
-              protocol: "/ipfs/kad/1.0.0",
-              peerInfoMapper: removePrivateAddressesMapper,
-              logPrefix: "libp2p:dht-amino",
-              datastorePrefix: "/dht-amino",
-              metricsPrefix: "libp2p_dht_amino",
-              validators: {
-                ipns: ipnsValidator,
-              },
-              selectors: {
-                ipns: ipnsSelector,
-              },
-            }),
-          }
-        : {}),
-      autoNATv2: autoNATv2(),
-      myHelper: (components: MyHelperComponents) => new MyHelper(components),
-      keychain: keychain(),
-    },
-  });
-
-  return await createHelia({
-    datastore,
-    blockstore,
-    libp2p,
-  });
-}
-
-const node = await createNode();
+const [dataStore, blockstore, node] = await createNode();
 const libp2p = node.libp2p;
 const services = libp2p.services;
 
-// services.lanDHT?.refreshRoutingTable();
+console.log("Node started with ID:", node.libp2p.peerId.toString());
 
-console.log("Node started with Peer ID:", node.libp2p.peerId.toString());
-const name = ipns(node, {});
+services.aminoDHT?.refreshRoutingTable();
 
-if (command === "add") {
-  console.log("Adding content...");
-  const j = dagJson(node);
+// build CID based on sha256 key of user
+const userPublicKeyHash = await sha256.digest(userKeys.userPublicKey);
+const userCid = CID.createV1(0x72, userPublicKeyHash);
 
-  setInterval(async () => {
-    if (node.libp2p.getMultiaddrs().length == 0) {
-      console.log("No addresses to announce yet, skipping provide");
-      return;
-    }
-    const cid = await j.add({ message: "Hello World " + new Date() });
-    console.log("content CID: " + cid);
-    await node.routing.provide(cid);
-    await name.publish("key1", cid);
-    console.log(
-      "key: " +
-        Buffer.from((await services.keychain.exportKey("key1")).raw).toString(
-          "base64",
-        ),
-    );
-    console.log(
-      "ipns cid: " +
-        (await services.keychain.exportKey("key1")).publicKey
-          .toCID()
-          .toString(),
-    );
-  }, 10 * 1000);
-} else {
-  await sleep(1000);
-  console.log("Getting content...");
-  setInterval(async () => {
-    // const foo = node;
-    // node.libp2p.getMultiaddrs();
-    // console.log(foo);
-    // console.log(node.libp2p.getMultiaddrs().map((a) => a.toString()));
-    // services.lanDHT?.refreshRoutingTable();
-  }, 3000);
-  // const keyRaw =
-  //   "+TrILfsyvu3b/L/toeU4SINrMi6EJSROJ8wAS4Eoc2lmFfM7DrS/AwwnYTJaBnT+C+Sxjyr7exhZoa+rCwPVTw==";
-  // services.keychain.importKey(
-  //   "key1",
-  //   privateKeyFromRaw(Buffer.from(keyRaw, "base64")),
-  // );
+const userNodeManager = new UserNodeManager(dataStore);
 
-  const j = dagJson(node);
-  setInterval(async () => {
-    const cid = CID.parse(
-      "bafzaajaiaejcb4m2eec7wlf2w2k2koe4healdpsojjb3nvcu37ns23sfmjikgktl",
-    );
+const components: Components = {
+  libp2p,
+  dataStore,
+} satisfies InstanceComponents as any;
 
-    console.log("resolving ipns...");
-    try {
-      const result = await name.resolve(cid as any, { nocache: true });
-      console.log(result.record);
+const lifecycleConstructors: {
+  [key in keyof LifecycleComponents]: (
+    c: Components,
+  ) => LifecycleComponents[key];
+} = {
+  userController: (c) => new UserController(c),
+  userNodeController: (c) => new UserNodeController(c),
+};
 
-      const contentCid = result.record.value;
-      console.log("Fetching content with CID:", contentCid);
-      const retrieved = await j.get(
-        CID.parse(contentCid.substring("/ipfs/".length)),
-      );
-      console.log("Fetched object:", retrieved);
-    } catch (e) {
-      console.log("resolving failed: ", e);
-    }
-  }, 3000);
-
-  // const cid = "baguqeeraifakbvsuuoaw3hm5eumekugcgu4umkogsekwohsy6kfy6sp3s3eq";
-  // console.log("Fetching content with CID:", cid);
-  // const retrieved = await j.get(CID.parse(cid));
-  // console.log("Fetched object:", retrieved);
-
-  // name.resolve("key1");
-
-  // process.exit(0);
-  // node.stop();
-  while (true) {
-    await sleep(1000);
-  }
+const lifecycleComponents: Component[] = [];
+for (const e of Object.entries(lifecycleConstructors)) {
+  const c = e[1](components);
+  (components as any)[e[0]] = c;
+  lifecycleComponents.push(c);
 }
+
+for (const c of lifecycleComponents) {
+  await c.initialize();
+}
+
+(async () => {
+  while (true) {
+    try {
+      console.log(libp2p.getMultiaddrs());
+      while (libp2p.getMultiaddrs().length == 0) {
+        await sleep(1000);
+      }
+      console.log("Own addresses are available: ", libp2p.getMultiaddrs());
+
+      // publish own node as provider for the user
+      console.log(
+        "Publishing node as provider for user CID:",
+        userCid.toString(),
+      );
+      for await (const event of libp2p.services.aminoDHT!.provide(userCid)) {
+        if (event.name == "PEER_RESPONSE") continue;
+        if (event.name == "DIAL_PEER") continue;
+        if (event.name == "QUERY_ERROR") continue;
+
+        // console.log("Provide event:", event);
+      }
+    } catch (e) {
+      console.log("Error while publishing node as provider", e);
+    }
+    await sleep(30 * 1000);
+  }
+})();
+
+if (true)
+  (async () => {
+    while (true) {
+      try {
+        // search kad for other nodes providing this user
+        console.log(
+          "Searching for providers for user CID:",
+          userCid.toString(),
+        );
+        for await (const event of libp2p.services.aminoDHT!.findProviders(
+          userCid,
+        )) {
+          if (event.name === "DIAL_PEER") continue;
+
+          // console.log("Search event: ", event);
+          if (event.name === "PROVIDER") {
+            console.log("Found provider:", event, event.providers);
+            event.providers.forEach((p) => userNodeManager.merge(p));
+          }
+        }
+      } catch (e) {
+        console.log("Error while searching for providers", e);
+      }
+      console.log("Search: sleep");
+      await sleep(30 * 1000);
+    }
+  })();
+
+libp2p.handle(protocolId, (stream) => {
+  // pipe the stream output back to the stream input
+  stream.addEventListener("message", (evt) => {
+    stream.send(evt.data);
+  });
+
+  // close the incoming writable end when the remote writable end closes
+  stream.addEventListener("remoteCloseWrite", () => {
+    stream.close();
+  });
+});
+
+libp2p.addEventListener("peer:identify", (e) => {
+  console.log("peer:identify", e.detail, e.detail.protocols);
+});
+
+// // the local will dial the remote on the protocol stream
+// const stream = await local.dialProtocol(remote.getMultiaddrs(), ECHO_PROTOCOL);
+
+// stream.addEventListener("message", (evt) => {
+//   // evt.data is a `Uint8ArrayList` so we must turn it into a `Uint8Array`
+//   // before decoding it
+//   console.info(
+//     `Echoed back to us: "${new TextDecoder().decode(evt.data.subarray())}"`,
+//   );
+// });
+
+// // the stream input must be bytes
+// stream.send(new TextEncoder().encode("hello world"));

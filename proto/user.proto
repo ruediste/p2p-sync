@@ -1,0 +1,10 @@
+syntax = "proto3";
+package example;
+
+message UserKeys {
+  bytes user_public_key=1;
+  optional bytes user_private_key=2;
+  optional bytes data_key=3;
+  optional bytes link_key=4;
+  bytes storage_key=5;
+}

@@ -14,25 +14,31 @@
     "dist"
   ],
   "scripts": {
+    "test": "NODE_OPTIONS='--experimental-vm-modules' npx jest",
     "build": "esbuild src/index.ts --bundle --platform=node --packages=external --outfile=dist/index.mjs --sourcemap --format=esm",
-    "start": "concurrently \"npm run dev:build\" \"npm run dev:start\"",
-    "start-add": "node dist/index.mjs add",
-    "start-get": "nodemon --watch 'dist/*.mjs' --exec \"node dist/index.mjs get\"",
-    "dev:build": "esbuild src/index.ts --bundle --platform=node --packages=external --outfile=dist/index.mjs --format=esm --sourcemap --watch",
-    "dev:start": "nodemon --watch 'dist/*.mjs' --exec \"node dist/index.mjs\""
+    "gen": "buf generate",
+    "node1": "mkdir -p data/node1 && cd data/node1 && node ../../dist/index.mjs 7743",
+    "node2": "mkdir -p data/node2 && cd data/node2 && node ../../dist/index.mjs 7744",
+    "dev:build": "esbuild src/index.ts --bundle --platform=node --packages=external --outfile=dist/index.mjs --format=esm --sourcemap --watch"
   },
   "devDependencies": {
+    "@bufbuild/buf": "^1.66.1",
+    "@bufbuild/protoc-gen-es": "^2.11.0",
     "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
     "@types/reload": "^3.2.3",
     "concurrently": "^9.2.1",
     "dotenv": "^17.2.3",
     "esbuild": "^0.27.2",
     "express": "^5.2.1",
+    "jest": "^30.3.0",
     "nodemon": "^3.1.11",
+    "ts-jest": "^29.4.9",
     "tsdown": "^0.18.1",
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "^2.11.0",
     "@helia/dag-json": "^5.0.7",
     "@helia/http": "^3.0.20",
     "@helia/ipns": "^9.1.9",

@@ -1,0 +1,9 @@
+syntax = "proto3";
+package example;
+
+message WantUsers {
+}
+
+message HaveUsers {
+  repeated bytes user_ids=1;
+}

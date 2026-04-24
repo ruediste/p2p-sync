@@ -28,13 +28,19 @@
       "label": "npm: start-add",
       "detail": "node dist/index.mjs add"
     },
-
     {
       "type": "npm",
       "script": "start-get",
       "problemMatcher": [],
       "label": "npm: start-get",
       "detail": "node dist/index.mjs get"
+    },
+    {
+      "type": "npm",
+      "script": "gen",
+      "problemMatcher": [],
+      "label": "npm: gen",
+      "detail": "buf generate"
     }
   ]
 }
