@@ -110,7 +110,7 @@ Based on functionality available from `js-libp2p`.
 ### 3.8 Node Management (`src/node/`)
 
 - `NodeKeysManagement` (module): `loadOrCreateNodeKeys()`: Manages the node's management keypair used for signing and decrypting `NodeConfiguration`s.
-- `NodeConfigController` (class): Discovers and merges `NodeConfiguration`s from all `StorageUserData` blocks the node has access to. Enforces "most generous" quota merging and key union. Persists the node configurations locally, such that they are available after a restart.
+- `NodeConfigController` (class): Discovers and merges `NodeConfiguration`s from all `StorageUserData` blocks the node has access to. Enforces "most generous" quota merging and key union.
 
 ### 3.9 Component System (`src/components.ts`)
 

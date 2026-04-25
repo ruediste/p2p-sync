@@ -1,4 +1,4 @@
-import { UserKeysSchema } from "@/gen/user_pb";
+import { UserKeysSchema } from "../gen/user_pb.js";
 import { create, fromBinary, toBinary } from "@bufbuild/protobuf";
 import { generateKeyPair } from "@libp2p/crypto/keys";
 import webcrypto from "@libp2p/crypto/webcrypto";

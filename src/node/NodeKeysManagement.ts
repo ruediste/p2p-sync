@@ -1,4 +1,4 @@
-import { NodeKeysSchema } from "@/gen/node_pb";
+import { NodeKeysSchema } from "../gen/node_pb.js";
 import { create, fromBinary, toBinary } from "@bufbuild/protobuf";
 import { generateKeyPair } from "@libp2p/crypto/keys";
 import fs from "node:fs/promises";

@@ -10,7 +10,7 @@ export class ReplicationController implements Component {
   constructor(
     private components: Pick<
       Components,
-      "userController" | "storageRepository"
+      "userController" | "storageRepository" | "nodeConfigController"
     >,
   ) {
     this.repository = components.storageRepository;
@@ -78,6 +78,10 @@ export class ReplicationController implements Component {
           await this.repository.deleteUserDataRoot(existing);
         }
       }
+
+      // Check for new node configurations
+      await this.components.nodeConfigController.refreshConfigurations();
+
       // After root is saved, trigger bitswap for missing shards/blocks
       // (Placeholder for bitswap integration)
     }

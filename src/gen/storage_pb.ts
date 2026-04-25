@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file storage.proto.
  */
 export const file_storage: GenFile = /*@__PURE__*/
-  fileDesc("Cg1zdG9yYWdlLnByb3RvEghwMnBfc3luYyIpCgxTdG9yYWdlQmxvY2sSCwoDY2lkGAEgASgMEgwKBGRhdGEYAiABKAwiMQoJRGF0YVNoYXJkEhAKCHNoYXJkX2lkGAEgASgMEhIKCmJsb2NrX2NpZHMYAiADKAwiVwoJTm9kZVRydXN0Eg8KB25vZGVfaWQYASABKAwSEwoLcmVsaWFiaWxpdHkYAiABKAISJAoFY2xvY2sYAyABKAsyFS5wMnBfc3luYy5WZWN0b3JDbG9jayI0CgxOb2RlVHJ1c3RTZXQSJAoHZW50cmllcxgBIAMoCzITLnAycF9zeW5jLk5vZGVUcnVzdCLQAQoVTm9kZVVzZXJDb25maWd1cmF0aW9uEg8KB3VzZXJfaWQYASABKAwSFQoNc3RvcmFnZV9xdW90YRgCIAEoBBITCgtzdG9yYWdlX2tleRgDIAEoDBIVCghsaW5rX2tleRgEIAEoDEgAiAEBEhUKCGRhdGFfa2V5GAUgASgMSAGIAQESHQoQdXNlcl9wcml2YXRlX2tleRgGIAEoDEgCiAEBQgsKCV9saW5rX2tleUILCglfZGF0YV9rZXlCEwoRX3VzZXJfcHJpdmF0ZV9rZXkibgoRTm9kZUNvbmZpZ3VyYXRpb24SDwoHbm9kZV9pZBgBIAEoDBI1Cgx1c2VyX2NvbmZpZ3MYAiADKAsyHy5wMnBfc3luYy5Ob2RlVXNlckNvbmZpZ3VyYXRpb24SEQoJc2lnbmF0dXJlGAMgASgMIrQBCg9TdG9yYWdlVXNlckRhdGESDwoHdXNlcl9pZBgBIAEoDBIkCgVjbG9jaxgCIAEoCzIVLnAycF9zeW5jLlZlY3RvckNsb2NrEhEKCXNoYXJkX2lkcxgDIAMoDBIpCgl0cnVzdF9zZXQYBCABKAsyFi5wMnBfc3luYy5Ob2RlVHJ1c3RTZXQSGQoRZW5jcnlwdGVkX3BheWxvYWQYBSABKAwSEQoJc2lnbmF0dXJlGAYgASgMImoKDFN0b3JhZ2VDbGFpbRIPCgdub2RlX2lkGAEgASgMEg8KB3VzZXJfaWQYAiABKAwSDwoHdmVyc2lvbhgDIAEoDRIUCgxzaGFyZF9iaXRtYXAYBCABKAwSEQoJcF9mYWlsdXJlGAUgASgCYgZwcm90bzM", [file_clock]);
+  fileDesc("Cg1zdG9yYWdlLnByb3RvEghwMnBfc3luYyIpCgxTdG9yYWdlQmxvY2sSCwoDY2lkGAEgASgMEgwKBGRhdGEYAiABKAwiMQoJRGF0YVNoYXJkEhAKCHNoYXJkX2lkGAEgASgMEhIKCmJsb2NrX2NpZHMYAiADKAwiVwoJTm9kZVRydXN0Eg8KB25vZGVfaWQYASABKAwSEwoLcmVsaWFiaWxpdHkYAiABKAISJAoFY2xvY2sYAyABKAsyFS5wMnBfc3luYy5WZWN0b3JDbG9jayI0CgxOb2RlVHJ1c3RTZXQSJAoHZW50cmllcxgBIAMoCzITLnAycF9zeW5jLk5vZGVUcnVzdCLnAQoVTm9kZVVzZXJDb25maWd1cmF0aW9uEg8KB3VzZXJfaWQYASABKAwSGgoNc3RvcmFnZV9xdW90YRgCIAEoBEgAiAEBEhMKC3N0b3JhZ2Vfa2V5GAMgASgMEhUKCGxpbmtfa2V5GAQgASgMSAGIAQESFQoIZGF0YV9rZXkYBSABKAxIAogBARIdChB1c2VyX3ByaXZhdGVfa2V5GAYgASgMSAOIAQFCEAoOX3N0b3JhZ2VfcXVvdGFCCwoJX2xpbmtfa2V5QgsKCV9kYXRhX2tleUITChFfdXNlcl9wcml2YXRlX2tleSJuChFOb2RlQ29uZmlndXJhdGlvbhIPCgdub2RlX2lkGAEgASgMEjUKDHVzZXJfY29uZmlncxgCIAMoCzIfLnAycF9zeW5jLk5vZGVVc2VyQ29uZmlndXJhdGlvbhIRCglzaWduYXR1cmUYAyABKAwi5wEKD1N0b3JhZ2VVc2VyRGF0YRIPCgd1c2VyX2lkGAEgASgMEiQKBWNsb2NrGAIgASgLMhUucDJwX3N5bmMuVmVjdG9yQ2xvY2sSEQoJc2hhcmRfaWRzGAMgAygMEikKCXRydXN0X3NldBgEIAEoCzIWLnAycF9zeW5jLk5vZGVUcnVzdFNldBIZChFlbmNyeXB0ZWRfcGF5bG9hZBgFIAEoDBIRCglzaWduYXR1cmUYBiABKAwSMQoMbm9kZV9jb25maWdzGAcgAygLMhsucDJwX3N5bmMuTm9kZUNvbmZpZ3VyYXRpb24iVwoMU3RvcmFnZUNsYWltEg8KB25vZGVfaWQYASABKAwSDwoHdXNlcl9pZBgCIAEoDBIPCgd2ZXJzaW9uGAMgASgNEhQKDHNoYXJkX2JpdG1hcBgEIAEoDGIGcHJvdG8z", [file_clock]);
 
 /**
  * @generated from message p2p_sync.StorageBlock
@@ -116,9 +116,9 @@ export type NodeUserConfiguration = Message<"p2p_sync.NodeUserConfiguration"> & 
   userId: Uint8Array;
 
   /**
-   * @generated from field: uint64 storage_quota = 2;
+   * @generated from field: optional uint64 storage_quota = 2;
    */
-  storageQuota: bigint;
+  storageQuota?: bigint;
 
   /**
    * @generated from field: bytes storage_key = 3;
@@ -214,6 +214,11 @@ export type StorageUserData = Message<"p2p_sync.StorageUserData"> & {
    * @generated from field: bytes signature = 6;
    */
   signature: Uint8Array;
+
+  /**
+   * @generated from field: repeated p2p_sync.NodeConfiguration node_configs = 7;
+   */
+  nodeConfigs: NodeConfiguration[];
 };
 
 /**
@@ -246,11 +251,6 @@ export type StorageClaim = Message<"p2p_sync.StorageClaim"> & {
    * @generated from field: bytes shard_bitmap = 4;
    */
   shardBitmap: Uint8Array;
-
-  /**
-   * @generated from field: float p_failure = 5;
-   */
-  pFailure: number;
 };
 
 /**

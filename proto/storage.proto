@@ -25,7 +25,7 @@ message NodeTrustSet {
 
 message NodeUserConfiguration {
   bytes user_id = 1;
-  uint64 storage_quota = 2;
+  optional uint64 storage_quota = 2;
   bytes storage_key = 3;
   optional bytes link_key = 4;
   optional bytes data_key = 5;
@@ -45,6 +45,7 @@ message StorageUserData {
   NodeTrustSet trust_set = 4;
   bytes encrypted_payload = 5; // Linking to data layer
   bytes signature = 6; // Signed by user public key
+  repeated NodeConfiguration node_configs = 7;
 }
 
 message StorageClaim {

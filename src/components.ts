@@ -5,6 +5,7 @@ import { type Blockstore } from "interface-blockstore";
 import { type Datastore } from "interface-datastore";
 import type { ReplicationController } from "./storage/ReplicationController.js";
 import type { StorageRepository } from "./storage/StorageRepository.js";
+import type { NodeConfigController } from "./node/NodeConfigController.js";
 
 export interface InstanceComponents {
   libp2p: LibP2PType;
@@ -18,6 +19,7 @@ export interface LifecycleComponents {
   userController: UserController;
   userNodeConnectionController: UserNodeConnectionController;
   replicationController: ReplicationController;
+  nodeConfigController: NodeConfigController;
 }
 
 export type Components = InstanceComponents & LifecycleComponents;

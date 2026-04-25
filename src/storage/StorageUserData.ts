@@ -1,8 +1,12 @@
-import { create, toBinary, fromBinary } from "@bufbuild/protobuf";
-import { StorageUserDataSchema, NodeTrustSetSchema } from "../gen/storage_pb.js";
+import { create, fromBinary, toBinary } from "@bufbuild/protobuf";
 import { VectorClock } from "../clock/vector-clock.js";
-import { NodeTrustSet } from "./NodeTrustSet.js";
 import { signData, verifySignature } from "../crypto/index.js";
+import {
+  NodeTrustSetSchema,
+  StorageUserDataSchema,
+  type NodeConfiguration,
+} from "../gen/storage_pb.js";
+import { NodeTrustSet } from "./NodeTrustSet.js";
 
 export class StorageUserData {
   constructor(
@@ -11,19 +15,21 @@ export class StorageUserData {
     public readonly shardIds: Uint8Array[],
     public readonly trustSet: NodeTrustSet,
     public readonly encryptedPayload: Uint8Array,
-    public readonly signature?: Uint8Array
+    public readonly nodeConfigs: NodeConfiguration[] = [],
+    public readonly signature?: Uint8Array,
   ) {}
 
   async sign(privateKey: Uint8Array): Promise<StorageUserData> {
     const dataToSign = this.toBinary(false); // Exclude signature
     const signature = await signData(privateKey, dataToSign);
     return new StorageUserData(
-        this.userId,
-        this.clock,
-        this.shardIds,
-        this.trustSet,
-        this.encryptedPayload,
-        signature
+      this.userId,
+      this.clock,
+      this.shardIds,
+      this.trustSet,
+      this.encryptedPayload,
+      this.nodeConfigs,
+      signature,
     );
   }
 
@@ -40,24 +46,26 @@ export class StorageUserData {
 
   toBinary(includeSignature: boolean = true): Uint8Array {
     const message = create(StorageUserDataSchema, {
-        userId: this.userId,
-        clock: this.clock.toProto(),
-        shardIds: this.shardIds,
-        trustSet: fromBinary(NodeTrustSetSchema, this.trustSet.toBinary()),
-        encryptedPayload: this.encryptedPayload,
-        signature: includeSignature ? this.signature : new Uint8Array()
+      userId: this.userId,
+      clock: this.clock.toProto(),
+      shardIds: this.shardIds,
+      trustSet: fromBinary(NodeTrustSetSchema, this.trustSet.toBinary()),
+      encryptedPayload: this.encryptedPayload,
+      nodeConfigs: this.nodeConfigs,
+      signature: includeSignature ? this.signature : new Uint8Array(),
     });
     return toBinary(StorageUserDataSchema, message);
   }
 
   static fromProto(proto: any): StorageUserData {
-      return new StorageUserData(
-          proto.userId,
-          VectorClock.fromProto(proto.clock),
-          proto.shardIds,
-          NodeTrustSet.fromProto(proto.trustSet),
-          proto.encryptedPayload,
-          proto.signature
-      );
+    return new StorageUserData(
+      proto.userId,
+      VectorClock.fromProto(proto.clock),
+      proto.shardIds,
+      NodeTrustSet.fromProto(proto.trustSet),
+      proto.encryptedPayload,
+      proto.nodeConfigs,
+      proto.signature,
+    );
   }
 }

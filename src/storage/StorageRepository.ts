@@ -1,10 +1,13 @@
-import { fromBinary } from "@bufbuild/protobuf";
+import { fromBinary, toBinary } from "@bufbuild/protobuf";
 import { Key } from "interface-datastore";
 import { CID } from "multiformats/cid";
 import { sha256 } from "multiformats/hashes/sha2";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 import { type Component, type Components } from "../components.js";
-import { StorageUserDataSchema } from "../gen/storage_pb.js";
+import {
+  StorageUserDataSchema,
+  NodeConfigurationSchema,
+} from "../gen/storage_pb.js";
 import { StorageBlock } from "./StorageBlock.js";
 import { StorageUserData } from "./StorageUserData.js";
 
@@ -56,6 +59,23 @@ export class StorageRepository implements Component {
     const hashStr = uint8ArrayToString(hash.bytes, "base64url");
     const key = new Key(`/storage/user/${userIdStr}/root/${hashStr}`);
     await this.components.dataStore.delete(key);
+  }
+
+  async saveMergedNodeConfig(userId: Uint8Array, config: Uint8Array) {
+    const userIdStr = uint8ArrayToString(userId, "base64url");
+    const key = new Key(`/node/config/user/${userIdStr}`);
+    await this.components.dataStore.put(key, config);
+  }
+
+  async getMergedNodeConfig(userId: Uint8Array): Promise<Uint8Array | null> {
+    const userIdStr = uint8ArrayToString(userId, "base64url");
+    const key = new Key(`/node/config/user/${userIdStr}`);
+    try {
+      return await this.components.dataStore.get(key);
+    } catch (e: any) {
+      if (e.code === "ERR_NOT_FOUND") return null;
+      throw e;
+    }
   }
 
   // --- Blocks (Blocks are stored in blockStore) ---

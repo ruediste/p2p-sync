@@ -8,6 +8,7 @@ import { createNode } from "@/network/createNode";
 import { syncProtocolId } from "@/network/syncProtocol";
 import { UserNodeConnectionController } from "@/network/UserNodeConnectionController";
 import { BootstrapService } from "@/node/BootstrapService";
+import { NodeConfigController } from "@/node/NodeConfigController";
 import { loadOrCreateNodeKeys } from "@/node/NodeKeysManagement";
 import { ReplicationController } from "@/storage/ReplicationController";
 import { StorageRepository } from "@/storage/StorageRepository";
@@ -49,6 +50,7 @@ const lifecycleConstructors: {
   userController: (c) => new UserController(c),
   userNodeConnectionController: (c) => new UserNodeConnectionController(c),
   replicationController: (c) => new ReplicationController(c),
+  nodeConfigController: (c) => new NodeConfigController(c),
 };
 
 const lifecycleComponents: Component[] = [];
