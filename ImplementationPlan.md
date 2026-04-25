@@ -173,20 +173,3 @@ Based on functionality available from `js-libp2p`.
 6. **Existing code is kept and reorganized.** Current files (`createNode.ts`, `UserNodeController.ts`, `UsersController.ts`, `userKeysManagement.ts`, `syncProtocol.ts`, `utils.ts`, `mdns/`) map cleanly to the proposed structure. The main refactoring is splitting the monolithic `UserNodeController.ts` into `UserPeerManager`, `UserPeerEntry`, `UserNodeController`, and `SyncMessageHandler`, and moving files into their respective layer directories.
 
 7. **NodeTrust is first-class replicated data.** Trust updates are part of the signed `StorageUserData`, travel through the same replication pipeline as files, and rely on vector clocks plus deterministic merge rules so that revocations and quota changes never get lost.
-
-## 6. Implementation Order
-
-The following order minimizes dependencies and allows incremental testing:
-
-2. **`crypto/`** — Pure logic. Required by all layers.
-3. **`proto/` expansion** — Define `storage.proto`, `link.proto`, expand sync protocol messages.
-4. **`storage/`** — `StorageBlock`, `DataShard`, `StorageUserData`, `BlockStore`. Can be tested with in-memory stores.
-5. **`network/` refactor** — Split existing code into the proposed files. Get node management and sync protocol working.
-6. **`link/`** — `LinkBlock`, `LinkTraversal`. Depends on storage layer and crypto.
-7. **`data/`** — `UserData`, `Directory`, `File`, `ConflictResolver`. Depends on clock, link, and crypto.
-8. **`storage/ReplicationController`** — Depends on storage layer, network (for `StorageClaim` exchange), and user trust config.
-9. **`link/GarbageCollector`** — Depends on link traversal, storage layer, and data layer merge.
-10. **`user/`** — `UserController`, `NodeTrust`. Ties together the full stack and ensures trust data flows into the `NodeTrustSet`.
-11. **`apps/backend/`** — Build the Express bridge on top of the stabilized domain modules.
-12. **`apps/frontend/`** — Implement the React UI on top of the backend API, focusing on conflict management and NodeTrust editing flows.
-13. **`index.ts`** — Wire everything together.
