@@ -1,23 +1,22 @@
 import type { Component, Components } from "@/components";
-import { UserNodeEntry } from "@/network/UserNodeEntry";
+import { UserNodeConnectionEntry } from "@/network/UserNodeConnectionEntry";
 import { type PeerInfo } from "@libp2p/interface";
 import { Key } from "interface-datastore";
 
 const NODES_KEY = new Key("/user-nodes");
-const PREFIX = "/user-nodes/";
 
 /*
- * Keeps track of all user nodes currently being processed.
+ * Keeps track of all user nodes currently known/processed.
  */
-export class UserNodeController implements Component {
-  nodes: UserNodeEntry[] = [];
+export class UserNodeConnectionController implements Component {
+  nodes: UserNodeConnectionEntry[] = [];
   private dirty = false;
   private running = true;
 
   constructor(
     private components: Pick<
       Components,
-      "libp2p" | "userController" | "dataStore"
+      "libp2p" | "userController" | "dataStore" | "replicationController"
     >,
   ) {
     // start an async loop, persisting the nodes in the datastore every second (if dirty)
@@ -30,22 +29,23 @@ export class UserNodeController implements Component {
 
   private async init() {
     try {
-      // Note: PREFIX query from original seemed incomplete or unused in the sense that it wasn't assigning results
-      // await this.components.dataStore.query({prefix: PREFIX});
-
       const data = await this.components.dataStore.get(NODES_KEY);
       const json = JSON.parse(new TextDecoder().decode(data));
       this.nodes = json.map((p: any) =>
-        UserNodeEntry.deserialize(p, this.components.libp2p, this.components),
+        UserNodeConnectionEntry.deserialize(
+          p,
+          this.components.libp2p,
+          this.components,
+        ),
       );
 
       // Start processing for each node
       for (const node of this.nodes) {
         void node.process();
       }
-    } catch (err: any) {
+      } catch (err: any) {
       if (err.code !== "ERR_NOT_FOUND") {
-        console.error("Failed to initialize UserNodeController", err);
+        console.error("Failed to initialize UserNodeConnectionController", err);
       }
     }
   }
@@ -80,7 +80,7 @@ export class UserNodeController implements Component {
   merge(info: PeerInfo) {
     let node = this.nodes.find((p) => p.id.equals(info.id));
     if (!node) {
-      node = new UserNodeEntry(
+      node = new UserNodeConnectionEntry(
         info.id,
         this.components.libp2p,
         this.components,

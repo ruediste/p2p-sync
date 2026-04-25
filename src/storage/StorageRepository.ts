@@ -3,26 +3,23 @@ import { Key } from "interface-datastore";
 import { CID } from "multiformats/cid";
 import { sha256 } from "multiformats/hashes/sha2";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
-import { type Components } from "../components.js";
+import { type Component, type Components } from "../components.js";
 import { StorageUserDataSchema } from "../gen/storage_pb.js";
 import { StorageBlock } from "./StorageBlock.js";
 import { StorageUserData } from "./StorageUserData.js";
 
-export class StorageRepository {
+export class StorageRepository implements Component {
   constructor(
     private components: Pick<Components, "dataStore" | "blockStore">,
   ) {}
+
+  async initialize() {}
 
   async saveNodeKeys(publicKey: Uint8Array, privateKey: Uint8Array) {
     const batch = this.components.dataStore.batch();
     batch.put(new Key("/node/keys/public"), publicKey);
     batch.put(new Key("/node/keys/private"), privateKey);
     await batch.commit();
-  }
-
-  async registerUser(userId: Uint8Array) {
-    const key = new Key(`/user/${uint8ArrayToString(userId, "base64url")}`);
-    await this.components.dataStore.put(key, new Uint8Array([1]));
   }
 
   async saveUserDataRoot(userData: StorageUserData) {

@@ -1,9 +1,10 @@
 import type { LibP2PType } from "@/network/createNode";
-import type { UserNodeController } from "@/network/UserNodeController";
+import type { UserNodeConnectionController } from "@/network/UserNodeConnectionController.js";
 import type { UserController } from "@/user/UserController";
-import type { ReplicationController } from "./storage/ReplicationController.js";
-import { type Datastore } from "interface-datastore";
 import { type Blockstore } from "interface-blockstore";
+import { type Datastore } from "interface-datastore";
+import type { ReplicationController } from "./storage/ReplicationController.js";
+import type { StorageRepository } from "./storage/StorageRepository.js";
 
 export interface InstanceComponents {
   libp2p: LibP2PType;
@@ -13,8 +14,9 @@ export interface InstanceComponents {
 }
 
 export interface LifecycleComponents {
+  storageRepository: StorageRepository;
   userController: UserController;
-  userNodeController: UserNodeController;
+  userNodeConnectionController: UserNodeConnectionController;
   replicationController: ReplicationController;
 }
 

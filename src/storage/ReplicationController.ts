@@ -10,14 +10,10 @@ export class ReplicationController implements Component {
   constructor(
     private components: Pick<
       Components,
-      | "dataStore"
-      | "blockStore"
-      | "userController"
-      | "userNodeController"
-      | "libp2p"
+      "userController" | "storageRepository"
     >,
   ) {
-    this.repository = new StorageRepository(components);
+    this.repository = components.storageRepository;
   }
 
   async initialize() {
@@ -46,9 +42,9 @@ export class ReplicationController implements Component {
   async replicate() {
     const users = this.components.userController.getUsers();
     for (const user of users) {
-      // Trigger WantUserDatas via UserNodeController
-      // (This part needs integration with UserNodeController/Entry)
-      // For now, assume UserNodeController handles the periodic triggering or we trigger it here
+      // Trigger WantUserDatas via UserNodeConnectionController
+      // (This part needs integration with UserNodeConnectionController/Entry)
+      // For now, assume UserNodeConnectionController handles the periodic triggering or we trigger it here
     }
   }
 

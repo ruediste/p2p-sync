@@ -1,14 +1,12 @@
 import type { LibP2PType } from "@/network/createNode";
-import { SyncMessageHandler } from "./SyncMessageHandler.js";
-import { syncProtocolId, syncRegistry } from "./syncProtocol.js";
-import { sleep } from "../util/sleep.js";
-import type { Components } from "../components.js";
-import { fromBinary } from "@bufbuild/protobuf";
-import { AnySchema, anyUnpack } from "@bufbuild/protobuf/wkt";
 import { type PeerId, type Stream } from "@libp2p/interface";
 import { peerIdFromString } from "@libp2p/peer-id";
 import { type Multiaddr, multiaddr } from "@multiformats/multiaddr";
 import { isUint8ArrayList } from "uint8arraylist";
+import type { Components } from "../components.js";
+import { sleep } from "../util/sleep.js";
+import { SyncMessageHandler } from "./SyncMessageHandler.js";
+import { syncProtocolId } from "./syncProtocol.js";
 
 export interface MultiaddrEntry {
   addr: Multiaddr;
@@ -17,7 +15,7 @@ export interface MultiaddrEntry {
 
 /** Keeps track of a single remote user node. An async method keeps track of the state, error handling and retries.
  * The state is persisted in such a way that processing can continue after a restart. */
-export class UserNodeEntry {
+export class UserNodeConnectionEntry {
   /**
    * The multiaddrs a node is listening on
    */
@@ -90,7 +88,7 @@ export class UserNodeEntry {
     libp2p: LibP2PType,
     components: Pick<Components, "userController" | "replicationController">,
   ) {
-    const result = new UserNodeEntry(
+    const result = new UserNodeConnectionEntry(
       peerIdFromString(json.id),
       libp2p,
       components,

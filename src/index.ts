@@ -6,17 +6,17 @@ import type {
 } from "@/components";
 import { createNode } from "@/network/createNode";
 import { syncProtocolId } from "@/network/syncProtocol";
-import { UserNodeController } from "@/network/UserNodeController";
-import { UserPeerManager } from "@/network/UserPeerManager";
-import { UserController } from "@/user/UserController";
-import { loadOrCreateUserKeys } from "@/user/UserKeysManagement";
+import { UserNodeConnectionController } from "@/network/UserNodeConnectionController";
+import { BootstrapService } from "@/node/BootstrapService";
 import { loadOrCreateNodeKeys } from "@/node/NodeKeysManagement";
 import { ReplicationController } from "@/storage/ReplicationController";
 import { StorageRepository } from "@/storage/StorageRepository";
-import { BootstrapService } from "@/node/BootstrapService";
+import { UserController } from "@/user/UserController";
+import { loadOrCreateUserKeys } from "@/user/UserKeysManagement";
 import { sleep } from "@/util/sleep";
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
+import { SyncMessageHandler } from "./network/SyncMessageHandler";
 
 const nodeKeys = await loadOrCreateNodeKeys();
 const userKeys = await loadOrCreateUserKeys();
@@ -33,8 +33,6 @@ services.aminoDHT?.refreshRoutingTable();
 const userPublicKeyHash = await sha256.digest(userKeys.userPublicKey);
 const userCid = CID.createV1(0x72, userPublicKeyHash);
 
-const userPeerManager = new UserPeerManager(dataStore);
-
 const components: Components = {
   libp2p,
   dataStore,
@@ -42,17 +40,14 @@ const components: Components = {
   nodePublicKey: nodeKeys.publicKey,
 } satisfies InstanceComponents as any;
 
-const storageRepository = new StorageRepository(components);
-const bootstrapService = new BootstrapService(storageRepository);
-await bootstrapService.bootstrap();
-
 const lifecycleConstructors: {
   [key in keyof LifecycleComponents]: (
     c: Components,
   ) => LifecycleComponents[key];
 } = {
+  storageRepository: (c) => new StorageRepository(c),
   userController: (c) => new UserController(c),
-  userNodeController: (c) => new UserNodeController(c),
+  userNodeConnectionController: (c) => new UserNodeConnectionController(c),
   replicationController: (c) => new ReplicationController(c),
 };
 
@@ -66,6 +61,9 @@ for (const e of Object.entries(lifecycleConstructors)) {
 for (const c of lifecycleComponents) {
   await c.initialize();
 }
+
+const bootstrapService = new BootstrapService(components.storageRepository);
+await bootstrapService.bootstrap();
 
 (async () => {
   while (true) {
@@ -111,7 +109,9 @@ for (const c of lifecycleComponents) {
           // console.log("Search event: ", event);
           if (event.name === "PROVIDER") {
             console.log("Found provider:", event, event.providers);
-            event.providers.forEach((p) => userPeerManager.merge(p));
+            event.providers.forEach((p) =>
+              components.userNodeConnectionController.merge(p),
+            );
           }
         }
       }
@@ -124,10 +124,7 @@ for (const c of lifecycleComponents) {
 })();
 
 libp2p.handle(syncProtocolId, (stream) => {
-  // pipe the stream output back to the stream input
-  stream.addEventListener("message", (evt) => {
-    stream.send(evt.data);
-  });
+  new SyncMessageHandler(stream, components);
 
   // close the incoming writable end when the remote writable end closes
   stream.addEventListener("remoteCloseWrite", () => {

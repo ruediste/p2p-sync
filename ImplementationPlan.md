@@ -96,10 +96,10 @@ Based on functionality available from `js-libp2p`.
 
 - `createNode()` (function): Factory that configures and starts a libp2p node with Helia. Sets up transports (TCP, circuit relay), encryption (Noise), muxing (Yamux), DHT (Amino, LAN), mDNS, identify, autoNAT, ping. Returns `[datastore, blockstore, heliaNode]`.
 - `SyncProtocol` (constant + helpers): Protocol ID (`/p2p-sync/v1/`), protobuf registry, and `encode`/`decode` helper functions for sync messages.
-- `UserNodeEntry` (class (internal)): Tracks a single remote node: multiaddrs, dial state, retry backoff, active stream. Runs an async processing loop: dial → setup message handlers → exchange sync messages. Serializable for persistence.
-- `UserNodeController` (class): Manages the set of `UserNodeEntry` instances for all users this node serves. Forms the per-user dense network. Coordinates connection attempts, reacts to node discovery events, and delegates incoming protocol streams. Implements `Component` for lifecycle management.
+- `UserNodeConnectionEntry` (class (internal)): Tracks a single remote node: multiaddrs, dial state, retry backoff, active stream. Runs an async processing loop: dial → setup message handlers → exchange sync messages. Serializable for persistence.
+- `UserNodeConnectionController` (class): Manages the set of `UserNodeConnectionEntry` instances for all users this node serves. Forms the per-user dense network. Coordinates connection attempts, reacts to node discovery events, and delegates incoming protocol streams. Implements `Component` for lifecycle management.
 - `DHTPublisher` (class): Async loop that periodically calls `aminoDHT.provide(userCid)` to advertise this node as a provider for each user.
-- `DHTDiscovery` (class): Async loop that periodically calls `aminoDHT.findProviders(userCid)` and feeds discovered nodes into `UserNodeController`.
+- `DHTDiscovery` (class): Async loop that periodically calls `aminoDHT.findProviders(userCid)` and feeds discovered nodes into `UserNodeConnectionController`.
 - `SyncMessageHandler` (class): Processes incoming sync protocol messages on a stream. Dispatches `WantUserDatas` → replies with `HaveUserDatas`; processes incoming `HaveUserDatas` → updates local `StorageUserData` set and triggers replication if needed. Handles `WantNodeList` / `HaveNodeList` for node exchange.
 
 ### 3.7 User (`src/user/`)
@@ -116,7 +116,7 @@ Based on functionality available from `js-libp2p`.
 
 - `Component` (interface): Lifecycle interface: `initialize()`, optionally `stop()`. All major controllers implement this.
 - `InstanceComponents` (interface): Components available immediately: `libp2p`, `dataStore`, `blockStore`.
-- `LifecycleComponents` (interface): Components that require initialization and depend on `InstanceComponents`: `userController`, `userNodeController`, `replicationController`, `garbageCollector`, `dhtPublisher`, `dhtDiscovery`, `nodeConfigController`.
+- `LifecycleComponents` (interface): Components that require initialization and depend on `InstanceComponents`: `userController`, `userNodeConnectionController`, `replicationController`, `garbageCollector`, `dhtPublisher`, `dhtDiscovery`, `nodeConfigController`.
 - `Components` (type): Union of `InstanceComponents & LifecycleComponents`. Passed to constructors for dependency injection.
 
 ### 3.10 Entry Point (`src/index.ts`)
@@ -154,6 +154,6 @@ Based on functionality available from `js-libp2p`.
 
 5. **Async processing loops with backoff.** Node connections, DHT operations, and replication checks all run as `async` loops with exponential backoff on failure. This provides resilience without complex state machines.
 
-6. **Existing code is kept and reorganized.** Current files (`createNode.ts`, `UserNodeController.ts`, `UsersController.ts`, `userKeysManagement.ts`, `syncProtocol.ts`, `utils.ts`, `mdns/`) map cleanly to the proposed structure. The main refactoring is splitting the monolithic `UserNodeController.ts` into `UserPeerManager`, `UserPeerEntry`, `UserNodeController`, and `SyncMessageHandler`, and moving files into their respective layer directories.
+6. **Existing code is kept and reorganized.** Current files (`createNode.ts`, `UserNodeConnectionController.ts`, `UsersController.ts`, `userKeysManagement.ts`, `syncProtocol.ts`, `utils.ts`, `mdns/`) map cleanly to the proposed structure. The main refactoring is splitting the monolithic `UserNodeConnectionController.ts` into `UserPeerManager`, `UserPeerEntry`, `UserNodeConnectionController`, and `SyncMessageHandler`, and moving files into their respective layer directories.
 
 7. **NodeTrust is first-class replicated data.** Trust updates are part of the signed `StorageUserData`, travel through the same replication pipeline as files, and rely on vector clocks plus deterministic merge rules so that revocations and quota changes never get lost.
