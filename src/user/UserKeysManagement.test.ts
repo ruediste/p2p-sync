@@ -1,6 +1,6 @@
+import { UserKeysSchema } from "@/gen/user_pb.js";
 import { create, toBinary } from "@bufbuild/protobuf";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { UserKeysSchema } from "./gen/user_pb.js";
 
 // Mock must be hoisted or defined before the module that uses it is imported
 jest.unstable_mockModule("node:fs/promises", () => ({
@@ -12,7 +12,7 @@ jest.unstable_mockModule("node:fs/promises", () => ({
 
 // We need to dynamically import the module we want to test AFTER mocking
 const { loadOrCreateUserKeys: loadOrCreateKeys } =
-  await import("./userKeysManagement.js");
+  await import("@/user/UserKeysManagement.js");
 const fs = (await import("node:fs/promises")).default as any;
 
 describe("userKeysManagement", () => {

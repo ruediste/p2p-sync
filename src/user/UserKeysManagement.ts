@@ -1,8 +1,8 @@
+import { UserKeysSchema } from "@/gen/user_pb";
 import { create, fromBinary, toBinary } from "@bufbuild/protobuf";
 import { generateKeyPair } from "@libp2p/crypto/keys";
 import webcrypto from "@libp2p/crypto/webcrypto";
 import fs from "node:fs/promises";
-import { UserKeysSchema } from "./gen/user_pb";
 
 const USER_KEYS_FILE = "userKeys.proto";
 

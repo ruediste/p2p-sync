@@ -1,16 +1,18 @@
-import { CID } from "multiformats";
-import { sha256 } from "multiformats/hashes/sha2";
 import type {
   Component,
   Components,
   InstanceComponents,
   LifecycleComponents,
-} from "./components";
-import { createNode } from "./createNode";
-import { loadOrCreateUserKeys } from "./userKeysManagement";
-import { UserNodeController, UserNodeManager } from "./UserNodeController";
-import { UserController } from "./UsersController";
-import { sleep } from "./utils";
+} from "@/components";
+import { createNode } from "@/network/createNode";
+import { syncProtocolId } from "@/network/syncProtocol";
+import { UserNodeController } from "@/network/UserNodeController";
+import { UserPeerManager } from "@/network/UserPeerManager";
+import { UserController } from "@/user/UserController";
+import { loadOrCreateUserKeys } from "@/user/UserKeysManagement";
+import { sleep } from "@/util/sleep";
+import { CID } from "multiformats";
+import { sha256 } from "multiformats/hashes/sha2";
 
 const userKeys = await loadOrCreateUserKeys();
 
@@ -26,7 +28,7 @@ services.aminoDHT?.refreshRoutingTable();
 const userPublicKeyHash = await sha256.digest(userKeys.userPublicKey);
 const userCid = CID.createV1(0x72, userPublicKeyHash);
 
-const userNodeManager = new UserNodeManager(dataStore);
+const userPeerManager = new UserPeerManager(dataStore);
 
 const components: Components = {
   libp2p,
@@ -67,12 +69,14 @@ for (const c of lifecycleComponents) {
         "Publishing node as provider for user CID:",
         userCid.toString(),
       );
-      for await (const event of libp2p.services.aminoDHT!.provide(userCid)) {
-        if (event.name == "PEER_RESPONSE") continue;
-        if (event.name == "DIAL_PEER") continue;
-        if (event.name == "QUERY_ERROR") continue;
+      if (libp2p.services.aminoDHT) {
+        for await (const event of libp2p.services.aminoDHT.provide(userCid)) {
+          if (event.name == "PEER_RESPONSE") continue;
+          if (event.name == "DIAL_PEER") continue;
+          if (event.name == "QUERY_ERROR") continue;
 
-        // console.log("Provide event:", event);
+          // console.log("Provide event:", event);
+        }
       }
     } catch (e) {
       console.log("Error while publishing node as provider", e);
@@ -81,16 +85,13 @@ for (const c of lifecycleComponents) {
   }
 })();
 
-if (true)
-  (async () => {
-    while (true) {
-      try {
-        // search kad for other nodes providing this user
-        console.log(
-          "Searching for providers for user CID:",
-          userCid.toString(),
-        );
-        for await (const event of libp2p.services.aminoDHT!.findProviders(
+(async () => {
+  while (true) {
+    try {
+      // search kad for other nodes providing this user
+      console.log("Searching for providers for user CID:", userCid.toString());
+      if (libp2p.services.aminoDHT) {
+        for await (const event of libp2p.services.aminoDHT.findProviders(
           userCid,
         )) {
           if (event.name === "DIAL_PEER") continue;
@@ -98,18 +99,19 @@ if (true)
           // console.log("Search event: ", event);
           if (event.name === "PROVIDER") {
             console.log("Found provider:", event, event.providers);
-            event.providers.forEach((p) => userNodeManager.merge(p));
+            event.providers.forEach((p) => userPeerManager.merge(p));
           }
         }
-      } catch (e) {
-        console.log("Error while searching for providers", e);
       }
-      console.log("Search: sleep");
-      await sleep(30 * 1000);
+    } catch (e) {
+      console.log("Error while searching for providers", e);
     }
-  })();
+    console.log("Search: sleep");
+    await sleep(30 * 1000);
+  }
+})();
 
-libp2p.handle(protocolId, (stream) => {
+libp2p.handle(syncProtocolId, (stream) => {
   // pipe the stream output back to the stream input
   stream.addEventListener("message", (evt) => {
     stream.send(evt.data);
@@ -124,17 +126,3 @@ libp2p.handle(protocolId, (stream) => {
 libp2p.addEventListener("peer:identify", (e) => {
   console.log("peer:identify", e.detail, e.detail.protocols);
 });
-
-// // the local will dial the remote on the protocol stream
-// const stream = await local.dialProtocol(remote.getMultiaddrs(), ECHO_PROTOCOL);
-
-// stream.addEventListener("message", (evt) => {
-//   // evt.data is a `Uint8ArrayList` so we must turn it into a `Uint8Array`
-//   // before decoding it
-//   console.info(
-//     `Echoed back to us: "${new TextDecoder().decode(evt.data.subarray())}"`,
-//   );
-// });
-
-// // the stream input must be bytes
-// stream.send(new TextEncoder().encode("hello world"));

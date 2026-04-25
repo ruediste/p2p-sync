@@ -1,7 +1,7 @@
+import type { LibP2PType } from "@/network/createNode";
+import type { UserNodeController } from "@/network/UserNodeController";
+import type { UserController } from "@/user/UserController";
 import { type Datastore } from "interface-datastore";
-import type { LibP2PType } from "./createNode";
-import type { UserNodeController } from "./UserNodeController";
-import type { UserController } from "./UsersController";
 
 export interface InstanceComponents {
   libp2p: LibP2PType;

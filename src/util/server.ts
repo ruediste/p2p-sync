@@ -34,9 +34,3 @@ export async function startServer() {
     console.log(`Server is running on port ${port}`);
   });
 }
-
-export function sleep(ms: number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}

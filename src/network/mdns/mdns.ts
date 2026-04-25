@@ -1,3 +1,5 @@
+import * as query from "@/network/mdns/query.js";
+import { stringGen } from "@/network/mdns/utils.js";
 import type {
   ComponentLogger,
   Logger,
@@ -17,8 +19,6 @@ import { multiaddr } from "@multiformats/multiaddr";
 import type { RemoteInfo } from "dgram";
 import { TypedEventEmitter } from "main-event";
 import multicastDNS from "multicast-dns";
-import * as query from "./query.js";
-import { stringGen } from "./utils.js";
 
 export interface MulticastDNSInit {
   broadcast?: boolean;

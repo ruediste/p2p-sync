@@ -77,14 +77,20 @@
  * ```
  */
 
-import { MulticastDNS } from './mdns.js'
-import type { MulticastDNSInit, MulticastDNSComponents } from './mdns.js'
-import type { PeerDiscovery } from '@libp2p/interface'
+import type {
+  MulticastDNSComponents,
+  MulticastDNSInit,
+} from "@/network/mdns/mdns.js";
+import { MulticastDNS } from "@/network/mdns/mdns.js";
+import type { PeerDiscovery } from "@libp2p/interface";
 
-export type { MulticastDNSInit, MulticastDNSComponents }
+export type { MulticastDNSComponents, MulticastDNSInit };
 
-export function mdns (init: MulticastDNSInit = {}): (components: MulticastDNSComponents) => PeerDiscovery {
-  return (components: MulticastDNSComponents) => new MulticastDNS(components, init)
+export function mdns(
+  init: MulticastDNSInit,
+): (components: MulticastDNSComponents) => PeerDiscovery {
+  return (components: MulticastDNSComponents) =>
+    new MulticastDNS(components, init);
 }
 
 /* for reference
