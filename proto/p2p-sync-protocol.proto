@@ -1,9 +1,19 @@
 syntax = "proto3";
-package example;
+package p2p_sync;
+
+import "storage.proto";
 
 message WantUsers {
 }
 
 message HaveUsers {
-  repeated bytes user_ids=1;
+  repeated bytes user_ids = 1;
+}
+
+message WantUserDatas {
+  repeated bytes user_ids = 1;
+}
+
+message HaveUserDatas {
+  repeated StorageUserData user_datas = 1;
 }

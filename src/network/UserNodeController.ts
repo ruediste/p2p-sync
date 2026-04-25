@@ -36,7 +36,7 @@ export class UserNodeController implements Component {
       const data = await this.components.dataStore.get(NODES_KEY);
       const json = JSON.parse(new TextDecoder().decode(data));
       this.nodes = json.map((p: any) =>
-        UserNodeEntry.deserialize(p, this.components.libp2p),
+        UserNodeEntry.deserialize(p, this.components.libp2p, this.components),
       );
 
       // Start processing for each node
@@ -80,7 +80,11 @@ export class UserNodeController implements Component {
   merge(info: PeerInfo) {
     let node = this.nodes.find((p) => p.id.equals(info.id));
     if (!node) {
-      node = new UserNodeEntry(info.id, this.components.libp2p);
+      node = new UserNodeEntry(
+        info.id,
+        this.components.libp2p,
+        this.components,
+      );
       this.nodes.push(node);
       void node.process();
     }

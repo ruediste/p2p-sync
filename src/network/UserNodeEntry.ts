@@ -1,7 +1,8 @@
 import type { LibP2PType } from "@/network/createNode";
-import { SyncMessageHandler } from "@/network/SyncMessageHandler";
-import { syncProtocolId, syncRegistry } from "@/network/syncProtocol";
-import { sleep } from "@/util/sleep";
+import { SyncMessageHandler } from "./SyncMessageHandler.js";
+import { syncProtocolId, syncRegistry } from "./syncProtocol.js";
+import { sleep } from "../util/sleep.js";
+import type { Components } from "../components.js";
 import { fromBinary } from "@bufbuild/protobuf";
 import { AnySchema, anyUnpack } from "@bufbuild/protobuf/wkt";
 import { type PeerId, type Stream } from "@libp2p/interface";
@@ -28,6 +29,10 @@ export class UserNodeEntry {
      */
     public id: PeerId,
     private libp2p: LibP2PType,
+    private components: Pick<
+      Components,
+      "userController" | "replicationController"
+    >,
   ) {}
 
   dialFail?: {
@@ -60,12 +65,11 @@ export class UserNodeEntry {
         this.stream = stream;
         this.dialFail = undefined;
 
-        const handler = new SyncMessageHandler(this.stream);
+        const handler = new SyncMessageHandler(this.stream, this.components);
 
         this.stream.addEventListener("message", (e) => {
           const data = isUint8ArrayList(e.data) ? e.data.slice() : e.data;
-          const msg = anyUnpack(fromBinary(AnySchema, data), syncRegistry);
-          handler.handleMessage(msg);
+          void handler.handleMessage(data);
         });
 
         // ask node for users
@@ -81,8 +85,16 @@ export class UserNodeEntry {
     }
   }
 
-  static deserialize(json: any, libp2p: LibP2PType) {
-    const result = new UserNodeEntry(peerIdFromString(json.id), libp2p);
+  static deserialize(
+    json: any,
+    libp2p: LibP2PType,
+    components: Pick<Components, "userController" | "replicationController">,
+  ) {
+    const result = new UserNodeEntry(
+      peerIdFromString(json.id),
+      libp2p,
+      components,
+    );
     json.multiaddrs.forEach((m: any) =>
       result.multiaddrs.push({
         addr: multiaddr(m.addr),

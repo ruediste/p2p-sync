@@ -11,6 +11,9 @@ import { UserPeerManager } from "@/network/UserPeerManager";
 import { UserController } from "@/user/UserController";
 import { loadOrCreateUserKeys } from "@/user/UserKeysManagement";
 import { loadOrCreateNodeKeys } from "@/node/NodeKeysManagement";
+import { ReplicationController } from "@/storage/ReplicationController";
+import { StorageRepository } from "@/storage/StorageRepository";
+import { BootstrapService } from "@/node/BootstrapService";
 import { sleep } from "@/util/sleep";
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
@@ -18,7 +21,7 @@ import { sha256 } from "multiformats/hashes/sha2";
 const nodeKeys = await loadOrCreateNodeKeys();
 const userKeys = await loadOrCreateUserKeys();
 
-const [dataStore, , node] = await createNode();
+const [dataStore, blockStore, node] = await createNode();
 const libp2p = node.libp2p;
 const services = libp2p.services;
 
@@ -35,8 +38,13 @@ const userPeerManager = new UserPeerManager(dataStore);
 const components: Components = {
   libp2p,
   dataStore,
+  blockStore,
   nodePublicKey: nodeKeys.publicKey,
 } satisfies InstanceComponents as any;
+
+const storageRepository = new StorageRepository(components);
+const bootstrapService = new BootstrapService(storageRepository);
+await bootstrapService.bootstrap();
 
 const lifecycleConstructors: {
   [key in keyof LifecycleComponents]: (
@@ -45,6 +53,7 @@ const lifecycleConstructors: {
 } = {
   userController: (c) => new UserController(c),
   userNodeController: (c) => new UserNodeController(c),
+  replicationController: (c) => new ReplicationController(c),
 };
 
 const lifecycleComponents: Component[] = [];

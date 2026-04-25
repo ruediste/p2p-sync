@@ -1,0 +1,55 @@
+syntax = "proto3";
+package p2p_sync;
+
+import "clock.proto";
+
+message StorageBlock {
+  bytes cid = 1;
+  bytes data = 2; // Encrypted data
+}
+
+message DataShard {
+  bytes shard_id = 1;
+  repeated bytes block_cids = 2;
+}
+
+message NodeTrust {
+  bytes node_id = 1;
+  float reliability = 2; // reliability factor (0..1)
+  VectorClock clock = 3;
+}
+
+message NodeTrustSet {
+  repeated NodeTrust entries = 1;
+}
+
+message NodeUserConfiguration {
+  bytes user_id = 1;
+  uint64 storage_quota = 2;
+  bytes storage_key = 3;
+  optional bytes link_key = 4;
+  optional bytes data_key = 5;
+  optional bytes user_private_key = 6;
+}
+
+message NodeConfiguration {
+  bytes node_id = 1;
+  repeated NodeUserConfiguration user_configs = 2;
+  bytes signature = 3; // Signed by user management key
+}
+
+message StorageUserData {
+  bytes user_id = 1;
+  VectorClock clock = 2;
+  repeated bytes shard_ids = 3;
+  NodeTrustSet trust_set = 4;
+  bytes encrypted_payload = 5; // Linking to data layer
+  bytes signature = 6; // Signed by user public key
+}
+
+message StorageClaim {
+  bytes node_id = 1;
+  bytes user_id = 2;
+  uint32 version = 3;
+  bytes shard_bitmap = 4;
+}

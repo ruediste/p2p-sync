@@ -1,5 +1,5 @@
 syntax = "proto3";
-package example;
+package p2p_sync;
 
 message UserKeys {
   bytes user_public_key=1;
