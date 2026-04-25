@@ -178,8 +178,7 @@ Based on functionality available from `js-libp2p`.
 
 The following order minimizes dependencies and allows incremental testing:
 
-1. **`clock/`** — Pure logic, no dependencies. Foundation for everything above.
-2. **`crypto/`** — Pure logic + Web Crypto API. Required by all layers.
+2. **`crypto/`** — Pure logic. Required by all layers.
 3. **`proto/` expansion** — Define `storage.proto`, `link.proto`, expand sync protocol messages.
 4. **`storage/`** — `StorageBlock`, `DataShard`, `StorageUserData`, `BlockStore`. Can be tested with in-memory stores.
 5. **`network/` refactor** — Split existing code into the proposed files. Get node management and sync protocol working.

@@ -1,0 +1,19 @@
+syntax = "proto3";
+package p2p_sync;
+
+message VectorClock {
+  map<uint32, uint32> entries = 1;
+}
+
+message NodeMapEntry {
+  uint32 node_nr = 1;
+  bytes node_id = 2;
+  VectorClock clock = 3;
+  bool leaving = 4;
+}
+
+message NodeMap {
+  repeated NodeMapEntry entries = 1;
+  uint32 next_node_nr = 2;
+  VectorClock clock = 3;
+}
