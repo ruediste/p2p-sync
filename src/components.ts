@@ -6,6 +6,7 @@ import { type Datastore } from "interface-datastore";
 export interface InstanceComponents {
   libp2p: LibP2PType;
   dataStore: Datastore;
+  nodePublicKey: Uint8Array;
 }
 
 export interface LifecycleComponents {

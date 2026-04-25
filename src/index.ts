@@ -10,13 +10,15 @@ import { UserNodeController } from "@/network/UserNodeController";
 import { UserPeerManager } from "@/network/UserPeerManager";
 import { UserController } from "@/user/UserController";
 import { loadOrCreateUserKeys } from "@/user/UserKeysManagement";
+import { loadOrCreateNodeKeys } from "@/node/NodeKeysManagement";
 import { sleep } from "@/util/sleep";
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 
+const nodeKeys = await loadOrCreateNodeKeys();
 const userKeys = await loadOrCreateUserKeys();
 
-const [dataStore, blockstore, node] = await createNode();
+const [dataStore, , node] = await createNode();
 const libp2p = node.libp2p;
 const services = libp2p.services;
 
@@ -33,6 +35,7 @@ const userPeerManager = new UserPeerManager(dataStore);
 const components: Components = {
   libp2p,
   dataStore,
+  nodePublicKey: nodeKeys.publicKey,
 } satisfies InstanceComponents as any;
 
 const lifecycleConstructors: {
