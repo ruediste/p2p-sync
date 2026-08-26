@@ -1,5 +1,33 @@
 # Implementation Plan: Java port of jvm-libp2p core (Host / Transport / Noise / Yamux)
 
+## Progress
+
+| Milestone | Status | Notes |
+|---|---|---|
+| M0 — Project setup | ✅ Done | See log below. |
+| M1 — Foundations | ⬜ Not started | |
+| M2 — Keys and PeerId | ⬜ Not started | |
+| M3 — Multistream-select | ⬜ Not started | |
+| M4 — Netty channel plumbing | ⬜ Not started | |
+| M5 — TCP transport / upgrade pipeline | ⬜ Not started | |
+| M6 — Noise XX security transport | ⬜ Not started | |
+| M7 — Yamux stream multiplexer | ⬜ Not started | |
+| M8 — Network, ConnectionUpgrader, Host | ⬜ Not started | |
+| M9 — End-to-end integration test / demo | ⬜ Not started | |
+
+### Progress log
+
+- **M0 (done)**: Added Netty 4.1.118.Final (`netty-buffer`/`-common`/`-transport`/`-handler`/`-codec`)
+  and `protobuf-java` 3.25.5 to `pom.xml`; registered `kr.motd.maven:os-maven-plugin` as a build
+  extension and `org.xolstice.maven.plugins:protobuf-maven-plugin` (bound to `generate-sources`/
+  `compile`) using `protocArtifact` resolved via `${os.detected.classifier}`. Bumped
+  `maven-compiler-plugin` to 3.13.0 (3.8.0 predates Java 21 support). Copied `crypto.proto` and
+  `spipe.proto` from `upstream/jvm-libp2p/libp2p/src/main/proto/` into `src/main/proto/` verbatim
+  (with a provenance header comment added). Verified `mvn generate-sources` emits
+  `target/generated-sources/protobuf/java/{crypto/pb/Crypto.java,spipe/pb/Spipe.java}`, and added
+  `src/test/java/.../libp2p/ProtobufToolchainTest.java` exercising round-trips of
+  `Crypto.PublicKey` and `Spipe.NoiseHandshakePayload` — `mvn test` passes (3/3 tests green).
+
 ## Goal
 
 Port the minimal subset of `jvm-libp2p` (`upstream/jvm-libp2p`) needed to:
