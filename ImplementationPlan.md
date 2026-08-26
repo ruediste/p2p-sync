@@ -5,7 +5,7 @@
 | Milestone | Status | Notes |
 |---|---|---|
 | M0 — Project setup | ✅ Done | See log below. |
-| M1 — Foundations | ⬜ Not started | |
+| M1 — Foundations | ✅ Done | See log below. |
 | M2 — Keys and PeerId | ⬜ Not started | |
 | M3 — Multistream-select | ⬜ Not started | |
 | M4 — Netty channel plumbing | ⬜ Not started | |
@@ -27,6 +27,29 @@
   `target/generated-sources/protobuf/java/{crypto/pb/Crypto.java,spipe/pb/Spipe.java}`, and added
   `src/test/java/.../libp2p/ProtobufToolchainTest.java` exercising round-trips of
   `Crypto.PublicKey` and `Spipe.NoiseHandshakePayload` — `mvn test` passes (3/3 tests green).
+- **Plan deviation (applies from M1 onward)**: no bespoke `Libp2pException` hierarchy. Error
+  conditions throw plain JDK exceptions (`IllegalArgumentException`/`RuntimeException`) instead
+  of a custom taxonomy — see the note under M1 below for rationale.
+- **M1 (done)**: Implemented under `com.github.ruediste.p2psync.libp2p.core[.multiaddr]`:
+  `Varint` (uvarint read/write on Netty `ByteBuf`, mirrors `ByteBufExt.kt`), `Protocol` enum
+  (`IP4`/`TCP`/`IP6`/`P2P` only; parsers/stringifiers implemented as static-method references
+  on the enum itself rather than Kotlin-style top-level lambda constants, since Java enum
+  constants can't forward-reference sibling static fields — method references sidestep that
+  ordering restriction), `MultiaddrComponent`, `Multiaddr` (string/byte (de)serialization,
+  `getPeerId`/`withP2P`/`withComponent`/`merged`/`concatenated`; the `p2p-circuit`-aware split
+  logic and path-style component handling from upstream were dropped as out of scope),
+  `Multihash` (trimmed to `IDENTITY`/`SHA2_256` only, simple `sum`/`decode` byte-array API
+  instead of upstream's pluggable digest registry), `Base58` (ported near-verbatim from
+  `etc/encode/Base58.kt`), and a first cut of `PeerId` (byte storage,
+  `toBase58`/`fromBase58`/`toHex`/`fromHex`/`random`, `equals`/`hashCode`; `fromPubKey` deferred
+  to M2). `PeerId` and `Base58` were pulled forward from M2 into M1 because `Protocol.P2P`'s
+  validator and `Multiaddr.getPeerId()`/`withP2P()` already depend on them (same layering as
+  upstream, where `core/multiformats/Protocol.kt` imports `io.libp2p.core.PeerId`). IPv6
+  string formatting uses plain `java.net.Inet6Address#getHostAddress()` (no leading-zero
+  compression like Guava's `InetAddresses.toAddrString`), a known cosmetic gap versus upstream
+  that doesn't affect the `ip4`/`tcp`/`p2p` paths this project actually exercises. Added
+  `VarintTest`, `MultiaddrTest`, `MultihashTest`, `PeerIdTest` — `mvn test` passes (22/22 tests
+  green, including the M0 tests).
 
 ## Goal
 
@@ -64,7 +87,7 @@ application code in `com.github.ruediste.p2psync`:
 ```
 com.github.ruediste.p2psync.libp2p
 ├── core                    Host, PeerId, PeerInfo, Connection, Stream, P2PChannel,
-│                            ConnectionHandler, Network, AddressBook, Libp2pException + subtypes
+│                            ConnectionHandler, Network, AddressBook, Base58
 ├── core.multiaddr           Multiaddr, Protocol, Multihash, MultiaddrComponent, Varint
 ├── core.multistream         ProtocolBinding, ProtocolDescriptor, ProtocolMatcher, Multistream
 ├── multistream              MultistreamImpl, Negotiator, ProtocolSelect (wire protocol impl)
@@ -191,16 +214,29 @@ Add the Netty and protobuf-java dependencies, the `os-maven-plugin` extension an
 `Crypto.PublicKey.newBuilder().setType(Crypto.KeyType.Ed25519)...build()` to confirm the
 generated code is on the compile classpath. No hand-written libp2p code yet.
 
-### M1 — Foundations: exceptions, varint, Multiaddr
+### M1 — Foundations: varint, Multiaddr
 
-Files: `core/Libp2pException.java` (+ subtypes: `ConnectionClosedException`,
+**Deviation from the original plan**: no bespoke `Libp2pException` hierarchy is introduced.
+Error conditions throughout this port simply throw plain JDK exceptions
+(`IllegalArgumentException`/`IllegalStateException`/`RuntimeException`) with a descriptive
+message — a dedicated exception taxonomy (`ConnectionClosedException`,
 `NoSuchLocalProtocolException`, `NoSuchRemoteProtocolException`, `ProtocolViolationException`,
-`StreamNotActiveException`, `InternalErrorException`), `core/multiaddr/Varint.java`,
-`core/multiaddr/Protocol.java` (enum: `IP4`, `IP6`, `TCP`, `P2P` only — skip DNS variants),
-`core/multiaddr/Multihash.java` (Identity + SHA2-256 digest only), `core/multiaddr/Multiaddr.java`.
+`StreamNotActiveException`, `InternalErrorException`, ...) adds ceremony without enough payoff
+for this project's scope, since nothing here needs to catch/handle those subtypes differently.
+Later milestones referencing e.g. `NoSuchRemoteProtocolException` should read this as "throw a
+`RuntimeException` describing the same failure" instead.
 
-Reference: `core/multiformats/{Protocol,Multiaddr,Multihash}.kt`, `etc/types/ByteBufExt.kt`
-(uvarint read/write).
+Files: `core/multiaddr/Varint.java`,
+`core/multiaddr/Protocol.java` (enum: `IP4`, `IP6`, `TCP`, `P2P` only — skip DNS variants),
+`core/multiaddr/Multihash.java` (Identity + SHA2-256 digest only), `core/multiaddr/Multiaddr.java`,
+`core/multiaddr/MultiaddrComponent.java`, `core/Base58.java`, `core/PeerId.java` (minimal version:
+byte storage, `toBase58`/`fromBase58`/`fromHex`/`toHex`/`random`, `equals`/`hashCode`; `fromPubKey`
+is added in M2 once `crypto.PubKey`/`Marshaling` exist — needed already in M1 because
+`Protocol.P2P`'s validator and `Multiaddr.getPeerId()` both depend on `PeerId`, mirroring
+upstream's own layering).
+
+Reference: `core/multiformats/{Protocol,Multiaddr,MultiaddrComponent,Multihash}.kt`,
+`etc/types/ByteBufExt.kt` (uvarint read/write), `core/PeerId.kt`, `etc/encode/Base58.kt`.
 
 Tests: uvarint round-trip; `Multiaddr` parse/serialize for `/ip4/127.0.0.1/tcp/4001`,
 `/ip4/127.0.0.1/tcp/4001/p2p/<peerId>`; `getPeerId()` extraction; invalid-address rejection.
@@ -257,7 +293,8 @@ Implementation notes:
   generically now so milestones 5–8 just reuse it.
 
 Tests: two in-memory `EmbeddedChannel`s wired back-to-back (or a loopback pair) negotiating a
-fake protocol id; negotiation failure path (`NoSuchRemoteProtocolException`).
+fake protocol id; negotiation failure path (plain `RuntimeException`, no remote protocol match
+— see M1 deviation note on exceptions).
 
 ### M4 — Netty channel plumbing (Connection/Stream as P2PChannel)
 
