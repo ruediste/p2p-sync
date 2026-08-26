@@ -1,14 +1,13 @@
 package com.github.ruediste.p2psync.libp2p.core.multiaddr;
 
-import io.netty.buffer.ByteBuf;
-
 /**
  * Unsigned varint read/write helpers, as defined in
  * https://github.com/multiformats/unsigned-varint.
  *
  * <p>
  * Ported from {@code io.libp2p.etc.types.ByteBufExt} (jvm-libp2p) {@code writeUvarint}/
- * {@code readUvarint} extension functions.
+ * {@code readUvarint} extension functions, operating on the project's own minimal {@link ByteBuf}
+ * instead of Netty's.
  */
 public final class Varint {
 

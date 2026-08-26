@@ -5,9 +5,6 @@ import com.github.ruediste.p2psync.libp2p.core.PeerId;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
 /**
  * Minimal implementation of the multihash spec (https://github.com/multiformats/multihash),
  * trimmed to the two digest functions actually needed by this port: {@code identity} (used
@@ -49,7 +46,7 @@ public final class Multihash {
             default:
                 throw new IllegalArgumentException("Unsupported digest: " + digest);
         }
-        ByteBuf buf = Unpooled.buffer(value.length + 10);
+        ByteBuf buf = ByteBuf.buffer(value.length + 10);
         Varint.writeUvarint(buf, code);
         Varint.writeUvarint(buf, value.length);
         buf.writeBytes(value);
@@ -62,7 +59,7 @@ public final class Multihash {
      * Parses a multihash-encoded byte array back into its digest kind and raw value.
      */
     public static Decoded decode(byte[] bytes) {
-        ByteBuf buf = Unpooled.wrappedBuffer(bytes);
+        ByteBuf buf = ByteBuf.wrappedBuffer(bytes);
         long code = Varint.readUvarint(buf);
         int length = (int) Varint.readUvarint(buf);
         if (length < 0 || length > buf.readableBytes()) {

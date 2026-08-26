@@ -1,9 +1,6 @@
 package com.github.ruediste.p2psync.libp2p.core.multiaddr;
 
 import com.github.ruediste.p2psync.libp2p.core.PeerId;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -158,7 +155,7 @@ public final class Multiaddr {
     }
 
     public byte[] serialize() {
-        ByteBuf buf = serializeToBuf(Unpooled.buffer());
+        ByteBuf buf = serializeToBuf(ByteBuf.buffer());
         byte[] out = new byte[buf.readableBytes()];
         buf.readBytes(out);
         return out;
@@ -194,7 +191,7 @@ public final class Multiaddr {
     }
 
     public static Multiaddr deserialize(byte[] bytes) {
-        return new Multiaddr(parseBytes(Unpooled.wrappedBuffer(bytes)));
+        return new Multiaddr(parseBytes(ByteBuf.wrappedBuffer(bytes)));
     }
 
     public static Multiaddr deserializeFromBuf(ByteBuf buf) {

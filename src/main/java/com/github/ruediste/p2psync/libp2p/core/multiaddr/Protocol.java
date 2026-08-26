@@ -2,8 +2,6 @@ package com.github.ruediste.p2psync.libp2p.core.multiaddr;
 
 import com.github.ruediste.p2psync.libp2p.core.Base58;
 import com.github.ruediste.p2psync.libp2p.core.PeerId;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -62,7 +60,7 @@ public enum Protocol {
         this.parser = parser;
         this.stringifier = stringifier;
         this.validator = validator;
-        ByteBuf buf = Unpooled.buffer(4);
+        ByteBuf buf = ByteBuf.buffer(4);
         Varint.writeUvarint(buf, code);
         this.encoded = toByteArray(buf);
     }
@@ -218,13 +216,13 @@ public enum Protocol {
             throw new IllegalArgumentException(
                     "Failed to parse " + addr + " value (expected 0 <= x < 65536)");
         }
-        ByteBuf buf = Unpooled.buffer(2);
+        ByteBuf buf = ByteBuf.buffer(2);
         buf.writeShort(x);
         return toByteArray(buf);
     }
 
     private static String stringifyUint16(Protocol protocol, byte[] bytes) {
-        return String.valueOf(Unpooled.wrappedBuffer(bytes).readUnsignedShort());
+        return String.valueOf(ByteBuf.wrappedBuffer(bytes).readUnsignedShort());
     }
 
     private static byte[] parseBase58(Protocol protocol, String addr) {

@@ -1,19 +1,23 @@
 # Implementation Plan: Java port of jvm-libp2p core (Host / Transport / Noise / Yamux)
 
+See `ARCHITECTURE.md` for the transport/stream/threading architecture this plan implements
+(custom blocking-I/O TCP server, virtual threads, `P2PInputStream`/`P2POutputStream`) — the
+milestones below assume that document as background reading.
+
 ## Progress
 
-| Milestone | Status | Notes |
-|---|---|---|
-| M0 — Project setup | ✅ Done | See log below. |
-| M1 — Foundations | ✅ Done | See log below. |
-| M2 — Keys and PeerId | ✅ Done | See log below. |
-| M3 — Multistream-select | ⬜ Not started | |
-| M4 — Netty channel plumbing | ⬜ Not started | |
-| M5 — TCP transport / upgrade pipeline | ⬜ Not started | |
-| M6 — Noise XX security transport | ⬜ Not started | |
-| M7 — Yamux stream multiplexer | ⬜ Not started | |
-| M8 — Network, ConnectionUpgrader, Host | ⬜ Not started | |
-| M9 — End-to-end integration test / demo | ⬜ Not started | |
+| Milestone                               | Status         | Notes          |
+| --------------------------------------- | -------------- | -------------- |
+| M0 — Project setup                      | ✅ Done        | See log below. |
+| M1 — Foundations                        | ✅ Done        | See log below. |
+| M2 — Keys and PeerId                    | ✅ Done        | See log below. |
+| M3 — Multistream-select                 | ⬜ Not started |                |
+| M4 — Core stream abstractions (P2P{In,Out}putStream, Connection/Stream) | ⬜ Not started | |
+| M5 — TCP transport / upgrade pipeline   | ⬜ Not started |                |
+| M6 — Noise XX security transport        | ⬜ Not started |                |
+| M7 — Yamux stream multiplexer           | ⬜ Not started |                |
+| M8 — Network, ConnectionUpgrader, Host  | ⬜ Not started |                |
+| M9 — End-to-end integration test / demo | ⬜ Not started |                |
 
 ### Progress log
 
@@ -27,11 +31,17 @@
   `target/generated-sources/protobuf/java/{crypto/pb/Crypto.java,spipe/pb/Spipe.java}`, and added
   `src/test/java/.../libp2p/ProtobufToolchainTest.java` exercising round-trips of
   `Crypto.PublicKey` and `Spipe.NoiseHandshakePayload` — `mvn test` passes (3/3 tests green).
+  **(Superseded)**: the Netty dependencies added here were removed again once the
+  transport/stream architecture was changed to blocking I/O on virtual threads — see the "Plan
+  deviation (retroactively applies to M0 onward — transport/stream architecture)" entry below.
+  Only `protobuf-java` (still needed for `crypto.proto`/`spipe.proto`) remains.
 - **Plan deviation (applies from M1 onward)**: no bespoke `Libp2pException` hierarchy. Error
   conditions throw plain JDK exceptions (`IllegalArgumentException`/`RuntimeException`) instead
   of a custom taxonomy — see the note under M1 below for rationale.
 - **M1 (done)**: Implemented under `com.github.ruediste.p2psync.libp2p.core[.multiaddr]`:
-  `Varint` (uvarint read/write on Netty `ByteBuf`, mirrors `ByteBufExt.kt`), `Protocol` enum
+  `Varint` (uvarint read/write on the project's own minimal `ByteBuf`, mirrors `ByteBufExt.kt`;
+  originally implemented against Netty's `ByteBuf` — see the transport/stream architecture
+  deviation note below), `Protocol` enum
   (`IP4`/`TCP`/`IP6`/`P2P` only; parsers/stringifiers implemented as static-method references
   on the enum itself rather than Kotlin-style top-level lambda constants, since Java enum
   constants can't forward-reference sibling static fields — method references sidestep that
@@ -73,7 +83,7 @@
   `Ed25519KeysTest`) the `SunEC` provider consumes exactly 32 bytes from the supplied
   `SecureRandom` as the private scalar/seed with no extra hashing, so this reliably regenerates
   the identical key pair including the public point — see the Javadoc on `Ed25519PrivateKey`
-  for the full reasoning. Encoding/decoding the raw 32-byte Ed25519 *public* key point itself
+  for the full reasoning. Encoding/decoding the raw 32-byte Ed25519 _public_ key point itself
   uses fully standard JEP 339 API (`EdECPoint`/`EdECPublicKeySpec`/`KeyFactory`), no trick
   needed there. Added `Ed25519KeysTest`, `MarshalingTest`, and extended `PeerIdTest` with
   `fromPubKey` tests, including a hand-computed golden fixture (fixed raw Ed25519 pubkey →
@@ -82,6 +92,25 @@
   marshal-then-multihash pipeline (no upstream Kotlin test happens to cover an Ed25519
   `PeerIdTest` fixture — only RSA/Secp256k1 — so this fixture was derived by hand instead of
   copied) — `mvn test` passes (38/38 tests green).
+- **Plan deviation (retroactively applies to M0 onward — transport/stream architecture)**:
+  the original plan built the whole transport/security/muxer stack on Netty (channels,
+  pipelines, an `EventLoopGroup`). This has been dropped in favor of a hand-rolled TCP server
+  and plain **blocking I/O on Java 21 virtual threads** (JEP 444) throughout — see
+  `ARCHITECTURE.md` for the full rationale and thread model. Concretely:
+  - `io.netty:netty-buffer`/`-common`/`-transport`/`-handler`/`-codec` are no longer
+    dependencies (removed from `pom.xml`; only `protobuf-java` remains as a runtime
+    dependency, see the updated "Dependencies" table below).
+  - The M1 `Varint`/`Multiaddr`/`MultiaddrComponent`/`Multihash`/`Protocol` code, which used
+    Netty's `ByteBuf`/`Unpooled` purely as a growable-byte-buffer utility (no networking
+    involved), now uses a small project-owned `core/multiaddr/ByteBuf.java` implementing just
+    the handful of methods those classes need (sequential big-endian writes with
+    auto-growth, a rewindable reader index, a couple of read-only view helpers) — same
+    behavior, zero external dependency. `VarintTest`/`MultiaddrTest`/`MultihashTest` updated
+    accordingly; `mvn test` still passes (38/38 tests green) after the removal.
+  - Every later milestone (M3 onward, none of which had been started yet) is rewritten below
+    to use the project's own minimal `P2PInputStream`/`P2POutputStream` abstraction instead of
+    Netty `Channel`/`ByteBuf`, and a directly-implemented `java.net.ServerSocket`-based TCP
+    server instead of Netty's `ServerBootstrap`/`NioServerSocketChannel`.
 
 ## Goal
 
@@ -92,7 +121,7 @@ Port the minimal subset of `jvm-libp2p` (`upstream/jvm-libp2p`) needed to:
 3. Dial from one `Host` to another over TCP.
 4. Negotiate and run a Noise (`XX` pattern) handshake to encrypt the connection.
 5. Negotiate and run a Yamux session to multiplex streams over the encrypted connection.
-6. Invoke a `ConnectionHandler` on both sides once the connection is fully upgraded, and support opening at least one application stream through the muxer as an end-to-end smoke test.
+6. Invoke a `ConnectionHandler` on both sides once the connection is fully upgraded, and support opening at least one application stream through the muxer as an end-to-end smoke test. Implement ping for this purpose.
 
 **Explicitly out of scope for this plan** (do not implement yet):
 
@@ -111,6 +140,22 @@ not copied/translated mechanically — do not check its git history). Where upst
 fixtures exist (e.g. `PeerIdTest.kt`, `NoiseHandshakeTest.kt`, `YamuxHandlerTest.kt`), reuse
 their expected byte sequences/vectors as cross-check data for the Java tests where practical.
 
+**Deliberate architectural deviation from upstream**: upstream `jvm-libp2p` is built on Netty
+(non-blocking I/O, channel pipelines, an event-loop group). This project does **not** use
+Netty anywhere. Instead:
+
+- Transport, security (Noise), and multiplexing (Yamux) are all implemented directly on top of
+  plain blocking `java.net.Socket` I/O.
+- Every connection and every multiplexed stream runs on its own **virtual thread**
+  (`java.lang.Thread`, JEP 444, Java 21) — blocking a virtual thread on a socket read/write is
+  cheap, so there is no need for non-blocking I/O, callbacks, futures/promises, or a
+  channel-pipeline abstraction to get concurrency across many connections/streams.
+- The only "framework" abstraction introduced is a minimal pair of classes,
+  `core.P2PInputStream`/`core.P2POutputStream`, that every layer (raw TCP socket, Noise-framed
+  connection, individual Yamux stream) implements/wraps. See `ARCHITECTURE.md` for the full
+  rationale, the exact shape of these two classes, and the thread model in detail — the
+  milestones below assume that document as background reading.
+
 ## Package layout
 
 All new code lives under a new base package, separate from the existing (currently empty)
@@ -118,32 +163,39 @@ application code in `com.github.ruediste.p2psync`:
 
 ```
 com.github.ruediste.p2psync.libp2p
-├── core                    Host, PeerId, PeerInfo, Connection, Stream, P2PChannel,
-│                            ConnectionHandler, Network, AddressBook, Base58
-├── core.multiaddr           Multiaddr, Protocol, Multihash, MultiaddrComponent, Varint
+├── core                    Host, PeerId, PeerInfo, Connection, Stream, P2PInputStream,
+│                            P2POutputStream, ConnectionHandler, StreamHandler, Network,
+│                            AddressBook, Base58
+├── core.multiaddr           Multiaddr, Protocol, Multihash, MultiaddrComponent, Varint, ByteBuf
 ├── core.multistream         ProtocolBinding, ProtocolDescriptor, ProtocolMatcher, Multistream
-├── multistream              MultistreamImpl, Negotiator, ProtocolSelect (wire protocol impl)
+├── multistream              MultistreamImpl, Negotiator, ProtocolSelect (wire protocol impl,
+│                            implemented directly against P2PInputStream/P2POutputStream —
+│                            no pipeline/frame-decoder framework involved)
 ├── crypto                   Key, PrivKey, PubKey, KeyType, Marshaling (thin wrapper around the
 │                            generated `crypto.pb.Crypto` protobuf classes)
 ├── crypto.keys              Ed25519PrivateKey, Ed25519PublicKey
 ├── transport                Transport (interface)
-├── transport.netty          NettyTransport base, ConnectionBuilder, ConnectionOverNetty,
-│                            StreamOverNetty, P2PChannelOverNetty, ConnectionUpgrader
-├── transport.tcp            TcpTransport
+├── transport.tcp            TcpTransport (dial), TcpServer (accept loop + per-connection
+│                            virtual thread), TcpConnection, SocketP2PInputStream/
+│                            SocketP2POutputStream (thin adapters over `Socket#getInputStream`/
+│                            `#getOutputStream`), ConnectionBuilder, ConnectionUpgrader
 ├── security                 SecureChannel
-├── security.noise           NoiseXXSecureChannel, NoiseXXHandshake, NoiseXXCodec,
-│                            UShortLengthCodec (payload uses the generated `spipe.pb.Spipe`
-│                            protobuf classes directly, no hand-written wrapper needed)
-├── mux                      StreamMuxer, AbstractChildChannel, MuxChannel, MuxId
-├── mux.yamux                YamuxStreamMuxer, YamuxHandler, YamuxFrameCodec, YamuxFrame,
-│                            YamuxFlag, YamuxType, YamuxId, YamuxStreamIdGenerator
+├── security.noise           NoiseXXSecureChannel, NoiseXXHandshake, NoiseXXFramedInputStream,
+│                            NoiseXXFramedOutputStream (payload uses the generated
+│                            `spipe.pb.Spipe` protobuf classes directly, no hand-written
+│                            wrapper needed)
+├── mux                      StreamMuxer, MuxedConnection, MuxedStream, MuxId
+├── mux.yamux                YamuxStreamMuxer, YamuxConnection, YamuxStream, YamuxFrameIO,
+│                            YamuxFrame, YamuxFlag, YamuxType, YamuxId, YamuxStreamIdGenerator
 ├── network                  NetworkImpl
 └── host                     HostImpl, HostBuilder, MemoryAddressBook
 ```
 
 This mirrors upstream's package split (`core`, `crypto`, `transport`, `multistream`,
 `security.noise`, `mux.yamux`, `network`, `host`) closely enough that future diffs against
-upstream (e.g. to port more protocols later) stay easy to reason about.
+upstream (e.g. to port more protocols later) stay easy to reason about, even though the
+`transport.netty`/`P2PChannelOverNetty`/`AbstractChildChannel` family of Netty-shaped classes
+upstream uses has no equivalent here (replaced by the blocking-stream classes above).
 
 Protobuf-generated classes (see "Protobuf toolchain" below) live in their own `crypto.pb`/
 `spipe.pb` packages, matching the `package` statements in the `.proto` files, and are treated
@@ -151,14 +203,19 @@ as generated code (not hand-edited, not manually maintained package-layout-wise)
 
 ## Dependencies to add to `pom.xml`
 
-| Dependency | Purpose | Notes |
-|---|---|---|
-| `io.netty:netty-buffer`, `netty-common`, `netty-transport`, `netty-handler`, `netty-codec` | Pipeline/IO framework, TCP transport, and length-prefix framing (`ProtobufVarint32FrameDecoder`/`Prepender` classes live in `netty-codec` and work standalone, independent of the protobuf toolchain below). | Use a recent 4.1.x LTS (or 4.2.x) release; pin via a `<netty.version>` property. |
-| `com.google.protobuf:protobuf-java` | Runtime for the generated `crypto.pb`/`spipe.pb` message classes (see "Protobuf toolchain" below). | Pin via a `<protobuf.version>` property; use a version whose matching `protoc` artifact is available for the build machine's OS/arch (e.g. `3.25.5`, matching upstream, or a newer 3.25.x/4.x release — all support the `proto2` syntax used by these files). |
-| `org.junit.jupiter:junit-jupiter` **or** keep existing `junit:junit:4.11` | Tests | Project currently has JUnit 4; keep JUnit 4 for consistency unless a strong reason to move to JUnit 5 arises during implementation. |
+| Dependency                                                                | Purpose                                                                                             | Notes                                                                                                                                                                                                                                                         |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `com.google.protobuf:protobuf-java`                                        | Runtime for the generated `crypto.pb`/`spipe.pb` message classes (see "Protobuf toolchain" below).    | Pin via a `<protobuf.version>` property; use a version whose matching `protoc` artifact is available for the build machine's OS/arch (e.g. `3.25.5`, matching upstream, or a newer 3.25.x/4.x release — all support the `proto2` syntax used by these files). |
+| `org.junit.jupiter:junit-jupiter` **or** keep existing `junit:junit:4.11` | Tests                                                                                                  | Project currently has JUnit 4; keep JUnit 4 for consistency unless a strong reason to move to JUnit 5 arises during implementation.                                                                                                                           |
 
-Deliberately **not** added for this milestone:
+Deliberately **not** added:
 
+- `io.netty:*` (`netty-buffer`/`-common`/`-transport`/`-handler`/`-codec`) — superseded plan; see
+  the architectural deviation note above and `ARCHITECTURE.md`. The transport/security/muxer
+  stack is hand-rolled directly on top of blocking `java.net.Socket` I/O and Java 21 virtual
+  threads (JEP 444), which avoids both the runtime dependency and the conceptual overhead of
+  Netty's channel/pipeline/event-loop model for a project that has no need for non-blocking I/O
+  at the connection counts this system operates at.
 - `tech.pegasys:noise-java` — see "Noise" section below: hand-roll `Noise_XX_25519_ChaChaPoly_SHA256`
   using only JDK 21 built-in crypto (`X25519`, `ChaCha20-Poly1305`, `HmacSHA256`), avoiding an extra
   runtime dependency for a single fixed handshake pattern.
@@ -167,6 +224,7 @@ Deliberately **not** added for this milestone:
   Add BouncyCastle later if/when Secp256k1/RSA/ECDSA key types are ported.
 - `com.github.multiformats:java-multibase`, Guava — not needed for the minimal `ip4`/`ip6`/`tcp`/`p2p`
   multiaddr subset.
+
 
 ## Protobuf toolchain and `.proto` files
 
@@ -238,13 +296,14 @@ milestone 5 onward requires loopback TCP integration tests.
 
 ### M0 — Project setup: dependencies and protobuf toolchain
 
-Add the Netty and protobuf-java dependencies, the `os-maven-plugin` extension and
+Add the `protobuf-java` dependency, the `os-maven-plugin` extension and
 `protobuf-maven-plugin` build plugin described above to `pom.xml`, and copy `crypto.proto` /
 `spipe.proto` into `src/main/proto/`. Acceptance: `mvn generate-sources` produces
 `crypto.pb.Crypto` and `spipe.pb.Spipe` under `target/generated-sources/protobuf/java`, and
 `mvn compile` succeeds with a trivial test referencing e.g.
 `Crypto.PublicKey.newBuilder().setType(Crypto.KeyType.Ed25519)...build()` to confirm the
-generated code is on the compile classpath. No hand-written libp2p code yet.
+generated code is on the compile classpath. No hand-written libp2p code yet. (No Netty
+dependency is added — see the architectural deviation note under "Goal" above.)
 
 ### M1 — Foundations: varint, Multiaddr
 
@@ -283,6 +342,7 @@ Files: `crypto/KeyType.java`, `crypto/PrivKey.java`, `crypto/PubKey.java`,
 on that toolchain being wired up first), `core/PeerId.java`.
 
 Implementation notes:
+
 - Use `KeyPairGenerator.getInstance("Ed25519")` / `Signature.getInstance("Ed25519")`
   (`java.security` + `java.security.spec.NamedParameterSpec`) — no external crypto library.
 - `raw()` for Ed25519 keys must extract the 32-byte raw seed/point (not full PKCS8/X509 DER),
@@ -305,65 +365,143 @@ bytes → same PeerId string).
 Files: `core/multistream/ProtocolBinding.java`, `ProtocolDescriptor.java`,
 `ProtocolMatcher.java`, `Multistream.java`, `multistream/MultistreamImpl.java`,
 `multistream/Negotiator.java`, `multistream/ProtocolSelect.java`,
-`core/P2PChannel.java`, `core/P2PChannelHandler.java`.
+`core/P2PInputStream.java`, `core/P2POutputStream.java`.
 
 Reference: `core/multistream/*.kt`, `multistream/{MultistreamImpl,Negotiator,ProtocolSelect}.kt`,
-`etc/events/ProtocolNegotiation.kt`, `etc/util/netty/protobuf/LimitedProtobufVarint32FrameDecoder.kt`.
+`etc/events/ProtocolNegotiation.kt` (for the negotiation state machine's shape only — the
+Netty-pipeline-event mechanics described there don't apply here).
+
+`P2PInputStream`/`P2POutputStream` (see `ARCHITECTURE.md`) are introduced here because
+`Negotiator` is the first thing that needs to read/write bytes; they are two tiny abstract
+classes exposing bulk array read/write (the primitive every layer must implement) plus a
+single-byte convenience method defined once in terms of it:
+
+```java
+public abstract class P2PInputStream implements Closeable {
+    public abstract int read(byte[] buf, int off, int len) throws IOException;
+
+    public int read() throws IOException {
+        byte[] single = new byte[1];
+        int n = read(single, 0, 1);
+        return n < 0 ? -1 : single[0] & 0xFF;
+    }
+}
+
+public abstract class P2POutputStream implements Closeable {
+    public abstract void write(byte[] buf, int off, int len) throws IOException;
+
+    public void write(int b) throws IOException {
+        write(new byte[] { (byte) b }, 0, 1);
+    }
+}
+```
 
 Implementation notes:
+
 - Wire protocol `/multistream/1.0.0`: varint32-length-prefixed, `\n`-terminated UTF-8 strings.
-  Build the pipeline with Netty's `ProtobufVarint32FrameDecoder`/`ProtobufVarint32LengthFieldPrepender`
-  (bound max frame length to 1024 bytes, mirroring `LimitedProtobufVarint32FrameDecoder`) +
-  `StringDecoder`/`StringEncoder` + a small suffix-newline codec.
-- `Negotiator` requester side sends header + first candidate immediately on `channelActive`;
-  responder side matches against `ProtocolMatcher`s (support `strict` matcher only — sufficient
-  for `/noise`, `/yamux/1.0.0`, and app protocol ids used later).
-- `ProtocolSelect` listens for the negotiation-succeeded/failed user events, resolves the
-  matching `ProtocolBinding`, and installs its handler right after itself in the pipeline.
+  Implement a tiny pair of helpers, `MultistreamFraming.writeMessage(P2POutputStream, String)`/
+  `readMessage(P2PInputStream)`, that do the varint-length-prefix + UTF-8 + `\n` framing by
+  calling `read`/`write` directly (the varint length prefix is naturally decoded one byte at a
+  time via `P2PInputStream#read()`, stopping as soon as the continuation bit is clear; the
+  fixed-length string body afterwards uses a `readFully`-style loop over
+  `read(byte[], int, int)`, since that — like `InputStream#read(byte[], int, int)` — is allowed
+  to return fewer bytes than requested); cap the frame length at 1024 bytes (mirrors upstream's
+  `LimitedProtobufVarint32FrameDecoder`) and throw on overflow. No frame-decoder/pipeline
+  framework needed — this is a handful of straight-line blocking calls.
+- `Negotiator`: requester side runs synchronously — write the multistream header + first
+  candidate, then blocking-read the response line(s) and loop until a protocol matches or the
+  candidates are exhausted (throwing if none do); responder side blocking-reads the header/first
+  candidate, matches against `ProtocolMatcher`s (support `strict` matcher only — sufficient for
+  `/noise`, `/yamux/1.0.0`, and app protocol ids used later), and writes back accept/reject lines.
+  Because this all runs on a virtual thread (see M5), there is no `channelActive`/event-callback
+  shape to this at all — `Negotiator.negotiate(P2PInputStream, P2POutputStream, ...)` is a plain
+  blocking method that returns the agreed protocol id (or throws).
+- `ProtocolSelect` resolves the matching `ProtocolBinding` once negotiation succeeds and hands
+  it the same `P2PInputStream`/`P2POutputStream` pair to continue reading/writing on — there is
+  no pipeline to "install a handler into"; the caller just invokes the binding's handler method
+  directly with the streams.
 - This exact mechanism is reused twice per connection (security negotiation, then muxer
   negotiation) and later once per stream (application protocol negotiation) — implement it
   generically now so milestones 5–8 just reuse it.
 
-Tests: two in-memory `EmbeddedChannel`s wired back-to-back (or a loopback pair) negotiating a
-fake protocol id; negotiation failure path (plain `RuntimeException`, no remote protocol match
-— see M1 deviation note on exceptions).
+Tests: two in-memory `P2PInputStream`/`P2POutputStream` pairs, each side driven from its own
+plain (platform) thread since `Negotiator` blocks, connected via a small in-memory
+byte-pipe implementation (e.g. backed by `java.io.PipedInputStream`/`PipedOutputStream`, or a
+tiny hand-rolled blocking byte queue — this pipe implementation is reusable by later
+milestones' tests too, so it's worth writing once as test-support code), negotiating a fake
+protocol id; negotiation failure path (plain `RuntimeException`, no remote protocol match —
+see M1 deviation note on exceptions).
 
-### M4 — Netty channel plumbing (Connection/Stream as P2PChannel)
+### M4 — Core stream abstractions (Connection/Stream)
 
-Files: `transport/netty/P2PChannelOverNetty.java`, `ConnectionOverNetty.java`,
-`StreamOverNetty.java`, `core/Connection.java`, `core/Stream.java`, `core/StreamHandler.java`
+Files: `core/Connection.java`, `core/Stream.java`, `core/StreamHandler.java`
 (`StreamPromise`), `core/ConnectionHandler.java`.
 
-Reference: `transport/implementation/{P2PChannelOverNetty,ConnectionOverNetty,StreamOverNetty}.kt`,
-`etc/Attributes.kt` (channel `AttributeKey`s: `CONNECTION`, `STREAM`, `PROTOCOL`, `REMOTE_PEER_ID`).
+Reference: `core/{Connection,Stream}.kt`, `core/ConnectionHandler.kt` (for the shape of the
+public API only — the underlying `P2PChannel`/Netty-`Channel` implementation upstream uses does
+not apply here: `Connection`/`Stream` are implemented directly in terms of the connection's/
+stream's own `P2PInputStream`/`P2POutputStream` pair from M3, plus metadata (remote `PeerId`,
+negotiated protocol, secure/muxer session handles) — no `AttributeKey`-on-a-channel indirection
+needed since there's no channel).
 
-No network I/O yet — just the abstraction layer that lets the rest of the code depend on
-`P2PChannel`/`Connection`/`Stream` instead of raw Netty `Channel`.
+No network I/O yet — just the `Connection`/`Stream` interfaces/base classes that let the rest
+of the code depend on those instead of directly on `P2PInputStream`/`P2POutputStream` +
+raw sockets. `P2PInputStream`/`P2POutputStream` themselves were already introduced in M3.
 
-### M5 — TCP transport and connection upgrade pipeline
+### M5 — TCP transport, custom TCP server, and the connection upgrade pipeline
 
-Files: `transport/Transport.java`, `transport/netty/NettyTransport.java` (Bootstrap/
-ServerBootstrap setup, `NioSocketChannel`/`NioServerSocketChannel`,
-`MultiThreadIoEventLoopGroup`/`NioIoHandler`), `transport/netty/ConnectionBuilder.java`,
-`transport/netty/ConnectionUpgrader.java`, `transport/tcp/TcpTransport.java`.
+Files: `transport/Transport.java`, `transport/tcp/TcpServer.java` (accept loop),
+`transport/tcp/TcpTransport.java` (dial + `handles(addr)`), `transport/tcp/TcpConnection.java`,
+`transport/tcp/SocketP2PInputStream.java`, `transport/tcp/SocketP2POutputStream.java`,
+`transport/ConnectionBuilder.java`, `transport/ConnectionUpgrader.java`.
 
 Reference: `transport/implementation/{PlainNettyTransport,ConnectionBuilder}.kt`,
-`transport/ConnectionUpgrader.kt`, `transport/tcp/TcpTransport.kt`.
+`transport/ConnectionUpgrader.kt`, `transport/tcp/TcpTransport.kt` (for the *sequencing*/
+responsibilities of these classes only — the actual implementation is plain blocking
+`java.net.ServerSocket`/`java.net.Socket`, not Netty `Bootstrap`/`ServerBootstrap`). See
+`ARCHITECTURE.md` for the full thread-model writeup this milestone implements.
 
 Implementation notes:
-- `ConnectionBuilder.initChannel`: wrap channel as `ConnectionOverNetty`, then
-  `upgrader.establishSecureChannel(connection)` → on success set secure session, then
-  `upgrader.establishMuxer(connection)` → on success set muxer session, then invoke the
-  connection handler and complete the "connection established" future. This exact sequencing
-  (TCP connect → security handshake → muxer negotiation → app connection handler) is the crux
-  of the whole plan and should be a literal, testable method.
-- `TcpTransport.handles(addr)`: multiaddr has `ip4`/`ip6` + `tcp` components.
+
+- `TcpServer`: wraps a bound `java.net.ServerSocket`. `start()` spawns one dedicated **virtual
+  thread** running `while (!closed) { Socket s = serverSocket.accept(); Thread.ofVirtual()
+  .start(() -> handleAccepted(s)); }`. Each accepted socket gets its own fresh virtual thread
+  running `handleAccepted`, which performs the entire upgrade sequence synchronously (see
+  `ConnectionBuilder` below) before invoking the application's `ConnectionHandler`. `close()`
+  closes the `ServerSocket` (which unblocks `accept()` with a `SocketException`, ending the
+  accept-loop thread) and, if desired, tracks + closes still-open accepted connections.
+- `TcpTransport.dial(multiaddr)`: `new Socket(host, port)` (blocking connect, optionally with a
+  connect timeout via `Socket#connect(SocketAddress, int)`), then runs the exact same
+  `ConnectionBuilder` upgrade sequence synchronously on the calling virtual thread. Callers that
+  want a non-blocking-looking API (e.g. `Host.connect(...)` returning something awaitable) wrap
+  this blocking call at the outermost layer with
+  `CompletableFuture.supplyAsync(() -> dial(...), Executors.newVirtualThreadPerTaskExecutor())`
+  — no async plumbing is needed inside the transport/security/muxer layers themselves.
+- `ConnectionBuilder.upgrade(Socket socket, boolean isInitiator)`: wraps
+  `socket.getInputStream()`/`socket.getOutputStream()` as `SocketP2PInputStream`/
+  `SocketP2POutputStream` (trivial adapters delegating straight to the underlying `InputStream`/
+  `OutputStream`), constructs a `TcpConnection` around them, then calls, in order and as plain
+  sequential blocking method calls (no futures/promises/callbacks at this layer):
+  1. `upgrader.establishSecureChannel(connection)` — runs the Noise handshake (M6) synchronously,
+     sets the secure session on success.
+  2. `upgrader.establishMuxer(connection)` — runs the Yamux `/yamux/1.0.0` multistream
+     negotiation (M7) synchronously, sets the muxer session on success and starts the muxer's
+     background reader virtual thread (see M7).
+  3. Invoke the configured `ConnectionHandler` with the fully upgraded `Connection`.
+  Any exception at any step closes the socket and propagates/logs, exactly as the original plan
+  intended — this method is a literal, single-threaded, testable method precisely *because*
+  it's allowed to block.
+- `TcpTransport.handles(addr)`: unchanged (multiaddr has `ip4`/`ip6` + `tcp` components).
 - At this point `ConnectionUpgrader` can be stubbed/tested with a fake `SecureChannel`/
   `StreamMuxer` pair before Noise/Yamux exist (M6/M7), to validate the sequencing independently.
 
 Tests: loopback TCP connect/listen with stub security+muxer bindings that just complete
 immediately; verify `ConnectionHandler` fires exactly once per side with a fully "upgraded"
-`Connection` (non-null secure/muxer session).
+`Connection` (non-null secure/muxer session). Since both the server's accept-handler and the
+client's dial run to completion on their own thread before returning/invoking the handler, the
+test is a plain sequential JUnit method plus a `CountDownLatch` (or simply `Thread#join`/a
+short poll) to wait for the *server-side* handler thread specifically, since it necessarily
+runs on a different thread than the test method.
 
 ### M6 — Noise `XX` security transport
 
@@ -371,15 +509,17 @@ Files: `security/SecureChannel.java`, `security/noise/NoiseXXHandshake.java`
 (the Noise `XX` state machine — reads/writes the **generated** `spipe.pb.Spipe.NoiseHandshakePayload`
 protobuf message directly for the handshake payload, field 1 `libp2p_key` + field 2
 `noise_static_key_signature`; the unused `libp2p_data`/`libp2p_data_signature` fields are simply
-left unset), `security/noise/NoiseXXCodec.java`, `security/noise/UShortLengthCodec.java`,
-`security/noise/NoiseXXSecureChannel.java`.
+left unset), `security/noise/NoiseXXFramedInputStream.java`,
+`security/noise/NoiseXXFramedOutputStream.java`, `security/noise/NoiseXXSecureChannel.java`.
 
 Reference: `security/noise/{NoiseXXSecureChannel,NoiseXXCodec,NoiseSecureChannelSession}.kt`,
 and cross-check against `security/noise/{NoiseHandshakeTest,NoiseSecureChannelTest,
 NoiseXXCodecTest}.kt` for known-vector sanity checks (payload signing string
-`"noise-libp2p-static-key:"`, framing sizes, AEAD error handling).
+`"noise-libp2p-static-key:"`, framing sizes, AEAD error handling) — the cryptographic details
+below are unchanged from the original plan; only the I/O plumbing around them changes.
 
 Implementation notes — hand-rolled Noise using only JDK crypto (`Noise_XX_25519_ChaChaPoly_SHA256`):
+
 - DH: ephemeral + static X25519 key pairs via `KeyPairGenerator.getInstance("X25519")`,
   shared secret via `KeyAgreement.getInstance("X25519")`.
 - Hash/HKDF: SHA-256 (`MessageDigest`) + HMAC-SHA-256 (`Mac`) implementing Noise's
@@ -394,51 +534,85 @@ Implementation notes — hand-rolled Noise using only JDK crypto (`Noise_XX_2551
   `NoiseHandshakePayload`, send as the (encrypted) payload of handshake messages 2 and 3.
   Verify the same on the receiving side and derive the remote `PeerId`; if dialing, must match
   the `PeerId` from the dial multiaddr's `/p2p/` component.
-- Netty wiring identical to upstream: `UShortLengthCodec` (2-byte big-endian length prefix,
-  max 65535) is pushed first and stays permanently; handshake handler runs the 3-message
-  exchange; on success it's replaced by `NoiseXXCodec` (AEAD encrypt/decrypt every subsequent
-  frame) + a splitter for outbound plaintext > frame capacity.
+- **I/O plumbing (the actual deviation from the original plan)**: `NoiseXXHandshake.run(
+  P2PInputStream rawIn, P2POutputStream rawOut, ...)` is a plain blocking method that performs
+  the 2-byte-big-endian-length-prefixed (max 65535, same framing upstream's `UShortLengthCodec`
+  used) 3-message exchange directly against the connection's raw streams and returns the two
+  derived `CipherState`s (one per direction) on success — there is no handshake *handler*
+  sitting in a pipeline reacting to `channelRead` events; it's a synchronous request/response
+  loop, which is exactly what the Noise `XX` pattern already is. Once the handshake completes,
+  `NoiseXXFramedInputStream`/`NoiseXXFramedOutputStream` wrap the same raw streams and implement
+  `P2PInputStream`/`P2POutputStream` by transparently decrypting/encrypting each
+  length-prefixed frame inside `read`/`write` — from the muxer's (M7) point of view these are
+  just another `P2PInputStream`/`P2POutputStream` pair, identical in shape to the raw TCP ones.
 - `protocolDescriptor = ProtocolDescriptor("/noise")`.
 
-Tests: two `NoiseXXHandshake` instances (initiator/responder) piped through an in-memory byte
-channel (e.g. two `EmbeddedChannel`s forwarding buffers to each other, or a loopback
-`SocketChannel` pair) complete a handshake and can then exchange AEAD-encrypted application
-data both ways; tamper tests (flipped bit) must fail decryption; peer-id mismatch on dial must
-be rejected.
+Tests: two `NoiseXXHandshake` instances (initiator/responder), each driven from its own thread
+(the handshake blocks on reads, so both sides need to run concurrently), piped through an
+in-memory `P2PInputStream`/`P2POutputStream` pair (the same test-support byte-pipe introduced in
+M3) complete a handshake and can then exchange AEAD-encrypted application data both ways via
+`NoiseXXFramedInputStream`/`NoiseXXFramedOutputStream`; tamper tests (flipped bit) must fail
+decryption; peer-id mismatch on dial must be rejected.
 
 ### M7 — Yamux stream multiplexer
 
-Files: `mux/StreamMuxer.java`, `mux/MuxId.java`, `mux/AbstractChildChannel.java`,
-`mux/MuxChannel.java`, `mux/yamux/{YamuxFlag,YamuxType,YamuxId,YamuxFrame,YamuxFrameCodec,
-YamuxStreamIdGenerator,YamuxHandler,YamuxStreamMuxer}.java`.
+Files: `mux/StreamMuxer.java`, `mux/MuxId.java`, `mux/MuxedConnection.java`,
+`mux/MuxedStream.java`, `mux/yamux/{YamuxFlag,YamuxType,YamuxId,YamuxFrame,YamuxFrameIO,
+YamuxStreamIdGenerator,YamuxConnection,YamuxStream,YamuxStreamMuxer}.java`.
 
-Reference: `core/mux/StreamMuxer.kt`, `mux/MuxHandler.kt`, `mux/yamux/*.kt`,
-`etc/util/netty/mux/{AbstractMuxHandler,MuxChannel,MuxId,RemoteWriteClosed}.kt`,
-`etc/util/netty/AbstractChildChannel.kt`; cross-check frame encoding against
-`YamuxHandlerTest.kt`.
+Reference: `core/mux/StreamMuxer.kt`, `mux/MuxHandler.kt`, `mux/yamux/*.kt` (wire format and
+flow-control *semantics* only — the Netty child-`Channel`/`EventLoop` plumbing described in
+`etc/util/netty/mux/*.kt`/`etc/util/netty/AbstractChildChannel.kt` has no equivalent here);
+cross-check frame encoding against `YamuxHandlerTest.kt`.
 
 Implementation notes:
-- Wire format (12-byte header, big-endian): `version:u8, type:u8, flags:u16, streamId:u32,
-  length:u32` + optional `DATA` payload. `maxFrameDataLength = 1<<20`.
-- Types: `DATA=0, WINDOW_UPDATE=1, PING=2, GO_AWAY=3`. Flags (single-flag only):
-  `SYN=1, ACK=2, FIN=4, RST=8`.
-- Stream IDs: odd if this side initiated the underlying *connection*, even otherwise
-  (session id `0` reserved). `AbstractChildChannel`/`MuxChannel` exposes every Yamux stream as
-  a genuine Netty child `Channel` (own pipeline, registered on the connection's `EventLoop`) so
-  the existing `StreamOverNetty`/multistream-select machinery from M3/M4 works unmodified for
-  per-stream protocol negotiation.
-- Flow control: `INITIAL_WINDOW_SIZE = 256 * 1024`; send `WINDOW_UPDATE` once the receive
-  window drops below half; buffer outbound writes while `sendWindowSize` is exhausted, capped
-  by `maxBufferedConnectionWrites` (default 10 MiB) — exceeding it resets the stream rather
-  than blocking the connection.
-- `YamuxStreamMuxer.protocolDescriptor = ProtocolDescriptor("/yamux/1.0.0")`; `initChannel`
-  pushes `YamuxFrameCodec` then `YamuxHandler` onto the (already Noise-encrypted) connection
-  channel.
 
-Tests: two `YamuxHandler`s over a loopback pair (or piped `EmbeddedChannel`s): open a stream
-from each side, send/receive data larger than one window, verify `WINDOW_UPDATE` is emitted
-and unblocks a previously buffered write, verify `RST`/`FIN` close semantics, verify
-ack-backlog/overflow limits raise the expected exceptions.
+- Wire format (12-byte header, big-endian): `version:u8, type:u8, flags:u16, streamId:u32,
+  length:u32` + optional `DATA` payload. `maxFrameDataLength = 1<<20`. Types:
+  `DATA=0, WINDOW_UPDATE=1, PING=2, GO_AWAY=3`. Flags (single-flag only): `SYN=1, ACK=2, FIN=4,
+  RST=8`. `YamuxFrameIO` implements `readFrame(P2PInputStream)`/`writeFrame(P2POutputStream,
+  YamuxFrame)` as plain blocking calls (`readFully`-style loop for the 12-byte header, then the
+  payload) — this wire format is unchanged from the original plan, only the encode/decode entry
+  points change shape (methods on a plain I/O helper instead of a Netty
+  `ByteToMessageDecoder`/`MessageToByteEncoder`).
+- Stream IDs: odd if this side initiated the underlying _connection_, even otherwise
+  (session id `0` reserved).
+- **Threading (the actual deviation from the original plan)**: `YamuxConnection` owns the
+  single underlying `P2PInputStream`/`P2POutputStream` of the secured connection (from M6), plus:
+  - One dedicated **reader virtual thread**, started when the muxer is established, that loops
+    `YamuxFrameIO.readFrame(...)` and dispatches: `DATA` payloads are appended to the target
+    `YamuxStream`'s incoming byte queue (unblocking any virtual thread parked in that stream's
+    `read()`); `WINDOW_UPDATE` increases the target stream's send-window counter and notifies any
+    thread parked waiting to write; `PING`/`GO_AWAY` are handled inline; unknown/invalid frames
+    close the connection. Inbound `SYN` (new stream opened by the remote side) constructs a new
+    `YamuxStream` and hands it off to a **freshly spawned virtual thread** that runs
+    multistream-select (M3) + the matching application `StreamHandler` — mirroring exactly what
+    `TcpServer`'s accept loop does per connection, one layer up.
+  - A single **writer lock** (`java.util.concurrent.locks.ReentrantLock`, or `synchronized`)
+    guarding the shared underlying `P2POutputStream`, since multiple application virtual threads
+    may call `YamuxStream#write` concurrently on different streams that all funnel through the
+    one underlying connection stream. (Netty serialized this for free via the single-threaded
+    per-channel event loop; blocking I/O needs an explicit lock instead — see `ARCHITECTURE.md`.)
+  - Each `YamuxStream` implements `P2PInputStream`/`P2POutputStream`: `write()` acquires the
+    writer lock, frames the payload as one or more `DATA` frames, and — if the stream's send
+    window is currently exhausted — simply **blocks the calling virtual thread** on a condition
+    variable until a `WINDOW_UPDATE` arrives (parking a virtual thread is cheap; there is no
+    need for the upstream `maxBufferedConnectionWrites`-capped buffering/reset-on-overflow
+    scheme this had to have to avoid blocking a shared Netty event-loop thread). `read()` blocks
+    on the stream's own incoming-data queue, populated by the connection's reader thread.
+  - `INITIAL_WINDOW_SIZE = 256 * 1024`; send `WINDOW_UPDATE` once the receive window drops below
+    half — this flow-control policy is unchanged from the original plan.
+- `YamuxConnection.openStream()` sends a `SYN` frame (via the writer lock) and returns a
+  `YamuxStream` immediately; the `ACK` is awaited lazily on the first `read`/`write` call.
+- `YamuxStreamMuxer.protocolDescriptor = ProtocolDescriptor("/yamux/1.0.0")`; establishing the
+  muxer means: negotiate `/yamux/1.0.0` via multistream-select (M3) over the connection's
+  already-Noise-encrypted `P2PInputStream`/`P2POutputStream` (M6), then construct the
+  `YamuxConnection` around those same two streams and start its reader thread.
+
+Tests: two `YamuxConnection`s over an in-memory pipe (or loopback TCP): open a stream from each
+side, send/receive data larger than one window (this specifically exercises the
+block-on-window-exhaustion path and confirms a `WINDOW_UPDATE` unblocks the parked writer
+thread), verify `RST`/`FIN` close semantics.
 
 ### M8 — Network, ConnectionUpgrader wiring, Host
 
@@ -452,17 +626,23 @@ builder — useful naming/shape reference), and `upstream/nabu/.../HostBuilder.j
 downstream Java project actually calls the builder in practice.
 
 Implementation notes:
+
 - `HostBuilder` (fluent, Java-idiomatic — no Kotlin DSL lambdas-with-receiver needed):
   `.privateKey(key)` (or auto-generate Ed25519 if unset), `.listenAddress(String)`,
   `.connectionHandler(ConnectionHandler)`. Defaults: TCP transport, `NoiseXXSecureChannel`,
   Yamux (do **not** default to Mplex — it isn't ported). `.build()` wires:
   `muxer -> secureChannel(privKey, muxer) -> ConnectionUpgrader(security multistream,
-  muxer multistream) -> TcpTransport(upgrader) -> NetworkImpl(transports, broadcastConnHandler)
-  -> HostImpl(...)`.
+muxer multistream) -> TcpTransport(upgrader) -> NetworkImpl(transports, broadcastConnHandler)
+-> HostImpl(...)`.
 - `NetworkImpl.connect(peerId, addrs)`: reuse existing connection to `peerId` if present
   (matched by `secureSession().remoteId`), else dial and append `/p2p/<peerId>` to the target
   multiaddr for post-Noise identity verification (M6).
-- `HostImpl.start()`: bind all configured listen addresses; `stop()`: close network/transports.
+- `HostImpl.start()`: for each configured listen address, bind and start a `TcpServer`
+  (M5) — i.e. spawn its accept-loop virtual thread. `stop()`: close every `TcpServer` (unblocks
+  and ends each accept-loop thread) and every open `Connection` (closing the underlying socket
+  unblocks that connection's Yamux reader thread with an `IOException`, which it treats as a
+  normal "connection closed" shutdown signal — no explicit cancellation/interruption protocol
+  needed beyond `Socket#close()`).
 - `Host.newStream(...)` is needed for the M9 smoke test: locate the app `ProtocolBinding` and
   call `connection.muxerSession().createStream(...)`.
 
@@ -478,6 +658,7 @@ optionally a tiny `TrivialEchoProtocol` (`ProtocolBinding`) purely for the strea
 clearly marked as test-only scaffolding, not a real application protocol.
 
 Test outline:
+
 ```java
 Host nodeA = new HostBuilder()
     .listenAddress("/ip4/127.0.0.1/tcp/0")
@@ -502,6 +683,13 @@ Connection conn = nodeB.getNetwork().connect(nodeA.getPeerId(), aAddr).get(5, SE
 // - (optional) open a stream from B to A with TrivialEchoProtocol, write bytes, read the
 //   same bytes back, proving per-stream multistream-select + Yamux data path works
 ```
+
+Note: `Host.start()`/`connect()` return plain `CompletableFuture`s (backed by
+`Executors.newVirtualThreadPerTaskExecutor()`, per the M5 note) purely so this test's API shape
+matches the original plan — internally each just kicks off blocking work on a virtual thread.
+There is no `EventLoopGroup` (or any other framework resource) to shut down: `Host.stop()`
+closing every `TcpServer`/`Connection` is suffient to unwind every virtual thread this system
+spawned (each blocking call simply gets an `IOException` from its now-closed socket and returns).
 
 Also add a runnable demo (`main` method or a small `examples` source set, matching upstream's
 `examples/pinger` spirit) that starts two nodes as separate JVM processes/ports and logs the

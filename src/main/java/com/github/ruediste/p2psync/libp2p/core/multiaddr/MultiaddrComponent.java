@@ -1,7 +1,5 @@
 package com.github.ruediste.p2psync.libp2p.core.multiaddr;
 
-import io.netty.buffer.ByteBuf;
-
 import java.util.Arrays;
 import java.util.Objects;
 
