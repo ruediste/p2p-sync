@@ -1,4 +1,13 @@
 {
-  "cSpell.words": ["IPFS", "Kademlia", "keypair"],
+  "cSpell.words": [
+    "IPFS",
+    "Kademlia",
+    "keypair",
+    "libp2p",
+    "p2psync",
+    "ruediste",
+    "unmarshal",
+    "Unmarshals"
+  ],
   "java.configuration.updateBuildConfiguration": "automatic"
 }

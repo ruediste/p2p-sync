@@ -6,7 +6,7 @@
 |---|---|---|
 | M0 — Project setup | ✅ Done | See log below. |
 | M1 — Foundations | ✅ Done | See log below. |
-| M2 — Keys and PeerId | ⬜ Not started | |
+| M2 — Keys and PeerId | ✅ Done | See log below. |
 | M3 — Multistream-select | ⬜ Not started | |
 | M4 — Netty channel plumbing | ⬜ Not started | |
 | M5 — TCP transport / upgrade pipeline | ⬜ Not started | |
@@ -50,6 +50,38 @@
   that doesn't affect the `ip4`/`tcp`/`p2p` paths this project actually exercises. Added
   `VarintTest`, `MultiaddrTest`, `MultihashTest`, `PeerIdTest` — `mvn test` passes (22/22 tests
   green, including the M0 tests).
+- **M2 (done)**: Implemented under `com.github.ruediste.p2psync.libp2p.crypto[.keys]`:
+  `PubKey`/`PrivKey` (abstract classes storing the generated `crypto.pb.Crypto.KeyType` directly
+  as `keyType`, mirroring upstream's `Key`/`PubKey`/`PrivKey`; `bytes()`/`equals()`/`hashCode()`
+  implemented on the base classes since they're identical for every key type), `KeyType` (a
+  small wrapper enum around `Crypto.KeyType`, trimmed to `ED25519` only — see the M1-era "out of
+  scope" note; `PrivKey.generate(KeyType)`/`generate(KeyType, SecureRandom)` are the Java
+  static-method equivalent of upstream's top-level `generateKeyPair(type, bits, random)`
+  function in `Key.kt`, dispatching only to `Ed25519PrivateKey.generateKeyPair` for now),
+  `Marshaling` (`marshalPublicKey`/`marshalPrivateKey`/`unmarshalPublicKey`/`unmarshalPrivateKey`,
+  building/parsing the generated `Crypto.PublicKey`/`Crypto.PrivateKey` messages directly),
+  `keys.Ed25519PrivateKey`/`keys.Ed25519PublicKey` (backed by the JDK's built-in `"Ed25519"`
+  `KeyPairGenerator`/`KeyFactory`/`Signature` providers — JEP 339, no BouncyCastle, as planned).
+  `PeerId.fromPubKey` added on top of the M1 `PeerId`.
+  **Plan deviation**: deriving a public key from a raw 32-byte private seed (needed by
+  `Ed25519PrivateKey.unmarshal`, e.g. when loading a persisted identity) has no direct
+  `java.security` API — unlike BouncyCastle's `Ed25519PrivateKeyParameters.generatePublicKey()`,
+  the JDK's `KeyFactory` can reconstruct a `PrivateKey` from a raw seed
+  (`EdECPrivateKeySpec`) but cannot re-derive the associated public point from it. Worked around
+  by feeding the raw seed through a `SecureRandom` stand-in (`nextBytes` just returns those
+  exact 32 bytes) into `KeyPairGenerator.getInstance("Ed25519")`: empirically (and per
+  `Ed25519KeysTest`) the `SunEC` provider consumes exactly 32 bytes from the supplied
+  `SecureRandom` as the private scalar/seed with no extra hashing, so this reliably regenerates
+  the identical key pair including the public point — see the Javadoc on `Ed25519PrivateKey`
+  for the full reasoning. Encoding/decoding the raw 32-byte Ed25519 *public* key point itself
+  uses fully standard JEP 339 API (`EdECPoint`/`EdECPublicKeySpec`/`KeyFactory`), no trick
+  needed there. Added `Ed25519KeysTest`, `MarshalingTest`, and extended `PeerIdTest` with
+  `fromPubKey` tests, including a hand-computed golden fixture (fixed raw Ed25519 pubkey →
+  expected protobuf marshaling → expected identity-multihash wrapping → expected base58 string,
+  each layer computed independently in the test comment) cross-checking the exact
+  marshal-then-multihash pipeline (no upstream Kotlin test happens to cover an Ed25519
+  `PeerIdTest` fixture — only RSA/Secp256k1 — so this fixture was derived by hand instead of
+  copied) — `mvn test` passes (38/38 tests green).
 
 ## Goal
 

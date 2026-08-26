@@ -3,12 +3,15 @@ package com.github.ruediste.p2psync.libp2p.core;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
+import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multihash;
+import com.github.ruediste.p2psync.libp2p.crypto.Marshaling;
+import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
+
 /**
  * Represents the peer identity which is basically derived from the peer's public key.
  *
  * <p>
- * Ported from {@code io.libp2p.core.PeerId} (jvm-libp2p). {@code fromPubKey} is added in M2
- * once {@code crypto.PubKey}/{@code Marshaling} exist.
+ * Ported from {@code io.libp2p.core.PeerId} (jvm-libp2p).
  */
 public final class PeerId {
 
@@ -95,5 +98,16 @@ public final class PeerId {
         byte[] data = new byte[32];
         new SecureRandom().nextBytes(data);
         return new PeerId(data);
+    }
+
+    /**
+     * Creates {@link PeerId} from the peer's public key: the multihash of the marshaled public
+     * key, using the {@code identity} digest if the marshaled bytes fit within 42 bytes (as is
+     * the case for Ed25519 keys), else {@code sha2-256}.
+     */
+    public static PeerId fromPubKey(PubKey pubKey) {
+        byte[] marshaled = Marshaling.marshalPublicKey(pubKey);
+        Multihash.Digest digest = marshaled.length <= 42 ? Multihash.Digest.IDENTITY : Multihash.Digest.SHA2_256;
+        return new PeerId(Multihash.sum(digest, marshaled));
     }
 }
