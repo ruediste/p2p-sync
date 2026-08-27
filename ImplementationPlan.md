@@ -14,7 +14,7 @@ milestones below assume that document as background reading.
 | M3 — Multistream-select                 | ✅ Done        | See log below. |
 | M4 — TCP transport / upgrade pipeline   | ✅ Done        | See log below. |
 | M5 — Noise XX security transport        | ✅ Done        | See log below. |
-| M6 — Yamux stream multiplexer           | ⬜ Not started |                |
+| M6 — Yamux stream multiplexer           | ✅ Done        | See log below. |
 | M7 — Network, ConnectionUpgrader, Host  | ⬜ Not started |                |
 | M8 — End-to-end integration test / demo | ⬜ Not started |                |
 
@@ -71,66 +71,6 @@ moving to the next. Milestones 1–3 have no network I/O and are pure unit-testa
 milestone 4 onward requires loopback TCP integration tests.
 
 Completed Milestone descriptions have been removed on purpose.
-
-### M6 — Yamux stream multiplexer
-
-Files: `mux/StreamMuxer.java`, `mux/MuxId.java`, `mux/MuxedConnection.java`,
-`mux/MuxedStream.java`, `mux/yamux/{YamuxFlag,YamuxType,YamuxId,YamuxFrame,YamuxFrameIO,
-YamuxStreamIdGenerator,YamuxConnection,YamuxStream,YamuxStreamMuxer}.java`.
-
-Reference: `core/mux/StreamMuxer.kt`, `mux/MuxHandler.kt`, `mux/yamux/*.kt` (wire format and
-flow-control _semantics_ only — the Netty child-`Channel`/`EventLoop` plumbing described in
-`etc/util/netty/mux/*.kt`/`etc/util/netty/AbstractChildChannel.kt` has no equivalent here);
-cross-check frame encoding against `YamuxHandlerTest.kt`.
-
-Implementation notes:
-
-- Wire format (12-byte header, big-endian): `version:u8, type:u8, flags:u16, streamId:u32,
-length:u32` + optional `DATA` payload. `maxFrameDataLength = 1<<20`. Types:
-  `DATA=0, WINDOW_UPDATE=1, PING=2, GO_AWAY=3`. Flags (single-flag only): `SYN=1, ACK=2, FIN=4,
-RST=8`. `YamuxFrameIO` implements `readFrame(P2PInputStream)`/`writeFrame(P2POutputStream,
-YamuxFrame)` as plain blocking calls (`readFully`-style loop for the 12-byte header, then the
-  payload) — this wire format is unchanged from the original plan, only the encode/decode entry
-  points change shape (methods on a plain I/O helper instead of a Netty
-  `ByteToMessageDecoder`/`MessageToByteEncoder`).
-- Stream IDs: odd if this side initiated the underlying _connection_, even otherwise
-  (session id `0` reserved).
-- **Threading (the actual deviation from the original plan)**: `YamuxConnection` owns the
-  single underlying `P2PInputStream`/`P2POutputStream` of the secured connection (from M5), plus:
-  - One dedicated **reader virtual thread**, started when the muxer is established, that loops
-    `YamuxFrameIO.readFrame(...)` and dispatches: `DATA` payloads are appended to the target
-    `YamuxStream`'s incoming byte queue (unblocking any virtual thread parked in that stream's
-    `read()`); `WINDOW_UPDATE` increases the target stream's send-window counter and notifies any
-    thread parked waiting to write; `PING`/`GO_AWAY` are handled inline; unknown/invalid frames
-    close the connection. Inbound `SYN` (new stream opened by the remote side) constructs a new
-    `YamuxStream` and hands it off to a **freshly spawned virtual thread** that runs
-    multistream-select (M3) + the matching application `StreamHandler` — mirroring exactly what
-    `TcpServer`'s accept loop does per connection, one layer up.
-  - A single **writer lock** (`java.util.concurrent.locks.ReentrantLock`, or `synchronized`)
-    guarding the shared underlying `P2POutputStream`, since multiple application virtual threads
-    may call `YamuxStream#write` concurrently on different streams that all funnel through the
-    one underlying connection stream. (Netty serialized this for free via the single-threaded
-    per-channel event loop; blocking I/O needs an explicit lock instead — see `ARCHITECTURE.md`.)
-  - Each `YamuxStream` implements `P2PInputStream`/`P2POutputStream`: `write()` acquires the
-    writer lock, frames the payload as one or more `DATA` frames, and — if the stream's send
-    window is currently exhausted — simply **blocks the calling virtual thread** on a condition
-    variable until a `WINDOW_UPDATE` arrives (parking a virtual thread is cheap; there is no
-    need for the upstream `maxBufferedConnectionWrites`-capped buffering/reset-on-overflow
-    scheme this had to have to avoid blocking a shared Netty event-loop thread). `read()` blocks
-    on the stream's own incoming-data queue, populated by the connection's reader thread.
-  - `INITIAL_WINDOW_SIZE = 256 * 1024`; send `WINDOW_UPDATE` once the receive window drops below
-    half — this flow-control policy is unchanged from the original plan.
-- `YamuxConnection.openStream()` sends a `SYN` frame (via the writer lock) and returns a
-  `YamuxStream` immediately; the `ACK` is awaited lazily on the first `read`/`write` call.
-- `YamuxStreamMuxer.protocolDescriptor = ProtocolDescriptor("/yamux/1.0.0")`; establishing the
-  muxer means: negotiate `/yamux/1.0.0` via multistream-select (M3) over the connection's
-  already-Noise-encrypted `P2PInputStream`/`P2POutputStream` (M5), then construct the
-  `YamuxConnection` around those same two streams and start its reader thread.
-
-Tests: two `YamuxConnection`s over an in-memory pipe (or loopback TCP): open a stream from each
-side, send/receive data larger than one window (this specifically exercises the
-block-on-window-exhaustion path and confirms a `WINDOW_UPDATE` unblocks the parked writer
-thread), verify `RST`/`FIN` close semantics.
 
 ### M7 — Network, ConnectionUpgrader wiring, Host
 

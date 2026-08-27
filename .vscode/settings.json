@@ -4,11 +4,14 @@
     "Kademlia",
     "keypair",
     "libp2p",
+    "Multistream",
+    "Muxer",
     "p2psync",
     "ruediste",
     "unmarshal",
     "Unmarshals",
-    "Upgrader"
+    "Upgrader",
+    "Yamux"
   ],
   "java.configuration.updateBuildConfiguration": "automatic"
 }
