@@ -18,4 +18,9 @@ public interface MuxerSession {
     default <T> T createStream(ProtocolBinding<T> protocol) {
         return createStream(List.of(protocol));
     }
+
+    /**
+     * Closes the muxer session and releases all resources.
+     */
+    void close();
 }

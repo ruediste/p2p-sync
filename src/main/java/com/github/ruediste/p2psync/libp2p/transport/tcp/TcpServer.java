@@ -15,9 +15,12 @@ import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
 import com.github.ruediste.p2psync.libp2p.transport.ConnectionBuilder;
 
 /**
- * Wraps a bound {@link ServerSocket}. {@link #start()} spawns one dedicated virtual thread
- * running an accept loop. Each accepted socket gets its own fresh virtual thread that runs the
- * full connection upgrade sequence synchronously before invoking the application's
+ * Wraps a bound {@link ServerSocket}. {@link #start()} spawns one dedicated
+ * virtual thread
+ * running an accept loop. Each accepted socket gets its own fresh virtual
+ * thread that runs the
+ * full connection upgrade sequence synchronously before invoking the
+ * application's
  * {@link ConnectionHandler}.
  */
 public final class TcpServer {
@@ -79,8 +82,7 @@ public final class TcpServer {
 
     private void handleAccepted(Socket socket) {
         try {
-            com.github.ruediste.p2psync.libp2p.core.Connection connection =
-                    connectionBuilder.upgrade(socket, false);
+            com.github.ruediste.p2psync.libp2p.core.Connection connection = connectionBuilder.upgrade(socket, false);
             lock.lock();
             try {
                 connections.add(connection);

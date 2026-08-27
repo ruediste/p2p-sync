@@ -27,6 +27,10 @@ public final class TcpTransport implements Transport {
         this.connectionBuilder = connectionBuilder;
     }
 
+    public ConnectionBuilder getConnectionBuilder() {
+        return connectionBuilder;
+    }
+
     @Override
     public Connection dial(Multiaddr address) {
         MultiaddrComponent tcpComponent = address.getFirstComponent(Protocol.TCP);

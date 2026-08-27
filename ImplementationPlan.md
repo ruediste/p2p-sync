@@ -15,7 +15,7 @@ milestones below assume that document as background reading.
 | M4 — TCP transport / upgrade pipeline   | ✅ Done        | See log below. |
 | M5 — Noise XX security transport        | ✅ Done        | See log below. |
 | M6 — Yamux stream multiplexer           | ✅ Done        | See log below. |
-| M7 — Network, ConnectionUpgrader, Host  | ⬜ Not started |                |
+| M7 — Network, ConnectionUpgrader, Host  | ✅ Done        | See log below. |
 | M8 — End-to-end integration test / demo | ⬜ Not started |                |
 
 #
@@ -71,40 +71,6 @@ moving to the next. Milestones 1–3 have no network I/O and are pure unit-testa
 milestone 4 onward requires loopback TCP integration tests.
 
 Completed Milestone descriptions have been removed on purpose.
-
-### M7 — Network, ConnectionUpgrader wiring, Host
-
-Files: `network/NetworkImpl.java`, `host/HostImpl.java`, `host/HostBuilder.java`,
-`host/MemoryAddressBook.java`, `core/Host.java`, `core/Network.java`, `core/AddressBook.java`,
-`core/PeerInfo.java`.
-
-Reference: `network/NetworkImpl.kt`, `host/{HostImpl,MemoryAddressBook}.kt`,
-`core/dsl/{Builders.kt,BuilderJ.kt}`, `core/dsl/HostBuilder.java` (upstream's own Java-facing
-builder — useful naming/shape reference), and `upstream/nabu/.../HostBuilder.java` for how a
-downstream Java project actually calls the builder in practice.
-
-Implementation notes:
-
-- `HostBuilder` (fluent, Java-idiomatic — no Kotlin DSL lambdas-with-receiver needed):
-  `.privateKey(key)` (or auto-generate Ed25519 if unset), `.listenAddress(String)`,
-  `.connectionHandler(ConnectionHandler)`. Defaults: TCP transport, `NoiseXXSecureChannel`,
-  Yamux (do **not** default to Mplex — it isn't ported). `.build()` wires:
-  `muxer -> secureChannel(privKey, muxer) -> ConnectionUpgrader(security multistream,
-muxer multistream) -> TcpTransport(upgrader) -> NetworkImpl(transports, broadcastConnHandler)
--> HostImpl(...)`.
-- `NetworkImpl.connect(peerId, addrs)`: reuse existing connection to `peerId` if present
-  (matched by `secureSession().remoteId`), else dial and append `/p2p/<peerId>` to the target
-  multiaddr for post-Noise identity verification (M5).
-- `HostImpl.start()`: for each configured listen address, bind and start a `TcpServer`
-  (M4) — i.e. spawn its accept-loop virtual thread. `stop()`: close every `TcpServer` (unblocks
-  and ends each accept-loop thread) and every open `Connection` (closing the underlying socket
-  unblocks that connection's Yamux reader thread with an `UncheckedIOException` (wrapping the
-  socket's `IOException`), which it treats as a normal "connection closed" shutdown signal — no
-  explicit cancellation/interruption protocol needed beyond `Socket#close()`).
-- `Host.newStream(...)` is needed for the M8 smoke test: locate the app `ProtocolBinding` and
-  call `connection.muxerSession().createStream(...)`.
-
-Tests: unit tests for `NetworkImpl` connection reuse/dedupe logic with fake transports.
 
 ### M8 — End-to-end integration test / demo
 
