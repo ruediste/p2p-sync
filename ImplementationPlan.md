@@ -13,7 +13,7 @@ milestones below assume that document as background reading.
 | M2 — Keys and PeerId                    | ✅ Done        | See log below. |
 | M3 — Multistream-select                 | ✅ Done        | See log below. |
 | M4 — TCP transport / upgrade pipeline   | ✅ Done        | See log below. |
-| M5 — Noise XX security transport        | ⬜ Not started |                |
+| M5 — Noise XX security transport        | ✅ Done        | See log below. |
 | M6 — Yamux stream multiplexer           | ⬜ Not started |                |
 | M7 — Network, ConnectionUpgrader, Host  | ⬜ Not started |                |
 | M8 — End-to-end integration test / demo | ⬜ Not started |                |
@@ -71,57 +71,6 @@ moving to the next. Milestones 1–3 have no network I/O and are pure unit-testa
 milestone 4 onward requires loopback TCP integration tests.
 
 Completed Milestone descriptions have been removed on purpose.
-
-### M5 — Noise `XX` security transport
-
-Files: `security/SecureChannel.java`, `security/noise/NoiseXXHandshake.java`
-(the Noise `XX` state machine — reads/writes the **generated** `spipe.pb.Spipe.NoiseHandshakePayload`
-protobuf message directly for the handshake payload, field 1 `libp2p_key` + field 2
-`noise_static_key_signature`; the unused `libp2p_data`/`libp2p_data_signature` fields are simply
-left unset), `security/noise/NoiseXXFramedInputStream.java`,
-`security/noise/NoiseXXFramedOutputStream.java`, `security/noise/NoiseXXSecureChannel.java`.
-
-Reference: `security/noise/{NoiseXXSecureChannel,NoiseXXCodec,NoiseSecureChannelSession}.kt`,
-and cross-check against `security/noise/{NoiseHandshakeTest,NoiseSecureChannelTest,
-NoiseXXCodecTest}.kt` for known-vector sanity checks (payload signing string
-`"noise-libp2p-static-key:"`, framing sizes, AEAD error handling) — the cryptographic details
-below are unchanged from the original plan; only the I/O plumbing around them changes.
-
-Implementation notes — hand-rolled Noise using only JDK crypto (`Noise_XX_25519_ChaChaPoly_SHA256`):
-
-- DH: ephemeral + static X25519 key pairs via `KeyPairGenerator.getInstance("X25519")`,
-  shared secret via `KeyAgreement.getInstance("X25519")`.
-- Hash/HKDF: SHA-256 (`MessageDigest`) + HMAC-SHA-256 (`Mac`) implementing Noise's
-  `MixKey`/`MixHash`/`GetKeys`/`Split` per the [Noise Protocol spec](noiseprotocol.org) `XX`
-  pattern (`e, ee, s, es` / `e, ee, se, s, es` message pattern — implement exactly the 3-message
-  XX flow, no generic multi-pattern framework needed).
-- AEAD: `Cipher.getInstance("ChaCha20-Poly1305")` with the Noise nonce format (8-byte LE
-  counter, zero-padded to 12 bytes) for each handshake message and, after `Split`, for the
-  ongoing per-direction `CipherState`s.
-- Handshake payload: sign `"noise-libp2p-static-key:" + noiseStaticPubKeyBytes` with the
-  libp2p identity private key (Ed25519), embed identity pubkey + signature in
-  `NoiseHandshakePayload`, send as the (encrypted) payload of handshake messages 2 and 3.
-  Verify the same on the receiving side and derive the remote `PeerId`; if dialing, must match
-  the `PeerId` from the dial multiaddr's `/p2p/` component.
-- **I/O plumbing (the actual deviation from the original plan)**: `NoiseXXHandshake.run(
-P2PInputStream rawIn, P2POutputStream rawOut, ...)` is a plain blocking method that performs
-  the 2-byte-big-endian-length-prefixed (max 65535, same framing upstream's `UShortLengthCodec`
-  used) 3-message exchange directly against the connection's raw streams and returns the two
-  derived `CipherState`s (one per direction) on success — there is no handshake _handler_
-  sitting in a pipeline reacting to `channelRead` events; it's a synchronous request/response
-  loop, which is exactly what the Noise `XX` pattern already is. Once the handshake completes,
-  `NoiseXXFramedInputStream`/`NoiseXXFramedOutputStream` wrap the same raw streams and implement
-  `P2PInputStream`/`P2POutputStream` by transparently decrypting/encrypting each
-  length-prefixed frame inside `read`/`write` — from the muxer's (M6) point of view these are
-  just another `P2PInputStream`/`P2POutputStream` pair, identical in shape to the raw TCP ones.
-- `protocolDescriptor = ProtocolDescriptor("/noise")`.
-
-Tests: two `NoiseXXHandshake` instances (initiator/responder), each driven from its own thread
-(the handshake blocks on reads, so both sides need to run concurrently), piped through an
-in-memory `P2PInputStream`/`P2POutputStream` pair (the same test-support byte-pipe introduced in
-M3) complete a handshake and can then exchange AEAD-encrypted application data both ways via
-`NoiseXXFramedInputStream`/`NoiseXXFramedOutputStream`; tamper tests (flipped bit) must fail
-decryption; peer-id mismatch on dial must be rejected.
 
 ### M6 — Yamux stream multiplexer
 

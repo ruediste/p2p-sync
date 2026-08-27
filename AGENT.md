@@ -2,4 +2,4 @@ This is a p2p file storage and synchronization project. It is based on IPFS, but
 
 The project documentation lives in `upstream/p2p-sync.wiki`.
 
-When starting a new task, avoid inspecting the whole codebase. Use a focused exploration instead
+When starting a new task, avoid inspecting the whole codebase. Use a focused exploration instead. Do not scan the whole local maven repository for file contents. Searching just for `.jar`s matching a certain name is ok.
