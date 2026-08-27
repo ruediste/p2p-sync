@@ -1,8 +1,7 @@
 # Architecture: Transport, Streams, and Threading
 
 This document describes the transport/security/multiplexing architecture used by the
-`com.github.ruediste.p2psync.libp2p` port (see `ImplementationPlan.md` for the milestone-by-
-milestone build-out of this design). It exists because this project deliberately does **not**
+`com.github.ruediste.p2psync.libp2p` port. It exists because this project deliberately does **not**
 follow upstream `jvm-libp2p`'s choice of Netty (non-blocking I/O, channel pipelines, an
 event-loop group) — instead everything is built on plain **blocking I/O**, using one
 **virtual thread** (JEP 444, Java 21) per connection and per multiplexed stream.
@@ -21,7 +20,7 @@ multiplexed streams): a virtual thread blocked on a socket read consumes no OS t
 parked, so "one thread per connection, one thread per stream" scales to the numbers this system
 actually needs, while letting every layer — multistream-select, the Noise handshake, the Yamux
 muxer — be written as plain, sequential, blocking Java code. A 3-message Noise handshake is
-*inherently* three blocking round-trips; writing it as a Netty handler reacting to
+_inherently_ three blocking round-trips; writing it as a Netty handler reacting to
 `channelRead` events is not simpler than `NoiseXXHandshake.run(in, out)`, and virtual threads
 mean it doesn't cost anything either.
 
@@ -42,38 +41,15 @@ stream — is exposed to the layer above it as the same minimal pair of classes:
 package com.github.ruediste.p2psync.libp2p.core;
 
 public abstract class P2PInputStream implements Closeable {
-    /** Same contract as {@link java.io.InputStream#read(byte[], int, int)}: blocks until at
-     *  least one byte is available (or EOF/error), may return fewer bytes than requested.
-     *  Throws {@link UncheckedIOException} (not a checked {@code IOException}) on I/O failure. */
-    public abstract int read(byte[] buf, int off, int len);
-
-    /** Same contract as {@link java.io.InputStream#read()}: blocks for, and returns, a single
-     *  byte (0-255), or {@code -1} on EOF. Defined in terms of {@link #read(byte[], int, int)}
-     *  so subclasses only ever need to implement the array-based version; overriding this one
-     *  too is only worth it if a layer has a cheaper single-byte path. */
-    public int read() {
-        byte[] single = new byte[1];
-        int n = read(single, 0, 1);
-        return n < 0 ? -1 : single[0] & 0xFF;
-    }
-
+    public int read(byte[] buf, int off, int len);
+    public int read() ;
     @Override
     public abstract void close();
 }
 
 public abstract class P2POutputStream implements Closeable {
-    /** Same contract as {@link java.io.OutputStream#write(byte[], int, int)}: blocks until all
-     *  {@code len} bytes have been written (or an error occurs). Throws
-     *  {@link UncheckedIOException} (not a checked {@code IOException}) on I/O failure. */
-    public abstract void write(byte[] buf, int off, int len);
-
-    /** Same contract as {@link java.io.OutputStream#write(int)}: blocks until the single given
-     *  byte (the low 8 bits of {@code b}) has been written. Defined in terms of
-     *  {@link #write(byte[], int, int)}, same rationale as {@link P2PInputStream#read()}. */
-    public void write(int b) {
-        write(new byte[] { (byte) b }, 0, 1);
-    }
-
+    public void write(byte[] buf, int off, int len);
+    public void write(int b);
     @Override
     public abstract void close();
 }
@@ -93,41 +69,13 @@ the Noise handshake/framing, Yamux frame headers.)
 **No checked exceptions.** Unlike `java.io.InputStream`/`OutputStream`, none of these methods
 declare `throws IOException` — every implementation instead catches any underlying
 `IOException` and rethrows it wrapped in the JDK's `java.io.UncheckedIOException` (a
-`RuntimeException`). This is a deliberate consequence of the M1 deviation note in
-`ImplementationPlan.md` ("no bespoke exception hierarchy, just plain JDK exceptions"): every
+`RuntimeException`). Every
 caller in this codebase — multistream-select, the Noise handshake, Yamux frame I/O — is a
 straight-line sequence of blocking `read`/`write` calls with no `try/catch`-for-plumbing noise
 at every single call site; code that does want to react to I/O failure catches
 `UncheckedIOException` (typically once, at the outermost per-connection/per-stream worker
 virtual thread) and inspects `getCause()`. Protocol-level violations (a malformed frame, a
-rejected negotiation) are *not* I/O failures and are raised as plain `RuntimeException` instead
-— see e.g. `multistream.MultistreamFraming`/`Multistream`.
-
-Concrete implementations, one per layer, each wrapping the layer beneath it:
-
-| Layer | Implementation | Wraps |
-| --- | --- | --- |
-| Raw TCP | `transport.tcp.SocketP2PInputStream`/`SocketP2POutputStream` | `Socket#getInputStream()`/`#getOutputStream()` |
-| Noise-encrypted connection | `security.noise.NoiseXXFramedInputStream`/`NoiseXXFramedOutputStream` | the raw TCP `P2PInputStream`/`P2POutputStream` (decrypts/encrypts each length-prefixed AEAD frame inside `read`/`write`) |
-| One multiplexed Yamux stream | `mux.yamux.YamuxStream` (implements both) | the Noise-encrypted connection's single shared `P2PInputStream`/`P2POutputStream`, via the connection's frame reader thread / writer lock (see below) |
-
-A `core.P2PStream` bundles an `P2PInputStream`/`P2POutputStream` pair together with an
-`isInitiator` flag — whether *this* side opened/dialed the pair (a connection it dialed, a
-stream it opened) or accepted it (a connection accepted by `TcpServer`, an inbound Yamux
-`SYN`). This is the actual unit multistream-select negotiates on: a `P2PStream` wrapping a
-whole connection's raw/Noise-encrypted streams for security/muxer negotiation, or a single
-Yamux stream's streams for per-application-protocol negotiation. Carrying the initiator/
-responder role alongside the streams themselves (instead of as a separate parameter) is what
-lets `multistream.Multistream#negotiate(P2PStream)` be a single method that picks the right
-negotiation role on its own — see "Layering summary" below.
-
-Because every layer presents the exact same two-class interface, code written against it once —
-multistream-select (used for security negotiation, muxer negotiation, *and* per-stream
-application-protocol negotiation) — is written exactly once and reused at all three of those
-points, exactly as the original (Netty-based) plan intended with its `P2PChannel` abstraction.
-The difference is purely mechanical: `P2PChannel` wrapped a Netty `Channel` and worked via
-pipeline events; `P2PInputStream`/`P2POutputStream` are just blocking streams and work via plain
-method calls.
+rejected negotiation) are _not_ I/O failures and are raised as plain `RuntimeException` instead.
 
 ## Thread model
 
@@ -158,7 +106,7 @@ TcpServer accept-loop thread (1 per listen address)
   connection (as opposed to for the duration of one blocking call) — everything else is workers
   that run to completion and exit.
 - **Writes are synchronized, reads are not**: many virtual threads (one per open stream) can
-  call `YamuxStream#write` concurrently, but they all funnel through the *one* underlying
+  call `YamuxStream#write` concurrently, but they all funnel through the _one_ underlying
   connection `P2POutputStream`. Netty gets this serialization for free (a channel's pipeline
   runs on a single event-loop thread); with blocking I/O it needs an explicit
   `java.util.concurrent.locks.ReentrantLock` (or `synchronized`) around that shared output
@@ -211,12 +159,3 @@ invoked at three points: once for security (a `P2PStream` wrapping the raw TCP s
 on `/noise`), once for muxing (a `P2PStream` wrapping the Noise-framed streams → agree on
 `/yamux/1.0.0`), and once per application stream (a `P2PStream` wrapping a Yamux stream's
 streams → agree on the app protocol id).
-
-## Where to look for the milestone-level detail
-
-`ImplementationPlan.md` walks through building this stack incrementally (M3 introduces
-`P2PInputStream`/`P2POutputStream`/`P2PStream` and multistream-select; M4 introduces `TcpServer`/
-`TcpTransport`, `Connection`/`Stream`, and the virtual-thread-per-connection model; M5 reworks
-the Noise handshake/framing onto blocking streams; M6 reworks Yamux onto the reader-thread +
-writer-lock model described above), including file-by-file breakdowns and test strategy per
-milestone.

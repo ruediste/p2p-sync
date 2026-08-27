@@ -100,8 +100,10 @@ public abstract class P2PInputStream implements Closeable {
     public abstract void close();
 
     /**
-     * Adapts a plain {@link InputStream} (e.g. {@code Socket#getInputStream()}, or a
-     * {@code PipedInputStream} used in tests) to a {@link P2PInputStream}, wrapping any
+     * Adapts a plain {@link InputStream} (e.g. {@code Socket#getInputStream()}, or
+     * a
+     * {@code PipedInputStream} used in tests) to a {@link P2PInputStream}, wrapping
+     * any
      * {@link IOException} it throws in an {@link UncheckedIOException}.
      */
     public static P2PInputStream wrap(InputStream in) {
@@ -135,4 +137,3 @@ public abstract class P2PInputStream implements Closeable {
         };
     }
 }
-

@@ -12,104 +12,13 @@ milestones below assume that document as background reading.
 | M1 — Foundations                        | ✅ Done        | See log below. |
 | M2 — Keys and PeerId                    | ✅ Done        | See log below. |
 | M3 — Multistream-select                 | ✅ Done        | See log below. |
-| M4 — TCP transport / upgrade pipeline    | ⬜ Not started |                |
+| M4 — TCP transport / upgrade pipeline   | ✅ Done        | See log below. |
 | M5 — Noise XX security transport        | ⬜ Not started |                |
 | M6 — Yamux stream multiplexer           | ⬜ Not started |                |
 | M7 — Network, ConnectionUpgrader, Host  | ⬜ Not started |                |
 | M8 — End-to-end integration test / demo | ⬜ Not started |                |
 
-### Progress log
-
-- **M0 (done)**: Added Netty 4.1.118.Final (`netty-buffer`/`-common`/`-transport`/`-handler`/`-codec`)
-  and `protobuf-java` 3.25.5 to `pom.xml`; registered `kr.motd.maven:os-maven-plugin` as a build
-  extension and `org.xolstice.maven.plugins:protobuf-maven-plugin` (bound to `generate-sources`/
-  `compile`) using `protocArtifact` resolved via `${os.detected.classifier}`. Bumped
-  `maven-compiler-plugin` to 3.13.0 (3.8.0 predates Java 21 support). Copied `crypto.proto` and
-  `spipe.proto` from `upstream/jvm-libp2p/libp2p/src/main/proto/` into `src/main/proto/` verbatim
-  (with a provenance header comment added). Verified `mvn generate-sources` emits
-  `target/generated-sources/protobuf/java/{crypto/pb/Crypto.java,spipe/pb/Spipe.java}`, and added
-  `src/test/java/.../libp2p/ProtobufToolchainTest.java` exercising round-trips of
-  `Crypto.PublicKey` and `Spipe.NoiseHandshakePayload` — `mvn test` passes (3/3 tests green).
-  **(Superseded)**: the Netty dependencies added here were removed again once the
-  transport/stream architecture was changed to blocking I/O on virtual threads — see the "Plan
-  deviation (retroactively applies to M0 onward — transport/stream architecture)" entry below.
-  Only `protobuf-java` (still needed for `crypto.proto`/`spipe.proto`) remains.
-- **Plan deviation (applies from M1 onward)**: no bespoke `Libp2pException` hierarchy. Error
-  conditions throw plain JDK exceptions (`IllegalArgumentException`/`RuntimeException`) instead
-  of a custom taxonomy — see the note under M1 below for rationale.
-- **M1 (done)**: Implemented under `com.github.ruediste.p2psync.libp2p.core[.multiaddr]`:
-  `Varint` (uvarint read/write on the project's own minimal `ByteBuf`, mirrors `ByteBufExt.kt`;
-  originally implemented against Netty's `ByteBuf` — see the transport/stream architecture
-  deviation note below), `Protocol` enum
-  (`IP4`/`TCP`/`IP6`/`P2P` only; parsers/stringifiers implemented as static-method references
-  on the enum itself rather than Kotlin-style top-level lambda constants, since Java enum
-  constants can't forward-reference sibling static fields — method references sidestep that
-  ordering restriction), `MultiaddrComponent`, `Multiaddr` (string/byte (de)serialization,
-  `getPeerId`/`withP2P`/`withComponent`/`merged`/`concatenated`; the `p2p-circuit`-aware split
-  logic and path-style component handling from upstream were dropped as out of scope),
-  `Multihash` (trimmed to `IDENTITY`/`SHA2_256` only, simple `sum`/`decode` byte-array API
-  instead of upstream's pluggable digest registry), `Base58` (ported near-verbatim from
-  `etc/encode/Base58.kt`), and a first cut of `PeerId` (byte storage,
-  `toBase58`/`fromBase58`/`toHex`/`fromHex`/`random`, `equals`/`hashCode`; `fromPubKey` deferred
-  to M2). `PeerId` and `Base58` were pulled forward from M2 into M1 because `Protocol.P2P`'s
-  validator and `Multiaddr.getPeerId()`/`withP2P()` already depend on them (same layering as
-  upstream, where `core/multiformats/Protocol.kt` imports `io.libp2p.core.PeerId`). IPv6
-  string formatting uses plain `java.net.Inet6Address#getHostAddress()` (no leading-zero
-  compression like Guava's `InetAddresses.toAddrString`), a known cosmetic gap versus upstream
-  that doesn't affect the `ip4`/`tcp`/`p2p` paths this project actually exercises. Added
-  `VarintTest`, `MultiaddrTest`, `MultihashTest`, `PeerIdTest` — `mvn test` passes (22/22 tests
-  green, including the M0 tests).
-- **M2 (done)**: Implemented under `com.github.ruediste.p2psync.libp2p.crypto[.keys]`:
-  `PubKey`/`PrivKey` (abstract classes storing the generated `crypto.pb.Crypto.KeyType` directly
-  as `keyType`, mirroring upstream's `Key`/`PubKey`/`PrivKey`; `bytes()`/`equals()`/`hashCode()`
-  implemented on the base classes since they're identical for every key type), `KeyType` (a
-  small wrapper enum around `Crypto.KeyType`, trimmed to `ED25519` only — see the M1-era "out of
-  scope" note; `PrivKey.generate(KeyType)`/`generate(KeyType, SecureRandom)` are the Java
-  static-method equivalent of upstream's top-level `generateKeyPair(type, bits, random)`
-  function in `Key.kt`, dispatching only to `Ed25519PrivateKey.generateKeyPair` for now),
-  `Marshaling` (`marshalPublicKey`/`marshalPrivateKey`/`unmarshalPublicKey`/`unmarshalPrivateKey`,
-  building/parsing the generated `Crypto.PublicKey`/`Crypto.PrivateKey` messages directly),
-  `keys.Ed25519PrivateKey`/`keys.Ed25519PublicKey` (backed by the JDK's built-in `"Ed25519"`
-  `KeyPairGenerator`/`KeyFactory`/`Signature` providers — JEP 339, no BouncyCastle, as planned).
-  `PeerId.fromPubKey` added on top of the M1 `PeerId`.
-  **Plan deviation**: deriving a public key from a raw 32-byte private seed (needed by
-  `Ed25519PrivateKey.unmarshal`, e.g. when loading a persisted identity) has no direct
-  `java.security` API — unlike BouncyCastle's `Ed25519PrivateKeyParameters.generatePublicKey()`,
-  the JDK's `KeyFactory` can reconstruct a `PrivateKey` from a raw seed
-  (`EdECPrivateKeySpec`) but cannot re-derive the associated public point from it. Worked around
-  by feeding the raw seed through a `SecureRandom` stand-in (`nextBytes` just returns those
-  exact 32 bytes) into `KeyPairGenerator.getInstance("Ed25519")`: empirically (and per
-  `Ed25519KeysTest`) the `SunEC` provider consumes exactly 32 bytes from the supplied
-  `SecureRandom` as the private scalar/seed with no extra hashing, so this reliably regenerates
-  the identical key pair including the public point — see the Javadoc on `Ed25519PrivateKey`
-  for the full reasoning. Encoding/decoding the raw 32-byte Ed25519 _public_ key point itself
-  uses fully standard JEP 339 API (`EdECPoint`/`EdECPublicKeySpec`/`KeyFactory`), no trick
-  needed there. Added `Ed25519KeysTest`, `MarshalingTest`, and extended `PeerIdTest` with
-  `fromPubKey` tests, including a hand-computed golden fixture (fixed raw Ed25519 pubkey →
-  expected protobuf marshaling → expected identity-multihash wrapping → expected base58 string,
-  each layer computed independently in the test comment) cross-checking the exact
-  marshal-then-multihash pipeline (no upstream Kotlin test happens to cover an Ed25519
-  `PeerIdTest` fixture — only RSA/Secp256k1 — so this fixture was derived by hand instead of
-  copied) — `mvn test` passes (38/38 tests green).
-- **Plan deviation (retroactively applies to M0 onward — transport/stream architecture)**:
-  the original plan built the whole transport/security/muxer stack on Netty (channels,
-  pipelines, an `EventLoopGroup`). This has been dropped in favor of a hand-rolled TCP server
-  and plain **blocking I/O on Java 21 virtual threads** (JEP 444) throughout — see
-  `ARCHITECTURE.md` for the full rationale and thread model. Concretely:
-  - `io.netty:netty-buffer`/`-common`/`-transport`/`-handler`/`-codec` are no longer
-    dependencies (removed from `pom.xml`; only `protobuf-java` remains as a runtime
-    dependency, see the updated "Dependencies" table below).
-  - The M1 `Varint`/`Multiaddr`/`MultiaddrComponent`/`Multihash`/`Protocol` code, which used
-    Netty's `ByteBuf`/`Unpooled` purely as a growable-byte-buffer utility (no networking
-    involved), now uses a small project-owned `core/multiaddr/ByteBuf.java` implementing just
-    the handful of methods those classes need (sequential big-endian writes with
-    auto-growth, a rewindable reader index, a couple of read-only view helpers) — same
-    behavior, zero external dependency. `VarintTest`/`MultiaddrTest`/`MultihashTest` updated
-    accordingly; `mvn test` still passes (38/38 tests green) after the removal.
-  - Every later milestone (M3 onward, none of which had been started yet) is rewritten below
-    to use the project's own minimal `P2PInputStream`/`P2POutputStream` abstraction instead of
-    Netty `Channel`/`ByteBuf`, and a directly-implemented `java.net.ServerSocket`-based TCP
-    server instead of Netty's `ServerBootstrap`/`NioServerSocketChannel`.
+#
 
 ## Goal
 
@@ -155,398 +64,13 @@ Netty anywhere. Instead:
   rationale, the exact shape of these two classes, and the thread model in detail — the
   milestones below assume that document as background reading.
 
-## Package layout
-
-All new code lives under a new base package, separate from the existing (currently empty)
-application code in `com.github.ruediste.p2psync`:
-
-```
-com.github.ruediste.p2psync.libp2p
-├── core                    Host, PeerId, PeerInfo, Connection, Stream, P2PInputStream,
-│                            P2POutputStream, P2PStream, ConnectionHandler, StreamHandler,
-│                            Network, AddressBook, Base58
-├── core.multiaddr           Multiaddr, Protocol, Multihash, MultiaddrComponent, Varint, ByteBuf
-├── multistream              ProtocolBinding, ProtocolDescriptor, ProtocolMatcher,
-│                            Multistream, MultistreamFraming, ProtocolSelect (both
-│                            the protocol-agnostic types and the wire protocol implementation
-│                            live in this one package — implemented directly against
-│                            P2PStream/P2PInputStream/P2POutputStream, no pipeline/frame-decoder
-│                            framework involved)
-├── crypto                   Key, PrivKey, PubKey, KeyType, Marshaling (thin wrapper around the
-│                            generated `crypto.pb.Crypto` protobuf classes)
-├── crypto.keys              Ed25519PrivateKey, Ed25519PublicKey
-├── transport                Transport (interface)
-├── transport.tcp            TcpTransport (dial), TcpServer (accept loop + per-connection
-│                            virtual thread), TcpConnection, SocketP2PInputStream/
-│                            SocketP2POutputStream (thin adapters over `Socket#getInputStream`/
-│                            `#getOutputStream`), ConnectionBuilder, ConnectionUpgrader
-├── security                 SecureChannel
-├── security.noise           NoiseXXSecureChannel, NoiseXXHandshake, NoiseXXFramedInputStream,
-│                            NoiseXXFramedOutputStream (payload uses the generated
-│                            `spipe.pb.Spipe` protobuf classes directly, no hand-written
-│                            wrapper needed)
-├── mux                      StreamMuxer, MuxedConnection, MuxedStream, MuxId
-├── mux.yamux                YamuxStreamMuxer, YamuxConnection, YamuxStream, YamuxFrameIO,
-│                            YamuxFrame, YamuxFlag, YamuxType, YamuxId, YamuxStreamIdGenerator
-├── network                  NetworkImpl
-└── host                     HostImpl, HostBuilder, MemoryAddressBook
-```
-
-This mirrors upstream's package split (`core`, `crypto`, `transport`, `multistream`,
-`security.noise`, `mux.yamux`, `network`, `host`) closely enough that future diffs against
-upstream (e.g. to port more protocols later) stay easy to reason about, even though the
-`transport.netty`/`P2PChannelOverNetty`/`AbstractChildChannel` family of Netty-shaped classes
-upstream uses has no equivalent here (replaced by the blocking-stream classes above).
-**Deviation from upstream's split**: upstream keeps the protocol-agnostic multistream types
-(`ProtocolBinding`/`ProtocolDescriptor`/`ProtocolMatcher`/`Multistream`) in
-`core.multistream` and the wire-protocol implementation (`MultistreamImpl`/`Multistream`/
-`ProtocolSelect`) in a separate `multistream` package, mirroring a `core`-interfaces-vs-
-`impl`-classes split that made more sense when `Multistream` was an interface with a Netty-
-pipeline-based implementation class (`MultistreamImpl`). Since this port's `Multistream` is
-already just a single concrete class (see M3 below — there's no alternate implementation to
-abstract behind an interface), that split added a package boundary without a corresponding
-abstraction boundary; both halves now live together in one `multistream` package.
-
-Protobuf-generated classes (see "Protobuf toolchain" below) live in their own `crypto.pb`/
-`spipe.pb` packages, matching the `package` statements in the `.proto` files, and are treated
-as generated code (not hand-edited, not manually maintained package-layout-wise).
-
-## Dependencies to add to `pom.xml`
-
-| Dependency                                                                | Purpose                                                                                             | Notes                                                                                                                                                                                                                                                         |
-| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `com.google.protobuf:protobuf-java`                                        | Runtime for the generated `crypto.pb`/`spipe.pb` message classes (see "Protobuf toolchain" below).    | Pin via a `<protobuf.version>` property; use a version whose matching `protoc` artifact is available for the build machine's OS/arch (e.g. `3.25.5`, matching upstream, or a newer 3.25.x/4.x release — all support the `proto2` syntax used by these files). |
-| `org.junit.jupiter:junit-jupiter` **or** keep existing `junit:junit:4.11` | Tests                                                                                                  | Project currently has JUnit 4; keep JUnit 4 for consistency unless a strong reason to move to JUnit 5 arises during implementation.                                                                                                                           |
-
-Deliberately **not** added:
-
-- `io.netty:*` (`netty-buffer`/`-common`/`-transport`/`-handler`/`-codec`) — superseded plan; see
-  the architectural deviation note above and `ARCHITECTURE.md`. The transport/security/muxer
-  stack is hand-rolled directly on top of blocking `java.net.Socket` I/O and Java 21 virtual
-  threads (JEP 444), which avoids both the runtime dependency and the conceptual overhead of
-  Netty's channel/pipeline/event-loop model for a project that has no need for non-blocking I/O
-  at the connection counts this system operates at.
-- `tech.pegasys:noise-java` — see "Noise" section below: hand-roll `Noise_XX_25519_ChaChaPoly_SHA256`
-  using only JDK 21 built-in crypto (`X25519`, `ChaCha20-Poly1305`, `HmacSHA256`), avoiding an extra
-  runtime dependency for a single fixed handshake pattern.
-- `org.bouncycastle:*` — not needed while only Ed25519 is supported; JDK 15+ has native
-  `KeyPairGenerator.getInstance("Ed25519")` / `Signature.getInstance("Ed25519")` (JEP 339).
-  Add BouncyCastle later if/when Secp256k1/RSA/ECDSA key types are ported.
-- `com.github.multiformats:java-multibase`, Guava — not needed for the minimal `ip4`/`ip6`/`tcp`/`p2p`
-  multiaddr subset.
-
-
-## Protobuf toolchain and `.proto` files
-
-Two upstream `.proto` files are needed for this scope — `crypto.proto` (key marshaling,
-used by `PeerId` derivation and identity persistence) and `spipe.proto` (only its
-`NoiseHandshakePayload` message is used, by the Noise `XX` handshake in M5). Both are tiny
-(`proto2` syntax, ≤5 fields each) but should be compiled with a real protobuf toolchain rather
-than hand-rolled, so the wire format is guaranteed byte-compatible with upstream/other libp2p
-implementations and stays trivially maintainable if fields are ever added.
-
-**Copy the `.proto` files themselves** (unmodified, so they stay wire-identical to upstream)
-into this repo:
-
-- `upstream/jvm-libp2p/libp2p/src/main/proto/crypto.proto` → `src/main/proto/crypto.proto`
-- `upstream/jvm-libp2p/libp2p/src/main/proto/spipe.proto` → `src/main/proto/spipe.proto`
-
-Add a one-line header comment to each copy noting it was copied verbatim from
-`jvm-libp2p` (`libp2p/src/main/proto/…`), dual-licensed Apache-2.0/MIT, for reference/provenance.
-Do not trim unused messages (`Propose`/`Exchange` in `spipe.proto`) — keeping the full file
-matches upstream exactly and costs nothing (unused generated classes are harmless).
-
-Neither file declares a `java_package` option, so `protoc`'s default naming applies: the
-generated outer classes are `crypto.pb.Crypto` (nested `Crypto.PublicKey`, `Crypto.PrivateKey`,
-`Crypto.KeyType`) and `spipe.pb.Spipe` (nested `Spipe.NoiseHandshakePayload`, plus the unused
-`Spipe.Propose`/`Spipe.Exchange`).
-
-**Maven toolchain wiring** (`pom.xml`), mirroring what upstream's Gradle build does with the
-`com.google.protobuf` Gradle plugin, using the Maven-ecosystem equivalent:
-
-- `kr.motd.maven:os-maven-plugin` registered as a build `<extension>`, so `${os.detected.classifier}`
-  resolves the right native `protoc` binary for the build machine.
-- `org.xolstice.maven.plugins:protobuf-maven-plugin` bound to the `generate-sources` phase,
-  `compile` goal, configured with:
-  - `<protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}</protocArtifact>`
-  - default `protoSourceRoot` (`src/main/proto`) — matches the layout above, no extra config needed.
-  - default output (`target/generated-sources/protobuf/java`), automatically registered as a
-    compile source root by the plugin (no `build-helper-maven-plugin` needed).
-- No gRPC plugin/codegen needed — only plain message classes.
-
-Generated classes are build artifacts (`target/generated-sources/...`), not committed to
-source control (already covered by the existing `.gitignore` pattern for `target/`).
-
-Code in `crypto/Marshaling.java` (M2) and the Noise handshake payload handling (M5) call the
-generated builders directly, e.g.:
-
-```java
-Crypto.PublicKey proto = Crypto.PublicKey.newBuilder()
-    .setType(Crypto.KeyType.Ed25519)
-    .setData(ByteString.copyFrom(pubKey.raw()))
-    .build();
-byte[] marshaled = proto.toByteArray();
-```
-
-```java
-Spipe.NoiseHandshakePayload payload = Spipe.NoiseHandshakePayload.newBuilder()
-    .setLibp2PKey(ByteString.copyFrom(identityPubKeyMarshaled))
-    .setNoiseStaticKeySignature(ByteString.copyFrom(signature))
-    .build();
-```
-
-This removes any need to hand-document the protobuf wire format in code comments — the
-`.proto` files are the single source of truth for both this project and upstream.
-
 ## Milestones
 
 Each milestone should be its own commit (or small set of commits) with passing tests before
 moving to the next. Milestones 1–3 have no network I/O and are pure unit-testable logic;
 milestone 4 onward requires loopback TCP integration tests.
 
-### M0 — Project setup: dependencies and protobuf toolchain
-
-Add the `protobuf-java` dependency, the `os-maven-plugin` extension and
-`protobuf-maven-plugin` build plugin described above to `pom.xml`, and copy `crypto.proto` /
-`spipe.proto` into `src/main/proto/`. Acceptance: `mvn generate-sources` produces
-`crypto.pb.Crypto` and `spipe.pb.Spipe` under `target/generated-sources/protobuf/java`, and
-`mvn compile` succeeds with a trivial test referencing e.g.
-`Crypto.PublicKey.newBuilder().setType(Crypto.KeyType.Ed25519)...build()` to confirm the
-generated code is on the compile classpath. No hand-written libp2p code yet. (No Netty
-dependency is added — see the architectural deviation note under "Goal" above.)
-
-### M1 — Foundations: varint, Multiaddr
-
-**Deviation from the original plan**: no bespoke `Libp2pException` hierarchy is introduced.
-Error conditions throughout this port simply throw plain JDK exceptions
-(`IllegalArgumentException`/`IllegalStateException`/`RuntimeException`) with a descriptive
-message — a dedicated exception taxonomy (`ConnectionClosedException`,
-`NoSuchLocalProtocolException`, `NoSuchRemoteProtocolException`, `ProtocolViolationException`,
-`StreamNotActiveException`, `InternalErrorException`, ...) adds ceremony without enough payoff
-for this project's scope, since nothing here needs to catch/handle those subtypes differently.
-Later milestones referencing e.g. `NoSuchRemoteProtocolException` should read this as "throw a
-`RuntimeException` describing the same failure" instead.
-
-Files: `core/multiaddr/Varint.java`,
-`core/multiaddr/Protocol.java` (enum: `IP4`, `IP6`, `TCP`, `P2P` only — skip DNS variants),
-`core/multiaddr/Multihash.java` (Identity + SHA2-256 digest only), `core/multiaddr/Multiaddr.java`,
-`core/multiaddr/MultiaddrComponent.java`, `core/Base58.java`, `core/PeerId.java` (minimal version:
-byte storage, `toBase58`/`fromBase58`/`fromHex`/`toHex`/`random`, `equals`/`hashCode`; `fromPubKey`
-is added in M2 once `crypto.PubKey`/`Marshaling` exist — needed already in M1 because
-`Protocol.P2P`'s validator and `Multiaddr.getPeerId()` both depend on `PeerId`, mirroring
-upstream's own layering).
-
-Reference: `core/multiformats/{Protocol,Multiaddr,MultiaddrComponent,Multihash}.kt`,
-`etc/types/ByteBufExt.kt` (uvarint read/write), `core/PeerId.kt`, `etc/encode/Base58.kt`.
-
-Tests: uvarint round-trip; `Multiaddr` parse/serialize for `/ip4/127.0.0.1/tcp/4001`,
-`/ip4/127.0.0.1/tcp/4001/p2p/<peerId>`; `getPeerId()` extraction; invalid-address rejection.
-
-### M2 — Keys and PeerId
-
-Files: `crypto/KeyType.java`, `crypto/PrivKey.java`, `crypto/PubKey.java`,
-`crypto/keys/Ed25519PrivateKey.java`, `crypto/keys/Ed25519PublicKey.java`,
-`crypto/Marshaling.java` (thin `marshalPublicKey`/`marshalPrivateKey`/`unmarshalPublicKey`/
-`unmarshalPrivateKey` helpers that build/parse the **generated** `crypto.pb.Crypto.PublicKey`/
-`Crypto.PrivateKey` protobuf messages — see "Protobuf toolchain" above; this milestone depends
-on that toolchain being wired up first), `core/PeerId.java`.
-
-Implementation notes:
-
-- Use `KeyPairGenerator.getInstance("Ed25519")` / `Signature.getInstance("Ed25519")`
-  (`java.security` + `java.security.spec.NamedParameterSpec`) — no external crypto library.
-- `raw()` for Ed25519 keys must extract the 32-byte raw seed/point (not full PKCS8/X509 DER),
-  to match `Data` in `crypto.proto`, matching upstream's `Ed25519PrivateKey`/`PublicKey.raw()`.
-  This is the fiddly part: JDK returns PKCS8/X509-wrapped keys; extract the raw 32 bytes from
-  the encoded `PrivateKeyInfo`/`SubjectPublicKeyInfo` (fixed offset for Ed25519, or use
-  `java.security.spec.EdECPrivateKeySpec`/`EdECPublicKeySpec` +
-  `KeyFactory.getInstance("Ed25519")` to go back and forth cleanly).
-- `PeerId.fromPubKey(pubKey)`: marshal pubkey via `Marshaling`, then Multihash-encode:
-  Identity digest if marshaled bytes.length <= 42, else SHA2-256 digest. Store/compare as
-  raw bytes; `toBase58()`/`fromBase58()` (need a small Base58 encode/decode utility —
-  ~30 lines, no dependency required).
-
-Tests: generate key pair, marshal/unmarshal round trip, `PeerId.fromPubKey` produces a stable
-base58 id; cross-check against `PeerIdTest.kt` fixtures/format if convenient (same input pubkey
-bytes → same PeerId string).
-
-### M3 — Multistream-select
-
-Files: `core/P2PInputStream.java`, `core/P2POutputStream.java`, `core/P2PStream.java`,
-`multistream/ProtocolBinding.java`, `multistream/ProtocolDescriptor.java`,
-`multistream/ProtocolMatcher.java`, `multistream/Multistream.java`,
-`multistream/MultistreamFraming.java`,
-`multistream/ProtocolSelect.java`.
-
-**Deviation from the original plan**: upstream splits these into a `core.multistream` package
-(the protocol-agnostic `ProtocolBinding`/`ProtocolDescriptor`/`ProtocolMatcher`/`Multistream`
-interface) and a separate `multistream` package (the Netty-pipeline-based
-`MultistreamImpl`/`Multistream`/`ProtocolSelect`). Since `Multistream` here is just one plain
-concrete class with no alternate implementation to abstract behind an interface (see below),
-that package boundary added no corresponding abstraction boundary, so everything lives in a
-single `multistream` package instead — see the package-layout deviation note above.
-
-Reference: `core/multistream/*.kt`, `multistream/{MultistreamImpl,Multistream,ProtocolSelect}.kt`,
-`etc/events/ProtocolNegotiation.kt` (for the negotiation state machine's shape only — the
-Netty-pipeline-event mechanics described there don't apply here).
-
-`P2PInputStream`/`P2POutputStream` (see `ARCHITECTURE.md`) are introduced here because
-`Multistream` is the first thing that needs to read/write bytes; they are two tiny abstract
-classes exposing bulk array read/write (the primitive every layer must implement) plus a
-single-byte convenience method defined once in terms of it. Neither declares a checked
-exception — implementations catch any underlying `IOException` and rethrow it wrapped in
-`java.io.UncheckedIOException` instead (see `ARCHITECTURE.md`'s "No checked exceptions" note;
-this keeps every caller below a plain straight-line sequence of blocking calls with no
-`try/catch`-for-plumbing noise):
-
-```java
-public abstract class P2PInputStream implements Closeable {
-    public abstract int read(byte[] buf, int off, int len);
-
-    public int read() {
-        byte[] single = new byte[1];
-        int n = read(single, 0, 1);
-        return n < 0 ? -1 : single[0] & 0xFF;
-    }
-}
-
-public abstract class P2POutputStream implements Closeable {
-    public abstract void write(byte[] buf, int off, int len);
-
-    public void write(int b) {
-        write(new byte[] { (byte) b }, 0, 1);
-    }
-}
-```
-
-`P2PStream` bundles an `P2PInputStream`/`P2POutputStream` pair together with an `isInitiator`
-flag identifying which side of the pair opened it (dialed/opened, vs. accepted):
-
-```java
-public final class P2PStream implements Closeable {
-    public P2PStream(P2PInputStream in, P2POutputStream out, boolean initiator) { ... }
-
-    public P2PInputStream getIn() { ... }
-    public P2POutputStream getOut() { ... }
-    public boolean isInitiator() { ... }
-}
-```
-
-This is the unit multistream-select actually negotiates on — a whole connection's raw/Noise-
-encrypted streams before security negotiation (M5) and muxer negotiation (M6), or a single
-Yamux stream's streams for per-application-protocol negotiation (M7/M8) — and bundling the
-initiator/responder role together with the streams themselves means
-`Multistream.negotiate(P2PStream)` (see below) is a single method that picks the right
-negotiation role on its own, instead of upstream's split between an initiator-side and
-responder-side entry point.
-
-Implementation notes:
-
-- Wire protocol `/multistream/1.0.0`: varint32-length-prefixed, `\n`-terminated UTF-8 strings.
-  Implement a tiny pair of helpers, `MultistreamFraming.writeMessage(P2POutputStream, String)`/
-  `readMessage(P2PInputStream)`, that do the varint-length-prefix + UTF-8 + `\n` framing by
-  calling `read`/`write` directly (the varint length prefix is naturally decoded one byte at a
-  time via `P2PInputStream#read()`, stopping as soon as the continuation bit is clear; the
-  fixed-length string body afterwards uses `P2PInputStream#readFully(byte[])`, since
-  `read(byte[], int, int)` — like `InputStream#read(byte[], int, int)` — is allowed to return
-  fewer bytes than requested); cap the frame length at 1024 bytes (mirrors upstream's
-  `LimitedProtobufVarint32FrameDecoder`) and throw a plain `RuntimeException` on a malformed or
-  oversized frame (a genuine I/O failure, e.g. premature EOF, instead surfaces as
-  `UncheckedIOException` — see `ARCHITECTURE.md`). No frame-decoder/pipeline framework needed —
-  this is a handful of straight-line blocking calls.
-- `Multistream.negotiateAsInitiator(P2PStream, List<String> candidates)`/
-  `negotiateAsResponder(P2PStream, List<ProtocolMatcher> matchers)`: requester side runs
-  synchronously — write the multistream header + first candidate, then blocking-read the
-  response line(s) and loop until a protocol matches or the candidates are exhausted (throwing
-  if none do); responder side blocking-reads the header/first candidate, matches against
-  `ProtocolMatcher`s (support `strict` matcher only — sufficient for `/noise`, `/yamux/1.0.0`,
-  and app protocol ids used later), and writes back accept/reject lines. Because this all runs
-  on a virtual thread (see M4), there is no `channelActive`/event-callback shape to this at all
-  — each is a plain blocking method that returns the agreed protocol id (or throws).
-- `Multistream<T>` ties a fixed `List<ProtocolBinding<T>>` to the negotiate methods and `ProtocolSelect`:
-  `negotiate(P2PStream stream)` picks `negotiateAsInitiator`/`negotiateAsResponder` based on
-  `stream.isInitiator()`, resolves the matching `ProtocolBinding` via `ProtocolSelect`, and
-  calls its `init(stream, selectedProtocol)` — there is no pipeline to "install a handler
-  into"; the caller just invokes the binding's handler method directly with the same stream
-  negotiation used, and gets back a `Multistream.Result` (selected protocol id + controller).
-- This exact mechanism is reused twice per connection (security negotiation, then muxer
-  negotiation) and later once per stream (application protocol negotiation) — implement it
-  generically now so milestones 5–8 just reuse it.
-
-Tests: two in-memory `P2PStream`s (backed by a shared byte-pipe, e.g. `java.io.PipedInputStream`/
-`PipedOutputStream`, or a tiny hand-rolled blocking byte queue — this pipe implementation is
-reusable by later milestones' tests too, so it's worth writing once as test-support code), one
-constructed with `isInitiator=true` and the other with `isInitiator=false`, each side driven
-from its own plain (platform) thread since `Multistream.negotiate*` blocks, negotiating a fake protocol id;
-negotiation failure path (plain `RuntimeException`, no remote protocol match — see M1 deviation
-note on exceptions).
-
-### M4 — TCP transport, custom TCP server, and the connection upgrade pipeline
-
-Files: `core/Connection.java`, `core/Stream.java`, `core/StreamHandler.java`,
-`core/ConnectionHandler.java`, `transport/Transport.java`, `transport/tcp/TcpServer.java`
-(accept loop), `transport/tcp/TcpTransport.java` (dial + `handles(addr)`),
-`transport/tcp/TcpConnection.java`, `transport/tcp/SocketP2PInputStream.java`,
-`transport/tcp/SocketP2POutputStream.java`, `transport/ConnectionBuilder.java`,
-`transport/ConnectionUpgrader.java`.
-
-**Plan deviation**: the original plan had a standalone milestone (formerly "M4") just for the
-`Connection`/`Stream` abstractions, before any transport existed to actually create one. That
-milestone added ceremony without payoff once `P2PStream` (M3) already exists as the underlying
-streams-plus-role abstraction: `Connection`/`Stream` are introduced here, in the milestone that
-actually needs them, as thin wrappers around a `P2PStream` plus metadata (remote `PeerId`,
-negotiated protocol, secure/muxer session handles) — no `AttributeKey`-on-a-channel indirection
-needed since there's no channel (see `core/{Connection,Stream}.kt`,
-`core/ConnectionHandler.kt` for the shape of the public API only; upstream's underlying
-`P2PChannel`/Netty-`Channel` implementation does not apply here).
-
-Reference: `transport/implementation/{PlainNettyTransport,ConnectionBuilder}.kt`,
-`transport/ConnectionUpgrader.kt`, `transport/tcp/TcpTransport.kt` (for the *sequencing*/
-responsibilities of these classes only — the actual implementation is plain blocking
-`java.net.ServerSocket`/`java.net.Socket`, not Netty `Bootstrap`/`ServerBootstrap`). See
-`ARCHITECTURE.md` for the full thread-model writeup this milestone implements.
-
-Implementation notes:
-
-- `TcpServer`: wraps a bound `java.net.ServerSocket`. `start()` spawns one dedicated **virtual
-  thread** running `while (!closed) { Socket s = serverSocket.accept(); Thread.ofVirtual()
-  .start(() -> handleAccepted(s)); }`. Each accepted socket gets its own fresh virtual thread
-  running `handleAccepted`, which performs the entire upgrade sequence synchronously (see
-  `ConnectionBuilder` below) before invoking the application's `ConnectionHandler`. `close()`
-  closes the `ServerSocket` (which unblocks `accept()` with a `SocketException`, ending the
-  accept-loop thread) and, if desired, tracks + closes still-open accepted connections.
-- `TcpTransport.dial(multiaddr)`: `new Socket(host, port)` (blocking connect, optionally with a
-  connect timeout via `Socket#connect(SocketAddress, int)`), then runs the exact same
-  `ConnectionBuilder` upgrade sequence synchronously on the calling virtual thread. Callers that
-  want a non-blocking-looking API (e.g. `Host.connect(...)` returning something awaitable) wrap
-  this blocking call at the outermost layer with
-  `CompletableFuture.supplyAsync(() -> dial(...), Executors.newVirtualThreadPerTaskExecutor())`
-  — no async plumbing is needed inside the transport/security/muxer layers themselves.
-- `ConnectionBuilder.upgrade(Socket socket, boolean isInitiator)`: wraps
-  `socket.getInputStream()`/`socket.getOutputStream()` as `SocketP2PInputStream`/
-  `SocketP2POutputStream` (trivial adapters delegating straight to the underlying `InputStream`/
-  `OutputStream`), constructs a `TcpConnection` around them, then calls, in order and as plain
-  sequential blocking method calls (no futures/promises/callbacks at this layer):
-  1. `upgrader.establishSecureChannel(connection)` — runs the Noise handshake (M5) synchronously,
-     sets the secure session on success.
-  2. `upgrader.establishMuxer(connection)` — runs the Yamux `/yamux/1.0.0` multistream
-     negotiation (M6) synchronously, sets the muxer session on success and starts the muxer's
-     background reader virtual thread (see M6).
-  3. Invoke the configured `ConnectionHandler` with the fully upgraded `Connection`.
-  Any exception at any step closes the socket and propagates/logs, exactly as the original plan
-  intended — this method is a literal, single-threaded, testable method precisely *because*
-  it's allowed to block.
-- `TcpTransport.handles(addr)`: unchanged (multiaddr has `ip4`/`ip6` + `tcp` components).
-- At this point `ConnectionUpgrader` can be stubbed/tested with a fake `SecureChannel`/
-  `StreamMuxer` pair before Noise/Yamux exist (M5/M6), to validate the sequencing independently.
-
-Tests: loopback TCP connect/listen with stub security+muxer bindings that just complete
-immediately; verify `ConnectionHandler` fires exactly once per side with a fully "upgraded"
-`Connection` (non-null secure/muxer session). Since both the server's accept-handler and the
-client's dial run to completion on their own thread before returning/invoking the handler, the
-test is a plain sequential JUnit method plus a `CountDownLatch` (or simply `Thread#join`/a
-short poll) to wait for the *server-side* handler thread specifically, since it necessarily
-runs on a different thread than the test method.
+Completed Milestone descriptions have been removed on purpose.
 
 ### M5 — Noise `XX` security transport
 
@@ -580,10 +104,10 @@ Implementation notes — hand-rolled Noise using only JDK crypto (`Noise_XX_2551
   Verify the same on the receiving side and derive the remote `PeerId`; if dialing, must match
   the `PeerId` from the dial multiaddr's `/p2p/` component.
 - **I/O plumbing (the actual deviation from the original plan)**: `NoiseXXHandshake.run(
-  P2PInputStream rawIn, P2POutputStream rawOut, ...)` is a plain blocking method that performs
+P2PInputStream rawIn, P2POutputStream rawOut, ...)` is a plain blocking method that performs
   the 2-byte-big-endian-length-prefixed (max 65535, same framing upstream's `UShortLengthCodec`
   used) 3-message exchange directly against the connection's raw streams and returns the two
-  derived `CipherState`s (one per direction) on success — there is no handshake *handler*
+  derived `CipherState`s (one per direction) on success — there is no handshake _handler_
   sitting in a pipeline reacting to `channelRead` events; it's a synchronous request/response
   loop, which is exactly what the Noise `XX` pattern already is. Once the handshake completes,
   `NoiseXXFramedInputStream`/`NoiseXXFramedOutputStream` wrap the same raw streams and implement
@@ -606,17 +130,17 @@ Files: `mux/StreamMuxer.java`, `mux/MuxId.java`, `mux/MuxedConnection.java`,
 YamuxStreamIdGenerator,YamuxConnection,YamuxStream,YamuxStreamMuxer}.java`.
 
 Reference: `core/mux/StreamMuxer.kt`, `mux/MuxHandler.kt`, `mux/yamux/*.kt` (wire format and
-flow-control *semantics* only — the Netty child-`Channel`/`EventLoop` plumbing described in
+flow-control _semantics_ only — the Netty child-`Channel`/`EventLoop` plumbing described in
 `etc/util/netty/mux/*.kt`/`etc/util/netty/AbstractChildChannel.kt` has no equivalent here);
 cross-check frame encoding against `YamuxHandlerTest.kt`.
 
 Implementation notes:
 
 - Wire format (12-byte header, big-endian): `version:u8, type:u8, flags:u16, streamId:u32,
-  length:u32` + optional `DATA` payload. `maxFrameDataLength = 1<<20`. Types:
+length:u32` + optional `DATA` payload. `maxFrameDataLength = 1<<20`. Types:
   `DATA=0, WINDOW_UPDATE=1, PING=2, GO_AWAY=3`. Flags (single-flag only): `SYN=1, ACK=2, FIN=4,
-  RST=8`. `YamuxFrameIO` implements `readFrame(P2PInputStream)`/`writeFrame(P2POutputStream,
-  YamuxFrame)` as plain blocking calls (`readFully`-style loop for the 12-byte header, then the
+RST=8`. `YamuxFrameIO` implements `readFrame(P2PInputStream)`/`writeFrame(P2POutputStream,
+YamuxFrame)` as plain blocking calls (`readFully`-style loop for the 12-byte header, then the
   payload) — this wire format is unchanged from the original plan, only the encode/decode entry
   points change shape (methods on a plain I/O helper instead of a Netty
   `ByteToMessageDecoder`/`MessageToByteEncoder`).

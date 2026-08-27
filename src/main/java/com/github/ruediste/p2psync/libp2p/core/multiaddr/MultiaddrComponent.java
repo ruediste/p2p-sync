@@ -38,6 +38,14 @@ public final class MultiaddrComponent {
         return stringValueCache;
     }
 
+    /**
+     * Returns the value as an integer (e.g. for port numbers). Equivalent to parsing
+     * {@link #getStringValue()} as an integer.
+     */
+    public int getIntValue() {
+        return Integer.parseInt(getStringValue());
+    }
+
     public void serialize(ByteBuf buf) {
         buf.writeBytes(protocol.encoded);
         protocol.writeAddressBytes(buf, value);
