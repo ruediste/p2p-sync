@@ -4,6 +4,8 @@ The project documentation lives in `upstream/p2p-sync.wiki`.
 
 Read `ImplementationPlan.md` if the user seems to reference to it, for example for implementation of a milestone.
 
+If there is an issue with generating the protobuf java files, a `mvn clean` sometimes helps.
+
 ## Initial Exploration of the Code Base
 
 When starting a new task, avoid inspecting the whole codebase. Use a focused exploration instead.

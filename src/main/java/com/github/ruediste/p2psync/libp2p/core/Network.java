@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
-import com.github.ruediste.p2psync.libp2p.transport.Transport;
+import com.github.ruediste.p2psync.libp2p.transport.InitiatingTransport;
 
 /**
  * Manages transports, listening endpoints, and active connections.
@@ -18,7 +18,7 @@ import com.github.ruediste.p2psync.libp2p.transport.Transport;
  */
 public interface Network {
 
-    List<Transport> transports();
+    List<InitiatingTransport> transports();
 
     ConnectionHandler connectionHandler();
 

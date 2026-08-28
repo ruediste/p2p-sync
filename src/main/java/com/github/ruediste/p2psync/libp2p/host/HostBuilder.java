@@ -16,7 +16,8 @@ import com.github.ruediste.p2psync.libp2p.network.NetworkImpl;
 import com.github.ruediste.p2psync.libp2p.security.SecureSession;
 import com.github.ruediste.p2psync.libp2p.security.noise.NoiseXXProtocolBinding;
 import com.github.ruediste.p2psync.libp2p.transport.DefaultConnectionBuilder;
-import com.github.ruediste.p2psync.libp2p.transport.tcp.TcpTransport;
+import com.github.ruediste.p2psync.libp2p.transport.InitiatingTransport;
+import com.github.ruediste.p2psync.libp2p.transport.tcp.TcpInitiatingTransport;
 
 /**
  * Fluent Java-idiomatic builder for {@link Host}.
@@ -80,8 +81,8 @@ public final class HostBuilder {
         DefaultConnectionBuilder connectionBuilder = new DefaultConnectionBuilder(secureChannels, muxers);
 
         // 4. Create transport (TCP)
-        TcpTransport tcpTransport = new TcpTransport(connectionBuilder);
-        List<com.github.ruediste.p2psync.libp2p.transport.Transport> transports = List.of(tcpTransport);
+        TcpInitiatingTransport tcpTransport = new TcpInitiatingTransport();
+        List<InitiatingTransport> transports = List.of(tcpTransport);
 
         // 5. Create broadcast connection handler
         ConnectionHandler broadcastHandler = conn -> {
@@ -91,7 +92,7 @@ public final class HostBuilder {
         };
 
         // 6. Create Network
-        NetworkImpl network = new NetworkImpl(transports, broadcastHandler);
+        NetworkImpl network = new NetworkImpl(transports, connectionBuilder, broadcastHandler);
 
         // 7. Create AddressBook
         MemoryAddressBook addressBook = new MemoryAddressBook();

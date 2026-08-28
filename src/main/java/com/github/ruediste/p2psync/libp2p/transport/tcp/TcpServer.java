@@ -82,7 +82,8 @@ public final class TcpServer {
 
     private void handleAccepted(Socket socket) {
         try {
-            com.github.ruediste.p2psync.libp2p.core.Connection connection = connectionBuilder.upgrade(socket, false);
+            com.github.ruediste.p2psync.libp2p.core.Connection connection = connectionBuilder
+                    .upgrade(SocketUtils.toConnection(socket, false));
             lock.lock();
             try {
                 connections.add(connection);

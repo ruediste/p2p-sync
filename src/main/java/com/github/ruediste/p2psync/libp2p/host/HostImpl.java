@@ -117,6 +117,6 @@ public final class HostImpl implements Host {
 
     @Override
     public <T> T newStream(List<ProtocolBinding<T>> protocols, Connection conn) {
-        return conn.muxerSession.createStream(protocols);
+        return conn.muxerSession().createStream(protocols);
     }
 }

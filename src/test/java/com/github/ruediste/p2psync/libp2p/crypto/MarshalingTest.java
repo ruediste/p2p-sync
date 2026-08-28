@@ -48,8 +48,10 @@ public class MarshalingTest {
 
         byte[] marshaled = Marshaling.marshalPublicKey(priv.publicKey());
 
-        // crypto.proto: PublicKey { required KeyType Type = 1; required bytes Data = 2; }
-        // field 1 (varint, tag 0x08), value 1 (Ed25519); field 2 (length-delimited, tag 0x12),
+        // crypto.proto: PublicKey { required KeyType Type = 1; required bytes Data = 2;
+        // }
+        // field 1 (varint, tag 0x08), value 1 (Ed25519); field 2 (length-delimited, tag
+        // 0x12),
         // length 32, followed by the 32 raw key bytes -- 36 bytes total.
         byte[] expected = new byte[4 + 32];
         expected[0] = 0x08;

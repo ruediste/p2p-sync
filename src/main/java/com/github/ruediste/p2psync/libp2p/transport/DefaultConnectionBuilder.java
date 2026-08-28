@@ -1,14 +1,10 @@
 package com.github.ruediste.p2psync.libp2p.transport;
 
-import java.io.UncheckedIOException;
 import java.net.Socket;
 import java.util.List;
 
 import com.github.ruediste.p2psync.libp2p.core.Connection;
-import com.github.ruediste.p2psync.libp2p.core.P2PInputStream;
-import com.github.ruediste.p2psync.libp2p.core.P2POutputStream;
-import com.github.ruediste.p2psync.libp2p.core.P2PStream;
-import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
+import com.github.ruediste.p2psync.libp2p.core.RawConnection;
 import com.github.ruediste.p2psync.libp2p.multistream.Multistream;
 import com.github.ruediste.p2psync.libp2p.multistream.ProtocolBinding;
 import com.github.ruediste.p2psync.libp2p.mux.MuxerSession;
@@ -32,52 +28,15 @@ public final class DefaultConnectionBuilder implements ConnectionBuilder {
         this.secureChannels = secureChannels;
     }
 
-    public Connection upgrade(Socket socket, boolean isInitiator) {
-        P2PInputStream in = P2PInputStream.wrap(getInputStream(socket));
-        P2POutputStream out = P2POutputStream.wrap(getOutputStream(socket));
-        P2PStream rawStream = new P2PStream(in, out, isInitiator);
-
-        Multiaddr localAddress = localAddress(socket);
-        Multiaddr remoteAddress = remoteAddress(socket);
-
+    public Connection upgrade(RawConnection rawConnection) {
         // establish secure channel
-        SecureSession secureSession = new Multistream<>(secureChannels).negotiate(rawStream).getController();
+        SecureSession secureSession = new Multistream<>(secureChannels).negotiate(rawConnection.stream()).getController();
 
         // establish muxer
         MuxerSession muxerSession = new Multistream<>(muxers).negotiate(secureSession.getStream()).getController();
 
-        return new Connection(rawStream, localAddress, remoteAddress, secureSession.getRemoteId(), muxerSession,
+        return new Connection(rawConnection, muxerSession,
                 secureSession);
     }
 
-    private static java.io.InputStream getInputStream(Socket socket) {
-        try {
-            return socket.getInputStream();
-        } catch (java.io.IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    private static java.io.OutputStream getOutputStream(Socket socket) {
-        try {
-            return socket.getOutputStream();
-        } catch (java.io.IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    private static Multiaddr localAddress(java.net.Socket socket) {
-        java.net.InetSocketAddress addr = (java.net.InetSocketAddress) socket.getLocalSocketAddress();
-        if (addr == null) {
-            return new Multiaddr("/ip4/0.0.0.0/tcp/0");
-        }
-        String ip = addr.getAddress().getHostAddress();
-        return new Multiaddr("/ip4/" + ip + "/tcp/" + addr.getPort());
-    }
-
-    public static Multiaddr remoteAddress(java.net.Socket socket) {
-        java.net.InetSocketAddress addr = (java.net.InetSocketAddress) socket.getRemoteSocketAddress();
-        String ip = addr.getAddress().getHostAddress();
-        return new Multiaddr("/ip4/" + ip + "/tcp/" + addr.getPort());
-    }
 }
