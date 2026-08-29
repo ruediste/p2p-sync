@@ -41,11 +41,13 @@ public class YamuxTest {
 
         final YamuxSession connA;
         final YamuxSession connB;
+        final P2PStream streamA;
+        final P2PStream streamB;
 
         MuxerPair() {
             // A is initiator, B is responder
-            P2PStream streamA = new P2PStream(bToA.input(), aToB.output(), true);
-            P2PStream streamB = new P2PStream(aToB.input(), bToA.output(), false);
+            streamA = new P2PStream(bToA.input(), aToB.output(), true);
+            streamB = new P2PStream(aToB.input(), bToA.output(), false);
 
             // No application multistream for basic muxer tests — inbound streams
             // would fail negotiation, which is fine for this test. We test
@@ -61,6 +63,8 @@ public class YamuxTest {
         void close() {
             connA.close();
             connB.close();
+            streamA.close();
+            streamB.close();
         }
     }
 

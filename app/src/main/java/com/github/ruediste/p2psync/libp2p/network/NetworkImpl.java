@@ -1,6 +1,5 @@
 package com.github.ruediste.p2psync.libp2p.network;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import com.github.ruediste.p2psync.libp2p.core.Connection;
 import com.github.ruediste.p2psync.libp2p.core.ConnectionEstablishedListener;
@@ -19,6 +19,7 @@ import com.github.ruediste.p2psync.libp2p.core.RawConnection;
 import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
 import com.github.ruediste.p2psync.libp2p.transport.ConnectionBuilder;
 import com.github.ruediste.p2psync.libp2p.transport.InitiatingTransport;
+import com.github.ruediste.p2psync.libp2p.transport.ListeningTransport;
 import com.github.ruediste.p2psync.libp2p.transport.ListeningTransportBinding;
 
 /**
@@ -34,7 +35,7 @@ public final class NetworkImpl implements Network {
     private final ConnectionBuilder connectionBuilder;
     private final ConnectionEstablishedListener connectionEstablishedListener;
     private final List<Connection> connections = new CopyOnWriteArrayList<>();
-    private final Map<Multiaddr, Closeable> servers = new ConcurrentHashMap<>();
+    private final Map<Multiaddr, ListeningTransport> servers = new ConcurrentHashMap<>();
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private final List<ListeningTransportBinding> listeningTransportBindings;
 
@@ -94,7 +95,7 @@ public final class NetworkImpl implements Network {
     @Override
     public CompletableFuture<Void> unlisten(Multiaddr addr) {
         return CompletableFuture.runAsync(() -> {
-            Closeable server = servers.remove(addr);
+            ListeningTransport server = servers.remove(addr);
             if (server != null) {
                 try {
                     server.close();
@@ -103,6 +104,13 @@ public final class NetworkImpl implements Network {
                 }
             }
         }, executor);
+    }
+
+    @Override
+    public List<Multiaddr> listenAddresses() {
+        return servers.values().stream()
+                .map(ListeningTransport::getActualListeningAddr)
+                .collect(Collectors.toList());
     }
 
     @Override

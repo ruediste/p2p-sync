@@ -32,6 +32,7 @@ import com.github.ruediste.p2psync.libp2p.crypto.PrivKey;
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 import com.github.ruediste.p2psync.libp2p.security.CantDecryptInboundException;
 import com.github.ruediste.p2psync.libp2p.security.InvalidRemotePubKeyException;
+import com.github.ruediste.p2psync.libp2p.security.MalformedNoiseHandshakeException;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -229,6 +230,11 @@ public final class NoiseXXHandshake {
         out.write((message.length >>> 8) & 0xFF);
         out.write(message.length & 0xFF);
         out.write(message);
+        // the handshake is three blocking round-trips: each side writes a
+        // complete message, then blocks on a read. Without an explicit flush
+        // the message could sit in a buffered peer indefinitely and both sides
+        // would deadlock.
+        out.flush();
     }
 
     private static byte[] readFrame(P2PInputStream in) {
@@ -313,8 +319,30 @@ public final class NoiseXXHandshake {
      * A Noise {@code CipherState}: a 32-byte key (or empty = "no key" for the
      * plaintext handshake phase) plus a monotonically increasing 64-bit counter
      * nonce, used for both handshake and (post-split) transport AEAD operations.
+     *
+     * <p>
+     * Instances are <b>thread-safe</b>: {@link #encryptWithAd} and
+     * {@link #decryptWithAd} are synchronized on the instance, so a given AEAD
+     * counter is allocated, used, and incremented atomically. Without this, two
+     * threads could read the same {@code nonce}, encrypt with it, and reuse a
+     * key/nonce pair — catastrophic for ChaCha20-Poly1305. Atomic, but note that
+     * this only protects the counter: the framed streams additionally serialize
+     * wire emission so frame order matches nonce order.
      */
     public static final class CipherState {
+
+        /**
+         * Largest Noise AEAD nonce (2^64 - 1). The Noise spec mandates the
+         * counter must never wrap: reaching this value is a fatal error and no
+         * further encryption/decryption may be attempted, lest the nonce be
+         * reused against the same key (catastrophic for ChaCha20-Poly1305).
+         *
+         * <p>
+         * Matches upstream noise-java's {@code CipherState} guard
+         * ({@code "Nonce has wrapped around"}).
+         */
+        private static final long MAX_NONCE = 0xFFFFFFFFFFFFFFFFL;
+
         private final byte[] key;
         private long nonce;
 
@@ -330,10 +358,17 @@ public final class NoiseXXHandshake {
         /**
          * Encrypts {@code plaintext} with AEAD (authentication tag appended),
          * advancing the nonce.
+         *
+         * @throws IllegalStateException if the nonce counter has reached its
+         *                               maximum value (2^64 - 1), refusing any
+         *                               further operations per the Noise spec.
          */
-        public byte[] encryptWithAd(byte[] ad, byte[] plaintext) {
+        public synchronized byte[] encryptWithAd(byte[] ad, byte[] plaintext) {
             if (!hasKey()) {
                 return plaintext.clone();
+            }
+            if (nonce == MAX_NONCE) {
+                throw new IllegalStateException("Noise AEAD nonce exhausted (2^64 - 1); refusing to reuse the counter");
             }
             try {
                 byte[] ciphertext = IvCipher.aead(Cipher.ENCRYPT_MODE, key, buildNonce(nonce), ad, plaintext);
@@ -348,10 +383,17 @@ public final class NoiseXXHandshake {
          * Decrypts {@code ciphertext}, advancing the nonce only on success. An
          * authentication failure throws {@link CantDecryptInboundException} and
          * the nonce is left unchanged (per the Noise spec).
+         *
+         * @throws IllegalStateException if the nonce counter has reached its
+         *                               maximum value (2^64 - 1), refusing any
+         *                               further operations per the Noise spec.
          */
-        public byte[] decryptWithAd(byte[] ad, byte[] ciphertext) {
+        public synchronized byte[] decryptWithAd(byte[] ad, byte[] ciphertext) {
             if (!hasKey()) {
                 return ciphertext.clone();
+            }
+            if (nonce == MAX_NONCE) {
+                throw new IllegalStateException("Noise AEAD nonce exhausted (2^64 - 1); refusing to reuse the counter");
             }
             try {
                 byte[] plaintext = IvCipher.aead(Cipher.DECRYPT_MODE, key, buildNonce(nonce), ad, ciphertext);
@@ -366,7 +408,7 @@ public final class NoiseXXHandshake {
     private static byte[] buildNonce(long n) {
         byte[] nonce = new byte[12];
         for (int i = 0; i < 8; i++) {
-            nonce[11 - i] = (byte) (n >>> (8 * i));
+            nonce[4 + i] = (byte) (n >>> (8 * i));
         }
         return nonce;
     }
@@ -504,12 +546,12 @@ public final class NoiseXXHandshake {
             for (int token : tokens) {
                 switch (token) {
                     case TOKEN_E:
-                        remoteEphemeralPublic = slice(message, pos, pos + DH_LENGTH);
+                        remoteEphemeralPublic = checkRange(message, pos, pos + DH_LENGTH);
                         pos += DH_LENGTH;
                         symmetric.mixHash(remoteEphemeralPublic);
                         break;
                     case TOKEN_S:
-                        byte[] encryptedStatic = slice(message, pos, pos + DH_LENGTH + TAG_LENGTH);
+                        byte[] encryptedStatic = checkRange(message, pos, pos + DH_LENGTH + TAG_LENGTH);
                         pos += DH_LENGTH + TAG_LENGTH;
                         remoteStaticPublic = symmetric.decryptAndHash(encryptedStatic);
                         break;
@@ -534,7 +576,7 @@ public final class NoiseXXHandshake {
                         throw new IllegalStateException("Unknown Noise token: " + token);
                 }
             }
-            return symmetric.decryptAndHash(slice(message, pos, message.length));
+            return symmetric.decryptAndHash(checkRange(message, pos, message.length));
         }
 
         CipherStatePair split() {
@@ -710,7 +752,23 @@ public final class NoiseXXHandshake {
         return out;
     }
 
-    private static byte[] slice(byte[] data, int from, int to) {
+    /**
+     * Copies {@code data[from, to)} into a fresh array, rejecting any
+     * out-of-bounds range with a {@link MalformedNoiseHandshakeException}.
+     *
+     * <p>
+     * Unlike the raw {@link Arrays#copyOfRange} behaviour previously used here,
+     * an overlong request is not silently zero-padded: a truncated handshake
+     * frame must never be parsed with zero-filled key material (which could
+     * carry DH/crypto processing past its intended input) and must instead
+     * fail fast as a protocol violation.
+     */
+    private static byte[] checkRange(byte[] data, int from, int to) {
+        if (from < 0 || to > data.length || from > to) {
+            throw new MalformedNoiseHandshakeException(
+                    "Truncated Noise handshake message: requested bytes [" + from + ", " + to + ") but message has "
+                            + "length " + data.length);
+        }
         return Arrays.copyOfRange(data, from, to);
     }
 }

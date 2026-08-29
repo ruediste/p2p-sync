@@ -28,6 +28,12 @@ public interface Network {
 
     CompletableFuture<Void> unlisten(Multiaddr addr);
 
+    /**
+     * The addresses the network's transports are actually listening on (with
+     * ports resolved from any wildcard/zero ports in the configured addresses).
+     */
+    List<Multiaddr> listenAddresses();
+
     CompletableFuture<Connection> connect(PeerId id, Multiaddr... addrs);
 
     CompletableFuture<Void> disconnect(Connection conn);

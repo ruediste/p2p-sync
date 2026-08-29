@@ -60,6 +60,24 @@ public abstract class P2POutputStream implements Closeable {
     public abstract void close();
 
     /**
+     * Flushes any internally buffered bytes to the underlying sink.
+     *
+     * <p>
+     * The default implementation is a no-op, which is correct for streams with
+     * no internal buffering (raw socket streams, the in-memory test pipe, etc.).
+     * Implementations that buffer output (e.g. wrapping a
+     * {@link java.io.BufferedOutputStream}) must override this.
+     *
+     * <p>
+     * Blocking request/response protocols such as the Noise handshake write a
+     * complete message and then block on a read; without a flush after each such
+     * write, a buffered peer would leave the message sitting in local memory and
+     * the two sides would deadlock.
+     */
+    public void flush() {
+    }
+
+    /**
      * Adapts a plain {@link OutputStream} (e.g. {@code Socket#getOutputStream()},
      * or a
      * {@code PipedOutputStream} used in tests) to a {@link P2POutputStream},
@@ -81,6 +99,15 @@ public abstract class P2POutputStream implements Closeable {
             public void write(int b) {
                 try {
                     out.write(b);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }
+
+            @Override
+            public void flush() {
+                try {
+                    out.flush();
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }

@@ -1,12 +1,12 @@
 package com.github.ruediste.p2psync.libp2p.transport.tcp;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.function.Consumer;
 
 import com.github.ruediste.p2psync.libp2p.core.RawConnection;
 import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
+import com.github.ruediste.p2psync.libp2p.transport.ListeningTransport;
 import com.github.ruediste.p2psync.libp2p.transport.ListeningTransportBinding;
 
 public class TcpListeningTransportBinding implements ListeningTransportBinding {
@@ -17,7 +17,7 @@ public class TcpListeningTransportBinding implements ListeningTransportBinding {
     }
 
     @Override
-    public Closeable listen(Multiaddr address, Consumer<RawConnection> connectionHandler) {
+    public ListeningTransport listen(Multiaddr address, Consumer<RawConnection> connectionHandler) {
         var hostPort = SocketUtils.getHostPort(address)
                 .orElseThrow(() -> new IllegalArgumentException("Unsupported Address " + address));
 

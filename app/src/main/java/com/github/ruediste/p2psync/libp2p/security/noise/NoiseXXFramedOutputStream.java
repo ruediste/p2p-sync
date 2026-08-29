@@ -15,6 +15,13 @@ import com.github.ruediste.p2psync.libp2p.core.P2POutputStream;
  * upstream's {@code SplitEncoder}).
  *
  * <p>
+ * This stream is <b>thread-safe</b>: the whole {@code encrypt -> emit frame ->
+ * flush} sequence is performed under an exclusive lock. The lock covers wire
+ * emission as well as nonce allocation, so the order frames hit the wire always
+ * matches the AEAD counter order and concurrently-written frames can never be
+ * observed (by the remote decryptor) with their counters out of order.
+ *
+ * <p>
  * From the muxer's (M6) point of view this is just another
  * {@link P2POutputStream}, identical in shape to the raw TCP one
  * (see {@code ARCHITECTURE.md}).
@@ -35,7 +42,7 @@ public final class NoiseXXFramedOutputStream extends P2POutputStream {
     }
 
     @Override
-    public void write(byte[] buf, int off, int len) {
+    public synchronized void write(byte[] buf, int off, int len) {
         int written = 0;
         while (written < len) {
             int chunk = Math.min(len - written, NoiseXXHandshake.SPLIT_MAX);
@@ -45,7 +52,7 @@ public final class NoiseXXFramedOutputStream extends P2POutputStream {
     }
 
     @Override
-    public void write(int b) {
+    public synchronized void write(int b) {
         writeFrame(new byte[] { (byte) b }, 0, 1);
     }
 
@@ -56,6 +63,10 @@ public final class NoiseXXFramedOutputStream extends P2POutputStream {
         out.write((ciphertext.length >>> 8) & 0xFF);
         out.write(ciphertext.length & 0xFF);
         out.write(ciphertext);
+        // each transport frame is an independent unit the remote decrypts as
+        // soon as it completes; flush so a buffered peer doesn't stall waiting
+        // for the frame that never arrived.
+        out.flush();
     }
 
     @Override

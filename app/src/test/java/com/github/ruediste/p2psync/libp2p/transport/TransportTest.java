@@ -72,7 +72,7 @@ public class TransportTest {
         TcpServer server = new TcpServer(serverSocket, conn -> {
         });
         server.start();
-        Multiaddr addr = server.getListenAddress();
+        Multiaddr addr = server.getActualListeningAddr();
         assertTrue(addr.toString().contains("/tcp/" + port));
         server.close();
     }

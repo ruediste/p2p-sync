@@ -21,6 +21,13 @@ import com.github.ruediste.p2psync.libp2p.security.CantDecryptInboundException;
  * From the muxer's (M6) point of view this is just another
  * {@link P2PInputStream}, identical in shape to the raw TCP one
  * (see {@code ARCHITECTURE.md}).
+ *
+ * <p>
+ * This stream is <b>thread-safe</b>: {@link #read(byte[], int, int)} is
+ * synchronized, so a frame's wire bytes are fetched and decrypted atomically
+ * with respect to the shared {@code inbound} AEAD counter. Without this,
+ * concurrent readers could fetch frame N+1's ciphertext and decrypt it before
+ * frame N's, desynchronizing the counter from the wire.
  */
 public final class NoiseXXFramedInputStream extends P2PInputStream {
 
@@ -42,7 +49,7 @@ public final class NoiseXXFramedInputStream extends P2PInputStream {
     }
 
     @Override
-    public int read(byte[] buf, int off, int len) {
+    public synchronized int read(byte[] buf, int off, int len) {
         if (len == 0) {
             return 0;
         }

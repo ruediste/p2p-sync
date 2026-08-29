@@ -1,6 +1,5 @@
 package com.github.ruediste.p2psync.libp2p.transport.tcp;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.ServerSocket;
@@ -15,6 +14,7 @@ import java.util.function.Consumer;
 import com.github.ruediste.p2psync.libp2p.core.ConnectionEstablishedListener;
 import com.github.ruediste.p2psync.libp2p.core.RawConnection;
 import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
+import com.github.ruediste.p2psync.libp2p.transport.ListeningTransport;
 
 /**
  * Wraps a bound {@link ServerSocket}. {@link #start()} spawns one dedicated
@@ -25,7 +25,7 @@ import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
  * application's
  * {@link ConnectionEstablishedListener}.
  */
-public final class TcpServer implements Closeable {
+public final class TcpServer implements ListeningTransport {
 
     private final ServerSocket serverSocket;
     private final Consumer<RawConnection> connectionHandler;
@@ -39,8 +39,10 @@ public final class TcpServer implements Closeable {
         this.connectionHandler = connectionHandler;
     }
 
-    public Multiaddr getListenAddress() {
-        return new Multiaddr("/ip4/0.0.0.0/tcp/" + serverSocket.getLocalPort());
+    @Override
+    public Multiaddr getActualListeningAddr() {
+        return new Multiaddr("/ip4/" + serverSocket.getInetAddress().getHostAddress()
+                + "/tcp/" + serverSocket.getLocalPort());
     }
 
     public void start() {
@@ -80,21 +82,26 @@ public final class TcpServer implements Closeable {
     }
 
     private void handleAccepted(Socket socket) {
+        RawConnection connection = SocketUtils.toConnection(socket, false);
+        lock.lock();
         try {
-            var connection = SocketUtils.toConnection(socket, false);
-            lock.lock();
-            try {
-                connections.add(connection);
-            } finally {
-                lock.unlock();
-            }
-            connectionHandler.accept(connection);
+            connections.add(connection);
         } finally {
+            lock.unlock();
+        }
+        try {
+            connectionHandler.accept(connection);
+        } catch (RuntimeException e) {
+            // The handler failed to upgrade/take over the connection; nothing
+            // owns the socket anymore, so close it. On success the socket
+            // stays open: its lifecycle is now owned by the layers above
+            // (they close it via Connection.close()).
             try {
                 socket.close();
-            } catch (IOException e) {
+            } catch (IOException ignored) {
                 // ignore close failure
             }
+            throw e;
         }
     }
 

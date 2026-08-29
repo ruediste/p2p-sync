@@ -16,7 +16,7 @@ milestones below assume that document as background reading.
 | M5 — Noise XX security transport        | ✅ Done        | See log below. |
 | M6 — Yamux stream multiplexer           | ✅ Done        | See log below. |
 | M7 — Network, ConnectionUpgrader, Host  | ✅ Done        | See log below. |
-| M8 — End-to-end integration test / demo | ⬜ Not started |                |
+| M8 — End-to-end integration test / demo | ✅ Done        | See log below. |
 
 #
 
@@ -72,7 +72,7 @@ milestone 4 onward requires loopback TCP integration tests.
 
 Completed Milestone descriptions have been removed on purpose.
 
-### M8 — End-to-end integration test / demo
+### End-to-end integration test / demo
 
 Goal: prove the full stack works exactly as requested ("start two nodes, and establish a
 connection between them"), plus a minimal stream smoke test to exercise Yamux end-to-end.

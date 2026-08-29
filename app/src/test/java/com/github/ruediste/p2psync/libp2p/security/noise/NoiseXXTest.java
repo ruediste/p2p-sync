@@ -6,8 +6,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,6 +28,7 @@ import com.github.ruediste.p2psync.libp2p.core.PeerId;
 import com.github.ruediste.p2psync.libp2p.crypto.keys.Ed25519PrivateKey;
 import com.github.ruediste.p2psync.libp2p.security.CantDecryptInboundException;
 import com.github.ruediste.p2psync.libp2p.security.InvalidRemotePubKeyException;
+import com.github.ruediste.p2psync.libp2p.security.MalformedNoiseHandshakeException;
 import com.github.ruediste.p2psync.libp2p.security.SecureSession;
 import com.github.ruediste.p2psync.libp2p.test.BytePipe;
 
@@ -229,6 +235,161 @@ public class NoiseXXTest {
         }
     }
 
+    @Test
+    public void truncatedHandshakeFrameIsRejected() throws Throwable {
+        Ed25519PrivateKey privA = Ed25519PrivateKey.generateKeyPair();
+
+        Pipe pipe = new Pipe();
+
+        // adversarial responder: swallows the initiator's first message (msg1,
+        // the 32-byte ephemeral key) and replies with a frame that declares only
+        // 31 bytes -- one short of what TOKEN_E requires.
+        Thread responder = Thread.ofVirtual().name("truncator").start(() -> {
+            try {
+                P2PInputStream in = pipe.aToB.input();
+                int hi = in.read();
+                int lo = in.read();
+                int len = (hi << 8) | lo;
+                byte[] ignored = new byte[len];
+                in.readFully(ignored);
+                P2POutputStream out = pipe.bToA.output();
+                out.write(0);
+                out.write(31);
+                out.write(new byte[31]);
+            } catch (RuntimeException expected) {
+                // torn down after initiator rejection
+            }
+        });
+
+        try {
+            awaitSingle(() -> new NoiseXXProtocolBinding(privA).init(pipe.aRaw, "/noise"));
+            fail("Expected the initiator to reject the truncated handshake frame");
+        } catch (MalformedNoiseHandshakeException expected) {
+            // expected
+        } finally {
+            pipe.aToB.input().close();
+            pipe.bToA.input().close();
+            responder.join(1_000);
+        }
+    }
+
+    @Test
+    public void nonceOverflowIsFatal() throws Throwable {
+        // a CipherState carrying any 32-byte key: reading/writing its AEAD
+        // counter requires a live handshake only to obtain a key, which a
+        // directly-constructed state provides for the overflow check
+        byte[] key = new byte[32];
+        new Random(42).nextBytes(key);
+        NoiseXXHandshake.CipherState cipher = new NoiseXXHandshake.CipherState(key);
+
+        // force the AEAD counter to its maximum value (2^64 - 1); the very next
+        // operation must be refused outright rather than reuse the counter
+        java.lang.reflect.Field nonceField = NoiseXXHandshake.CipherState.class
+                .getDeclaredField("nonce");
+        nonceField.setAccessible(true);
+        nonceField.setLong(cipher, 0xFFFFFFFFFFFFFFFFL);
+
+        try {
+            cipher.encryptWithAd(null, new byte[8]);
+            fail("Expected nonce exhaustion to be fatal");
+        } catch (IllegalStateException expected) {
+            // expected
+        }
+        assertEquals("Refusal must not consume the counter", 0xFFFFFFFFFFFFFFFFL,
+                nonceField.getLong(cipher));
+
+        try {
+            cipher.decryptWithAd(null, new byte[8]);
+            fail("Expected nonce exhaustion to be fatal");
+        } catch (IllegalStateException expected) {
+            // expected
+        }
+        assertEquals("Refusal must not consume the counter", 0xFFFFFFFFFFFFFFFFL,
+                nonceField.getLong(cipher));
+    }
+
+    @Test
+    public void concurrentCallsOnSharedCipherNeverReuseANonce() throws Exception {
+        byte[] key = new byte[32];
+        new Random(42).nextBytes(key);
+        NoiseXXHandshake.CipherState cipher = new NoiseXXHandshake.CipherState(key);
+
+        int threads = 8;
+        int perThread = 500;
+        // identical cipher input on every call: if two calls ever shared a
+        // key/nonce pair their ciphertexts would be identical and the set would
+        // shrink accordingly
+        byte[] plaintext = "identical plaintext makes nonce reuse visible".getBytes(StandardCharsets.UTF_8);
+        Set<String> ciphertexts = Collections.synchronizedSet(new HashSet<>());
+
+        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+        try {
+            List<Future<?>> futures = new ArrayList<>();
+            for (int t = 0; t < threads; t++) {
+                futures.add(executor.submit(() -> {
+                    for (int i = 0; i < perThread; i++) {
+                        ciphertexts.add(Arrays.toString(cipher.encryptWithAd(null, plaintext)));
+                    }
+                }));
+            }
+            for (Future<?> f : futures) {
+                f.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+
+        assertEquals("each AEAD counter must be used exactly once",
+                threads * perThread, ciphertexts.size());
+        assertEquals("the counter must have advanced exactly once per encryption",
+                threads * perThread, nonceOf(cipher));
+    }
+
+    @Test
+    public void concurrentWritesKeepFrameOrderAlignedWithNonceOrder() throws Exception {
+        Ed25519PrivateKey privA = Ed25519PrivateKey.generateKeyPair();
+        Ed25519PrivateKey privB = Ed25519PrivateKey.generateKeyPair();
+
+        Pipe pipe = new Pipe();
+        SecureSession[] sessions = handshake(pipe, privA, privB, null);
+        P2POutputStream out = sessions[0].getStream().getOut();
+        P2PInputStream in = sessions[1].getStream().getIn();
+
+        // several writers hammer one outbound stream; the sole reader on the
+        // other side must be able to decrypt every frame. Any interleave that
+        // emitted a frame with a counter out of order vs. its nonce would make
+        // the next read fail with CantDecryptInboundException.
+        int threads = 8;
+        int chunks = 40;
+        int chunkLen = 333;
+        int total = threads * chunks * chunkLen;
+
+        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+        try {
+            List<Future<?>> futures = new ArrayList<>();
+            for (int t = 0; t < threads; t++) {
+                byte[] data = new byte[chunkLen];
+                new Random(t).nextBytes(data);
+                futures.add(executor.submit(() -> {
+                    for (int i = 0; i < chunks; i++) {
+                        out.write(data);
+                    }
+                }));
+            }
+            for (Future<?> f : futures) {
+                f.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+
+        // readExact throws (UncheckedIOException on EOF, CantDecryptInboundException
+        // on counter/wire desync) if any frame can't be decrypted in order; hence
+        // reaching the end proves the ordering guarantee
+        byte[] received = readExact(in, total);
+        assertEquals("decrypted byte volume must match what was written", total, received.length);
+    }
+
     // ------------------------------------------------------------------
     // helpers
     // ------------------------------------------------------------------
@@ -250,6 +411,13 @@ public class NoiseXXTest {
         } catch (RuntimeException | Error e) {
             throw e;
         }
+    }
+
+    /** White-box read of the AEAD counter, for asserting exactly-once use. */
+    private static long nonceOf(NoiseXXHandshake.CipherState cipher) throws Exception {
+        java.lang.reflect.Field nonceField = NoiseXXHandshake.CipherState.class.getDeclaredField("nonce");
+        nonceField.setAccessible(true);
+        return nonceField.getLong(cipher);
     }
 
     private static byte[] readExact(P2PInputStream in, int n) {

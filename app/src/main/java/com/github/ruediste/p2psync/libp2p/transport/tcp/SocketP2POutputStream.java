@@ -38,6 +38,15 @@ class SocketP2POutputStream extends P2POutputStream {
     }
 
     @Override
+    public void flush() {
+        try {
+            out.flush();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    @Override
     public void close() {
         try {
             out.close();

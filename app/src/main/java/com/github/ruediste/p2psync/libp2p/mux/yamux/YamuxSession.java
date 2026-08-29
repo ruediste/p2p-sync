@@ -35,7 +35,6 @@ public final class YamuxSession implements MuxerSession {
     private volatile boolean closed;
 
     private final Multistream<?> appMultistream;
-    private final Thread readerThread;
 
     public YamuxSession(P2PInputStream in, P2POutputStream out, boolean initiator,
             Multistream<?> appMultistream) {
@@ -45,7 +44,7 @@ public final class YamuxSession implements MuxerSession {
         this.idGenerator = new YamuxStreamIdGenerator(initiator);
         this.appMultistream = appMultistream;
 
-        this.readerThread = Thread.ofVirtual().name("yamux-reader").start(this::readerLoop);
+        Thread.ofVirtual().name("yamux-reader").start(this::readerLoop);
     }
 
     public boolean isInitiator() {

@@ -24,7 +24,7 @@ public interface Host {
 
     AddressBook addressBook();
 
-    List<Multiaddr> listenAddresses();
+    List<Multiaddr> actualListenAddresses();
 
     CompletableFuture<Void> start();
 

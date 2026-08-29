@@ -3,6 +3,7 @@ package com.github.ruediste.p2psync.libp2p.host;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import com.github.ruediste.p2psync.libp2p.core.AddressBook;
 import com.github.ruediste.p2psync.libp2p.core.Connection;
@@ -69,12 +70,10 @@ public final class HostImpl implements Host {
     }
 
     @Override
-    public List<Multiaddr> listenAddresses() {
-        List<Multiaddr> addrs = new ArrayList<>();
-        for (Multiaddr listenAddr : listenAddrs) {
-            addrs.add(listenAddr.withP2P(peerId));
-        }
-        return addrs;
+    public List<Multiaddr> actualListenAddresses() {
+        return network.listenAddresses().stream()
+                .map(addr -> addr.withP2P(peerId))
+                .collect(Collectors.toList());
     }
 
     @Override
