@@ -1,0 +1,24 @@
+{
+  "cSpell.words": [
+    "addrs",
+    "IPFS",
+    "Kademlia",
+    "keypair",
+    "libp2p",
+    "Multiaddr",
+    "multiformats",
+    "Multistream",
+    "Muxer",
+    "muxers",
+    "p2psync",
+    "ruediste",
+    "Stringifier",
+    "unlisten",
+    "unmarshal",
+    "Unmarshals",
+    "Upgrader",
+    "Varint",
+    "Yamux"
+  ],
+  "java.configuration.updateBuildConfiguration": "automatic"
+}
