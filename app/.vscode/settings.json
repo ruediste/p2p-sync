@@ -11,6 +11,7 @@
     "Muxer",
     "muxers",
     "p2psync",
+    "rawtypes",
     "ruediste",
     "Stringifier",
     "unlisten",

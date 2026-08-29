@@ -34,10 +34,10 @@ public final class YamuxSession implements MuxerSession {
     final ReentrantLock writerLock = new ReentrantLock();
     private volatile boolean closed;
 
-    private final Multistream<?> appMultistream;
+    private final Multistream<?, ?> appMultistream;
 
     public YamuxSession(P2PInputStream in, P2POutputStream out, boolean initiator,
-            Multistream<?> appMultistream) {
+            Multistream<?, ?> appMultistream) {
         this.in = in;
         this.out = out;
         this.initiator = initiator;
@@ -121,7 +121,7 @@ public final class YamuxSession implements MuxerSession {
         Thread.ofVirtual().name("yamux-stream-" + frame.streamId).start(() -> {
             try {
                 P2PStream p2pStream = stream.asP2PStream(false);
-                ((Multistream<Object>) appMultistream).negotiate(p2pStream);
+                ((Multistream<Object, Object>) appMultistream).negotiateResponder(p2pStream);
             } catch (RuntimeException e) {
                 // Stream handler failed
             }
@@ -265,12 +265,19 @@ public final class YamuxSession implements MuxerSession {
 
     // ---- Session interface ----
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public <T> T createStream(List<ProtocolBinding<T>> protocols) {
+    public <TInitiator> TInitiator createStream(
+            List<ProtocolBinding<TInitiator, ?>> protocols) {
+        return (TInitiator) createStreamHelper((List) protocols);
+    }
+
+    private <TInitiator, TResponder> TInitiator createStreamHelper(
+            List<ProtocolBinding<TInitiator, TResponder>> protocols) {
         YamuxStream yamuxStream = openStream();
-        Multistream<T> ms = new Multistream<>(protocols);
+        Multistream<TInitiator, ?> ms = new Multistream<>(protocols);
         P2PStream p2pStream = yamuxStream.asP2PStream(true);
-        Multistream.Result<T> result = ms.negotiate(p2pStream);
+        Multistream.Result<TInitiator> result = ms.negotiateInitiator(p2pStream);
         return result.getController();
     }
 

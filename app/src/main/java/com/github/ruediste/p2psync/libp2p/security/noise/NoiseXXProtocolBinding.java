@@ -11,8 +11,8 @@ import com.github.ruediste.p2psync.libp2p.security.SecureSession;
  * The libp2p Noise security channel protocol binding ({@code /noise}).
  *
  * <p>
- * {@link #init(P2PStream, String)} just delegates to
- * {@link NoiseXXHandshake#run} (a plain blocking call) and wraps the raw stream
+ * {@link #initInitiator} and {@link #initResponder} just delegate to
+ * {@link NoiseXXHandshake#run} (a plain blocking call) and wrap the raw stream
  * in a {@link NoiseXXFramedInputStream}/{@link NoiseXXFramedOutputStream} pair,
  * handing the resulting secured {@link P2PStream} to the layer above.
  *
@@ -20,7 +20,7 @@ import com.github.ruediste.p2psync.libp2p.security.SecureSession;
  * The Noise static keypair (distinct from the identity keypair) is generated
  * once per process.
  */
-public final class NoiseXXProtocolBinding implements ProtocolBinding<SecureSession> {
+public final class NoiseXXProtocolBinding implements ProtocolBinding<SecureSession, SecureSession> {
 
     private static final String ANNOUNCE = "/noise";
     private static final ProtocolDescriptor DESCRIPTOR = new ProtocolDescriptor(ANNOUNCE);
@@ -49,9 +49,7 @@ public final class NoiseXXProtocolBinding implements ProtocolBinding<SecureSessi
         return DESCRIPTOR;
     }
 
-    @Override
-    public SecureSession init(P2PStream stream, String selectedProtocol) {
-        boolean initiator = stream.isInitiator();
+    private SecureSession init(P2PStream stream, String selectedProtocol, boolean initiator) {
         NoiseXXHandshake.Result result = NoiseXXHandshake.run(stream, localKey,
                 expectedRemotePeerId);
 
@@ -63,6 +61,16 @@ public final class NoiseXXProtocolBinding implements ProtocolBinding<SecureSessi
 
         return new SecureSession(result.getLocalId(), result.getRemoteId(), result.getRemotePubKey(),
                 securedStream);
+    }
+
+    @Override
+    public SecureSession initInitiator(P2PStream stream, String selectedProtocol) {
+        return init(stream, selectedProtocol, true);
+    }
+
+    @Override
+    public SecureSession initResponder(P2PStream stream, String selectedProtocol) {
+        return init(stream, selectedProtocol, false);
     }
 
 }

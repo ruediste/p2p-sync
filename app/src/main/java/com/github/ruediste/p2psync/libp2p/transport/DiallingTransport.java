@@ -9,7 +9,7 @@ import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
  * establish the raw connection. The caller is responsible to establish a secure
  * channel and add a muxer.
  */
-public interface InitiatingTransport {
+public interface DiallingTransport {
     boolean handles(Multiaddr address);
 
     RawConnection dial(Multiaddr address);

@@ -13,9 +13,9 @@ public interface MuxerSession {
      * Initiates a new stream, negotiating one of the given protocol bindings
      * over it via multistream-select (acting as initiator).
      */
-    <T> T createStream(List<ProtocolBinding<T>> protocols);
+    <TInitiator> TInitiator createStream(List<ProtocolBinding<TInitiator, ?>> protocols);
 
-    default <T> T createStream(ProtocolBinding<T> protocol) {
+    default <TInitiator> TInitiator createStream(ProtocolBinding<TInitiator, ?> protocol) {
         return createStream(List.of(protocol));
     }
 

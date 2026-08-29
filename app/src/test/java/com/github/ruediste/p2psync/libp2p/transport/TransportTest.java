@@ -12,7 +12,7 @@ import org.junit.Test;
 import com.github.ruediste.p2psync.libp2p.core.Connection;
 import com.github.ruediste.p2psync.libp2p.core.RawConnection;
 import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
-import com.github.ruediste.p2psync.libp2p.transport.tcp.TcpInitiatingTransport;
+import com.github.ruediste.p2psync.libp2p.transport.tcp.TcpDiallingTransport;
 import com.github.ruediste.p2psync.libp2p.transport.tcp.TcpServer;
 
 public class TransportTest {
@@ -45,7 +45,7 @@ public class TransportTest {
         });
         server.start();
 
-        TcpInitiatingTransport transport = new TcpInitiatingTransport();
+        TcpDiallingTransport transport = new TcpDiallingTransport();
         Multiaddr addr = new Multiaddr("/ip4/127.0.0.1/tcp/" + port);
         RawConnection raw = transport.dial(addr);
         Connection clientConn = STUB_BUILDER.upgrade(raw);
@@ -59,7 +59,7 @@ public class TransportTest {
 
     @Test
     public void tcpTransportHandlesAddress() {
-        TcpInitiatingTransport transport = new TcpInitiatingTransport();
+        TcpDiallingTransport transport = new TcpDiallingTransport();
         assertTrue(transport.handles(new Multiaddr("/ip4/127.0.0.1/tcp/9000")));
         assertTrue(transport.handles(
                 new Multiaddr("/ip4/1.2.3.4/tcp/1234/p2p/12D3KooWBMq1iwruB5Nho4FPPRUhD5UGuauPrWNwLgRx7RkJYatC")));

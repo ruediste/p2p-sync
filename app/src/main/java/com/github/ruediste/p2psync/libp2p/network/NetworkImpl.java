@@ -18,7 +18,7 @@ import com.github.ruediste.p2psync.libp2p.core.PeerId;
 import com.github.ruediste.p2psync.libp2p.core.RawConnection;
 import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
 import com.github.ruediste.p2psync.libp2p.transport.ConnectionBuilder;
-import com.github.ruediste.p2psync.libp2p.transport.InitiatingTransport;
+import com.github.ruediste.p2psync.libp2p.transport.DiallingTransport;
 import com.github.ruediste.p2psync.libp2p.transport.ListeningTransport;
 import com.github.ruediste.p2psync.libp2p.transport.ListeningTransportBinding;
 
@@ -31,7 +31,7 @@ import com.github.ruediste.p2psync.libp2p.transport.ListeningTransportBinding;
  */
 public final class NetworkImpl implements Network {
 
-    private final List<InitiatingTransport> transports;
+    private final List<DiallingTransport> transports;
     private final ConnectionBuilder connectionBuilder;
     private final ConnectionEstablishedListener connectionEstablishedListener;
     private final List<Connection> connections = new CopyOnWriteArrayList<>();
@@ -39,7 +39,7 @@ public final class NetworkImpl implements Network {
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private final List<ListeningTransportBinding> listeningTransportBindings;
 
-    public NetworkImpl(List<InitiatingTransport> initiatingTransports,
+    public NetworkImpl(List<DiallingTransport> initiatingTransports,
             List<ListeningTransportBinding> listeningTransportBindings, ConnectionBuilder connectionBuilder,
             ConnectionEstablishedListener connectionEstablishedListener) {
         this.listeningTransportBindings = listeningTransportBindings;
@@ -49,7 +49,7 @@ public final class NetworkImpl implements Network {
     }
 
     @Override
-    public List<InitiatingTransport> transports() {
+    public List<DiallingTransport> transports() {
         return transports;
     }
 
@@ -132,7 +132,7 @@ public final class NetworkImpl implements Network {
             // Try each transport / address in sequence, return first success
             Exception lastError = null;
             for (Multiaddr addr : addrsWithP2P) {
-                for (InitiatingTransport transport : transports) {
+                for (DiallingTransport transport : transports) {
                     if (transport.handles(addr)) {
                         try {
                             RawConnection raw = transport.dial(addr);

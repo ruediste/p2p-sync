@@ -106,8 +106,8 @@ public class NoiseXXTest {
     private static SecureSession[] handshake(Pipe pipe, Ed25519PrivateKey privA, Ed25519PrivateKey privB,
             PeerId expectedA) throws Exception {
         return runBoth(pipe,
-                stream -> new NoiseXXProtocolBinding(privA, expectedA).init(stream, "/noise"),
-                stream -> new NoiseXXProtocolBinding(privB).init(stream, "/noise"));
+                stream -> new NoiseXXProtocolBinding(privA, expectedA).initInitiator(stream, "/noise"),
+                stream -> new NoiseXXProtocolBinding(privB).initResponder(stream, "/noise"));
     }
 
     @Test
@@ -217,14 +217,14 @@ public class NoiseXXTest {
         // initiator rejects; close the pipe afterwards to unblock it
         Thread responder = Thread.ofVirtual().name("responder").start(() -> {
             try {
-                new NoiseXXProtocolBinding(privB).init(pipe.bRaw, "/noise");
+                new NoiseXXProtocolBinding(privB).initResponder(pipe.bRaw, "/noise");
             } catch (RuntimeException expected) {
                 // torn down after initiator rejection
             }
         });
 
         try {
-            awaitSingle(() -> new NoiseXXProtocolBinding(privA, wrongRemote).init(pipe.aRaw, "/noise"));
+            awaitSingle(() -> new NoiseXXProtocolBinding(privA, wrongRemote).initInitiator(pipe.aRaw, "/noise"));
             fail("Expected the initiator to reject the mismatched peer id");
         } catch (InvalidRemotePubKeyException expected) {
             // expected
@@ -262,7 +262,7 @@ public class NoiseXXTest {
         });
 
         try {
-            awaitSingle(() -> new NoiseXXProtocolBinding(privA).init(pipe.aRaw, "/noise"));
+            awaitSingle(() -> new NoiseXXProtocolBinding(privA).initInitiator(pipe.aRaw, "/noise"));
             fail("Expected the initiator to reject the truncated handshake frame");
         } catch (MalformedNoiseHandshakeException expected) {
             // expected

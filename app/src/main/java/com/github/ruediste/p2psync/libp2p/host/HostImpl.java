@@ -30,7 +30,7 @@ public final class HostImpl implements Host {
     private final Network network;
     private final AddressBook addressBook;
     private final List<Multiaddr> listenAddrs;
-    private final List<ProtocolBinding<?>> protocolHandlers;
+    private final List<ProtocolBinding<?, ?>> protocolHandlers;
     private final List<ConnectionEstablishedListener> connectionHandlers;
 
     public HostImpl(
@@ -38,7 +38,7 @@ public final class HostImpl implements Host {
             Network network,
             AddressBook addressBook,
             List<Multiaddr> listenAddrs,
-            List<ProtocolBinding<?>> protocolHandlers,
+            List<ProtocolBinding<?, ?>> protocolHandlers,
             List<ConnectionEstablishedListener> connectionHandlers) {
         this.privKey = privKey;
         this.peerId = PeerId.fromPubKey(privKey.publicKey());
@@ -90,17 +90,17 @@ public final class HostImpl implements Host {
     }
 
     @Override
-    public void addProtocolHandler(ProtocolBinding<?> protocolBinding) {
+    public void addProtocolHandler(ProtocolBinding<?, ?> protocolBinding) {
         protocolHandlers.add(protocolBinding);
     }
 
     @Override
-    public void removeProtocolHandler(ProtocolBinding<?> protocolBinding) {
+    public void removeProtocolHandler(ProtocolBinding<?, ?> protocolBinding) {
         protocolHandlers.remove(protocolBinding);
     }
 
     @Override
-    public List<ProtocolBinding<?>> getProtocols() {
+    public List<ProtocolBinding<?, ?>> getProtocols() {
         return List.copyOf(protocolHandlers);
     }
 
@@ -115,7 +115,8 @@ public final class HostImpl implements Host {
     }
 
     @Override
-    public <T> T newStream(List<ProtocolBinding<T>> protocols, Connection conn) {
+    public <TInitiator> TInitiator newStream(List<ProtocolBinding<TInitiator, ?>> protocols,
+            Connection conn) {
         return conn.muxerSession().createStream(protocols);
     }
 }

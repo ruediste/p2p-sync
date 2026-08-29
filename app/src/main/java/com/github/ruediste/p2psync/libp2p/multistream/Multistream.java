@@ -30,52 +30,60 @@ import com.github.ruediste.p2psync.libp2p.core.P2PStream;
  * {@code preHandler}/{@code postHandler}/pipeline-installation hooks and the
  * {@code CompletableFuture}-returning {@code initChannel} have no equivalent
  * here — negotiation
- * and the binding's {@code init} are both plain blocking calls, so
- * {@link #negotiate} simply
+ * and the binding's {@code initInitiator}/{@code initResponder} are both plain
+ * blocking calls, so
+ * {@link #negotiateInitiator} / {@link #negotiateResponder} simply
  * returns the resolved {@link Result} once both steps complete (or throws).
  */
-public final class Multistream<TController> {
+public final class Multistream<TInitiator, TResponder> {
 
     static final String MULTISTREAM_PROTOCOL = "/multistream/1.0.0";
     private static final String NOT_ACCEPTED = "na";
 
-    private final List<ProtocolBinding<TController>> bindings;
+    private final List<ProtocolBinding<TInitiator, TResponder>> bindings;
 
-    public Multistream(List<ProtocolBinding<TController>> bindings) {
+    public Multistream(List<ProtocolBinding<TInitiator, TResponder>> bindings) {
         this.bindings = List.copyOf(bindings);
     }
 
-    public List<ProtocolBinding<TController>> getBindings() {
+    public List<ProtocolBinding<TInitiator, TResponder>> getBindings() {
         return bindings;
     }
 
     /**
-     * Negotiates over {@code stream}, as initiator or responder depending on
-     * {@link P2PStream#isInitiator()}, then runs the winning binding.
+     * Negotiates over {@code stream} as the initiator, then runs the winning
+     * binding's {@link ProtocolBinding#initInitiator}.
      *
      * <p>
-     * As initiator, announces every candidate protocol from every binding (in
+     * Announces every candidate protocol from every binding (in
      * binding order,
-     * each binding's own preference order). As responder, matches the initiator's
-     * proposals
-     * against every binding's matcher.
+     * each binding's own preference order) until the responder accepts one.
      */
-    public Result<TController> negotiate(P2PStream stream) {
+    public Result<TInitiator> negotiateInitiator(P2PStream stream) {
+        if (!stream.isInitiator())
+            throw new RuntimeException("stream is not initiator");
         String selectedProtocol;
-        if (stream.isInitiator()) {
-            List<String> candidates = bindings.stream()
-                    .flatMap(b -> b.getProtocolDescriptor().getAnnounceProtocols().stream())
-                    .collect(Collectors.toList());
-            selectedProtocol = negotiateAsInitiator(stream, candidates);
-        } else {
-            List<ProtocolMatcher> matchers = bindings.stream()
-                    .map(b -> b.getProtocolDescriptor().getProtocolMatcher())
-                    .collect(Collectors.toList());
-            selectedProtocol = negotiateAsResponder(stream, matchers);
-        }
-        ProtocolBinding<TController> binding = selectBinding(bindings, selectedProtocol);
-        TController controller = binding.init(stream, selectedProtocol);
+        List<String> candidates = bindings.stream()
+                .flatMap(b -> b.getProtocolDescriptor().getAnnounceProtocols().stream())
+                .collect(Collectors.toList());
+        selectedProtocol = negotiateAsInitiator(stream, candidates);
+
+        ProtocolBinding<TInitiator, TResponder> binding = selectBinding(bindings, selectedProtocol);
+        TInitiator controller = binding.initInitiator(stream, selectedProtocol);
         return new Result<>(selectedProtocol, controller);
+    }
+
+    public Result<TResponder> negotiateResponder(P2PStream stream) {
+        if (stream.isInitiator())
+            throw new RuntimeException("stream is not responder");
+        String selectedProtocol;
+        List<ProtocolMatcher> matchers = bindings.stream()
+                .map(b -> b.getProtocolDescriptor().getProtocolMatcher())
+                .collect(Collectors.toList());
+        selectedProtocol = negotiateAsResponder(stream, matchers);
+        ProtocolBinding<TInitiator, TResponder> binding = selectBinding(bindings, selectedProtocol);
+        TResponder responder = binding.initResponder(stream, selectedProtocol);
+        return new Result<>(selectedProtocol, responder);
     }
 
     /**
@@ -172,7 +180,8 @@ public final class Multistream<TController> {
      *                          note on exceptions (this stands in for upstream's
      *                          {@code NoSuchLocalProtocolException}).
      */
-    private static <T> ProtocolBinding<T> selectBinding(List<ProtocolBinding<T>> bindings, String selectedProtocol) {
+    private static <TInitiator, TResponder> ProtocolBinding<TInitiator, TResponder> selectBinding(
+            List<ProtocolBinding<TInitiator, TResponder>> bindings, String selectedProtocol) {
         return bindings.stream()
                 .filter(b -> b.getProtocolDescriptor().getProtocolMatcher().matches(selectedProtocol))
                 .findFirst()

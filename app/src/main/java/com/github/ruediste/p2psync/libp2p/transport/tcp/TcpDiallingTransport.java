@@ -7,14 +7,14 @@ import java.net.Socket;
 
 import com.github.ruediste.p2psync.libp2p.core.RawConnection;
 import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
-import com.github.ruediste.p2psync.libp2p.transport.InitiatingTransport;
+import com.github.ruediste.p2psync.libp2p.transport.DiallingTransport;
 
 /**
  * TCP transport implementation. Dials remote addresses and checks whether a
  * multiaddr is
  * handleable (ip4/ip6 + tcp).
  */
-public final class TcpInitiatingTransport implements InitiatingTransport {
+public final class TcpDiallingTransport implements DiallingTransport {
 
     @Override
     public RawConnection dial(Multiaddr address) {

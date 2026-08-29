@@ -19,7 +19,7 @@ import com.github.ruediste.p2psync.libp2p.multistream.ProtocolDescriptor;
  * Yamux data path (mirrors how upstream uses {@code Ping} as its minimal
  * example).
  */
-public final class TrivialEchoProtocol implements ProtocolBinding<TrivialEchoProtocol.Controller> {
+public final class TrivialEchoProtocol implements ProtocolBinding<TrivialEchoProtocol.Controller, Void> {
 
     public static final String PROTOCOL = "/p2p-sync/echo/1.0.0";
 
@@ -28,31 +28,28 @@ public final class TrivialEchoProtocol implements ProtocolBinding<TrivialEchoPro
         return new ProtocolDescriptor(PROTOCOL);
     }
 
-    /**
-     * Controller returned to the initiator side. The responder side gets nothing
-     * (it just echoes automatically on a virtual thread).
-     */
     @Override
-    public Controller init(P2PStream stream, String selectedProtocol) {
-        if (stream.isInitiator()) {
-            return new Controller(stream.getIn(), stream.getOut());
-        } else {
-            // Responder: echo on a virtual thread
-            Thread.ofVirtual().name("echo-responder").start(() -> {
-                try {
-                    byte[] buf = new byte[4096];
-                    while (true) {
-                        int n = stream.getIn().read(buf, 0, buf.length);
-                        if (n < 0)
-                            break;
-                        stream.getOut().write(buf, 0, n);
-                    }
-                } catch (RuntimeException ignored) {
-                    // stream closed
+    public Controller initInitiator(P2PStream stream, String selectedProtocol) {
+        return new Controller(stream.getIn(), stream.getOut());
+    }
+
+    @Override
+    public Void initResponder(P2PStream stream, String selectedProtocol) {
+        // Responder: echo on a virtual thread
+        Thread.ofVirtual().name("echo-responder").start(() -> {
+            try {
+                byte[] buf = new byte[4096];
+                while (true) {
+                    int n = stream.getIn().read(buf, 0, buf.length);
+                    if (n < 0)
+                        break;
+                    stream.getOut().write(buf, 0, n);
                 }
-            });
-            return null;
-        }
+            } catch (RuntimeException ignored) {
+                // stream closed
+            }
+        });
+        return null;
     }
 
     /**
@@ -80,4 +77,5 @@ public final class TrivialEchoProtocol implements ProtocolBinding<TrivialEchoPro
             out.close();
         }
     }
+
 }

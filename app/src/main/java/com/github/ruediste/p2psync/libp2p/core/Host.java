@@ -30,15 +30,16 @@ public interface Host {
 
     CompletableFuture<Void> stop();
 
-    void addProtocolHandler(ProtocolBinding<?> protocolBinding);
+    void addProtocolHandler(ProtocolBinding<?, ?> protocolBinding);
 
-    void removeProtocolHandler(ProtocolBinding<?> protocolBinding);
+    void removeProtocolHandler(ProtocolBinding<?, ?> protocolBinding);
 
-    List<ProtocolBinding<?>> getProtocols();
+    List<ProtocolBinding<?, ?>> getProtocols();
 
     void addConnectionEstablishedListener(ConnectionEstablishedListener handler);
 
     void removeConnectionEstablishedListener(ConnectionEstablishedListener handler);
 
-    <T> T newStream(List<ProtocolBinding<T>> protocols, Connection conn);
+    <TInitiator> TInitiator newStream(List<ProtocolBinding<TInitiator, ?>> protocols,
+            Connection conn);
 }

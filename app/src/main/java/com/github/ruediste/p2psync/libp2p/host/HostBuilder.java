@@ -16,9 +16,9 @@ import com.github.ruediste.p2psync.libp2p.network.NetworkImpl;
 import com.github.ruediste.p2psync.libp2p.security.SecureSession;
 import com.github.ruediste.p2psync.libp2p.security.noise.NoiseXXProtocolBinding;
 import com.github.ruediste.p2psync.libp2p.transport.DefaultConnectionBuilder;
-import com.github.ruediste.p2psync.libp2p.transport.InitiatingTransport;
+import com.github.ruediste.p2psync.libp2p.transport.DiallingTransport;
 import com.github.ruediste.p2psync.libp2p.transport.ListeningTransportBinding;
-import com.github.ruediste.p2psync.libp2p.transport.tcp.TcpInitiatingTransport;
+import com.github.ruediste.p2psync.libp2p.transport.tcp.TcpDiallingTransport;
 import com.github.ruediste.p2psync.libp2p.transport.tcp.TcpListeningTransportBinding;
 
 /**
@@ -43,7 +43,7 @@ public final class HostBuilder {
     private PrivKey privateKey;
     private final List<String> listenAddresses = new ArrayList<>();
     private final List<ConnectionEstablishedListener> connectionHandlers = new ArrayList<>();
-    private final List<ProtocolBinding<?>> protocolHandlers = new ArrayList<>();
+    private final List<ProtocolBinding<?, ?>> protocolHandlers = new ArrayList<>();
 
     public HostBuilder privateKey(PrivKey privateKey) {
         this.privateKey = privateKey;
@@ -60,7 +60,7 @@ public final class HostBuilder {
         return this;
     }
 
-    public HostBuilder protocolHandler(ProtocolBinding<?> binding) {
+    public HostBuilder protocolHandler(ProtocolBinding<?, ?> binding) {
         this.protocolHandlers.add(binding);
         return this;
     }
@@ -71,21 +71,21 @@ public final class HostBuilder {
 
         // Build the app-level multistream for inbound Yamux streams
         @SuppressWarnings("unchecked")
-        Multistream<Object> appMultistream = new Multistream<>(
-                List.copyOf((List<ProtocolBinding<Object>>) (List<?>) protocolHandlers));
+        Multistream<Object, Object> appMultistream = new Multistream<>(
+                List.copyOf((List<ProtocolBinding<Object, Object>>) (List<?>) protocolHandlers));
 
         // Wire muxer (Yamux) -> secure channel (Noise XX) -> upgrader
         YamuxProtocolBinding yamuxBinding = new YamuxProtocolBinding(appMultistream);
         NoiseXXProtocolBinding noiseBinding = new NoiseXXProtocolBinding(key);
 
-        List<ProtocolBinding<MuxerSession>> muxers = List.of(yamuxBinding);
-        List<ProtocolBinding<SecureSession>> secureChannels = List.of(noiseBinding);
+        List<ProtocolBinding<MuxerSession, MuxerSession>> muxers = List.of(yamuxBinding);
+        List<ProtocolBinding<SecureSession, SecureSession>> secureChannels = List.of(noiseBinding);
 
         DefaultConnectionBuilder connectionBuilder = new DefaultConnectionBuilder(secureChannels, muxers);
 
         // Create initiating transport (TCP)
-        TcpInitiatingTransport tcpTransport = new TcpInitiatingTransport();
-        List<InitiatingTransport> transports = List.of(tcpTransport);
+        TcpDiallingTransport tcpTransport = new TcpDiallingTransport();
+        List<DiallingTransport> transports = List.of(tcpTransport);
 
         // Create listening transport (TCP)
         TcpListeningTransportBinding tcpListeningTransport = new TcpListeningTransportBinding();
