@@ -6,6 +6,14 @@ Read `app/ImplementationPlan.md` if the user seems to reference to it, for examp
 
 If there is an issue with generating the protobuf java files, a `mvn clean` sometimes helps.
 
+## Running Tests
+
+Run tests from the `app/` directory.
+
+- `mvn test` runs the fast unit tests only. Integration tests (`*IT.java`, currently the slow mDNS loopback tests `MDnsDiscoveryIT` and `MDnsWireUpIT`) are excluded by default.
+- `mvn test -Pit` runs only the integration tests. They require working multicast networking and take several seconds each; they skip automatically (JUnit assumptions) when multicast is unavailable.
+- When changing test wiring, verify both: `mvn test` and `mvn test -Pit`.
+
 ## Initial Exploration of the Code Base
 
 When starting a new task, avoid inspecting the whole codebase. Use a focused exploration instead. Do NOT instruct a sub agent to explore all files (or all java files). Use `app/AiOverview.md` to get an overview of the project. After performing changes, make sure to update `app/AiOverview.md` as well.

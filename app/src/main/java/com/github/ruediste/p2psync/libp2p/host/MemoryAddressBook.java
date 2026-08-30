@@ -30,10 +30,12 @@ public final class MemoryAddressBook implements AddressBook {
     @Override
     public void addAddrs(PeerId id, long ttl, Multiaddr... addrs) {
         map.compute(id, (key, existing) -> {
-            Collection<Multiaddr> list = existing != null ? existing : java.util.Collections.emptyList();
-            java.util.List<Multiaddr> result = new java.util.ArrayList<>(list);
-            java.util.Collections.addAll(result, addrs);
-            return java.util.Collections.unmodifiableList(result);
+            java.util.LinkedHashSet<Multiaddr> set = new java.util.LinkedHashSet<>();
+            if (existing != null) {
+                set.addAll(existing);
+            }
+            java.util.Collections.addAll(set, addrs);
+            return java.util.Collections.unmodifiableList(new java.util.ArrayList<>(set));
         });
     }
 }

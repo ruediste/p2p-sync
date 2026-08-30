@@ -1,7 +1,9 @@
 package com.github.ruediste.p2psync.libp2p.host;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.github.ruediste.p2psync.libp2p.core.ConnectionEstablishedListener;
 import com.github.ruediste.p2psync.libp2p.core.Host;
@@ -44,6 +46,8 @@ public final class HostBuilder {
     private final List<String> listenAddresses = new ArrayList<>();
     private final List<ConnectionEstablishedListener> connectionHandlers = new ArrayList<>();
     private final List<ProtocolBinding<?, ?>> protocolHandlers = new ArrayList<>();
+    private boolean discoverMdns;
+    private Optional<InetAddress> mdnsAddress = Optional.empty();
 
     public HostBuilder privateKey(PrivKey privateKey) {
         this.privateKey = privateKey;
@@ -52,6 +56,26 @@ public final class HostBuilder {
 
     public HostBuilder listenAddress(String addr) {
         this.listenAddresses.add(addr);
+        return this;
+    }
+
+    /**
+     * Enable mDNS LAN peer discovery. Discovered peers are added to the host's
+     * {@link com.github.ruediste.p2psync.libp2p.core.AddressBook} so they can later
+     * be dialed. Off by default.
+     */
+    public HostBuilder discoverMdns(boolean enabled) {
+        this.discoverMdns = enabled;
+        return this;
+    }
+
+    /**
+     * Optional {@link InetAddress} to bind mDNS discovery to (e.g. loopback for
+     * tests). Also enables mDNS discovery. ({@link #discoverMdns(boolean)}).
+     */
+    public HostBuilder discoverMdnsAddress(InetAddress address) {
+        this.mdnsAddress = Optional.of(address);
+        this.discoverMdns = true;
         return this;
     }
 
@@ -112,6 +136,7 @@ public final class HostBuilder {
 
         return new HostImpl(key, network, addressBook, listenAddrs,
                 new ArrayList<>(protocolHandlers),
-                new ArrayList<>(connectionHandlers));
+                new ArrayList<>(connectionHandlers),
+                discoverMdns, mdnsAddress);
     }
 }

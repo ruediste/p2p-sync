@@ -12,7 +12,7 @@ This file gives a summary of the project, intended for AI Coding tools.
   LICENSE.txt                         # License file
   app/                                # Maven project root
     ARCHITECTURE.md                   # Detailed architecture doc (blocking I/O, virtual threads, P2PStream)
-    ImplementationPlan.md             # Milestone plan (M0-M8)
+    ImplementationPlan.md             # Milestone plan (M0-M9)
     pom.xml                           # Maven build (Java 21, protobuf 3.25.5, JUnit 4)
     .project                          # Eclipse project config
     .classpath                        # Eclipse classpath
@@ -24,10 +24,13 @@ This file gives a summary of the project, intended for AI Coding tools.
         proto/
           crypto.proto                # Protobuf: KeyType, PublicKey, PrivateKey messages
           spipe.proto                 # Protobuf: NoiseHandshakePayload, Propose, Exchange
+        resources/
+          logback.xml                 # Minimal logback config (INFO console)
         java/com/github/ruediste/p2psync/
           App.java                    # Stub "Hello World"
           libp2p/                     # Main libp2p port package
             core/                     # Core abstractions
+            discovery/                # mDNS LAN peer discovery (M9)
             crypto/                   # Cryptographic key types
             host/                     # Host implementation
             multistream/              # Multistream-select protocol
@@ -45,6 +48,9 @@ This file gives a summary of the project, intended for AI Coding tools.
             ProtobufToolchainTest.java
             test/BytePipe.java        # In-memory byte pipe for test use
             test/BytePipeTest.java
+            discovery/MDnsDiscoveryTest.java  # unit tests; loopback integration tests moved to MDnsDiscoveryIT
+            discovery/MDnsDiscoveryIT.java    # mDNS loopback integration tests, run via `mvn test -Pit`
+            host/MDnsWireUpIT.java            # mDNS wire-up integration test, run via `mvn test -Pit`
             core/PeerIdTest.java
             core/multiaddr/MultiaddrTest.java
             core/multiaddr/MultihashTest.java
@@ -90,7 +96,8 @@ The project is inspired by IPFS/libp2p but deliberately does **not** use any exi
 
 | Package          | Key Classes                                                                                                                                                                                                   | Purpose                                                                                   |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `core`           | `P2PInputStream`, `P2POutputStream`, `P2PStream`, `Stream`, `Connection`, `RawConnection`, `PeerId`, `PeerInfo`, `Base58`, `Host`, `Network`, `AddressBook`, `StreamHandler`, `ConnectionEstablishedListener` | Core abstractions for streams, connections, identities, and the Host/Network entry points |
+| `core`           | `P2PInputStream`, `P2POutputStream`, `P2PStream`, `Stream`, `Connection`, `RawConnection`, `PeerId`, `PeerInfo`, `Base58`, `Host`, `Network`, `AddressBook`, `StreamHandler`, `ConnectionEstablishedListener`, `Discoverer`, `PeerListener` | Core abstractions for streams, connections, identities, discovery, and the Host/Network entry points |
+| `discovery`      | `MDnsDiscovery`                                                                                                                                                                                               | mDNS LAN peer discovery via `javax.jmdns`: one JmDNS per interface the TCP servers listen on, polling for new/changed interfaces, chat-guided interface filtering (docker/VPN/loopback exclusion) for wildcard listens     |
 | `core/multiaddr` | `Multiaddr`, `MultiaddrComponent`, `Protocol`, `Varint`, `Multihash`, `ByteBuf`                                                                                                                               | Multiaddress parsing/serialization, multihash, varint encoding                            |
 | `crypto`         | `PrivKey`, `PubKey`, `KeyType`, `Marshaling`                                                                                                                                                                  | Key abstractions and protobuf marshaling                                                  |
 | `crypto/keys`    | `Ed25519PublicKey`, `Ed25519PrivateKey`                                                                                                                                                                       | Ed25519 implementation via JDK crypto                                                     |
@@ -114,10 +121,12 @@ The project is inspired by IPFS/libp2p but deliberately does **not** use any exi
 | Test framework   | JUnit 4.11                                                                                        |
 | Protobuf         | 3.25.5 (`protobuf-maven-plugin` 0.6.1, auto-generates Java from `.proto` files)                   |
 | Crypto           | JDK built-in only: `Ed25519`, `X25519`, `ChaCha20-Poly1305`, `SHA-256`, `HMAC-SHA256`             |
-| No external deps | No Netty, no BouncyCastle, no noise-java -- everything is custom                                  |
+| No external deps | No Netty, no BouncyCastle, no noise-java -- everything is custom                  |
+| Logging          | `slf4j-api 2.0.17` (compile) + `logback-classic 1.5.18` (runtime) — added for mDNS (M9); JmDNS logs via slf4j |
+| mDNS             | `org.jmdns:jmdns:3.6.3` (published library, not the vendored fork) — LAN peer discovery (M9) |
 | IDE              | Eclipse (M2E + JDT), VS Code                                                                      |
 | Git history      | Multiple checkpoints from AI agent sessions (`cline`); traces back to an earlier Kotlin prototype |
 
 ## What's Next
 
-Peer discovery (mDNS/Kademlia), Identify protocol, relay/NAT traversal, and any actual "sync" application protocol.
+Identify protocol, relay/NAT traversal, and any actual "sync" application protocol. mDNS peer discovery (M9) is implemented (multi-interface aware, per `app/mDNSChat.txt` guidance); Kademlia DHT is still open, and automatic dialing on mDNS discovery is a documented follow-up (currently discovered peers are only added to the address book).

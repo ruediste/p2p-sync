@@ -1,18 +1,22 @@
 package com.github.ruediste.p2psync.libp2p.host;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import com.github.ruediste.p2psync.libp2p.core.AddressBook;
 import com.github.ruediste.p2psync.libp2p.core.Connection;
 import com.github.ruediste.p2psync.libp2p.core.ConnectionEstablishedListener;
+import com.github.ruediste.p2psync.libp2p.core.Discoverer;
 import com.github.ruediste.p2psync.libp2p.core.Host;
 import com.github.ruediste.p2psync.libp2p.core.Network;
 import com.github.ruediste.p2psync.libp2p.core.PeerId;
 import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
 import com.github.ruediste.p2psync.libp2p.crypto.PrivKey;
+import com.github.ruediste.p2psync.libp2p.discovery.MDnsDiscovery;
 import com.github.ruediste.p2psync.libp2p.multistream.ProtocolBinding;
 
 /**
@@ -25,6 +29,8 @@ import com.github.ruediste.p2psync.libp2p.multistream.ProtocolBinding;
  */
 public final class HostImpl implements Host {
 
+    private static final long DISCOVERED_ADDR_TTL = 0;
+
     private final PrivKey privKey;
     private final PeerId peerId;
     private final Network network;
@@ -32,6 +38,9 @@ public final class HostImpl implements Host {
     private final List<Multiaddr> listenAddrs;
     private final List<ProtocolBinding<?, ?>> protocolHandlers;
     private final List<ConnectionEstablishedListener> connectionHandlers;
+    private final boolean mdnsDiscovery;
+    private final Optional<InetAddress> mdnsAddress;
+    private final List<Discoverer> discoverers = new ArrayList<>();
 
     public HostImpl(
             PrivKey privKey,
@@ -39,7 +48,9 @@ public final class HostImpl implements Host {
             AddressBook addressBook,
             List<Multiaddr> listenAddrs,
             List<ProtocolBinding<?, ?>> protocolHandlers,
-            List<ConnectionEstablishedListener> connectionHandlers) {
+            List<ConnectionEstablishedListener> connectionHandlers,
+            boolean mdnsDiscovery,
+            Optional<InetAddress> mdnsAddress) {
         this.privKey = privKey;
         this.peerId = PeerId.fromPubKey(privKey.publicKey());
         this.network = network;
@@ -47,6 +58,8 @@ public final class HostImpl implements Host {
         this.listenAddrs = List.copyOf(listenAddrs);
         this.protocolHandlers = new ArrayList<>(protocolHandlers);
         this.connectionHandlers = new ArrayList<>(connectionHandlers);
+        this.mdnsDiscovery = mdnsDiscovery;
+        this.mdnsAddress = mdnsAddress;
     }
 
     @Override
@@ -81,12 +94,27 @@ public final class HostImpl implements Host {
         CompletableFuture<?>[] futures = listenAddrs.stream()
                 .map(network::listen)
                 .toArray(CompletableFuture[]::new);
-        return CompletableFuture.allOf(futures);
+        return CompletableFuture.allOf(futures).thenCompose(ignored -> {
+            if (!mdnsDiscovery) {
+                return CompletableFuture.completedFuture(null);
+            }
+            MDnsDiscovery mdns = new MDnsDiscovery(peerId, network.listenAddresses(),
+                    MDnsDiscovery.SERVICE_TAG_LOCAL, mdnsAddress);
+            return mdns.start(peerInfo -> {
+                if (!peerInfo.getPeerId().equals(peerId)) {
+                    addressBook.addAddrs(peerInfo.getPeerId(), DISCOVERED_ADDR_TTL,
+                            peerInfo.getAddresses().toArray(new Multiaddr[0]));
+                }
+            }).thenRun(() -> discoverers.add(mdns));
+        });
     }
 
     @Override
     public CompletableFuture<Void> stop() {
-        return network.close();
+        CompletableFuture<?>[] futures = discoverers.stream()
+                .map(Discoverer::stop)
+                .toArray(CompletableFuture[]::new);
+        return CompletableFuture.allOf(futures).thenCompose(ignored -> network.close());
     }
 
     @Override

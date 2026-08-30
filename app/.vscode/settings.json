@@ -1,10 +1,13 @@
 {
   "cSpell.words": [
     "addrs",
+    "ciphertext",
+    "hmac",
     "IPFS",
     "Kademlia",
     "keypair",
     "libp2p",
+    "mdns",
     "Multiaddr",
     "multiformats",
     "Multistream",
