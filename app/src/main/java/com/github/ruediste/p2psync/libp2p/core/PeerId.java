@@ -4,16 +4,17 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multihash;
-import com.github.ruediste.p2psync.libp2p.crypto.Marshaling;
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 
 /**
- * Represents the peer identity which is basically derived from the peer's public key.
+ * Represents the peer identity which is basically derived from the peer's
+ * public key.
  *
  * <p>
  * Ported from {@code io.libp2p.core.PeerId} (jvm-libp2p).
  */
 public final class PeerId {
+    private static SecureRandom random = new SecureRandom();
 
     private final byte[] bytes;
 
@@ -32,7 +33,8 @@ public final class PeerId {
     }
 
     /**
-     * The common {@link PeerId} string representation, which is just base58 of the PeerId bytes.
+     * The common {@link PeerId} string representation, which is just base58 of the
+     * PeerId bytes.
      */
     public String toBase58() {
         return Base58.encode(bytes);
@@ -54,10 +56,11 @@ public final class PeerId {
         if (this == other) {
             return true;
         }
-        if (!(other instanceof PeerId)) {
-            return false;
+        if (other instanceof PeerId) {
+            return Arrays.equals(bytes, ((PeerId) other).bytes);
         }
-        return Arrays.equals(bytes, ((PeerId) other).bytes);
+
+        return false;
     }
 
     @Override
@@ -91,22 +94,25 @@ public final class PeerId {
     }
 
     /**
-     * Generates a random {@link PeerId}. Useful for testing purposes only since it doesn't
+     * Generates a random {@link PeerId}. Useful for testing purposes only since it
+     * doesn't
      * generate any private keys.
      */
     public static PeerId random() {
         byte[] data = new byte[32];
-        new SecureRandom().nextBytes(data);
+        random.nextBytes(data);
         return new PeerId(data);
     }
 
     /**
-     * Creates {@link PeerId} from the peer's public key: the multihash of the marshaled public
-     * key, using the {@code identity} digest if the marshaled bytes fit within 42 bytes (as is
+     * Creates {@link PeerId} from the peer's public key: the multihash of the
+     * marshaled public
+     * key, using the {@code identity} digest if the marshaled bytes fit within 42
+     * bytes (as is
      * the case for Ed25519 keys), else {@code sha2-256}.
      */
     public static PeerId fromPubKey(PubKey pubKey) {
-        byte[] marshaled = Marshaling.marshalPublicKey(pubKey);
+        byte[] marshaled = pubKey.toProto().toByteArray();
         Multihash.Digest digest = marshaled.length <= 42 ? Multihash.Digest.IDENTITY : Multihash.Digest.SHA2_256;
         return new PeerId(Multihash.sum(digest, marshaled));
     }

@@ -27,16 +27,14 @@ import com.github.ruediste.p2psync.libp2p.core.P2PInputStream;
 import com.github.ruediste.p2psync.libp2p.core.P2POutputStream;
 import com.github.ruediste.p2psync.libp2p.core.P2PStream;
 import com.github.ruediste.p2psync.libp2p.core.PeerId;
-import com.github.ruediste.p2psync.libp2p.crypto.Marshaling;
 import com.github.ruediste.p2psync.libp2p.crypto.PrivKey;
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 import com.github.ruediste.p2psync.libp2p.security.CantDecryptInboundException;
 import com.github.ruediste.p2psync.libp2p.security.InvalidRemotePubKeyException;
 import com.github.ruediste.p2psync.libp2p.security.MalformedNoiseHandshakeException;
+import com.github.ruediste.p2psync.proto.Noise.NoiseHandshakePayload;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-
-import spipe.pb.Spipe;
 
 /**
  * The Noise {@code XX} handshake for libp2p (protocol name
@@ -64,7 +62,9 @@ import spipe.pb.Spipe;
  * {@code e / e, ee, s, es / s, se});</li>
  * <li>chaChaPoly nonce = 12 bytes: four zero bytes followed by the 8-byte
  * little-endian counter;</li>
- * <li>handshake payload = {@code spipe.pb.Spipe.NoiseHandshakePayload} with the
+ * <li>handshake payload =
+ * {@code com.github.ruediste.p2psync.proto.libp2p.noise.NoiseHandshakePayload}
+ * with the
  * libp2p identity public key and a signature of
  * {@code "noise-libp2p-static-key:" || noiseStaticPubKey} made by the identity
  * private key;</li>
@@ -181,10 +181,10 @@ public final class NoiseXXHandshake {
     // ------------------------------------------------------------------
 
     private static byte[] buildPayload(PrivKey localIdentityKey) {
-        byte[] identityPublicKey = Marshaling.marshalPublicKey(localIdentityKey.publicKey());
+        byte[] identityPublicKey = localIdentityKey.publicKey().toProto().toByteArray();
         byte[] phrase = noiseSignaturePhrase(processStaticPublic);
         byte[] signature = localIdentityKey.sign(phrase);
-        return Spipe.NoiseHandshakePayload.newBuilder()
+        return NoiseHandshakePayload.newBuilder()
                 .setLibp2PKey(ByteString.copyFrom(identityPublicKey))
                 .setNoiseStaticKeySignature(ByteString.copyFrom(signature))
                 .build()
@@ -195,15 +195,15 @@ public final class NoiseXXHandshake {
         if (remoteStaticPublicKey == null) {
             throw new InvalidRemotePubKeyException("Remote did not send a Noise static key during the handshake");
         }
-        Spipe.NoiseHandshakePayload proto;
+        NoiseHandshakePayload proto;
         try {
-            proto = Spipe.NoiseHandshakePayload.parseFrom(payload);
+            proto = NoiseHandshakePayload.parseFrom(payload);
         } catch (InvalidProtocolBufferException e) {
             throw new InvalidRemotePubKeyException("Malformed Noise handshake payload", e);
         }
         PubKey pubKey;
         try {
-            pubKey = Marshaling.unmarshalPublicKey(proto.getLibp2PKey().toByteArray());
+            pubKey = PubKey.from(proto.getLibp2PKey().toByteArray());
         } catch (IllegalArgumentException e) {
             throw new InvalidRemotePubKeyException("Malformed identity public key in Noise handshake payload", e);
         }

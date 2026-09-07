@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package com.github.ruediste.p2psync.proto;
+import "libp2p.proto";
+
+message NodeUserConfiguration {
+	bytes storageKey = 1;
+
+	optional bytes dataKey = 5;
+	optional PrivateKey DataSigningKeyPrivate = 6;
+
+	// this is also the user id
+	PublicKey DataSigningKeyPublic = 7;
+}
+
+// <<xxx, yyy>> means: encrypted with xxx-key (symmetric), signed with yyy-key
+
+// <<storage, data>>
+message StorageUserRoot {
+	VectorClock clock = 1;
+	bytes shardListId = 2;
+	bytes dataRootBlockId = 3;
+	bytes nodeNrMapId=4;
+}
+
+message ShardList{
+	repeated bytes shardIds = 2;
+	
+}
+
+// <<storage, data>>
+message StorageShard {
+	int64 dataSize = 1;
+	repeated bytes blockIds = 2;
+}
+
+// <<storage, data>>
+message StorageBlock {
+	// <<data, data>>
+	repeated bytes dataBytes = 2;
+}
+
+// Data Structures
+
+message DataUserRoot {
+	string userStatusMessage = 1;
+	bytes rootDirectoryId=2;
+}
+
+
+message VectorClock{
+	map<int32,int64> values=1;
+}
+
+message Directory{
+	VectorClock clock = 1;
+	repeated DirectoryEntry directories=2;
+	repeated FileEntry files=3;
+}
+
+message DirectoryEntry{
+	VectorClock clock = 1;
+	string name=2;
+	bytes directoryId=3;
+}
+
+message FileEntry{
+	VectorClock clock = 1;
+	string name=2;
+	bytes dataBlockId=3;
+}
+
+message NodeNrMap{
+	int32 nextNodeNr=1;
+	repeated NodeNrEntry entries=2;
+	VectorClock clock = 3;
+}
+
+message NodeNrEntry{
+	int32 nodeNr=1;
+	bytes peerId=2;
+	bytes joinId=3;
+	optional VectorClock leavingSince = 4;
+}

@@ -28,6 +28,7 @@ This file gives a summary of the project, intended for AI Coding tools.
           logback.xml                 # Minimal logback config (INFO console)
         java/com/github/ruediste/p2psync/
           App.java                    # Stub "Hello World"
+          clock/                      # Vector clock mechanism (isolated, not yet integrated)
           libp2p/                     # Main libp2p port package
             core/                     # Core abstractions
             discovery/                # mDNS LAN peer discovery (M9)
@@ -44,6 +45,11 @@ This file gives a summary of the project, intended for AI Coding tools.
       test/
         java/.../
           AppTest.java
+          clock/
+            VectorClockTest.java
+            LocalClockTest.java
+            NodeNrMapTest.java
+            ClockFlowTest.java
           libp2p/
             ProtobufToolchainTest.java
             test/BytePipe.java        # In-memory byte pipe for test use
@@ -96,6 +102,7 @@ The project is inspired by IPFS/libp2p but deliberately does **not** use any exi
 
 | Package          | Key Classes                                                                                                                                                                                                   | Purpose                                                                                   |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `clock`          | `VectorClock`, `ClockRelation`, `LocalClock`, `ReceiveOutcome`, `NodeNrMap`, `NodeNrEntry`                                                                                                                     | Vector clock mechanism per wiki (Technical-Overview.md "Conflict Resolution" / "Dynamic Vector Clocks"): immutable clocks with dominance comparison and merge, local clock with modification flag (`prepareModify`/`clear`), dynamic nodeNr map with join/leave/merge (deleted-entry detection, renumbering of unseen entries, leave completion on active components). Isolated implementation, not yet wired into the sync data model |
 | `core`           | `P2PInputStream`, `P2POutputStream`, `P2PStream`, `Stream`, `Connection`, `RawConnection`, `PeerId`, `PeerInfo`, `Base58`, `Host`, `Network`, `AddressBook`, `StreamHandler`, `ConnectionEstablishedListener`, `Discoverer`, `PeerListener` | Core abstractions for streams, connections, identities, discovery, and the Host/Network entry points |
 | `discovery`      | `MDnsDiscovery`                                                                                                                                                                                               | mDNS LAN peer discovery via `javax.jmdns`: one JmDNS per interface the TCP servers listen on, polling for new/changed interfaces, chat-guided interface filtering (docker/VPN/loopback exclusion) for wildcard listens     |
 | `core/multiaddr` | `Multiaddr`, `MultiaddrComponent`, `Protocol`, `Varint`, `Multihash`, `ByteBuf`                                                                                                                               | Multiaddress parsing/serialization, multihash, varint encoding                            |

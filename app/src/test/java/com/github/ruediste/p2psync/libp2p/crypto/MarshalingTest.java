@@ -10,8 +10,7 @@ import java.nio.charset.StandardCharsets;
 import org.junit.Test;
 
 import com.github.ruediste.p2psync.libp2p.crypto.keys.Ed25519PrivateKey;
-
-import crypto.pb.Crypto;
+import com.github.ruediste.p2psync.proto.Libp2P;
 
 public class MarshalingTest {
 
@@ -20,8 +19,8 @@ public class MarshalingTest {
         Ed25519PrivateKey priv = Ed25519PrivateKey.generateKeyPair();
         PubKey pub = priv.publicKey();
 
-        byte[] marshaled = Marshaling.marshalPublicKey(pub);
-        PubKey unmarshaled = Marshaling.unmarshalPublicKey(marshaled);
+        byte[] marshaled = pub.toProto().toByteArray();
+        PubKey unmarshaled = PubKey.from(marshaled);
 
         assertArrayEquals(pub.raw(), unmarshaled.raw());
         assertEquals(pub, unmarshaled);
@@ -46,7 +45,7 @@ public class MarshalingTest {
         Ed25519PrivateKey priv = Ed25519PrivateKey.generateKeyPair();
         byte[] rawPub = priv.publicKey().raw();
 
-        byte[] marshaled = Marshaling.marshalPublicKey(priv.publicKey());
+        byte[] marshaled = priv.publicKey().toProto().toByteArray();
 
         // crypto.proto: PublicKey { required KeyType Type = 1; required bytes Data = 2;
         // }
@@ -65,13 +64,13 @@ public class MarshalingTest {
 
     @Test
     public void unmarshalPublicKeyRejectsUnsupportedType() {
-        byte[] data = Crypto.PublicKey.newBuilder()
-                .setType(Crypto.KeyType.RSA)
+        byte[] data = Libp2P.PublicKey.newBuilder()
+                .setType(Libp2P.KeyType.RSA)
                 .setData(com.google.protobuf.ByteString.copyFrom(new byte[4]))
                 .build()
                 .toByteArray();
         try {
-            Marshaling.unmarshalPublicKey(data);
+            PubKey.from(data);
             fail("expected IllegalArgumentException");
         } catch (IllegalArgumentException expected) {
             // expected
@@ -80,8 +79,8 @@ public class MarshalingTest {
 
     @Test
     public void unmarshalPrivateKeyRejectsUnsupportedType() {
-        byte[] data = Crypto.PrivateKey.newBuilder()
-                .setType(Crypto.KeyType.RSA)
+        byte[] data = Libp2P.PrivateKey.newBuilder()
+                .setType(Libp2P.KeyType.RSA)
                 .setData(com.google.protobuf.ByteString.copyFrom(new byte[4]))
                 .build()
                 .toByteArray();

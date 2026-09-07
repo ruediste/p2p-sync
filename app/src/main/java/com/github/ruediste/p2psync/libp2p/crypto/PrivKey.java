@@ -4,27 +4,30 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 import com.github.ruediste.p2psync.libp2p.crypto.keys.Ed25519PrivateKey;
-
-import crypto.pb.Crypto;
+import com.github.ruediste.p2psync.proto.Libp2P;
 
 /**
- * A private key that can be used to derive its paired {@link PubKey} and sign data.
+ * A private key that can be used to derive its paired {@link PubKey} and sign
+ * data.
  *
  * <p>
- * Ported from {@code io.libp2p.core.crypto.PrivKey} (jvm-libp2p). The upstream top-level
- * {@code generateKeyPair(type, bits, random)} function (in {@code Key.kt}) is exposed here as
- * the static {@link #generate(KeyType)}/{@link #generate(KeyType, SecureRandom)} factory
+ * Ported from {@code io.libp2p.core.crypto.PrivKey} (jvm-libp2p). The upstream
+ * top-level
+ * {@code generateKeyPair(type, bits, random)} function (in {@code Key.kt}) is
+ * exposed here as
+ * the static
+ * {@link #generate(KeyType)}/{@link #generate(KeyType, SecureRandom)} factory
  * methods instead, since Java has no top-level functions.
  */
 public abstract class PrivKey {
 
-    private final Crypto.KeyType keyType;
+    private final Libp2P.KeyType keyType;
 
-    protected PrivKey(Crypto.KeyType keyType) {
+    protected PrivKey(Libp2P.KeyType keyType) {
         this.keyType = keyType;
     }
 
-    public final Crypto.KeyType getKeyType() {
+    public final Libp2P.KeyType getKeyType() {
         return keyType;
     }
 
@@ -39,13 +42,15 @@ public abstract class PrivKey {
     public abstract PubKey publicKey();
 
     /**
-     * The raw key material, in the format expected by {@code crypto.proto}'s {@code Data} field
+     * The raw key material, in the format expected by {@code crypto.proto}'s
+     * {@code Data} field
      * for this key's {@link #getKeyType()} (e.g. the 32-byte raw seed for Ed25519).
      */
     public abstract byte[] raw();
 
     /**
-     * A serialized, storable representation of this key (the marshaled {@code crypto.pb.Crypto.PrivateKey}
+     * A serialized, storable representation of this key (the marshaled
+     * {@code com.github.ruediste.p2psync.proto.libp2p.Crypto.PrivateKey}
      * protobuf message).
      */
     public final byte[] bytes() {

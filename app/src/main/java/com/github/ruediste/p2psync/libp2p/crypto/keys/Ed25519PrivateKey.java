@@ -10,26 +10,39 @@ import java.security.interfaces.EdECPrivateKey;
 
 import com.github.ruediste.p2psync.libp2p.crypto.PrivKey;
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
-
-import crypto.pb.Crypto;
+import com.github.ruediste.p2psync.proto.Libp2P;
 
 /**
- * Ed25519 private key, backed by the JDK's built-in {@code "Ed25519"} {@link KeyPairGenerator}/
- * {@link Signature} providers (JEP 339, available since JDK 15) — no external crypto library.
+ * Ed25519 private key, backed by the JDK's built-in {@code "Ed25519"}
+ * {@link KeyPairGenerator}/
+ * {@link Signature} providers (JEP 339, available since JDK 15) — no external
+ * crypto library.
  *
  * <p>
- * Ported from {@code io.libp2p.crypto.keys.Ed25519PrivateKey} (jvm-libp2p), which wraps
- * BouncyCastle's {@code Ed25519PrivateKeyParameters} instead. BouncyCastle exposes
- * {@code Ed25519PrivateKeyParameters.generatePublicKey()} to derive the paired public key from
- * just the 32-byte seed; the standard {@code java.security} API has no equivalent (a
- * {@link java.security.KeyFactory} can only reconstruct a {@code PrivateKey} object from a raw
- * seed via {@code EdECPrivateKeySpec}, it cannot re-derive the associated point). Instead,
- * {@link #unmarshal} feeds the raw seed bytes through a {@link SecureRandom} stand-in whose
- * {@code nextBytes} simply returns those exact bytes: {@link KeyPairGenerator} (algorithm
- * {@code "Ed25519"}, {@code SunEC} provider) consumes exactly 32 bytes from the supplied
- * {@link SecureRandom} as the private scalar/seed with no extra hashing/mixing, so this
- * reliably regenerates the identical key pair (verified in {@code Ed25519KeysTest}) — the same
- * technique {@link #generateKeyPair} itself effectively performs when the caller supplies a
+ * Ported from {@code io.libp2p.crypto.keys.Ed25519PrivateKey} (jvm-libp2p),
+ * which wraps
+ * BouncyCastle's {@code Ed25519PrivateKeyParameters} instead. BouncyCastle
+ * exposes
+ * {@code Ed25519PrivateKeyParameters.generatePublicKey()} to derive the paired
+ * public key from
+ * just the 32-byte seed; the standard {@code java.security} API has no
+ * equivalent (a
+ * {@link java.security.KeyFactory} can only reconstruct a {@code PrivateKey}
+ * object from a raw
+ * seed via {@code EdECPrivateKeySpec}, it cannot re-derive the associated
+ * point). Instead,
+ * {@link #unmarshal} feeds the raw seed bytes through a {@link SecureRandom}
+ * stand-in whose
+ * {@code nextBytes} simply returns those exact bytes: {@link KeyPairGenerator}
+ * (algorithm
+ * {@code "Ed25519"}, {@code SunEC} provider) consumes exactly 32 bytes from the
+ * supplied
+ * {@link SecureRandom} as the private scalar/seed with no extra hashing/mixing,
+ * so this
+ * reliably regenerates the identical key pair (verified in
+ * {@code Ed25519KeysTest}) — the same
+ * technique {@link #generateKeyPair} itself effectively performs when the
+ * caller supplies a
  * real {@link SecureRandom} for fresh key generation.
  */
 public final class Ed25519PrivateKey extends PrivKey {
@@ -38,7 +51,7 @@ public final class Ed25519PrivateKey extends PrivKey {
     private final Ed25519PublicKey pub;
 
     private Ed25519PrivateKey(PrivateKey priv, Ed25519PublicKey pub) {
-        super(Crypto.KeyType.Ed25519);
+        super(Libp2P.KeyType.Ed25519);
         this.priv = priv;
         this.pub = pub;
     }
@@ -84,8 +97,10 @@ public final class Ed25519PrivateKey extends PrivKey {
     }
 
     /**
-     * Unmarshals a raw 32-byte Ed25519 seed (as produced by {@link #raw()}) back into an
-     * {@link Ed25519PrivateKey} — see the class Javadoc for how the paired public key is
+     * Unmarshals a raw 32-byte Ed25519 seed (as produced by {@link #raw()}) back
+     * into an
+     * {@link Ed25519PrivateKey} — see the class Javadoc for how the paired public
+     * key is
      * re-derived.
      */
     public static Ed25519PrivateKey unmarshal(byte[] rawSeed) {
@@ -107,8 +122,10 @@ public final class Ed25519PrivateKey extends PrivKey {
     }
 
     /**
-     * A {@link SecureRandom} that returns a fixed byte sequence instead of actual random data,
-     * used only to feed a known 32-byte seed through {@link KeyPairGenerator} (see class
+     * A {@link SecureRandom} that returns a fixed byte sequence instead of actual
+     * random data,
+     * used only to feed a known 32-byte seed through {@link KeyPairGenerator} (see
+     * class
      * Javadoc). Never used for anything actually requiring randomness.
      */
     private static final class FixedSeedSecureRandom extends SecureRandom {

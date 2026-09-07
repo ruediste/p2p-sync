@@ -1,8 +1,8 @@
 // Copied verbatim from jvm-libp2p (libp2p/src/main/proto/crypto.proto),
 // dual-licensed Apache-2.0/MIT, for reference/provenance.
-syntax = "proto2";
+syntax = "proto3";
 
-package crypto.pb;
+package com.github.ruediste.p2psync.proto;
 
 enum KeyType {
 	RSA = 0;
@@ -13,11 +13,17 @@ enum KeyType {
 }
 
 message PublicKey {
-	required KeyType Type = 1;
-	required bytes Data = 2;
+	KeyType type = 1;
+	bytes data = 2;
 }
 
 message PrivateKey {
-	required KeyType Type = 1;
-	required bytes Data = 2;
+	KeyType type = 1;
+	bytes data = 2;
+}
+
+message KeyPair {
+	KeyType type = 1;
+	bytes privateKey = 2;
+	bytes publicKey = 3;
 }

@@ -2,7 +2,7 @@
 // dual-licensed Apache-2.0/MIT, for reference/provenance.
 syntax = "proto2";
 
-package spipe.pb;
+package com.github.ruediste.p2psync.proto;
 
 message Propose {
 	optional bytes rand = 1;

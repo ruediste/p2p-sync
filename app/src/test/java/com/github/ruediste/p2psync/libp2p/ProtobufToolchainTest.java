@@ -5,14 +5,14 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import com.github.ruediste.p2psync.proto.Libp2P;
+import com.github.ruediste.p2psync.proto.Noise;
 import com.google.protobuf.ByteString;
-
-import crypto.pb.Crypto;
-import spipe.pb.Spipe;
 
 /**
  * M0 acceptance test: confirms the protobuf-maven-plugin generated
- * {@code crypto.pb.Crypto} and {@code spipe.pb.Spipe} classes are on the
+ * {@code com.github.ruediste.p2psync.proto.libp2p.Crypto} and
+ * {@code com.github.ruediste.p2psync.proto.libp2p.Spipe} classes are on the
  * compile/test classpath and round-trip correctly.
  */
 public class ProtobufToolchainTest {
@@ -20,15 +20,15 @@ public class ProtobufToolchainTest {
     @Test
     public void cryptoPublicKeyRoundTrips() throws Exception {
         byte[] rawKey = { 1, 2, 3, 4, 5 };
-        Crypto.PublicKey proto = Crypto.PublicKey.newBuilder()
-                .setType(Crypto.KeyType.Ed25519)
+        Libp2P.PublicKey proto = Libp2P.PublicKey.newBuilder()
+                .setType(Libp2P.KeyType.Ed25519)
                 .setData(ByteString.copyFrom(rawKey))
                 .build();
 
         byte[] marshaled = proto.toByteArray();
 
-        Crypto.PublicKey parsed = Crypto.PublicKey.parseFrom(marshaled);
-        assertEquals(Crypto.KeyType.Ed25519, parsed.getType());
+        Libp2P.PublicKey parsed = Libp2P.PublicKey.parseFrom(marshaled);
+        assertEquals(Libp2P.KeyType.Ed25519, parsed.getType());
         assertArrayEquals(rawKey, parsed.getData().toByteArray());
     }
 
@@ -36,12 +36,12 @@ public class ProtobufToolchainTest {
     public void spipeNoiseHandshakePayloadRoundTrips() throws Exception {
         byte[] libp2pKey = { 9, 9, 9 };
         byte[] signature = { 7, 7 };
-        Spipe.NoiseHandshakePayload proto = Spipe.NoiseHandshakePayload.newBuilder()
+        Noise.NoiseHandshakePayload proto = Noise.NoiseHandshakePayload.newBuilder()
                 .setLibp2PKey(ByteString.copyFrom(libp2pKey))
                 .setNoiseStaticKeySignature(ByteString.copyFrom(signature))
                 .build();
 
-        Spipe.NoiseHandshakePayload parsed = Spipe.NoiseHandshakePayload.parseFrom(proto.toByteArray());
+        Noise.NoiseHandshakePayload parsed = Noise.NoiseHandshakePayload.parseFrom(proto.toByteArray());
         assertArrayEquals(libp2pKey, parsed.getLibp2PKey().toByteArray());
         assertArrayEquals(signature, parsed.getNoiseStaticKeySignature().toByteArray());
     }
