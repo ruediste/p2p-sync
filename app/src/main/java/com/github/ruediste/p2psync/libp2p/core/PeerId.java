@@ -28,6 +28,10 @@ public final class PeerId {
         this.bytes = bytes;
     }
 
+    public int compareTo(PeerId other) {
+        return Arrays.compareUnsigned(bytes, other.bytes);
+    }
+
     public byte[] getBytes() {
         return bytes;
     }

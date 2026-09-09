@@ -3,8 +3,6 @@ package com.github.ruediste.p2psync.node;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.github.ruediste.p2psync.clock.LocalClock;
@@ -65,7 +63,7 @@ public class Node {
         }
     }
 
-    public PubKey createNewUser() {
+    public NodeUserHandle createNewUser() {
         var map = new NodeNrMap();
         var joinId = map.join(peerId);
         var nr = map.getNr(joinId).get();
@@ -75,7 +73,11 @@ public class Node {
         data.localClock = new LocalClock(nr, VectorClock.empty());
         data.localClock.prepareModify();
 
-        var rootDir = FsDirectory.empty(data.localClock.get());
+        data.userKey = Ed25519PrivateKey.generateKeyPair();
+        users.put(data.userId(), data);
+        var handle = new NodeUserHandle(this, data);
+
+        var rootDir = DirectoryHandle.empty(data.localClock.get(), handle);
 
         var root = new DataUserRoot();
         root.rootDirectoryId = storage.store(rootDir.toProto());
@@ -87,14 +89,11 @@ public class Node {
         storageRoot.dataRootBlockId = storage.store(root.toProto());
         storageRoot.nodeNrMapId = storage.store(map.toProto());
 
-        data.userKey = Ed25519PrivateKey.generateKeyPair();
-
         data.rootId = storage.store(storageRoot.toProto());
-        users.put(data.userId(), data);
-        return data.userId();
+        return handle;
     }
 
-    public void join(PubKey userId) {
+    public NodeUserHandle join(PubKey userId, PrivKey userKey) {
         var peer = network.getPeersForUser(userId).stream().findFirst().get();
         var root = network.getStorageUserRoot(peer, userId);
 
@@ -104,49 +103,10 @@ public class Node {
         var nr = map.getNr(joinId).get();
 
         data.localClock = new LocalClock(nr, root.clock);
+        data.userKey = userKey;
         data.rootId = storage.store(root.toProto());
         users.put(userId, data);
-    }
-
-    public void modify(PubKey userId, Consumer<DataUserRoot> action) {
-        var data = users.get(userId);
-        data.localClock.prepareModify();
-        var root = StorageUserRoot.from(network.getBlock(data.rootId));
-        var dataRoot = DataUserRoot.from(network.getBlock(root.dataRootBlockId));
-        action.accept(dataRoot);
-        root.dataRootBlockId = storage.store(dataRoot.toProto());
-        root.clock = data.localClock.get().clone();
-        data.rootId = storage.store(root.toProto());
-    }
-
-    public <T> T read(PubKey userId, Function<DataUserRoot, T> action) {
-        var data = users.get(userId);
-        var root = StorageUserRoot.from(network.getBlock(data.rootId));
-        var dataRoot = DataUserRoot.from(network.getBlock(root.dataRootBlockId));
-        return action.apply(dataRoot);
-    }
-
-    public void syncFrom(PeerId otherId, PubKey userId) {
-        var otherRoot = network.getStorageUserRoot(otherId, userId);
-
-        var data = users.get(userId);
-        var root = StorageUserRoot.from(network.getBlock(data.rootId));
-
-        switch (root.clock.compare(otherRoot.clock)) {
-            case EQUAL:
-            case AFTER:
-                // NOP, we already have the latest version
-                break;
-            case BEFORE:
-                // just update
-                data.rootId = storage.store(otherRoot.toProto());
-                data.localClock.resetTo(otherRoot.clock);
-                break;
-            case CONCURRENT:
-                throw new UnsupportedOperationException("Not yet implemented");
-            default:
-                break;
-        }
+        return new NodeUserHandle(this, data);
     }
 
 }

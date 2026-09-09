@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 import com.github.ruediste.p2psync.node.Node.Network;
 
 public class SyncFlowTest {
@@ -13,27 +12,27 @@ public class SyncFlowTest {
     private Network network;
     private Node nodeA;
     private Node nodeB;
-    private PubKey userId;
+    private NodeUserHandle handleA;
 
     @Before
     public void before() {
         network = new Network();
         nodeA = new Node(network);
         nodeB = new Node(network);
-        userId = nodeA.createNewUser();
+        handleA = nodeA.createNewUser();
     }
 
     @Test
     public void sync_no_conflict() {
-        nodeB.join(userId);
+        var handleB = nodeB.join(handleA.data.userId(), handleA.data.userKey);
 
-        nodeA.modify(userId, root -> root.userStatusMessage = "foo");
-        nodeB.syncFrom(nodeA.peerId, userId);
-        assertEquals("foo", nodeB.read(userId, r -> r.userStatusMessage));
+        handleA.modify(root -> root.userStatusMessage = "foo");
+        handleB.syncFrom(nodeA.peerId);
+        assertEquals("foo", handleB.read(r -> r.userStatusMessage));
 
-        nodeB.modify(userId, root -> root.userStatusMessage = "bar");
-        nodeA.syncFrom(nodeB.peerId, userId);
-        assertEquals("bar", nodeA.read(userId, r -> r.userStatusMessage));
+        handleB.modify(root -> root.userStatusMessage = "bar");
+        handleA.syncFrom(nodeB.peerId);
+        assertEquals("bar", handleA.read(r -> r.userStatusMessage));
 
     }
 }
