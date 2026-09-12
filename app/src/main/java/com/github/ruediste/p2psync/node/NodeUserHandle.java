@@ -3,6 +3,7 @@ package com.github.ruediste.p2psync.node;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.github.ruediste.p2psync.clock.VectorClock;
 import com.github.ruediste.p2psync.libp2p.core.PeerId;
 import com.github.ruediste.p2psync.node.Node.NodeUserData;
 
@@ -17,6 +18,10 @@ public class NodeUserHandle {
     public NodeUserHandle(Node node, NodeUserData data) {
         this.node = node;
         this.data = data;
+    }
+
+    public VectorClock getClockClone() {
+        return data.localClock.get().clone();
     }
 
     public void modify(Consumer<DataUserRoot> action) {

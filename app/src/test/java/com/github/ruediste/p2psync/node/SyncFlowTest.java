@@ -24,7 +24,7 @@ public class SyncFlowTest {
 
     @Test
     public void sync_no_conflict() {
-        var handleB = nodeB.join(handleA.data.userId(), handleA.data.userKey);
+        var handleB = nodeB.join(handleA.data.userKey);
 
         handleA.modify(root -> root.userStatusMessage = "foo");
         handleB.syncFrom(nodeA.peerId);

@@ -2,6 +2,7 @@ package com.github.ruediste.p2psync.node;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -77,7 +78,7 @@ public class Node {
         users.put(data.userId(), data);
         var handle = new NodeUserHandle(this, data);
 
-        var rootDir = DirectoryHandle.empty(data.localClock.get(), handle);
+        var rootDir = DirectoryHandle.empty(handle, Optional.empty());
 
         var root = new DataUserRoot();
         root.rootDirectoryId = storage.store(rootDir.toProto());
@@ -93,7 +94,8 @@ public class Node {
         return handle;
     }
 
-    public NodeUserHandle join(PubKey userId, PrivKey userKey) {
+    public NodeUserHandle join(PrivKey userKey) {
+        var userId = userKey.publicKey();
         var peer = network.getPeersForUser(userId).stream().findFirst().get();
         var root = network.getStorageUserRoot(peer, userId);
 

@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.github.ruediste.p2psync.clock.VectorClock;
@@ -16,17 +17,27 @@ public class DirectoryHandle {
     public List<DirectoryEntryHandle> directories;
     public List<FileEntryHandle> files;
     private NodeUserHandle userHandle;
+    private Optional<DirectoryEntryHandle> parent;
+    public boolean dirty;
 
-    private DirectoryHandle(NodeUserHandle userHandle) {
+    private DirectoryHandle(NodeUserHandle userHandle, Optional<DirectoryEntryHandle> parent) {
         this.userHandle = userHandle;
+        this.parent = parent;
     }
 
-    public static DirectoryHandle empty(VectorClock clock, NodeUserHandle userHandle) {
-        var result = new DirectoryHandle(userHandle);
-        result.clock = clock.clone();
+    public static DirectoryHandle empty(NodeUserHandle userHandle, Optional<DirectoryEntryHandle> parent) {
+        var result = new DirectoryHandle(userHandle, parent);
+        result.clock = userHandle.getClockClone();
         result.directories = new ArrayList<>();
         result.files = new ArrayList<>();
         return result;
+    }
+
+    public void markDirty() {
+        if (!dirty) {
+            dirty = true;
+            parent.ifPresent(p -> p.markDirty());
+        }
     }
 
     /**
@@ -34,7 +45,10 @@ public class DirectoryHandle {
      * afterward the merge
      */
     public void merge(DirectoryHandle other) {
-        boolean hasLowerPeerId = userHandle.getNode().peerId.compareTo(other.userHandle.getNode().peerId) < 0;
+        merge(other, userHandle.getNode().peerId.compareTo(other.userHandle.getNode().peerId) < 0);
+    }
+
+    private void merge(DirectoryHandle other, boolean hasLowerPeerId) {
         clock.merge(other.clock);
 
         // merge files
@@ -106,6 +120,7 @@ public class DirectoryHandle {
                         newFileNames.add(name);
                         conflict.name = name;
                         newFiles.add(conflict);
+                        break;
                     }
                 }
             }
@@ -143,8 +158,8 @@ public class DirectoryHandle {
                             break;
                         case CONCURRENT:
                             // both directories have been modified, merge recursively
-                            var merged = loadDirectory(directory.directoryId);
-                            merged.merge(loadDirectory(otherDirectory.directoryId));
+                            var merged = directory.load();
+                            merged.merge(otherDirectory.load(), hasLowerPeerId);
                             newDirectories.add(newEntry(directory.name, merged));
                             break;
                         case EQUAL:
@@ -172,20 +187,12 @@ public class DirectoryHandle {
         }
     }
 
-    private DirectoryHandle loadDirectory(BlockId id) {
-        try {
-            return fromProto(Sync.Directory.parseFrom(userHandle.getNode().network.getBlock(id)), userHandle);
-        } catch (InvalidProtocolBufferException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private BlockId storeDirectory(DirectoryHandle directory) {
         return userHandle.getNode().storage.store(directory.toProto());
     }
 
     private DirectoryEntryHandle newEntry(String name, DirectoryHandle directory) {
-        var entry = new DirectoryEntryHandle();
+        var entry = new DirectoryEntryHandle(this);
         entry.clock = directory.clock;
         entry.name = name;
         entry.directoryId = storeDirectory(directory);
@@ -200,10 +207,11 @@ public class DirectoryHandle {
                 .build();
     }
 
-    public static DirectoryHandle fromProto(Sync.Directory proto, NodeUserHandle userHandle) {
-        DirectoryHandle res = new DirectoryHandle(userHandle);
+    public static DirectoryHandle fromProto(Sync.Directory proto, NodeUserHandle userHandle,
+            Optional<DirectoryEntryHandle> parent) {
+        DirectoryHandle res = new DirectoryHandle(userHandle, parent);
         res.clock = VectorClock.from(proto.getClock());
-        res.directories = proto.getDirectoriesList().stream().map(DirectoryEntryHandle::fromProto)
+        res.directories = proto.getDirectoriesList().stream().map(x -> DirectoryEntryHandle.fromProto(x, res))
                 .collect(Collectors.toList());
         res.files = proto.getFilesList().stream().map(FileEntryHandle::fromProto).collect(Collectors.toList());
         return res;
@@ -213,6 +221,20 @@ public class DirectoryHandle {
         public VectorClock clock;
         public String name;
         public BlockId directoryId;
+        private DirectoryHandle parent;
+        public boolean dirty;
+
+        public DirectoryEntryHandle(DirectoryHandle parent) {
+            this.parent = parent;
+
+        }
+
+        public void markDirty() {
+            if (!dirty) {
+                dirty = true;
+                parent.markDirty();
+            }
+        }
 
         public Sync.DirectoryEntry toProto() {
             return Sync.DirectoryEntry.newBuilder()
@@ -222,12 +244,23 @@ public class DirectoryHandle {
                     .build();
         }
 
-        public static DirectoryEntryHandle fromProto(Sync.DirectoryEntry proto) {
-            DirectoryEntryHandle res = new DirectoryEntryHandle();
+        public static DirectoryEntryHandle fromProto(Sync.DirectoryEntry proto, DirectoryHandle parent) {
+            DirectoryEntryHandle res = new DirectoryEntryHandle(parent);
             res.clock = VectorClock.from(proto.getClock());
             res.name = proto.getName();
             res.directoryId = BlockId.fromProto(proto.getDirectoryId());
             return res;
+        }
+
+        private DirectoryHandle load() {
+            try {
+                return DirectoryHandle.fromProto(
+                        Sync.Directory.parseFrom(parent.userHandle.getNode().network.getBlock(directoryId)),
+                        parent.userHandle,
+                        Optional.of(this));
+            } catch (InvalidProtocolBufferException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
