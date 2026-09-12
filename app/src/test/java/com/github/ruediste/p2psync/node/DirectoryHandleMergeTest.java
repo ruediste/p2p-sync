@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -56,7 +57,7 @@ public class DirectoryHandleMergeTest {
     }
 
     private DirectoryHandle dir(NodeUserHandle handle) {
-        return DirectoryHandle.empty(handle);
+        return DirectoryHandle.empty(handle, Optional.empty());
     }
 
     private FileEntryHandle get(List<FileEntryHandle> files, String name) {
@@ -66,7 +67,8 @@ public class DirectoryHandleMergeTest {
     private DirectoryHandle loadSub(DirectoryHandle parent, String name) {
         var entry = parent.directories.stream().filter(d -> d.name.equals(name)).findFirst().orElseThrow();
         try {
-            return DirectoryHandle.fromProto(Sync.Directory.parseFrom(network.getBlock(entry.directoryId)), handleA);
+            return DirectoryHandle.fromProto(Sync.Directory.parseFrom(network.getBlock(entry.directoryId)), handleA,
+                    Optional.of(entry));
         } catch (InvalidProtocolBufferException e) {
             throw new RuntimeException(e);
         }
@@ -217,7 +219,8 @@ public class DirectoryHandleMergeTest {
     public void directoryOnlyInOther_isAdded() {
         var a = dir(handleA);
         var b = dir(handleB);
-        var entry = new DirectoryEntryHandle();
+
+        var entry = new DirectoryEntryHandle(a);
         entry.name = "sub";
         entry.clock = VectorClock.empty();
         entry.clock.increment(nrB);
@@ -235,7 +238,7 @@ public class DirectoryHandleMergeTest {
 
         var subA = dir(handleA);
         subA.files.add(file("x", nrA, 1));
-        var entryA = new DirectoryEntryHandle();
+        var entryA = new DirectoryEntryHandle(a);
         entryA.name = "sub";
         entryA.clock = VectorClock.empty();
         entryA.clock.increment(nrA);
@@ -244,7 +247,7 @@ public class DirectoryHandleMergeTest {
 
         var subB = dir(handleB);
         subB.files.add(file("x", nrB, 1));
-        var entryB = new DirectoryEntryHandle();
+        var entryB = new DirectoryEntryHandle(b);
         entryB.name = "sub";
         entryB.clock = VectorClock.empty();
         entryB.clock.increment(nrB);
@@ -266,7 +269,7 @@ public class DirectoryHandleMergeTest {
     @Test
     public void concurrentSubdirectoryModification_respectsLocalModification() {
         var a = dir(handleA);
-        var entryA = new DirectoryEntryHandle();
+        var entryA = new DirectoryEntryHandle(a);
         entryA.name = "sub";
         entryA.clock = VectorClock.empty();
         entryA.clock.increment(nrA);
@@ -275,7 +278,7 @@ public class DirectoryHandleMergeTest {
         a.directories.add(entryA);
 
         var b = dir(handleB);
-        var entryB = new DirectoryEntryHandle();
+        var entryB = new DirectoryEntryHandle(b);
         entryB.name = "sub";
         entryB.clock = VectorClock.empty();
         entryB.clock.increment(nrA);
