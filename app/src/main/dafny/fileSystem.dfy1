@@ -1,0 +1,766 @@
+include "vectorClock.dfy"
+include "eventSet.dfy"
+
+// Optional helper datatype
+datatype Option<T> = None | Some(value: T)
+
+// ---------------------------------------------------------------------------
+// Abstract (mathematical) values of the file system structures. They are used
+// to specify the behaviour of the heap based implementation below: every
+// implementation class provides an `Abs()` function yielding its abstract
+// value, and the mutating methods specify how that abstract value changes.
+// ---------------------------------------------------------------------------
+
+datatype AFile = AFile(sourceNodeNr: int, content: string, tag: int, clock: VectorClock)
+
+datatype AEntry = AEntry(directory: Option<ADir>, files: seq<AFile>, dirClock: VectorClock)
+
+datatype ADir = ADir(sourceNodeNr: int, clock: VectorClock, entries: map<string, AEntry>)
+
+predicate IsBeforeOrEqual(a: VectorClock, b: VectorClock) {
+  a.isBefore(b) || a.values == b.values
+}
+
+// `f` is superseded by one of the files of `others`
+predicate Superseded(f: AFile, others: seq<AFile>) {
+  exists i :: 0 <= i < |others| && f.tag == others[i].tag && f.clock.isBefore(others[i].clock)
+}
+
+// drop all files which are superseded by a file of `others`
+function FilterSuperseded(own: seq<AFile>, others: seq<AFile>): (r: seq<AFile>)
+  ensures |r| <= |own|
+{
+  if |own| == 0 then []
+  else (if Superseded(own[0], others) then [] else [own[0]]) + FilterSuperseded(own[1..], others)
+}
+
+// append all files of `others` which are not obsolete with respect to the
+// files accumulated so far
+function AddNonObsolete(own: seq<AFile>, others: seq<AFile>): (r: seq<AFile>)
+  ensures |r| >= |own|
+  decreases |others|
+{
+  if |others| == 0 then own
+  else AddNonObsolete(if Superseded(others[0], own) then own else own + [others[0]], others[1..])
+}
+
+function MergeFiles(own: seq<AFile>, other: seq<AFile>): seq<AFile> {
+  AddNonObsolete(FilterSuperseded(own, other), other)
+}
+
+// merging `other` into `own` changes the file list
+predicate FilesModified(own: seq<AFile>, other: seq<AFile>) {
+  |FilterSuperseded(own, other)| != |own|
+  || |MergeFiles(own, other)| != |FilterSuperseded(own, other)|
+}
+
+lemma FilterSupersededAppend(own: seq<AFile>, f: AFile, others: seq<AFile>)
+  ensures FilterSuperseded(own + [f], others)
+       == FilterSuperseded(own, others) + (if Superseded(f, others) then [] else [f])
+{
+  if |own| == 0 {
+    assert own + [f] == [f];
+  } else {
+    assert (own + [f])[0] == own[0];
+    assert (own + [f])[1..] == own[1..] + [f];
+    FilterSupersededAppend(own[1..], f, others);
+  }
+}
+
+lemma AddNonObsoleteAppend(own: seq<AFile>, others: seq<AFile>, f: AFile)
+  ensures AddNonObsolete(own, others + [f])
+       == (var a := AddNonObsolete(own, others);
+           if Superseded(f, a) then a else a + [f])
+  decreases |others|
+{
+  if |others| == 0 {
+    assert others + [f] == [f];
+  } else {
+    assert (others + [f])[0] == others[0];
+    assert (others + [f])[1..] == others[1..] + [f];
+    AddNonObsoleteAppend(if Superseded(others[0], own) then own else own + [others[0]],
+                         others[1..], f);
+  }
+}
+
+// keys of `own` which have been deleted in `other`
+function RemovedKeys(own: ADir, other: ADir): (r: set<string>)
+  ensures forall k :: k in r <==> (k in own.entries && k !in other.entries
+                                   && IsBeforeOrEqual(own.entries[k].dirClock, other.clock))
+{
+  set k | k in own.entries.Keys && k !in other.entries
+          && IsBeforeOrEqual(own.entries[k].dirClock, other.clock)
+}
+
+function KeptEntries(own: ADir, other: ADir): (r: map<string, AEntry>)
+  ensures r.Keys == own.entries.Keys - RemovedKeys(own, other)
+  ensures forall k | k in r :: r[k] == own.entries[k]
+{
+  map k | k in own.entries.Keys && k !in RemovedKeys(own, other) :: own.entries[k]
+}
+
+function MergeEntry(own: AEntry, other: AEntry, parentClock: VectorClock, fsNodeNr: int): (r: AEntry)
+  ensures r.files == MergeFiles(own.files, other.files)
+  ensures r.dirClock == own.dirClock
+  decreases other, 0
+{
+  AEntry(
+    match other.directory
+    case None => own.directory
+    case Some(otherDir) =>
+      match own.directory
+      case Some(ownDir) => Some(MergeDir(ownDir, otherDir, fsNodeNr))
+      case None => if other.dirClock.isBefore(parentClock) then None else Some(otherDir),
+    MergeFiles(own.files, other.files),
+    own.dirClock)
+}
+
+function MergedEntries(own: ADir, other: ADir, fsNodeNr: int): (r: map<string, AEntry>)
+  ensures r.Keys == KeptEntries(own, other).Keys + other.entries.Keys
+  ensures forall k | k in other.entries && k !in KeptEntries(own, other) :: r[k] == other.entries[k]
+  ensures forall k | k in KeptEntries(own, other) && k !in other.entries :: r[k] == own.entries[k]
+  ensures forall k | k in KeptEntries(own, other) && k in other.entries ::
+            r[k] == MergeEntry(own.entries[k], other.entries[k], own.clock, fsNodeNr)
+  decreases other, 1
+{
+  var kept := KeptEntries(own, other);
+  map k | k in kept.Keys + other.entries.Keys ::
+    if k !in kept then other.entries[k]
+    else if k !in other.entries then kept[k]
+    else MergeEntry(kept[k], other.entries[k], own.clock, fsNodeNr)
+}
+
+// merging entry `k` of `other` into `own` changes the entry
+predicate DirModifiedAt(own: ADir, other: ADir, k: string) {
+  k in other.entries
+  && (k !in KeptEntries(own, other)
+      || FilesModified(KeptEntries(own, other)[k].files, other.entries[k].files))
+}
+
+predicate DirModified(own: ADir, other: ADir) {
+  RemovedKeys(own, other) != {}
+  || exists k | k in other.entries :: DirModifiedAt(own, other, k)
+}
+
+function MergeDir(own: ADir, other: ADir, fsNodeNr: int): (r: ADir)
+  ensures r.sourceNodeNr == own.sourceNodeNr
+  ensures r.entries == MergedEntries(own, other, fsNodeNr)
+  ensures r.entries.Keys == KeptEntries(own, other).Keys + other.entries.Keys
+  ensures r.clock == (if DirModified(own, other) then own.clock.inc(fsNodeNr) else own.clock)
+  decreases other, 2
+{
+  ADir(own.sourceNodeNr,
+       if DirModified(own, other) then own.clock.inc(fsNodeNr) else own.clock,
+       MergedEntries(own, other, fsNodeNr))
+}
+
+// ---------------------------------------------------------------------------
+// Path handling structures
+// ---------------------------------------------------------------------------
+
+datatype FsPathPart = FsPathPart(name: string, nodeNr: Option<int>)
+
+datatype FsPath = FsPath(parts: seq<FsPathPart>)
+{
+  function Last(): FsPathPart
+    requires |parts| > 0
+  {
+    parts[|parts| - 1]
+  }
+
+  function RemoveLast(): FsPath
+    requires |parts| > 0
+  {
+    FsPath(parts[..|parts| - 1])
+  }
+}
+
+// ---------------------------------------------------------------------------
+// File node representation
+// ---------------------------------------------------------------------------
+
+class FsFile {
+  var sourceNodeNr: int
+  var content: string
+  var tag: int
+  var clock: VectorClock
+  var eventSet: EventSet
+
+  ghost function Abs(): AFile
+    reads this
+  {
+    AFile(sourceNodeNr, content, tag, clock)
+  }
+
+  constructor(sourceNodeNr: int, nodeNr: int)
+    ensures Abs() == AFile(sourceNodeNr, "", 0, VectorClock.empty().inc(nodeNr))
+  {
+    this.sourceNodeNr := sourceNodeNr;
+    this.content := "";
+    this.tag := 0;
+    var c := VectorClock.empty();
+    this.clock := c.inc(nodeNr);
+    var es := EventSet.empty();
+    var es2 := es.add();
+    this.eventSet := es2;
+  }
+
+  constructor Clone(other: FsFile)
+    ensures Abs() == other.Abs()
+  {
+    this.sourceNodeNr := other.sourceNodeNr;
+    this.content := other.content;
+    this.tag := other.tag;
+    this.clock := VectorClock(other.clock.values);
+    this.eventSet := other.eventSet;
+  }
+
+  method GetContent() returns (r: string)
+    ensures r == content
+  {
+    return content;
+  }
+
+  method SetContent(value: string, nodeNr: int)
+    modifies this
+    ensures Abs() == old(Abs()).(content := value, clock := old(clock).inc(nodeNr))
+    ensures clock == old(clock).inc(nodeNr)
+    ensures old(clock).isBefore(clock)
+  {
+    this.content := value;
+    this.clock := this.clock.inc(nodeNr);
+    var es := this.eventSet.add();
+    this.eventSet := es;
+  }
+
+  method IsBefore(other: FsFile) returns (r: bool)
+    ensures r == clock.isBefore(other.clock)
+  {
+    r := clock.isBefore(other.clock);
+  }
+}
+
+ghost function AbsFiles(files: seq<FsFile>): (r: seq<AFile>)
+  reads files
+  ensures |r| == |files|
+  ensures forall i | 0 <= i < |files| :: r[i] == files[i].Abs()
+{
+  if |files| == 0 then [] else [files[0].Abs()] + AbsFiles(files[1..])
+}
+
+lemma AbsFilesSame(a: seq<FsFile>, b: seq<FsFile>)
+  requires |a| == |b|
+  requires forall i | 0 <= i < |a| :: a[i].Abs() == b[i].Abs()
+  ensures AbsFiles(a) == AbsFiles(b)
+{
+}
+
+// ---------------------------------------------------------------------------
+// Directory entry, holding the file versions and/or the sub directory stored
+// under a name in a directory
+// ---------------------------------------------------------------------------
+
+class DirEntry {
+  var directory: Option<FsDirectory>
+  var files: seq<FsFile>
+  var dirClock: VectorClock
+  ghost var Repr: set<object>
+
+  ghost predicate Valid()
+    reads this, Repr
+    decreases Repr
+  {
+    this in Repr
+    && (forall f | f in files :: f in Repr)
+    && (directory.Some? ==>
+          directory.value in Repr
+          && directory.value.Repr <= Repr
+          && this !in directory.value.Repr
+          && directory.value.Valid())
+  }
+
+  ghost function Abs(): (r: AEntry)
+    requires Valid()
+    reads this, Repr
+    ensures r.files == AbsFiles(files)
+    ensures r.dirClock == dirClock
+    ensures r.directory.Some? == directory.Some?
+    decreases Repr
+  {
+    AEntry(if directory.Some? then Some(directory.value.Abs()) else None, AbsFiles(files), dirClock)
+  }
+
+  constructor(parentClock: VectorClock)
+    ensures Valid() && Repr == {this}
+    ensures Abs() == AEntry(None, [], parentClock)
+  {
+    this.directory := None;
+    this.files := [];
+    this.dirClock := VectorClock(parentClock.values);
+    this.Repr := {this};
+  }
+
+  method Clone(fsNodeNr: int) returns (r: DirEntry)
+    requires Valid()
+    ensures r.Valid() && fresh(r) && fresh(r.Repr)
+    ensures r.Abs() == Abs()
+    decreases Repr
+  {
+    r := new DirEntry(this.dirClock);
+    var clonedFiles: seq<FsFile> := [];
+    var i := 0;
+    while i < |files|
+      invariant 0 <= i <= |files|
+      invariant |clonedFiles| == i
+      invariant forall j | 0 <= j < i :: clonedFiles[j].Abs() == files[j].Abs()
+      invariant fresh(clonedFiles)
+      invariant r.Valid() && fresh(r.Repr) && r.directory == None
+      invariant r.dirClock == dirClock
+      invariant forall f | f in clonedFiles :: f in r.Repr
+      invariant unchanged(this) && unchanged(Repr)
+    {
+      var cf := new FsFile.Clone(files[i]);
+      clonedFiles := clonedFiles + [cf];
+      r.Repr := r.Repr + {cf};
+      i := i + 1;
+    }
+    r.files := clonedFiles;
+    AbsFilesSame(clonedFiles, files);
+    match directory {
+      case None =>
+      case Some(d) =>
+        var cd := d.Clone(fsNodeNr);
+        r.directory := Some(cd);
+        r.Repr := r.Repr + cd.Repr;
+    }
+  }
+
+  // Merge `other` into this entry. `parentClock` is the clock of the directory
+  // holding this entry. Returns whether the file versions changed.
+  method MergeWith(other: DirEntry, parentClock: VectorClock, fsNodeNr: int)
+    returns (filesModified: bool)
+    requires Valid() && other.Valid()
+    requires Repr !! other.Repr
+    modifies Repr
+    ensures Valid() && fresh(Repr - old(Repr))
+    ensures other.Valid() && other.Abs() == old(other.Abs())
+    ensures Abs() == MergeEntry(old(Abs()), old(other.Abs()), parentClock, fsNodeNr)
+    ensures filesModified == FilesModified(old(Abs()).files, old(other.Abs()).files)
+    decreases other.Repr
+  {
+    ghost var ownOld := Abs();
+    ghost var otherAbs := other.Abs();
+
+    // 1. drop own file versions superseded by a version of `other`
+    var filtered: seq<FsFile> := [];
+    var i := 0;
+    while i < |files|
+      modifies {}
+      invariant 0 <= i <= |files|
+      invariant forall f | f in filtered :: f in files
+      invariant AbsFiles(filtered) == FilterSuperseded(AbsFiles(files[..i]), otherAbs.files)
+    {
+      var f := files[i];
+      var shouldRemove := false;
+      var j := 0;
+      while j < |other.files|
+        modifies {}
+        invariant 0 <= j <= |other.files|
+        invariant shouldRemove <==>
+                  exists n :: 0 <= n < j && f.tag == other.files[n].tag
+                              && f.clock.isBefore(other.files[n].clock)
+      {
+        var of := other.files[j];
+        if f.tag == of.tag && f.clock.isBefore(of.clock) {
+          shouldRemove := true;
+        }
+        j := j + 1;
+      }
+      assert shouldRemove == Superseded(f.Abs(), otherAbs.files);
+      FilterSupersededAppend(AbsFiles(files[..i]), f.Abs(), otherAbs.files);
+      assert AbsFiles(files[..i]) + [f.Abs()] == AbsFiles(files[..i + 1]) by {
+        assert files[..i + 1] == files[..i] + [files[i]];
+        AbsFilesAppend(files[..i], files[i]);
+      }
+      if !shouldRemove {
+        AbsFilesAppend(filtered, f);
+        filtered := filtered + [f];
+      }
+      i := i + 1;
+    }
+    assert files[..|files|] == files;
+    assert ownOld.files == AbsFiles(files);
+    assert AbsFiles(filtered) == FilterSuperseded(ownOld.files, otherAbs.files);
+    filesModified := |filtered| != |files|;
+    files := filtered;
+    assert AbsFiles(files) == FilterSuperseded(ownOld.files, otherAbs.files);
+
+    // 2. add the file versions of `other` which are not obsolete
+    var m := 0;
+    while m < |other.files|
+      invariant 0 <= m <= |other.files|
+      invariant AbsFiles(files) == AddNonObsolete(FilterSuperseded(ownOld.files, otherAbs.files),
+                                                  otherAbs.files[..m])
+      invariant filesModified <==> |FilterSuperseded(ownOld.files, otherAbs.files)| != |ownOld.files|
+                                   || |AbsFiles(files)| != |FilterSuperseded(ownOld.files, otherAbs.files)|
+      invariant forall f | f in files :: f in Repr
+      invariant Repr == old(Repr) + (set f | f in files)
+      invariant fresh(Repr - old(Repr))
+      invariant directory == old(directory) && dirClock == old(dirClock)
+      invariant unchanged(other) && unchanged(other.Repr)
+      invariant Valid()
+    {
+      var otherFile := other.files[m];
+      var obsolete := false;
+      var n := 0;
+      while n < |files|
+        modifies {}
+        invariant 0 <= n <= |files|
+        invariant obsolete <==>
+                  exists x :: 0 <= x < n && otherFile.tag == files[x].tag
+                              && otherFile.clock.isBefore(files[x].clock)
+      {
+        var f := files[n];
+        if otherFile.tag == f.tag && otherFile.clock.isBefore(f.clock) {
+          obsolete := true;
+        }
+        n := n + 1;
+      }
+      assert obsolete == Superseded(otherFile.Abs(), AbsFiles(files));
+      AddNonObsoleteAppend(FilterSuperseded(ownOld.files, otherAbs.files),
+                           otherAbs.files[..m], otherFile.Abs());
+      assert otherAbs.files[..m] + [otherFile.Abs()] == otherAbs.files[..m + 1];
+      if !obsolete {
+        var clonedFile := new FsFile.Clone(otherFile);
+        AbsFilesAppend(files, clonedFile);
+        files := files + [clonedFile];
+        Repr := Repr + {clonedFile};
+        filesModified := true;
+      }
+      m := m + 1;
+    }
+    assert otherAbs.files[..|otherAbs.files|] == otherAbs.files;
+    assert AbsFiles(files) == MergeFiles(ownOld.files, otherAbs.files);
+
+    // 3. merge the sub directories recursively
+    match other.directory {
+      case None =>
+      case Some(otherDir) =>
+        match directory {
+          case Some(ownDir) =>
+            ownDir.Merge(otherDir, fsNodeNr);
+            Repr := Repr + ownDir.Repr;
+          case None =>
+            var before := other.dirClock.isBefore(parentClock);
+            if !before {
+              var clonedDir := otherDir.Clone(fsNodeNr);
+              directory := Some(clonedDir);
+              Repr := Repr + clonedDir.Repr;
+            }
+        }
+    }
+  }
+}
+
+lemma AbsFilesAppend(files: seq<FsFile>, f: FsFile)
+  ensures AbsFiles(files + [f]) == AbsFiles(files) + [f.Abs()]
+{
+  assert |AbsFiles(files + [f])| == |files| + 1;
+  assert forall i | 0 <= i < |files| :: AbsFiles(files + [f])[i] == files[i].Abs();
+}
+
+// ---------------------------------------------------------------------------
+// Directory representation supporting CRDT/P2P merges
+// ---------------------------------------------------------------------------
+
+function Repeat(c: char, n: nat): (r: string)
+  ensures |r| == n
+{
+  if n == 0 then "" else [c] + Repeat(c, n - 1)
+}
+
+class FsDirectory {
+  var sourceNodeNr: int
+  var clock: VectorClock
+  var events: EventSet
+  var entries: map<string, DirEntry>
+  ghost var Repr: set<object>
+
+  ghost predicate Valid()
+    reads this, Repr
+    decreases Repr
+  {
+    this in Repr
+    && (forall k | k in entries ::
+          entries[k] in Repr
+          && entries[k].Repr <= Repr
+          && this !in entries[k].Repr
+          && entries[k].Valid())
+    && (forall j, k | j in entries && k in entries && j != k ::
+          entries[j].Repr !! entries[k].Repr)
+  }
+
+  ghost function Abs(): (r: ADir)
+    requires Valid()
+    reads this, Repr
+    ensures r.sourceNodeNr == sourceNodeNr && r.clock == clock
+    ensures r.entries.Keys == entries.Keys
+    ensures forall k | k in entries :: r.entries[k] == entries[k].Abs()
+    decreases Repr
+  {
+    ADir(sourceNodeNr, clock, map k | k in entries :: entries[k].Abs())
+  }
+
+  constructor(sourceNodeNr: int, nodeNr: int)
+    ensures Valid() && Repr == {this}
+    ensures Abs() == ADir(sourceNodeNr, VectorClock.empty().inc(nodeNr), map[])
+  {
+    this.sourceNodeNr := sourceNodeNr;
+    var c := VectorClock.empty();
+    this.clock := c.inc(nodeNr);
+    var es := EventSet.empty();
+    var ev := es.add();
+    this.events := ev;
+    this.entries := map[];
+    this.Repr := {this};
+  }
+
+  method AddEvent(nodeNr: int)
+    requires Valid()
+    modifies this
+    ensures Valid() && Repr == old(Repr) && entries == old(entries)
+    ensures Abs() == old(Abs()).(clock := old(clock).inc(nodeNr))
+  {
+    this.clock := this.clock.inc(nodeNr);
+    this.events := this.events.add();
+  }
+
+  method Clone(fsNodeNr: int) returns (r: FsDirectory)
+    requires Valid()
+    ensures r.Valid() && fresh(r) && fresh(r.Repr)
+    ensures r.Abs() == Abs()
+    decreases Repr
+  {
+    r := new FsDirectory(sourceNodeNr, fsNodeNr);
+    r.clock := VectorClock(this.clock.values);
+    r.events := this.events;
+    var newEntries: map<string, DirEntry> := map[];
+    var keys := entries.Keys;
+    ghost var done: set<string> := {};
+    while keys != {}
+      invariant keys + done == entries.Keys
+      invariant keys !! done
+      invariant newEntries.Keys == done
+      invariant r.entries == map[]
+      invariant r.clock == clock && r.sourceNodeNr == sourceNodeNr
+      invariant fresh(r) && fresh(r.Repr) && r in r.Repr
+      invariant forall k | k in done :: newEntries[k] in r.Repr && newEntries[k].Repr <= r.Repr
+      invariant forall k | k in done :: r !in newEntries[k].Repr
+      invariant forall k | k in done :: newEntries[k].Valid() && newEntries[k].Abs() == entries[k].Abs()
+      invariant forall j, k | j in done && k in done && j != k ::
+                  newEntries[j].Repr !! newEntries[k].Repr
+      invariant unchanged(this) && unchanged(Repr)
+      decreases keys
+    {
+      var k :| k in keys;
+      keys := keys - {k};
+      var clonedEntry := entries[k].Clone(fsNodeNr);
+      newEntries := newEntries[k := clonedEntry];
+      r.Repr := r.Repr + clonedEntry.Repr;
+      done := done + {k};
+    }
+    r.entries := newEntries;
+    assert r.Abs().entries == Abs().entries;
+  }
+
+  method ChooseNewName(baseName: string) returns (candidate: string)
+    ensures candidate !in entries
+    ensures baseName !in entries ==> candidate == baseName
+    ensures baseName in entries && baseName + "_0" !in entries ==> candidate == baseName + "_0"
+  {
+    if baseName !in entries {
+      return baseName;
+    }
+    candidate := baseName + "_0";
+    if candidate !in entries {
+      return candidate;
+    }
+    // fall back to longer and longer names. Since `entries` is finite, one of
+    // them is unused.
+    var i := 2;
+    candidate := baseName + "_" + Repeat('0', i);
+    ghost var tried: set<string> := {baseName, baseName + "_0"};
+    while candidate in entries
+      invariant 2 <= i
+      invariant |candidate| == |baseName| + 1 + i
+      invariant tried <= entries.Keys
+      invariant forall s | s in tried :: |s| < |candidate|
+      decreases entries.Keys - tried
+    {
+      tried := tried + {candidate};
+      i := i + 1;
+      candidate := baseName + "_" + Repeat('0', i);
+    }
+  }
+
+  method AddFile(name: string, content: string, nodeNr: int) returns (f: FsFile)
+    requires Valid()
+    modifies this
+    ensures Valid() && fresh(Repr - old(Repr)) && fresh(f)
+    ensures sourceNodeNr == old(sourceNodeNr) && clock == old(clock)
+    ensures f.Abs() == AFile(nodeNr, content, 0, VectorClock.empty().inc(nodeNr).inc(nodeNr))
+    ensures name in entries && fresh(entries[name])
+    ensures entries[name].files == [f] && entries[name].directory == None
+    ensures entries == old(entries)[name := entries[name]]
+    ensures Abs() == old(Abs()).(entries :=
+                     old(Abs()).entries[name := AEntry(None, [f.Abs()], old(clock))])
+  {
+    f := new FsFile(nodeNr, nodeNr);
+    f.SetContent(content, nodeNr);
+    var entry := new DirEntry(this.clock);
+    entry.files := [f];
+    entry.Repr := entry.Repr + {f};
+    entries := entries[name := entry];
+    Repr := Repr + entry.Repr;
+    assert entry.Abs() == AEntry(None, [f.Abs()], old(clock));
+  }
+
+  method AddSubDirectory(name: string, nodeNr: int) returns (sub: FsDirectory)
+    requires Valid()
+    modifies this
+    ensures Valid() && fresh(Repr - old(Repr)) && fresh(sub) && fresh(sub.Repr)
+    ensures sourceNodeNr == old(sourceNodeNr) && clock == old(clock)
+    ensures sub.Valid() && sub.Abs() == ADir(nodeNr, VectorClock.empty().inc(nodeNr), map[])
+    ensures name in entries && fresh(entries[name])
+    ensures entries[name].directory == Some(sub) && entries[name].files == []
+    ensures entries == old(entries)[name := entries[name]]
+    ensures Abs() == old(Abs()).(entries :=
+                     old(Abs()).entries[name := AEntry(Some(sub.Abs()), [], old(clock))])
+  {
+    sub := new FsDirectory(nodeNr, nodeNr);
+    var entry := new DirEntry(this.clock);
+    entry.directory := Some(sub);
+    entry.Repr := entry.Repr + sub.Repr;
+    entries := entries[name := entry];
+    Repr := Repr + entry.Repr;
+    assert entry.Abs() == AEntry(Some(sub.Abs()), [], old(clock));
+  }
+
+  method Remove(entryName: string)
+    requires Valid()
+    modifies this
+    ensures Valid() && Repr == old(Repr)
+    ensures sourceNodeNr == old(sourceNodeNr) && clock == old(clock)
+    ensures entries == map k | k in old(entries).Keys && k != entryName :: old(entries)[k]
+    ensures Abs() == old(Abs()).(entries :=
+                     map k | k in old(Abs()).entries.Keys && k != entryName :: old(Abs()).entries[k])
+  {
+    entries := map k | k in entries.Keys && k != entryName :: entries[k];
+  }
+
+  // Merge the other directory into this directory
+  method Merge(other: FsDirectory, fsNodeNr: int)
+    requires Valid() && other.Valid()
+    requires Repr !! other.Repr
+    modifies Repr
+    ensures Valid() && fresh(Repr - old(Repr))
+    ensures other.Valid() && other.Abs() == old(other.Abs())
+    ensures Abs() == MergeDir(old(Abs()), old(other.Abs()), fsNodeNr)
+    decreases other.Repr
+  {
+    ghost var ownOld := Abs();
+    ghost var otherAbs := other.Abs();
+    var modified := false;
+
+    // 1. remove entries deleted in `other`
+    var kept := map k | k in entries.Keys
+                        && !(k !in other.entries
+                             && IsBeforeOrEqual(entries[k].dirClock, other.clock))
+      :: entries[k];
+    modified := kept.Keys != entries.Keys;
+    entries := kept;
+    assert entries.Keys == KeptEntries(ownOld, otherAbs).Keys;
+    assert forall k | k in entries :: entries[k].Abs() == KeptEntries(ownOld, otherAbs)[k];
+    assert modified <==> RemovedKeys(ownOld, otherAbs) != {};
+
+    // 2. add or merge the entries of `other`
+    var otherKeys := other.entries.Keys;
+    ghost var processed: set<string> := {};
+    while otherKeys != {}
+      invariant processed <= otherAbs.entries.Keys
+      invariant otherKeys + processed == other.entries.Keys
+      invariant otherKeys !! processed
+      invariant Valid()
+      invariant fresh(Repr - old(Repr))
+      invariant other.Valid() && unchanged(other) && unchanged(other.Repr)
+      invariant sourceNodeNr == old(sourceNodeNr) && clock == old(clock)
+      invariant entries.Keys == KeptEntries(ownOld, otherAbs).Keys + processed
+      invariant forall k | k in entries ::
+                  entries[k].Abs() == (if k in processed
+                                       then MergedEntries(ownOld, otherAbs, fsNodeNr)[k]
+                                       else KeptEntries(ownOld, otherAbs)[k])
+      invariant modified <==> RemovedKeys(ownOld, otherAbs) != {}
+                              || exists k | k in processed :: DirModifiedAt(ownOld, otherAbs, k)
+      decreases otherKeys
+    {
+      var k :| k in otherKeys;
+      otherKeys := otherKeys - {k};
+      var otherEntry := other.entries[k];
+
+      if k !in entries {
+        var cloned := otherEntry.Clone(fsNodeNr);
+        entries := entries[k := cloned];
+        Repr := Repr + cloned.Repr;
+        modified := true;
+      } else {
+        var ownEntry := entries[k];
+        var m := ownEntry.MergeWith(otherEntry, clock, fsNodeNr);
+        Repr := Repr + ownEntry.Repr;
+        modified := modified || m;
+      }
+      processed := processed + {k};
+    }
+
+    if modified {
+      AddEvent(fsNodeNr);
+    }
+    assert Abs().entries == MergedEntries(ownOld, otherAbs, fsNodeNr);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Top-level FileSystem structure
+// ---------------------------------------------------------------------------
+
+class FileSystem {
+  var nodeNr: int
+  var root: FsDirectory
+
+  ghost predicate Valid()
+    reads this, root, root.Repr
+  {
+    this !in root.Repr && root.Valid()
+  }
+
+  constructor(nodeNr: int)
+    ensures Valid()
+    ensures this.nodeNr == nodeNr
+    ensures fresh(root) && fresh(root.Repr)
+    ensures root.Abs() == ADir(nodeNr, VectorClock.empty().inc(nodeNr), map[])
+  {
+    this.nodeNr := nodeNr;
+    this.root := new FsDirectory(nodeNr, nodeNr);
+  }
+
+  method Merge(other: FileSystem)
+    requires Valid() && other.Valid()
+    requires other !in root.Repr
+    requires root.Repr !! other.root.Repr
+    modifies root.Repr
+    ensures Valid() && root == old(root) && fresh(root.Repr - old(root.Repr))
+    ensures other.Valid() && other.root.Abs() == old(other.root.Abs())
+    ensures root.Abs() == MergeDir(old(root.Abs()), old(other.root.Abs()), nodeNr)
+  {
+    root.Merge(other.root, nodeNr);
+  }
+}

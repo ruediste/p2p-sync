@@ -1,7 +1,7 @@
 include "fileSystem.dfy"
 
 // Property 1: Creation of files and subdirectories correctly updates directory entry maps.
-ghost method Verify_CreateDirAndFile() {
+method Verify_CreateDirAndFile() {
   var fs := new FileSystem(1);
   var f1 := fs.root.AddFile("a", "foo", 1);
   var subDir := fs.root.AddSubDirectory("b", 1);
@@ -15,7 +15,7 @@ ghost method Verify_CreateDirAndFile() {
 }
 
 // Property 2: ChooseNewName yields a non-conflicting candidate name.
-ghost method Verify_ChooseNewName() {
+method Verify_ChooseNewName() {
   var fs := new FileSystem(1);
   var f1 := fs.root.AddFile("file", "", 1);
   var candidate := fs.root.ChooseNewName("file");
@@ -25,7 +25,7 @@ ghost method Verify_ChooseNewName() {
 }
 
 // Property 3: Merging disjoint file systems incorporates new entries.
-ghost method Verify_SimpleMerge() {
+method Verify_SimpleMerge() {
   var fs1 := new FileSystem(1);
   var f1 := fs1.root.AddFile("a", "foo", 1);
 
@@ -38,7 +38,7 @@ ghost method Verify_SimpleMerge() {
 }
 
 // Property 4: Sequential updates across merges replace superseded file versions.
-ghost method Verify_MergeModifyMerge() {
+method Verify_MergeModifyMerge() {
   var fs1 := new FileSystem(1);
   var f1 := fs1.root.AddFile("a", "foo", 1);
 
@@ -54,7 +54,7 @@ ghost method Verify_MergeModifyMerge() {
 }
 
 // Property 5: Concurrent edits on distinct nodes result in conflict version sets.
-ghost method Verify_ConcurrentFileModification() {
+method Verify_ConcurrentFileModification() {
   var fs1 := new FileSystem(1);
   var f1 := fs1.root.AddFile("a", "foo", 1);
 
@@ -75,7 +75,7 @@ ghost method Verify_ConcurrentFileModification() {
 }
 
 // Property 6: Local entry deletions propagate to remote instances upon merge.
-ghost method Verify_RemoveAndMerge() {
+method Verify_RemoveAndMerge() {
   var fs1 := new FileSystem(1);
   var f1 := fs1.root.AddFile("a", "foo", 1);
 
