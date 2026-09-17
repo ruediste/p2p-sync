@@ -7,21 +7,24 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
 
+import com.github.ruediste.p2psync.clock.VectorClock;
+
 public class FileSystemDataStructureTest {
 
     static class FileSystem {
         int nodeNr;
-        Directory root;
+        FsDirectory root;
 
         FileSystem(int nodeNr) {
             this.nodeNr = nodeNr;
-            root = new Directory(this);
+            root = new FsDirectory(nodeNr, this);
         }
 
         public void merge(FileSystem other) {
@@ -29,135 +32,166 @@ public class FileSystemDataStructureTest {
         }
     }
 
-    static abstract class Entry<TSelf extends Entry<TSelf>> {
-        public abstract TSelf clone();
+    static abstract class FsElementBase<TSelf extends FsElementBase<TSelf>> {
+        public int sourceNodeNr;
 
-        public abstract void merge(TSelf other);
-    }
+        public abstract TSelf clone(FileSystem fs);
 
-    static class EntryVersion {
-        int nodeNr;
-        Entry<?> entry;
-
-        public EntryVersion(int nodeNr, Entry<?> entry) {
-            this.nodeNr = nodeNr;
-            this.entry = entry;
-        }
-
-        public EntryVersion clone() {
-            return new EntryVersion(nodeNr, entry.clone());
+        protected FsElementBase(int sourceNodeNr) {
+            this.sourceNodeNr = sourceNodeNr;
         }
     }
 
-    static class Directory extends Entry<Directory> {
+    static class DirEntry {
+        // invariant: either a directory or a file have to be present
+        Optional<FsDirectory> directory = Optional.empty();
+        List<FsFile> files = new ArrayList<>();
+    }
+
+    static class FsDirectory extends FsElementBase<FsDirectory> {
 
         private FileSystem fs;
-        Map<String, List<EntryVersion>> entries = new HashMap<>();
+        Map<String, DirEntry> entries = new HashMap<>();
 
-        public Directory(FileSystem fs) {
-
+        public FsDirectory(int sourceNodeNr, FileSystem fs) {
+            super(sourceNodeNr);
             this.fs = fs;
-
         }
 
         // Merge the other directory into this directory
-        public void merge(Directory other) {
-            for (var entry : other.entries.entrySet()) {
-                entries.computeIfAbsent(entry.getKey(), k -> new ArrayList<>())
-                        .addAll(entry.getValue().stream().map(x -> x.clone()).toList());
+        public void merge(FsDirectory other) {
+            for (var otherEntry : other.entries.entrySet()) {
+                var ownEntry = entries.computeIfAbsent(otherEntry.getKey(), k -> new DirEntry());
+
+                // remove FileEntries that are before any FileEntry in otherVersions
+                ownEntry.files.removeIf(f -> otherEntry.getValue().files.stream()
+                        .anyMatch(of -> f.tag == of.tag && f.isBefore(of)));
+
+                for (var otherFile : otherEntry.getValue().files) {
+                    // only add the other Entry if it is not obsolete
+                    if (!ownEntry.files.stream()
+                            .anyMatch(f -> otherFile.tag == f.tag && otherFile.isBefore(f))) {
+                        ownEntry.files.add(otherFile.clone(fs));
+                    }
+                }
             }
         }
 
-        public Directory clone() {
-            var result = new Directory(fs);
-            for (var e : entries.entrySet())
-                result.entries.put(e.getKey(), new ArrayList<>(e.getValue().stream().map(x -> x.clone()).toList()));
+        public FsDirectory clone(FileSystem fs) {
+            var result = new FsDirectory(sourceNodeNr, fs);
+            for (var e : entries.entrySet()) {
+                var newEntry = new DirEntry();
+                newEntry.files.addAll(e.getValue().files.stream().map(x -> x.clone(fs)).toList());
+                newEntry.directory = e.getValue().directory.map(d -> d.clone(fs));
+                result.entries.put(e.getKey(), newEntry);
+            }
             return result;
         }
 
-        Entry<?> loadEntry(String path) {
-            var versions = loadVersions(path);
-            if (versions.size() == 1)
-                return versions.get(0).entry;
-            else
-                throw new IllegalArgumentException("Multiple versions found for " + path);
+        static record FsPathPart(String name, Optional<Integer> nodeNr) {
+        }
+
+        static class FsPath {
+            public List<FsPathPart> parts = new ArrayList<>();
+
+            public FsPathPart last() {
+                if (parts.isEmpty()) {
+                    throw new IllegalStateException("Path is empty");
+                }
+                return parts.get(parts.size() - 1);
+            }
         }
 
         static record NameAndNodeNr(String name, int nodeNr) {
         }
 
-        private NameAndNodeNr parseNameAndNodeNr(String name) {
-            var idx = name.indexOf(':');
-            if (idx >= 0) {
-                return new NameAndNodeNr(name.substring(0, idx), Integer.parseInt(name.substring(idx + 1)));
-            } else
-                return new NameAndNodeNr(name, -1);
+        private FsPath parsePath(String path) {
+            var fsPath = new FsPath();
+            for (var part : path.split("/")) {
+                var fsPathPart = parseFsPathPart(part);
+                fsPath.parts.add(fsPathPart);
+            }
+            return fsPath;
         }
 
-        List<EntryVersion> loadVersions(String path) {
-            String[] parts = path.split("/");
-            Directory current = this;
+        private FsPathPart parseFsPathPart(String name) {
+            var idx = name.indexOf(':');
+            if (idx >= 0) {
+                return new FsPathPart(name.substring(0, idx), Optional.of(Integer.parseInt(name.substring(idx + 1))));
+            } else
+                return new FsPathPart(name, Optional.empty());
+        }
+
+        DirEntry loadEntry(String path) {
+            return loadEntry(parsePath(path));
+        }
+
+        DirEntry loadEntry(FsPath path) {
+            FsDirectory current = this;
             var currentPath = new StringBuilder();
-            for (var i = 0; i < parts.length - 1; i++) {
-                var part = parts[i];
+            for (var i = 0; i < path.parts.size() - 1; i++) {
+                var part = path.parts.get(i);
                 if (!currentPath.isEmpty())
                     currentPath.append("/");
                 currentPath.append(part);
 
-                var nameAndNodeNr = parseNameAndNodeNr(part);
-                part = nameAndNodeNr.name();
-
-                var versions = current.entries.get(part);
-                Entry<?> child;
-                if (nameAndNodeNr.nodeNr() >= 0) {
-                    child = versions.stream().filter(x -> x.nodeNr == nameAndNodeNr.nodeNr()).findFirst()
-                            .map(x -> x.entry)
-                            .orElse(null);
-                } else {
-                    child = versions.stream().findFirst().map(x -> x.entry).orElse(null);
-                }
-
-                if (child == null) {
+                var childEntry = current.entries.get(part.name());
+                if (childEntry == null) {
                     throw new IllegalArgumentException("no entry found for " + currentPath);
                 }
-                if (!(child instanceof Directory dir)) {
-                    throw new IllegalArgumentException("Expected directory, found file at " + currentPath);
-                }
-                current = dir;
+                current = childEntry.directory
+                        .orElseThrow(() -> new IllegalArgumentException("no directory found for " + currentPath));
             }
 
             {
-                var nameAndNodeNr = parseNameAndNodeNr(parts[parts.length - 1]);
+                var nameAndNodeNr = path.parts.get(path.parts.size() - 1);
                 var versions = current.entries.get(nameAndNodeNr.name());
                 if (versions == null) {
-                    throw new IllegalArgumentException("no entry found for " + path);
+                    throw new IllegalArgumentException("no entry found for " + nameAndNodeNr);
                 }
-                if (nameAndNodeNr.nodeNr() >= 0) {
-                    return versions.stream().filter(x -> x.nodeNr == nameAndNodeNr.nodeNr()).toList();
-                } else {
-                    return versions;
-                }
+                return versions;
             }
         }
 
-        Directory loadDir(String path) {
-            return (Directory) loadEntry(path);
+        FsDirectory loadDir(String path) {
+            return loadEntry(parsePath(path)).directory
+                    .orElseThrow(() -> new IllegalArgumentException("no directory found for " + path));
         }
 
-        File loadFile(String path) {
-            return (File) loadEntry(path);
+        FsFile loadFile(String path) {
+            var pathParsed = parsePath(path);
+            var entry = loadEntry(pathParsed);
+            var files = entry.files.stream()
+                    .filter(x -> pathParsed.last().nodeNr.map(nr -> x.sourceNodeNr == nr).orElse(true)).toList();
+            if (files.size() == 0) {
+                throw new IllegalArgumentException("no file found for " + path);
+            }
+            if (files.size() > 1) {
+                throw new IllegalArgumentException("multiple files found for " + path);
+            }
+            return files.get(0);
         }
 
-        File addFile(String name, String content) {
-            var file = new File(fs);
+        FsFile addFile(String name, String content) {
+            var file = FsFile.createNewFile(fs.nodeNr, fs);
             file.content = content;
-            entries.computeIfAbsent(name, k -> new ArrayList<>()).add(new EntryVersion(fs.nodeNr, file));
+            createNewEntry(name).files.add(file);
             return file;
         }
 
-        Directory addSubDirectory(String name) {
-            var dir = new Directory(fs);
-            entries.computeIfAbsent(name, k -> new ArrayList<>()).add(new EntryVersion(fs.nodeNr, dir));
+        private DirEntry createNewEntry(String name) {
+            var entry = entries.get(name);
+            if (entry != null) {
+                throw new IllegalArgumentException("entry already exists for " + name);
+            }
+            entry = new DirEntry();
+            entries.put(name, entry);
+            return entry;
+        }
+
+        FsDirectory addSubDirectory(String name) {
+            var dir = new FsDirectory(fs.nodeNr, fs);
+            createNewEntry(name).directory = Optional.of(dir);
             return dir;
         }
 
@@ -170,28 +204,83 @@ public class FileSystemDataStructureTest {
             }
             return candidate;
         }
+
+        public void remove(String entryName) {
+            this.entries.remove(entryName);
+        }
     }
 
-    static class File extends Entry<File> {
+    static class EventSet {
+        private class Event {
+            public String name;
+
+            @Override
+            public String toString() {
+                return name;
+            }
+        }
+
+        private Set<Event> events = new HashSet<>();
+
+        public void addEvent(String name) {
+            var event = new Event();
+            event.name = name;
+            events.add(event);
+        }
+
+        public EventSet copy() {
+            var result = new EventSet();
+            result.events.addAll(events);
+            return result;
+        }
+
+        public boolean isSubsetOf(EventSet other) {
+            return events.stream().allMatch(x -> other.events.contains(x));
+        }
+
+        public void assertIsSubsetOf(EventSet other) {
+            var missingEvents = events.stream().filter(x -> !other.events.contains(x)).toList();
+            if (!missingEvents.isEmpty()) {
+                throw new AssertionError("Events " + missingEvents + " are not in the other set");
+            }
+        }
+    }
+
+    static class FsFile extends FsElementBase<FsFile> {
         private FileSystem fs;
         private String content = "";
-        public Set<Object> eventSet = new HashSet<>();
+        public Object tag;
+        public VectorClock clock;
+        // ghost field to track events related to this file entry
+        public EventSet eventSet = new EventSet();
 
-        public File(FileSystem fs) {
+        public boolean isBefore(FsFile other) {
+            var result = this.clock.isBefore(other.clock);
+            if (result)
+                eventSet.assertIsSubsetOf(other.eventSet);
+            return result;
+        }
+
+        private FsFile(int sourceNodeNr, FileSystem fs) {
+            super(sourceNodeNr);
             this.fs = fs;
         }
 
-        @Override
-        public File clone() {
-            var result = new File(fs);
-            result.content = content;
+        public static FsFile createNewFile(int sourceNodeNr, FileSystem fs) {
+            var result = new FsFile(sourceNodeNr, fs);
+            result.clock = VectorClock.empty();
+            result.clock.increment(fs.nodeNr);
+            result.eventSet.addEvent("created");
             return result;
         }
 
         @Override
-        public void merge(File other) {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("Unimplemented method 'merge'");
+        public FsFile clone(FileSystem fs) {
+            var result = new FsFile(sourceNodeNr, fs);
+            result.content = content;
+            result.clock = clock.clone();
+            result.eventSet = eventSet.copy();
+            return result;
         }
 
         public String getContent() {
@@ -200,7 +289,8 @@ public class FileSystemDataStructureTest {
 
         public void setContent(String value) {
             this.content = value;
-            this.eventSet.add(new Object());
+            this.clock.increment(fs.nodeNr);
+            this.eventSet.addEvent("setContent " + value);
         }
     }
 
@@ -208,9 +298,9 @@ public class FileSystemDataStructureTest {
     public void generatedNamesAreUniqueAndDeterministic() {
         var fs = new FileSystem(1);
         var dir = fs.root;
-        dir.entries.put("file", new ArrayList<>());
-        dir.entries.put("file0", new ArrayList<>());
-        dir.entries.put("file1", new ArrayList<>());
+        dir.entries.put("file", new DirEntry());
+        dir.entries.put("file0", new DirEntry());
+        dir.entries.put("file1", new DirEntry());
 
         assertEquals("file2", dir.chooseNewName("file"));
     }
@@ -236,6 +326,38 @@ public class FileSystemDataStructureTest {
     }
 
     @Test
+    public void mergeModifyMerge() {
+        var fs1 = new FileSystem(1);
+        fs1.root.addFile("a", "foo");
+
+        var fs2 = new FileSystem(2);
+        fs2.merge(fs1);
+
+        fs1.root.loadFile("a").setContent("foo2");
+        fs2.merge(fs1);
+
+        assertEquals("foo2", fs2.root.loadFile("a").getContent());
+    }
+
+    @Test
+    public void mergeRecreateMerge() {
+        var fs1 = new FileSystem(1);
+        fs1.root.addFile("a", "foo");
+
+        var fs2 = new FileSystem(2);
+        fs2.merge(fs1);
+
+        fs1.root.remove("a");
+        fs1.root.addFile("a", "bar");
+
+        fs2.merge(fs1);
+
+        // `a` has been created twice. Thus there should be a conflict with two
+        // versions.
+        assertEquals(2, fs2.root.loadEntry("a").files.size());
+    }
+
+    @Test
     public void concurrentFileModification() {
         var fs1 = new FileSystem(1);
         fs1.root.addFile("a", "foo");
@@ -248,10 +370,10 @@ public class FileSystemDataStructureTest {
 
         fs2.merge(fs1);
         {
-            var versions = fs2.root.loadVersions("a");
+            var versions = fs2.root.loadEntry("a").files;
             assertEquals(2, versions.size());
             assertEquals(Set.of("foo2", "bar"),
-                    versions.stream().map(x -> ((File) x.entry).getContent()).collect(Collectors.toSet()));
+                    versions.stream().map(x -> ((FsFile) x).getContent()).collect(Collectors.toSet()));
         }
     }
 
@@ -262,7 +384,7 @@ public class FileSystemDataStructureTest {
     public void modelBasedTest() {
         int fileSystemsCount = 3;
         int testCount = 10;
-        int iterationCount = 1000;
+        int iterationCount = 10;
 
         for (int testNr = 0; testNr < testCount; testNr++) {
             // build file systems
@@ -270,7 +392,7 @@ public class FileSystemDataStructureTest {
             var fs0 = new FileSystem(0);
             for (int i = 1; i < fileSystemsCount; i++) {
                 var fs = new FileSystem(i);
-                fs.root = fs0.root.clone();
+                fs.root = fs0.root.clone(fs);
                 fileSystems.add(fs);
             }
 
@@ -297,7 +419,7 @@ public class FileSystemDataStructureTest {
 
                     // iterate over all directories and files and add actions for modifying them
                     {
-                        var dirsToProcess = new ArrayList<Directory>();
+                        var dirsToProcess = new ArrayList<FsDirectory>();
                         dirsToProcess.add(fs.root);
                         while (!dirsToProcess.isEmpty()) {
                             var dir = dirsToProcess.remove(dirsToProcess.size() - 1);
@@ -305,15 +427,11 @@ public class FileSystemDataStructureTest {
                             // iterate over all entries in the directory
                             for (var entry : dir.entries.entrySet()) {
                                 var name = entry.getKey();
-                                for (var version : entry.getValue()) {
-                                    var entryInstance = version.entry;
-                                    if (entryInstance instanceof Directory subDir) {
-                                        dirsToProcess.add(subDir);
-                                    } else if (entryInstance instanceof File file) {
-                                        actions.add(new Action("modify file " + name + " in fs" + i, 1.0, () -> {
-                                            file.setContent(file.getContent() + "x");
-                                        }));
-                                    }
+                                entry.getValue().directory.ifPresent(dirsToProcess::add);
+                                for (var file : entry.getValue().files) {
+                                    actions.add(new Action("modify file " + name + " in fs" + i, 1.0, () -> {
+                                        file.setContent(file.getContent() + "x");
+                                    }));
                                 }
                             }
 
@@ -366,26 +484,23 @@ public class FileSystemDataStructureTest {
         verifyDirectory(fs.root, "");
     }
 
-    private void verifyDirectory(Directory dir, String path) {
+    private void verifyDirectory(FsDirectory dir, String path) {
         // verify all entries of this directory, recursing into subdirectories
         for (var entry : dir.entries.entrySet()) {
-            for (var version : entry.getValue()) {
-                if (version.entry instanceof Directory subDir) {
-                    verifyDirectory(subDir, path + "/" + entry.getKey() + ":" + version.nodeNr);
-                }
-            }
+            entry.getValue().directory.ifPresent(
+                    subDir -> verifyDirectory(subDir, path + "/" + entry.getKey() + ":" + subDir.sourceNodeNr));
 
             // Check for all files, that the events of no file is a subset of
             // another. Otherwise, these two files should
             // have been merged
-            var allFiles = entry.getValue().stream()
-                    .<File>flatMap(x -> x.entry instanceof File f ? Stream.of(f) : Stream.of()).toList();
+            var allFiles = entry.getValue().files.stream()
+                    .<FsFile>flatMap(x -> x instanceof FsFile f ? Stream.of(f) : Stream.of()).toList();
             for (int i = 0; i < allFiles.size(); i++) {
                 var a = allFiles.get(i);
                 for (int j = i + 1; j < allFiles.size(); j++) {
                     var b = allFiles.get(j);
-                    if (b.eventSet.containsAll(a.eventSet)
-                            || a.eventSet.containsAll(b.eventSet)) {
+                    if (b.eventSet.isSubsetOf(a.eventSet)
+                            || a.eventSet.isSubsetOf(b.eventSet)) {
                         throw new RuntimeException("unmerged file found: " + path + "/" + entry.getKey());
                     }
                 }

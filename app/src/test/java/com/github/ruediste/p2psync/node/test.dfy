@@ -31,14 +31,11 @@ class EventSet<T(==)>{
   }
 
   method merge(other: EventSet<T>)
-  requires 
     modifies this
     ensures old(clock).IsBefore(other.clock) ==> clock.values==other.clock.values
     // ensures values==old(values) + old(other.values)
   {
-    var t:= clock.Merge(other.clock);
-    clock:=t;
-
+    clock:= clock.Merge(other.clock);
     values:=values + other.values;
   }
 }
