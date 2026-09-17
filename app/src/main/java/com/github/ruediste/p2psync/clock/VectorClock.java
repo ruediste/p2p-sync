@@ -77,6 +77,11 @@ public final class VectorClock {
         return compare(other) == ClockRelation.BEFORE;
     }
 
+    public boolean isBeforeOrEqual(VectorClock other) {
+        var relation = compare(other);
+        return relation == ClockRelation.BEFORE || relation == ClockRelation.EQUAL;
+    }
+
     public boolean isAfter(VectorClock other) {
         return compare(other) == ClockRelation.AFTER;
     }

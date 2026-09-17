@@ -7,6 +7,10 @@ Java implementation of the p2p-sync peer-to-peer file storage and synchronizatio
 - Java 21
 - Maven
 
+for Dafny:
+```bash
+dotnet tool install --global dafny
+```
 ## Building
 
 ```bash
