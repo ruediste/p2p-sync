@@ -18,6 +18,7 @@
     "muxers",
     "p2psync",
     "rawtypes",
+    "Repr",
     "ruediste",
     "Stringifier",
     "unlisten",

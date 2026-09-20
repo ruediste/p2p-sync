@@ -1,3 +1,4 @@
+module EventSet{
 class Event{
   constructor(){}
 }
@@ -29,3 +30,4 @@ datatype EventSet=EventSet(events: set<Event>){
 }
 
 
+}
