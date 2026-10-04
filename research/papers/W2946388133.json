@@ -1,0 +1,122 @@
+{
+  "id": "W2946388133",
+  "title": "Automated Parameterized Verification of CRDTs",
+  "doi": "https://doi.org/10.1007/978-3-030-25543-5_26",
+  "publication_date": "2019-01-01",
+  "publication_year": 2019,
+  "type": "conference-paper",
+  "cited_by_count": 12,
+  "authors": [
+    "Kartik Nagar",
+    "Suresh Jagannathan"
+  ],
+  "venue": "Lecture notes in computer science",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "hybrid",
+    "oa_url": "https://link.springer.com/content/pdf/10.1007%2F978-3-030-25543-5_26.pdf",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2946388133.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2946388133.grobid-xml"
+  },
+  "abstract": "Maintaining multiple replicas of data is crucial to achieving scalability, availability and low latency in distributed applications. Conflict-free Replicated Data Types (CRDTs) are important building blocks in this domain because they are designed to operate correctly under the myriad behaviors possible in a weakly-consistent distributed setting. Because of the possibility of concurrent updates to the same object at different replicas, and the absence of any ordering guarantees on these updates, convergence is an important correctness criterion for CRDTs. This property asserts that two replicas which receive the same set of updates (in any order) must nonetheless converge to the same state. One way to prove that operations on a CRDT converge is to show that they commute since commutative actions by definition behave the same regardless of the order in which they execute. In this paper, we present a framework for automatically verifying convergence of CRDTs under different weak-consistency policies. Surprisingly, depending upon the consistency policy supported by the underlying system, we show that not all operations of a CRDT need to commute to achieve convergence. We develop a proof rule parameterized by a consistency specification based on the concepts of commutativity modulo consistency policy and non-interference to commutativity. We describe the design and implementation of a verification engine equipped with this rule and show how it can be used to provide the first automated convergence proofs for a number of challenging CRDTs, including sets, lists, and graphs.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Data Storage Technologies",
+    "Parallel Computing and Optimization Techniques"
+  ],
+  "references": [
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1689093460",
+    "https://openalex.org/W1916848204",
+    "https://openalex.org/W1969925795",
+    "https://openalex.org/W1989814541",
+    "https://openalex.org/W1999468161",
+    "https://openalex.org/W2054584570",
+    "https://openalex.org/W2082133002",
+    "https://openalex.org/W2110768875",
+    "https://openalex.org/W2127428602",
+    "https://openalex.org/W2143725230",
+    "https://openalex.org/W2153704625",
+    "https://openalex.org/W2161730338",
+    "https://openalex.org/W2209943643",
+    "https://openalex.org/W2282477915",
+    "https://openalex.org/W2506181100",
+    "https://openalex.org/W2540479136",
+    "https://openalex.org/W2727092525",
+    "https://openalex.org/W2798647014",
+    "https://openalex.org/W2804216752",
+    "https://openalex.org/W2885875591",
+    "https://openalex.org/W2898350964",
+    "https://openalex.org/W2900394527",
+    "https://openalex.org/W3123835709"
+  ],
+  "cited_by": [
+    {
+      "id": "W4307887050",
+      "title": "Katara: synthesizing CRDTs with verified lifting",
+      "abstract": "Conflict-free replicated data types (CRDTs) are a promising tool for designing scalable, coordination-free distributed systems. However, constructing correct CRDTs is difficult, posing a challenge for even seasoned developers. As a result, CRDT development is still largely the domain of academics, with new designs often awaiting peer review and a manual proof of correctness. In this paper, we present Katara, a program synthesis-based system that takes sequential data type implementations and automatically synthesizes verified CRDT designs from them. Key to this process is a new formal definition of CRDT correctness that combines a reference sequential type with a lightweight ordering constraint that resolves conflicts between non-commutative operations. Our process follows the tradition of work in verified lifting, including an encoding of correctness into SMT logic using synthesized inductive invariants and hand-crafted grammars for the CRDT state and runtime. Katara is able to automatically synthesize CRDTs for a wide variety of scenarios, from reproducing classic CRDTs to synthesizing novel designs based on specifications in existing literature. Crucially, our synthesized CRDTs are fully, automatically verified, eliminating entire classes of common errors and reducing the process of producing a new CRDT from a painstaking paper proof of correctness to a lightweight specification."
+    },
+    {
+      "id": "W4379534068",
+      "title": "Type-Checking CRDT Convergence",
+      "abstract": "Conflict-Free Replicated Data Types (CRDTs) are a recent approach for keeping replicated data consistent while guaranteeing the absence of conflicts among replicas. For correct operation, CRDTs rely on a merge function that is commutative, associative and idempotent. Ensuring that such algebraic properties are satisfied by implementations, however, is left to the programmer, resulting in a process that is complex and error-prone. While techniques based on testing, automatic verification of a model, and mechanized or handwritten proofs are available, we lack an approach that is able to verify such properties on concrete CRDT implementations. In this paper, we present Propel, a programming language with a type system that captures the algebraic properties required by a correct CRDT implementation. The Propel type system deduces such properties by case analysis and induction: sum types guide the case analysis and algebraic properties in function types enable induction for free. Propel\u2019s key feature is its capacity to reason about algebraic properties (a) in terms of rewrite rules and (b) to derive the equality or inequality of expressions from the properties. We provide an implementation of Propel as a Scala embedding, we implement several CRDTs, verify them with Propel and compare the verification process with four state-of-the-art verification tools. Our evaluation shows that Propel is able to automatically deduce the properties that are relevant for common CRDT implementations found in open-source libraries even in cases in which competitors timeout."
+    },
+    {
+      "id": "W4281971122",
+      "title": "Certified mergeable replicated data types",
+      "abstract": "Replicated data types (RDTs) are data structures that permit concurrent modification of multiple, potentially geo-distributed, replicas without coordination between them. RDTs are designed in such a way that conflicting operations are eventually deterministically reconciled ensuring convergence. Constructing correct RDTs remains a difficult endeavour due to the complexity of reasoning about independently evolving states of the replicas. With the focus on the correctness of RDTs (and rightly so), existing approaches to RDTs are less efficient compared to their sequential counterparts in terms of the time and space complexity of local operations. This is unfortunate since RDTs are often used in a local-first setting where the local operations far outweigh remote communication."
+    },
+    {
+      "id": "W4281976460",
+      "title": "Hamband: RDMA replicated data types",
+      "abstract": "Data centers are increasingly equipped with RDMAs. These network interfaces mark the advent of a new distributed system model where a node can directly access the remote memory of another. They have enabled microsecond-scale replicated services. The underlying replication protocols of these systems execute all operations under strong consistency. However, strong consistency can hinder response time and availability, and recent replication models have turned to a hybrid of strong and relaxed consistency. This paper presents RDMA well-coordinated replicated data types, the first hybrid replicated data types for the RDMA network model. It presents a novel operational semantics for these data types that considers three distinct categories of methods and captures their required coordination, and formally proves that they preserve convergence and integrity. It implements these semantics in a system called Hamband that leverages direct remote accesses to efficiently implement the required coordination protocols. The empirical evaluation shows that Hamband outperforms the throughput of existing message-based and strongly consistent implementations by more than 17x and 2.7x respectively."
+    },
+    {
+      "id": "W4409095625",
+      "title": "Towards Local-First Distributed Property Graphs",
+      "abstract": "A graph database system (GDBMS) is designed to efficiently manage highly interconnected and diverse data. Compared to a traditional database system, a GDBMS has more stringent requirements due to long running transactions which also have a large footprint as they access a large number of vertices, as well as specific constraints and invariants related to graphs, such as key and connectivity constraints. Hence, existing sharding and georeplication techniques for scalability and availability are not well-suited for GDBMSes. Strong isolation levels suffer from a high probability of spurious conflict and unavailability, while techniques for highly available isolation, such as Replicated Data Types (RDTs), are well studied for traditional key-value stores but largely unexplored for GDBMSes. We analyze the interplay between availability, consistency, and constraints and propose studying RDTs and consistency levels tailored for GDBMSes."
+    },
+    {
+      "id": "W4409311143",
+      "title": "Hambazi: Spatial Coordination Synthesis for Augmented Reality",
+      "abstract": "Augmented reality (AR) seamlessly overlays virtual objects onto the real world, enabling an exciting new range of applications. Multiple users view and interact with virtual objects, which are replicated and shown on each user\u2019s display. A key requirement of AR is that the replicas should be quickly updated and converge to the same state; otherwise, users may have laggy or inconsistent views of the virtual object, which negatively affects their experience. A second key requirement is that the movements of virtual objects in space should preserve certain integrity properties either due to physical boundaries in the real world, or privacy and safety preferences of the user. For example, a virtual cup should not sink into a table, or a private virtual whiteboard should stay within an office. The challenge tackled in this paper is the coordination of virtual objects with low latency, spatial integrity properties and convergence. We introduce \u201cwell-organized\u201d replicated data types that guarantee these two properties. Importantly, they capture a local notion of conflict that supports more concurrency and lower latency. To implement well-organized virtual objects, we introduce a credit scheme and replication protocol that further facilitate local execution, and prove the protocol\u2019s correctness. Given an AR environment, we automatically derive conflicting actions through constraint solving, and statically instantiate the protocol to synthesize custom coordination. We evaluate our implementation, H ambazi , on off-the-shelf Android AR devices and show a latency reduction of 30.5-88.4% and a location staleness reduction of 35.6-75.6%, compared to three baselines, for varying numbers of devices, AR environments, request loads, and network conditions."
+    },
+    {
+      "id": "W3017394600",
+      "title": "Semantics, Specification, and Bounded Verification of Concurrent Libraries in Replicated Systems",
+      "abstract": "Geo-replicated systems provide a number of desirable properties such as globally low latency, high availability, scalability, and built-in fault tolerance. Unfortunately, programming correct applications on top of such systems has proven to be very challenging, in large part because of the weak consistency guarantees they offer. These complexities are exacerbated when we try to adapt existing highly-performant concurrent libraries developed for shared-memory environments to this setting. The use of these libraries, developed with performance and scalability in mind, is highly desirable. But, identifying a suitable notion of correctness to check their validity under a weakly consistent execution model has not been well-studied, in large part because it is problematic to na\u00efvely transplant criteria such as linearizability that has a useful interpretation in a shared-memory context to a distributed one where the cost of imposing a (logical) global ordering on all actions is prohibitive. In this paper, we tackle these issues by proposing appropriate semantics and specifications for highly-concurrent libraries in a weakly-consistent, replicated setting. We use these specifications to develop a static analysis framework that can automatically detect correctness violations of library implementations parameterized with respect to the different consistency policies provided by the underlying system. We use our framework to analyze the behavior of a number of highly non-trivial library implementations of stacks, queues, and exchangers. Our results provide the first demonstration that automated correctness checking of concurrent libraries in a weakly geo-replicated setting is both feasible and practical."
+    },
+    {
+      "id": "W3177430373",
+      "title": "Abstraction for conflict-free replicated data types",
+      "abstract": "Strong eventual consistency (SEC) has been used as a classic notion of correctness for Conflict-Free Replicated Data Types (CRDTs). However, it does not give proper abstractions of functionality, thus is not helpful for modular verification of client programs using CRDTs. We propose a new correctness formulation for CRDTs, called Abstract Converging Consistency (ACC), to specify both data consistency and functional correctness. ACC gives abstract atomic specifications (as an abstraction) to CRDT operations, and establishes consistency between the concrete execution traces and the execution using the abstract atomic operations. The abstraction allows us to verify the CRDT implementation and its client programs separately, resulting in more modular and elegant proofs than monolithic approaches for whole program verification. We give a generic proof method to verify ACC of CRDT implementations, and a rely-guarantee style program logic to verify client programs. Our Abstraction theorem shows that ACC is equivalent to contextual refinement, linking the verification of CRDT implementations and clients together to derive functional correctness of whole programs."
+    },
+    {
+      "id": "W4409310624",
+      "title": "Peepco: Batch-Based Consistency Optimization",
+      "abstract": "We present batch-based consistency, a new approach for consistency optimization that allows programmers to specialize consistency with application-level integrity properties. We implement the approach with a two-step process: we statically infer optimal consistency requirements for executions of bounded sets of operations, and then, use the inferred requirements to parameterize a new distributed protocol to relax operation reordering at run time when it is safe to do so. Our approach supports standard notions of consistency. We implement batch-based consistency in Peepco , demonstrate its expressiveness for partial data replication, and examine Peepco\u2019s run-time performance impact in different settings."
+    },
+    {
+      "id": "W4409311833",
+      "title": "Automatically Verifying Replication-Aware Linearizability",
+      "abstract": "Data replication is crucial for enabling fault tolerance and uniform low latency in modern decentralized applications. Replicated Data Types (RDTs) have emerged as a principled approach for developing replicated implementations of basic data structures such as counter, flag, set, map, etc. While the correctness of RDTs is generally specified using the notion of strong eventual consistency\u2013which guarantees that replicas that have received the same set of updates would converge to the same state\u2013a more expressive specification which relates the converged state to updates received at a replica would be more beneficial to RDT users. Replication-aware linearizability is one such specification, which requires all replicas to always be in a state which can be obtained by linearizing the updates received at the replica. In this work, we develop a novel fully automated technique for verifying replication-aware linearizability for Mergeable Replicated Data Types (MRDTs). We identify novel algebraic properties for MRDT operations and the merge function which are sufficient for proving an implementation to be linearizable and which go beyond the standard notions of commutativity, associativity, and idempotence. We also develop a novel inductive technique called bottom-up linearization to automatically verify the required algebraic properties. Our technique can be used to verify both MRDTs and state-based CRDTs. We have successfully applied our approach to a number of complex MRDT and CRDT implementations including a novel JSON MRDT."
+    },
+    {
+      "id": "W4410716058",
+      "title": "Concurrency Contracts for Designing Highly Available Replicated Data Types",
+      "abstract": "ABSTRACT Introduction Distributed system programmers rely on Replicated Data Types (RDTs), which resemble sequential data types but incorporate conflict resolution strategies to guarantee convergence when conflicts occur. The semantics of RDTs depend on the underlying conflict resolution strategy, but these cannot be customized. Moreover, ensuring state convergence alone is not enough because the resulting state may break application\u2010specific invariants. Although some approaches support application\u2010level invariants atop existing RDTs, they do not help build the RDT in the first place. As a result, custom RDTs are implemented using ad hoc approaches, which are known to be error\u2010prone and result in brittle systems. We previously proposed Explicitly Consistent Replicated Objects (ECROs) to address these issues, enabling programmers to build custom RDTs by augmenting sequential data types with a distributed specification. However, the specification requires a complete first\u2010order logic formalization of the data type and its operations, which is hard to develop. Furthermore, subtle errors in the specification may result in runtime anomalies such as state divergence and broken invariants. Methods To tackle these problems, we combine the ECRO programming model with automated program verification. The result is EFx, a minimalist object\u2010oriented programming language whose core consists of a contract system that simplifies the development of RDTs. EFx does not require tedious first\u2010order logic specifications because it analyses the data type's implementation, thereby preventing runtime anomalies due to errors in the specification. Results We reconstruct the original portfolio of ECROs in EFx to validate our approach. We consistently achieve a 2x to 4x reduction of the code size. Additionally, we implement several applications, such as the RUBiS auction system, the SmallBank benchmark, a distributed voting game, and an airline reservation system. Conclusion Our evaluation shows that EFx simplifies the development of RDTs."
+    },
+    {
+      "id": "W7172101291",
+      "title": "Formal Constraint-Guided Neural Network Design for Safe and Trustworthy AI",
+      "abstract": null
+    }
+  ]
+}

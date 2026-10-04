@@ -1,0 +1,49 @@
+{
+  "id": "W174158501",
+  "title": "Communication Timestamps for File System Synchronization",
+  "doi": null,
+  "publication_date": "2001-01-01",
+  "publication_year": 2001,
+  "type": "report",
+  "cited_by_count": 1,
+  "authors": [
+    "Russ Cox",
+    "William K. Josephson"
+  ],
+  "venue": "Digital Access to Scholarship at Harvard (DASH) (Harvard University)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "http://nrs.harvard.edu/urn-3:HUL.InstRepos:23017121",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W174158501.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W174158501.grobid-xml"
+  },
+  "abstract": "The problem of detecting various kinds of update conflicts in file system synchronization following a network partition is well-known. All systems of which we are aware use the version vectors of Parker et al. These require O(R*F) storage space for F files shared among R replicas. We propose a number of different methods, the most space-efficient of which uses O(R*F) space in the worst case, but O(R+F) in the expected case. To gain experience with the various methods, we implemented a file synchronization tool called Tra. Based on this experience, we discuss the advantages and disadvantages of each particular method. Tra itself turns out to be useful for a variety of tasks, including home directory maintenance, operating system installation, and managing offline work. We discuss some of these uses.",
+  "topics": [
+    "Advanced Data Storage Technologies",
+    "Distributed systems and fault tolerance",
+    "Distributed and Parallel Computing Systems"
+  ],
+  "references": [
+    "https://openalex.org/W1485389564",
+    "https://openalex.org/W1943176887",
+    "https://openalex.org/W1981173460",
+    "https://openalex.org/W2085631457",
+    "https://openalex.org/W2119636671",
+    "https://openalex.org/W2124074197"
+  ],
+  "cited_by": [
+    {
+      "id": "W2240138193",
+      "title": "File Synchronization with Vector Time Pairs",
+      "abstract": "Vector time pairs are a new method for trackingsynchronization metadata. A vector time pairconsists of two vector times: one tracking filemodification history and one tracking filesynchronization history. Because the vectortimes are maintained separately and used fordifferent purposes, different algorithms andoptimizations can be applied to each. As aresult, vector time pairs impose no restrictionon synchronization patterns, never falsely detectconflicts, require no space to store deletionnotices, require network bandwidth proportionalonly to the number of files changed, and supportpartial synchronizations. No other currentsynchronization method has all these properties.Results from an implementation of vector timepairs in a new user-level file synchronizercalled Tra confirm the benefits of vectortime pairs."
+    }
+  ]
+}

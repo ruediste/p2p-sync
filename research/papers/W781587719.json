@@ -1,0 +1,34 @@
+{
+  "id": "W781587719",
+  "title": "Watershed Health and Mechanical Fuel Reduction in the Walker Flats",
+  "doi": null,
+  "publication_date": "2008-01-01",
+  "publication_year": 2008,
+  "type": "article",
+  "cited_by_count": 0,
+  "authors": [
+    "A. Erdmann"
+  ],
+  "venue": "UNM\u2019s Digital Repository (University of New Mexico)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://digitalrepository.unm.edu/wr_sp/93",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W781587719.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W781587719.grobid-xml"
+  },
+  "abstract": "The mechanical fuel reduction project being implemented in the Walker Flats area is the result of a collaborative effort on the part of La Jicarita Enterprise Community (LJEC), the National Forest Service (USFS), the Santa Fe National Forest (SFNF), New Mexico State University (NMSU), the University of New Mexico (UNM), and numerous other Federal, state, local, non-profit, and educational agencies (LJEC, 2005). Each of these agencies is involved in several aspects of this project ranging from research, to developing the prescription, to monitoring the impacts and effectiveness of the project. The collective efforts of these agencies to develop and monitor this project are referred to as the Multi-Party Monitoring Team (MPMT), and this report is integral to the process.",
+  "topics": [
+    "Forest Biomass Utilization and Management",
+    "Soil Mechanics and Vehicle Dynamics"
+  ],
+  "references": [],
+  "cited_by": []
+}

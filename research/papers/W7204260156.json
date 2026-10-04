@@ -1,0 +1,36 @@
+{
+  "id": "W7204260156",
+  "title": "AgentRoom: Concurrent Multi-Agent Coding in a CRDT-Backed Shared Workspace",
+  "doi": "https://doi.org/10.48550/arxiv.2608.23740",
+  "publication_date": "2026-08-24",
+  "publication_year": 2026,
+  "type": "preprint",
+  "cited_by_count": 0,
+  "authors": [
+    "Seonglae Cho",
+    "Donghyun Lee"
+  ],
+  "venue": "arXiv (Cornell University)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://arxiv.org/pdf/2608.23740",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W7204260156.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W7204260156.grobid-xml"
+  },
+  "abstract": "Concurrent multi-agent coding promises division of labor across modules, robustness through redundancy, and parallel exploration at the natural granularity of multi-file projects. Realtime collaborative editing protocols solve this coordination problem for human teams via Conflict-free Replicated Data Types (CRDTs), but the LLMs underneath generate one token at a time and existing multi-agent coding systems inherit this serial limit: they either sequence agents through phase handoffs or pool independent samples without coordination, and a single agent abandons up to half of hard tasks with a one-file stub-and-exit. AgentRoom is a realtime collaborative editing protocol for concurrent coding agents. Its runtime layer exposes file-level claim, status, and broadcast as MCP tools on a CRDT-merged shared filesystem. Five frontier coding-CLI models ran four backend coding tasks, with cross-language checks in Python DevBench and Rust+axum. For CLI-stable models, AgentRoom with 2 agents abandons fewer tasks than Solo and has less run-to-run variation. At matched-compute, one positive mean LLM-judge contrast puts AgentRoom over parallel-merge. The other contrast, a bundle probe, puts full AgentRoom above each partial case: an ordering rather than a percentage split. Coordination, not parallelism or CRDT-merge, bears the load.",
+  "topics": [
+    "Multi-Agent Systems and Negotiation",
+    "Scientific Computing and Data Management",
+    "Language and cultural evolution"
+  ],
+  "references": [],
+  "cited_by": []
+}

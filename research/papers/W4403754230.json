@@ -1,0 +1,82 @@
+{
+  "id": "W4403754230",
+  "title": "Collaborative Text Editing with Eg-walker: Better, Faster, Smaller",
+  "doi": "https://doi.org/10.1145/3689031.3696076",
+  "publication_date": "2025-03-26",
+  "publication_year": 2025,
+  "type": "conference-paper",
+  "cited_by_count": 3,
+  "authors": [
+    "Joseph Gentle",
+    "Martin Kleppmann"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3689031.3696076?download=true",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4403754230.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4403754230.grobid-xml"
+  },
+  "abstract": "Collaborative text editing algorithms allow several users to concurrently modify a text file, and automatically merge concurrent edits into a consistent state. Existing algorithms fall in two categories: Operational Transformation (OT) algorithms are slow to merge files that have diverged substantially due to offline editing; CRDTs are slow to load and consume a lot of memory. We introduce Eg-walker, a collaboration algorithm for text that avoids these weaknesses. Compared to existing CRDTs, it consumes an order of magnitude less memory in the steady state, and loading a document from disk is orders of magnitude faster. Compared to OT, merging long-running branches is orders of magnitude faster. In the worst case, the merging performance of Eg-walker is comparable with existing CRDT algorithms. Eg-walker can be used everywhere CRDTs are used, including peer-to-peer systems without a central server. By offering performance that is competitive with centralised algorithms, our result paves the way towards the widespread adoption of peer-to-peer collaboration software.",
+  "topics": [
+    "Peer-to-Peer Network Technologies",
+    "Modular Robots and Swarm Intelligence",
+    "Distributed systems and fault tolerance"
+  ],
+  "references": [
+    "https://openalex.org/W98718822",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1794148987",
+    "https://openalex.org/W1971443766",
+    "https://openalex.org/W1985349143",
+    "https://openalex.org/W1989814541",
+    "https://openalex.org/W2071442639",
+    "https://openalex.org/W2088721436",
+    "https://openalex.org/W2098522119",
+    "https://openalex.org/W2106355650",
+    "https://openalex.org/W2117546628",
+    "https://openalex.org/W2118242633",
+    "https://openalex.org/W2129388329",
+    "https://openalex.org/W2134308710",
+    "https://openalex.org/W2143068513",
+    "https://openalex.org/W2151541805",
+    "https://openalex.org/W2151943351",
+    "https://openalex.org/W2295058494",
+    "https://openalex.org/W2506181100",
+    "https://openalex.org/W2510332240",
+    "https://openalex.org/W2548120315",
+    "https://openalex.org/W2942595830",
+    "https://openalex.org/W2979846168",
+    "https://openalex.org/W3103287347",
+    "https://openalex.org/W3137220996",
+    "https://openalex.org/W4236824789",
+    "https://openalex.org/W4281971122",
+    "https://openalex.org/W4300176356",
+    "https://openalex.org/W4372046852"
+  ],
+  "cited_by": [
+    {
+      "id": "W7204206231",
+      "title": "Collaborative Support for Software Product Line Modeling and Project Management: A Generative AI-Enhanced Approach with Real-Time Synchronization",
+      "abstract": "Background: Software Product Line (SPL) engineering relies on coordinated work over variability-intensive artifacts, yet existing SPL tools provide limited support for synchronized multi-user modeling and project-level collaboration. Objective: This paper presents a collaborative extension of VariaMos that combines synchronization based on Conflict-free Replicated Data Types (CRDTs), awareness and governance mechanisms, and integrated artificial intelligence (AI)-assisted model authoring. Method: Following Wieringa\u2019s Design Science methodology, the treatment was designed, implemented, and evaluated through unit and functional tests, collaborative proof-of-concept scenarios, controlled load experiments, an exploratory expert survey with 20 specialists, and a bounded preliminary evaluation of the AI-assisted component. Results: The environment supports project- and model-level synchronization, presence awareness, role-sensitive collaboration, comments, revision history, rollback, and vote-assisted conflict resolution. Load tests characterized the operational limits of the Yjs-based architecture and showed that partitioning users across model-specific collaborative spaces improves stability. The survey identified conflict handling, traceability, versioning, authorship, and review workflows as priorities; because it used a purposive non-probability sample, it does not support population-level or productivity claims. In a 100-case evaluation comprising 50 base prompts and 50 metamorphic follow-up prompts, a context-enhanced chatbot configuration reduced structural hallucination from 84% to 18% and increased reproducibility from 22% to 72%. These results are preliminary and limited to one LLM accessed through OpenRouter, one controlled prompt bank, and single-pass executions. Conclusions: The study demonstrates the controlled feasibility of combining multi-artifact SPL collaboration with integrated AI-assisted authoring, while identifying trade-offs among convergence, semantic control, recoverability, and latency."
+    },
+    {
+      "id": "W7155394780",
+      "title": "AegisSheet: A Compositional CRDT for Collaborative Spreadsheets",
+      "abstract": "Applications that support online collaboration over shared documents such as text files and spreadsheets are becoming increasingly popular. While collaborative text editing is well studied and multiple specialized data structures exist, there has been surprisingly little innovation in the field of collaborative spreadsheets, which allow multiple users to collaboratively organize data, and perform data-driven computations: Major providers often still resort to \u201clast-writer-wins\u201d semantics for common conflict scenarios, resulting in potential data loss that makes these applications ill-equipped for asynchronous and offline collaboration."
+    },
+    {
+      "id": "W7212256259",
+      "title": "Automatic Generation of Local-First, Collaborative Modeling Languages",
+      "abstract": "Modeling languages provide engineers with shared, domain-specific concepts for collaboratively structuring domain knowledge. Although modern language workbenches can generate much of the language-specific tooling from a metamodel, collaborative editing usually relies on external infrastructure that requires additional integration. In particular, existing solutions provide insufficient support for hybrid collaborative modeling, in which modelers alternate seamlessly between online and offline editing and their changes are automatically reconciled upon reconnection. This article presents an approach for automatically generating metamodel-specific replicated model runtimes directly from Ecore metamodels. We define a translation from a practically relevant subset of EMF/Ecore to compositions of Conflict-free Replicated Data Types (CRDTs), each encapsulating a well-defined conflict-resolution policy. The resulting runtimes expose model APIs for creating, updating, and querying replicated model states, while their constituent CRDTs define how concurrent updates are reconciled. The approach is implemented as a configurable code generator and evaluated through three case-study runtimes and all 5,475 Ecore files in ModelSet v0.9.4. The results quantify the generator\u2019s end-to-end coverage and provide complementary formal and empirical evidence for convergence within the stated scope and assumptions."
+    }
+  ]
+}

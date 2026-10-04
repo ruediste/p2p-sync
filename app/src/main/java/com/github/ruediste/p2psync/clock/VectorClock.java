@@ -1,68 +1,138 @@
 package com.github.ruediste.p2psync.clock;
 
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.ruediste.p2psync.proto.Sync;
 
 public final class VectorClock {
+    private static final AtomicLong nextTag = new AtomicLong();
 
-    private Map<Integer, Long> values;
+    public static class ClockValue {
+        public long value;
+        public long tag;
 
-    private VectorClock() {
-        this(new HashMap<>());
+        public ClockValue() {
+            this.value = 0L;
+            this.tag = nextTag.getAndIncrement();
+        }
+
+        @Override
+        public String toString() {
+            return value + "@" + tag;
+        }
     }
 
-    private VectorClock(Map<Integer, Long> values) {
-        this.values = values;
+    private Map<Integer, ClockValue> values;
+
+    public VectorClock() {
+        this.values = new TreeMap<>();
     }
 
-    public static VectorClock empty() {
-        return new VectorClock();
-    }
-
-    public static VectorClock of(Sync.VectorClock clock) {
-        return new VectorClock(new HashMap<>(clock.getValuesMap()));
+    private VectorClock(VectorClock other) {
+        this.values = new TreeMap<>(other.values);
     }
 
     /** Counter of the given {@code nodeNr}, 0 if absent. */
-    public long get(int nr) {
-        return values.getOrDefault(nr, 0L);
+    public Optional<ClockValue> get(int nr) {
+        return Optional.ofNullable(values.get(nr));
+    }
+
+    public void resetTag(int nr) {
+        var clockValue = values.get(nr);
+        if (clockValue != null) {
+            clockValue.tag = nextTag.getAndIncrement();
+            clockValue.value = 0;
+        }
     }
 
     /** Returns a clock with the counter of {@code nr} incremented by one. */
     public void increment(int nr) {
-        values.merge(nr, 1L, (old, increment) -> old + increment);
+        values.merge(nr, new ClockValue() {
+            {
+                value = 1L;
+            }
+        }, (old, increment) -> {
+            old.value += increment.value;
+            return old;
+        });
     }
 
-    /** Node-wise maximum of this clock and {@code other}. */
+    /**
+     * Node-wise maximum of this clock and {@code other}. On tag mismatches, a new
+     * tag is created.
+     */
     public void merge(VectorClock other) {
         other.values.forEach(
-                (key, value) -> values.merge(key, value, (ownValue, otherValue) -> Math.max(ownValue, otherValue)));
+                (otherKey, otherClock) -> {
+                    var ownClock = values.get(otherKey);
+                    if (ownClock == null) {
+                        values.put(otherKey, otherClock);
+                    } else {
+                        if (ownClock.tag != otherClock.tag) {
+                            ownClock.tag = nextTag.getAndIncrement();
+                            ownClock.value = 0;
+                        } else {
+                            ownClock.value = Math.max(ownClock.value, otherClock.value);
+                        }
+                    }
+                });
     }
 
     /**
      * Relation between this clock and {@code other}: dominance is checked
-     * component-wise with missing entries treated as 0.
+     * component-wise with missing entries treated as 0. If tags differ, the entries
+     * are considered concurrent.
      */
     public ClockRelation compare(VectorClock other) {
         boolean anyLess = false;
         boolean anyGreater = false;
-        var keys = new HashSet<>(values.keySet());
-        keys.addAll(other.values.keySet());
 
-        for (var key : keys) {
-            var ownValue = values.getOrDefault(key, 0L);
-            var otherValue = other.values.getOrDefault(key, 0L);
-            if (ownValue < otherValue)
+        var ownIterator = values.entrySet().iterator();
+        var otherIterator = other.values.entrySet().iterator();
+        var ownEntry = ownIterator.hasNext() ? ownIterator.next() : null;
+        var otherEntry = otherIterator.hasNext() ? otherIterator.next() : null;
+
+        while (ownEntry != null || otherEntry != null) {
+            int ownKey = ownEntry != null ? ownEntry.getKey() : Integer.MAX_VALUE;
+            int otherKey = otherEntry != null ? otherEntry.getKey() : Integer.MAX_VALUE;
+
+            ClockValue ownValue = null;
+            ClockValue otherValue = null;
+
+            if (otherEntry == null || (ownEntry != null && ownKey < otherKey)) {
+                ownValue = ownEntry.getValue();
+                ownEntry = ownIterator.hasNext() ? ownIterator.next() : null;
+            } else if (ownEntry == null || otherKey < ownKey) {
+                otherValue = otherEntry.getValue();
+                otherEntry = otherIterator.hasNext() ? otherIterator.next() : null;
+            } else {
+                ownValue = ownEntry.getValue();
+                otherValue = otherEntry.getValue();
+                ownEntry = ownIterator.hasNext() ? ownIterator.next() : null;
+                otherEntry = otherIterator.hasNext() ? otherIterator.next() : null;
+            }
+
+            if (ownValue == null && otherValue != null)
                 anyLess = true;
-            if (ownValue > otherValue)
+            if (ownValue != null && otherValue == null) {
                 anyGreater = true;
-        }
-        if (anyLess && anyGreater) {
-            return ClockRelation.CONCURRENT;
+            } else {
+                if (ownValue.tag != otherValue.tag) {
+                    return ClockRelation.CONCURRENT;
+                }
+
+                if (ownValue.value < otherValue.value)
+                    anyLess = true;
+                if (ownValue.value > otherValue.value)
+                    anyGreater = true;
+            }
+
+            if (anyLess && anyGreater)
+                return ClockRelation.CONCURRENT;
         }
         if (anyLess) {
             return ClockRelation.BEFORE;
@@ -95,7 +165,7 @@ public final class VectorClock {
      * {@code mapping.get(nr)}; entries without a mapping are left unchanged.
      */
     public void remap(Map<Integer, Integer> mapping) {
-        var newValues = new HashMap<Integer, Long>();
+        var newValues = new TreeMap<Integer, ClockValue>();
         values.entrySet().forEach(x -> newValues.put(mapping.getOrDefault(x.getKey(), x.getKey()), x.getValue()));
         this.values = newValues;
     }
@@ -108,14 +178,14 @@ public final class VectorClock {
     }
 
     public static VectorClock from(Sync.VectorClock proto) {
-        return new VectorClock(new HashMap<>(proto.getValuesMap()));
+        throw new UnsupportedOperationException("from(Sync.VectorClock) not implemented yet");
     }
 
     public Sync.VectorClock toProto() {
-        return Sync.VectorClock.newBuilder().putAllValues(values).build();
+        throw new UnsupportedOperationException("toProto() not implemented yet");
     }
 
     public VectorClock clone() {
-        return new VectorClock(new HashMap<>(values));
+        return new VectorClock(this);
     }
 }

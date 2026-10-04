@@ -1,0 +1,5329 @@
+{
+  "query": {
+    "search": "Farsite distributed file system Douceur Howell",
+    "filter": null,
+    "per-page": 5,
+    "sort": "relevance_score:desc"
+  },
+  "url": "https://api.openalex.org/works?search=Farsite+distributed+file+system+Douceur+Howell&per-page=5&sort=relevance_score%3Adesc",
+  "response": {
+    "meta": {
+      "count": 137,
+      "db_response_time_ms": 54,
+      "page": 1,
+      "per_page": 5,
+      "groups_count": null,
+      "x_query": {
+        "oql": "get works where full text has (Farsite distributed file system Douceur Howell)",
+        "oqo": {
+          "get_rows": "works",
+          "filter_rows": [
+            {
+              "column_id": "fulltext.search",
+              "value": "Farsite distributed file system Douceur Howell",
+              "operator": "has"
+            }
+          ]
+        },
+        "url": "/works?filter=fulltext.search:Farsite distributed file system Douceur Howell&per_page=5"
+      },
+      "cost_usd": 0.001
+    },
+    "results": [
+      {
+        "id": "https://openalex.org/W1999984505",
+        "doi": "https://doi.org/10.5555/1298455.1298485",
+        "title": "Ceph: a scalable, high-performance distributed file system",
+        "display_name": "Ceph: a scalable, high-performance distributed file system",
+        "relevance_score": 53.467274,
+        "publication_year": 2006,
+        "publication_date": "2006-11-06",
+        "ids": {
+          "openalex": "https://openalex.org/W1999984505",
+          "doi": "https://doi.org/10.5555/1298455.1298485",
+          "mag": "1999984505"
+        },
+        "language": "en",
+        "primary_location": {
+          "id": "pmh:oai:escholarship.org/ark:/13030/qt1pf8q17j",
+          "is_oa": true,
+          "landing_page_url": "https://escholarship.org/uc/item/1pf8q17j",
+          "pdf_url": "https://escholarship.org/uc/item/1pf8q17j",
+          "source": {
+            "id": "https://openalex.org/S4306400115",
+            "display_name": "eScholarship (California Digital Library)",
+            "issn_l": null,
+            "issn": null,
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": false,
+            "listed_in": [],
+            "host_organization": "https://openalex.org/I2801248553",
+            "host_organization_name": "California Digital Library",
+            "host_organization_lineage": [
+              "https://openalex.org/I2801248553"
+            ],
+            "host_organization_lineage_names": [],
+            "type": "repository"
+          },
+          "license": null,
+          "license_id": null,
+          "version": "submittedVersion",
+          "is_accepted": false,
+          "is_published": false,
+          "raw_source_name": "Proceedings of the 7th Conference on Operating Systems Design and Implementation (OSDI '06), vol n/a",
+          "raw_type": "article"
+        },
+        "type": "conference-paper",
+        "indexed_in": [],
+        "open_access": {
+          "is_oa": true,
+          "oa_status": "green",
+          "oa_url": "https://escholarship.org/uc/item/1pf8q17j",
+          "any_repository_has_fulltext": true
+        },
+        "authorships": [
+          {
+            "author_position": "first",
+            "author": {
+              "id": "https://openalex.org/A5002168896",
+              "display_name": "Sage A. Weil",
+              "orcid": null,
+              "observed_orcids": []
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I185103710",
+                "display_name": "University of California, Santa Cruz",
+                "ror": "https://ror.org/03s65by71",
+                "country_code": "US",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I185103710"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Sage A. Weil",
+            "raw_affiliation_strings": [
+              "University of California/Santa Cruz"
+            ],
+            "raw_orcid": null,
+            "affiliations": [
+              {
+                "raw_affiliation_string": "University of California/Santa Cruz",
+                "institution_ids": [
+                  "https://openalex.org/I185103710"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "middle",
+            "author": {
+              "id": "https://openalex.org/A5001788317",
+              "display_name": "Scott Brandt",
+              "orcid": null,
+              "observed_orcids": []
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I185103710",
+                "display_name": "University of California, Santa Cruz",
+                "ror": "https://ror.org/03s65by71",
+                "country_code": "US",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I185103710"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Scott Brandt",
+            "raw_affiliation_strings": [
+              "University of California/Santa Cruz"
+            ],
+            "raw_orcid": null,
+            "affiliations": [
+              {
+                "raw_affiliation_string": "University of California/Santa Cruz",
+                "institution_ids": [
+                  "https://openalex.org/I185103710"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "middle",
+            "author": {
+              "id": "https://openalex.org/A5026954004",
+              "display_name": "Ethan L. Miller",
+              "orcid": "https://orcid.org/0000-0003-2994-9060",
+              "observed_orcids": [
+                "https://orcid.org/0000-0003-2994-9060"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I185103710",
+                "display_name": "University of California, Santa Cruz",
+                "ror": "https://ror.org/03s65by71",
+                "country_code": "US",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I185103710"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Ethan L. Miller",
+            "raw_affiliation_strings": [
+              "University of California/Santa Cruz"
+            ],
+            "raw_orcid": "https://orcid.org/0000-0003-2994-9060",
+            "affiliations": [
+              {
+                "raw_affiliation_string": "University of California/Santa Cruz",
+                "institution_ids": [
+                  "https://openalex.org/I185103710"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "middle",
+            "author": {
+              "id": "https://openalex.org/A5029994088",
+              "display_name": "Darrell D. E. Long",
+              "orcid": "https://orcid.org/0000-0002-0822-0740",
+              "observed_orcids": [
+                "https://orcid.org/0000-0002-0822-0740"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I185103710",
+                "display_name": "University of California, Santa Cruz",
+                "ror": "https://ror.org/03s65by71",
+                "country_code": "US",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I185103710"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Darrell D. E. Long",
+            "raw_affiliation_strings": [
+              "University of California/Santa Cruz"
+            ],
+            "raw_orcid": "https://orcid.org/0000-0002-0822-0740",
+            "affiliations": [
+              {
+                "raw_affiliation_string": "University of California/Santa Cruz",
+                "institution_ids": [
+                  "https://openalex.org/I185103710"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "last",
+            "author": {
+              "id": "https://openalex.org/A5062340291",
+              "display_name": "Carlos Maltzahn",
+              "orcid": "https://orcid.org/0000-0001-8305-0748",
+              "observed_orcids": [
+                "https://orcid.org/0000-0001-8305-0748"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I185103710",
+                "display_name": "University of California, Santa Cruz",
+                "ror": "https://ror.org/03s65by71",
+                "country_code": "US",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I185103710"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Carlos Maltzahn",
+            "raw_affiliation_strings": [
+              "University of California/Santa Cruz"
+            ],
+            "raw_orcid": "https://orcid.org/0000-0001-8305-0748",
+            "affiliations": [
+              {
+                "raw_affiliation_string": "University of California/Santa Cruz",
+                "institution_ids": [
+                  "https://openalex.org/I185103710"
+                ]
+              }
+            ]
+          }
+        ],
+        "institutions": [],
+        "countries_distinct_count": 1,
+        "institutions_distinct_count": 1,
+        "corresponding_author_ids": [],
+        "corresponding_institution_ids": [
+          "https://openalex.org/I185103710"
+        ],
+        "apc_list": null,
+        "apc_paid": null,
+        "fwci": 29.3717,
+        "has_fulltext": true,
+        "cited_by_count": 1414,
+        "citation_normalized_percentile": {
+          "value": 0.99871848,
+          "is_in_top_1_percent": true,
+          "is_in_top_10_percent": true
+        },
+        "cited_by_percentile_year": {
+          "min": 93,
+          "max": 100
+        },
+        "biblio": {
+          "volume": null,
+          "issue": null,
+          "first_page": "307",
+          "last_page": "320"
+        },
+        "is_retracted": false,
+        "is_paratext": false,
+        "is_xpac": false,
+        "primary_topic": {
+          "id": "https://openalex.org/T11181",
+          "display_name": "Advanced Data Storage Technologies",
+          "score": 1.0,
+          "subfield": {
+            "id": "https://openalex.org/subfields/1705",
+            "display_name": "Computer Networks and Communications"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/17",
+            "display_name": "Computer Science"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/3",
+            "display_name": "Physical Sciences"
+          }
+        },
+        "topics": [
+          {
+            "id": "https://openalex.org/T11181",
+            "display_name": "Advanced Data Storage Technologies",
+            "score": 1.0,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10715",
+            "display_name": "Distributed and Parallel Computing Systems",
+            "score": 0.998199999332428,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10742",
+            "display_name": "Peer-to-Peer Network Technologies",
+            "score": 0.9937000274658203,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          }
+        ],
+        "keywords": [
+          {
+            "id": "https://openalex.org/keywords/ceph",
+            "display_name": "Ceph",
+            "score": 0.9980000257492065
+          },
+          {
+            "id": "https://openalex.org/keywords/distributed-file-systems",
+            "display_name": "distributed file systems",
+            "score": 0.9160000085830688
+          },
+          {
+            "id": "https://openalex.org/keywords/crush",
+            "display_name": "crushes",
+            "score": 0.8690000176429749
+          },
+          {
+            "id": "https://openalex.org/keywords/data-distribution",
+            "display_name": "data distribution",
+            "score": 0.6060000061988831
+          },
+          {
+            "id": "https://openalex.org/keywords/data-replication",
+            "display_name": "data replication",
+            "score": 0.7670000195503235
+          },
+          {
+            "id": "https://openalex.org/keywords/failure-detection-and-recovery",
+            "display_name": "failure detection and recovery",
+            "score": 0.8690000176429749
+          },
+          {
+            "id": "https://openalex.org/keywords/scalability",
+            "display_name": "scalability",
+            "score": 0.722000002861023
+          },
+          {
+            "id": "https://openalex.org/keywords/i-o-performance",
+            "display_name": "I/O performance",
+            "score": 0.8500000238418579
+          },
+          {
+            "id": "https://openalex.org/keywords/heterogeneous-clusters",
+            "display_name": "heterogeneous clusters",
+            "score": 0.5709999799728394
+          }
+        ],
+        "concepts": [
+          {
+            "id": "https://openalex.org/C41008148",
+            "wikidata": "https://www.wikidata.org/wiki/Q21198",
+            "display_name": "Computer science",
+            "level": 0,
+            "score": 0.858712911605835
+          },
+          {
+            "id": "https://openalex.org/C93518851",
+            "wikidata": "https://www.wikidata.org/wiki/Q180160",
+            "display_name": "Metadata",
+            "level": 2,
+            "score": 0.821800708770752
+          },
+          {
+            "id": "https://openalex.org/C2780940931",
+            "wikidata": "https://www.wikidata.org/wiki/Q174989",
+            "display_name": "File system",
+            "level": 2,
+            "score": 0.6873904466629028
+          },
+          {
+            "id": "https://openalex.org/C152043487",
+            "wikidata": "https://www.wikidata.org/wiki/Q1229600",
+            "display_name": "Distributed File System",
+            "level": 2,
+            "score": 0.6327106356620789
+          },
+          {
+            "id": "https://openalex.org/C48044578",
+            "wikidata": "https://www.wikidata.org/wiki/Q727490",
+            "display_name": "Scalability",
+            "level": 2,
+            "score": 0.6171445250511169
+          },
+          {
+            "id": "https://openalex.org/C2779489174",
+            "wikidata": "https://www.wikidata.org/wiki/Q6822246",
+            "display_name": "Metadata management",
+            "level": 3,
+            "score": 0.6149390339851379
+          },
+          {
+            "id": "https://openalex.org/C120314980",
+            "wikidata": "https://www.wikidata.org/wiki/Q180634",
+            "display_name": "Distributed computing",
+            "level": 1,
+            "score": 0.5474945306777954
+          },
+          {
+            "id": "https://openalex.org/C70061542",
+            "wikidata": "https://www.wikidata.org/wiki/Q989016",
+            "display_name": "Distributed database",
+            "level": 2,
+            "score": 0.4935351610183716
+          },
+          {
+            "id": "https://openalex.org/C12590798",
+            "wikidata": "https://www.wikidata.org/wiki/Q3933199",
+            "display_name": "Replication (statistics)",
+            "level": 2,
+            "score": 0.47729504108428955
+          },
+          {
+            "id": "https://openalex.org/C77088390",
+            "wikidata": "https://www.wikidata.org/wiki/Q8513",
+            "display_name": "Database",
+            "level": 1,
+            "score": 0.4628011882305145
+          },
+          {
+            "id": "https://openalex.org/C153083717",
+            "wikidata": "https://www.wikidata.org/wiki/Q6535263",
+            "display_name": "Leverage (statistics)",
+            "level": 2,
+            "score": 0.46198588609695435
+          },
+          {
+            "id": "https://openalex.org/C40350719",
+            "wikidata": "https://www.wikidata.org/wiki/Q2451637",
+            "display_name": "Torrent file",
+            "level": 4,
+            "score": 0.45475637912750244
+          },
+          {
+            "id": "https://openalex.org/C95637964",
+            "wikidata": "https://www.wikidata.org/wiki/Q82753",
+            "display_name": "Computer file",
+            "level": 2,
+            "score": 0.45294564962387085
+          },
+          {
+            "id": "https://openalex.org/C24885549",
+            "wikidata": "https://www.wikidata.org/wiki/Q339678",
+            "display_name": "Distributed data store",
+            "level": 2,
+            "score": 0.44735515117645264
+          },
+          {
+            "id": "https://openalex.org/C111919701",
+            "wikidata": "https://www.wikidata.org/wiki/Q9135",
+            "display_name": "Operating system",
+            "level": 1,
+            "score": 0.43265461921691895
+          },
+          {
+            "id": "https://openalex.org/C153048206",
+            "wikidata": "https://www.wikidata.org/wiki/Q3454922",
+            "display_name": "Metadata repository",
+            "level": 3,
+            "score": 0.4318169951438904
+          },
+          {
+            "id": "https://openalex.org/C2225880",
+            "wikidata": "https://www.wikidata.org/wiki/Q579047",
+            "display_name": "Journaling file system",
+            "level": 3,
+            "score": 0.21087738871574402
+          },
+          {
+            "id": "https://openalex.org/C33923547",
+            "wikidata": "https://www.wikidata.org/wiki/Q395",
+            "display_name": "Mathematics",
+            "level": 0,
+            "score": 0.0
+          },
+          {
+            "id": "https://openalex.org/C105795698",
+            "wikidata": "https://www.wikidata.org/wiki/Q12483",
+            "display_name": "Statistics",
+            "level": 1,
+            "score": 0.0
+          },
+          {
+            "id": "https://openalex.org/C119857082",
+            "wikidata": "https://www.wikidata.org/wiki/Q2539",
+            "display_name": "Machine learning",
+            "level": 1,
+            "score": 0.0
+          }
+        ],
+        "mesh": [],
+        "locations_count": 6,
+        "locations": [
+          {
+            "id": "pmh:oai:escholarship.org/ark:/13030/qt1pf8q17j",
+            "is_oa": true,
+            "landing_page_url": "https://escholarship.org/uc/item/1pf8q17j",
+            "pdf_url": "https://escholarship.org/uc/item/1pf8q17j",
+            "source": {
+              "id": "https://openalex.org/S4306400115",
+              "display_name": "eScholarship (California Digital Library)",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": "https://openalex.org/I2801248553",
+              "host_organization_name": "California Digital Library",
+              "host_organization_lineage": [
+                "https://openalex.org/I2801248553"
+              ],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": "Proceedings of the 7th Conference on Operating Systems Design and Implementation (OSDI '06), vol n/a",
+            "raw_type": "article"
+          },
+          {
+            "id": "pmh:qt1pf8q17j",
+            "is_oa": true,
+            "landing_page_url": "http://www.escholarship.org/uc/item/1pf8q17j",
+            "pdf_url": "http://www.escholarship.org/uc/item/1pf8q17j",
+            "source": {
+              "id": "https://openalex.org/S4306400115",
+              "display_name": "eScholarship (California Digital Library)",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": "https://openalex.org/I2801248553",
+              "host_organization_name": "California Digital Library",
+              "host_organization_lineage": [
+                "https://openalex.org/I2801248553"
+              ],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": "Weil, Sage; Brandt, Scott A; Miller, Ethan L; Long, Darrell D. E.; &amp; Maltzahn, Carlos. (2006). Ceph: A Scalable, High-Performance Distributed File System. Proceedings of the 7th Conference on Operating Systems Design and Implementation (OSDI '06), n/a, 307 - 320. UC Santa Cruz: Retrieved from: http://www.escholarship.org/uc/item/1pf8q17j",
+            "raw_type": "article"
+          },
+          {
+            "id": "pmh:oai:CiteSeerX.psu:10.1.1.110.4574",
+            "is_oa": false,
+            "landing_page_url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.110.4574",
+            "pdf_url": null,
+            "source": null,
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": "http://www.usenix.org/events/osdi06/tech/full_papers/weil/weil.pdf",
+            "raw_type": "text"
+          },
+          {
+            "id": "pmh:oai:CiteSeerX.psu:10.1.1.484.8017",
+            "is_oa": false,
+            "landing_page_url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.484.8017",
+            "pdf_url": null,
+            "source": null,
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": "http://users.soe.ucsc.edu/~darrell/Papers/ceph-osdi06.pdf",
+            "raw_type": "text"
+          },
+          {
+            "id": "pmh:oai:CiteSeerX.psu:10.1.1.591.8942",
+            "is_oa": false,
+            "landing_page_url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.591.8942",
+            "pdf_url": null,
+            "source": null,
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": "http://users.soe.ucsc.edu/~darrell/Papers/OSDI-Weil-06.pdf",
+            "raw_type": "text"
+          },
+          {
+            "id": "mag:1999984505",
+            "is_oa": false,
+            "landing_page_url": "http://ceph.com/papers/weil-ceph-osdi06.pdf",
+            "pdf_url": null,
+            "source": {
+              "id": "https://openalex.org/S4306420647",
+              "display_name": "Operating Systems Design and Implementation",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": null,
+              "host_organization_name": null,
+              "host_organization_lineage": [],
+              "host_organization_lineage_names": [],
+              "type": "conference"
+            },
+            "license": null,
+            "license_id": null,
+            "version": null,
+            "is_accepted": false,
+            "is_published": null,
+            "raw_source_name": "Operating Systems Design and Implementation",
+            "raw_type": null
+          }
+        ],
+        "best_oa_location": {
+          "id": "pmh:oai:escholarship.org/ark:/13030/qt1pf8q17j",
+          "is_oa": true,
+          "landing_page_url": "https://escholarship.org/uc/item/1pf8q17j",
+          "pdf_url": "https://escholarship.org/uc/item/1pf8q17j",
+          "source": {
+            "id": "https://openalex.org/S4306400115",
+            "display_name": "eScholarship (California Digital Library)",
+            "issn_l": null,
+            "issn": null,
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": false,
+            "listed_in": [],
+            "host_organization": "https://openalex.org/I2801248553",
+            "host_organization_name": "California Digital Library",
+            "host_organization_lineage": [
+              "https://openalex.org/I2801248553"
+            ],
+            "host_organization_lineage_names": [],
+            "type": "repository"
+          },
+          "license": null,
+          "license_id": null,
+          "version": "submittedVersion",
+          "is_accepted": false,
+          "is_published": false,
+          "raw_source_name": "Proceedings of the 7th Conference on Operating Systems Design and Implementation (OSDI '06), vol n/a",
+          "raw_type": "article"
+        },
+        "sustainable_development_goals": [],
+        "sustainable_development_goals_aurora": [],
+        "study_designs": [],
+        "awards": [],
+        "funders": [],
+        "has_content": {
+          "pdf": true,
+          "grobid_xml": true
+        },
+        "content_urls": {
+          "pdf": "https://content.openalex.org/works/W1999984505.pdf",
+          "grobid_xml": "https://content.openalex.org/works/W1999984505.grobid-xml"
+        },
+        "referenced_works_count": 34,
+        "referenced_works": [
+          "https://openalex.org/W9857082",
+          "https://openalex.org/W18564675",
+          "https://openalex.org/W332279198",
+          "https://openalex.org/W1677118421",
+          "https://openalex.org/W1972234887",
+          "https://openalex.org/W2020765652",
+          "https://openalex.org/W2053609011",
+          "https://openalex.org/W2068411009",
+          "https://openalex.org/W2088221489",
+          "https://openalex.org/W2094162326",
+          "https://openalex.org/W2104210894",
+          "https://openalex.org/W2107779152",
+          "https://openalex.org/W2109706326",
+          "https://openalex.org/W2110464544",
+          "https://openalex.org/W2117002327",
+          "https://openalex.org/W2117339850",
+          "https://openalex.org/W2119565742",
+          "https://openalex.org/W2121133177",
+          "https://openalex.org/W2122492666",
+          "https://openalex.org/W2128994988",
+          "https://openalex.org/W2131287008",
+          "https://openalex.org/W2131645490",
+          "https://openalex.org/W2132711844",
+          "https://openalex.org/W2137808089",
+          "https://openalex.org/W2138860061",
+          "https://openalex.org/W2141031699",
+          "https://openalex.org/W2144372924",
+          "https://openalex.org/W2145327262",
+          "https://openalex.org/W2148930480",
+          "https://openalex.org/W2149609142",
+          "https://openalex.org/W2153747271",
+          "https://openalex.org/W2153793343",
+          "https://openalex.org/W2155463028",
+          "https://openalex.org/W2162522793"
+        ],
+        "related_works": [
+          "https://openalex.org/W2173213060",
+          "https://openalex.org/W2153704625",
+          "https://openalex.org/W2148132761",
+          "https://openalex.org/W2137808089",
+          "https://openalex.org/W2131894525",
+          "https://openalex.org/W2131645490",
+          "https://openalex.org/W2121133177",
+          "https://openalex.org/W2119738171",
+          "https://openalex.org/W2119565742",
+          "https://openalex.org/W2110298485",
+          "https://openalex.org/W2109706326",
+          "https://openalex.org/W2104210894",
+          "https://openalex.org/W2087946700",
+          "https://openalex.org/W2020765652",
+          "https://openalex.org/W2005373714",
+          "https://openalex.org/W1981420413",
+          "https://openalex.org/W1977797546",
+          "https://openalex.org/W1972234887",
+          "https://openalex.org/W1677118421",
+          "https://openalex.org/W1516720694"
+        ],
+        "abstract_inverted_index": {
+          "We": [
+            0,
+            47
+          ],
+          "have": [
+            1
+          ],
+          "developed": [
+            2
+          ],
+          "Ceph,": [
+            3
+          ],
+          "a": [
+            4,
+            29,
+            63,
+            83,
+            98
+          ],
+          "distributed": [
+            5,
+            71
+          ],
+          "file": [
+            6,
+            67,
+            92
+          ],
+          "system": [
+            7,
+            93
+          ],
+          "that": [
+            8,
+            103
+          ],
+          "provides": [
+            9,
+            74
+          ],
+          "excellent": [
+            10,
+            106
+          ],
+          "performance,": [
+            11
+          ],
+          "reliability,": [
+            12
+          ],
+          "and": [
+            13,
+            21,
+            38,
+            57,
+            79,
+            89,
+            109
+          ],
+          "scalability.": [
+            14
+          ],
+          "Ceph": [
+            15,
+            104
+          ],
+          "maximizes": [
+            16
+          ],
+          "the": [
+            17
+          ],
+          "separation": [
+            18
+          ],
+          "between": [
+            19
+          ],
+          "data": [
+            20,
+            31,
+            53
+          ],
+          "metadata": [
+            22,
+            72,
+            77,
+            111,
+            117
+          ],
+          "management": [
+            23,
+            78
+          ],
+          "by": [
+            24,
+            51
+          ],
+          "replacing": [
+            25
+          ],
+          "allocation": [
+            26
+          ],
+          "tables": [
+            27
+          ],
+          "with": [
+            28
+          ],
+          "pseudo-random": [
+            30
+          ],
+          "distribution": [
+            32
+          ],
+          "function": [
+            33
+          ],
+          "(CRUSH)": [
+            34
+          ],
+          "designed": [
+            35
+          ],
+          "for": [
+            36
+          ],
+          "heterogeneous": [
+            37
+          ],
+          "dynamic": [
+            39,
+            70
+          ],
+          "clusters": [
+            40
+          ],
+          "of": [
+            41,
+            86,
+            100
+          ],
+          "unreliable": [
+            42
+          ],
+          "object": [
+            43,
+            66
+          ],
+          "storage": [
+            44
+          ],
+          "devices": [
+            45
+          ],
+          "(OSDs).": [
+            46
+          ],
+          "leverage": [
+            48
+          ],
+          "device": [
+            49
+          ],
+          "intelligence": [
+            50
+          ],
+          "distributing": [
+            52
+          ],
+          "replication,": [
+            54
+          ],
+          "failure": [
+            55
+          ],
+          "detection": [
+            56
+          ],
+          "recovery": [
+            58
+          ],
+          "to": [
+            59,
+            82
+          ],
+          "semi-autonomous": [
+            60
+          ],
+          "OSDs": [
+            61
+          ],
+          "running": [
+            62
+          ],
+          "specialized": [
+            64
+          ],
+          "local": [
+            65
+          ],
+          "system.": [
+            68
+          ],
+          "A": [
+            69
+          ],
+          "cluster": [
+            73
+          ],
+          "extremely": [
+            75
+          ],
+          "efficient": [
+            76
+          ],
+          "seamlessly": [
+            80
+          ],
+          "adapts": [
+            81
+          ],
+          "wide": [
+            84
+          ],
+          "range": [
+            85
+          ],
+          "general": [
+            87
+          ],
+          "purpose": [
+            88
+          ],
+          "scientific": [
+            90
+          ],
+          "computing": [
+            91
+          ],
+          "workloads.": [
+            94
+          ],
+          "Performance": [
+            95
+          ],
+          "measurements": [
+            96
+          ],
+          "under": [
+            97
+          ],
+          "variety": [
+            99
+          ],
+          "workloads": [
+            101
+          ],
+          "show": [
+            102
+          ],
+          "has": [
+            105
+          ],
+          "I/O": [
+            107
+          ],
+          "performance": [
+            108
+          ],
+          "scalable": [
+            110
+          ],
+          "management,": [
+            112
+          ],
+          "supporting": [
+            113
+          ],
+          "more": [
+            114
+          ],
+          "than": [
+            115
+          ],
+          "250,000": [
+            116
+          ],
+          "operations": [
+            118
+          ],
+          "per": [
+            119
+          ],
+          "second.": [
+            120
+          ],
+          "1": [
+            121
+          ]
+        },
+        "counts_by_year": [
+          {
+            "year": 2026,
+            "cited_by_count": 1
+          },
+          {
+            "year": 2025,
+            "cited_by_count": 4
+          },
+          {
+            "year": 2024,
+            "cited_by_count": 20
+          },
+          {
+            "year": 2023,
+            "cited_by_count": 30
+          },
+          {
+            "year": 2022,
+            "cited_by_count": 45
+          },
+          {
+            "year": 2021,
+            "cited_by_count": 91
+          },
+          {
+            "year": 2020,
+            "cited_by_count": 92
+          },
+          {
+            "year": 2019,
+            "cited_by_count": 121
+          },
+          {
+            "year": 2018,
+            "cited_by_count": 135
+          },
+          {
+            "year": 2017,
+            "cited_by_count": 133
+          },
+          {
+            "year": 2016,
+            "cited_by_count": 124
+          },
+          {
+            "year": 2015,
+            "cited_by_count": 111
+          },
+          {
+            "year": 2014,
+            "cited_by_count": 103
+          },
+          {
+            "year": 2013,
+            "cited_by_count": 82
+          },
+          {
+            "year": 2012,
+            "cited_by_count": 68
+          }
+        ],
+        "updated_date": "2026-10-01T08:54:57.152042",
+        "created_date": "2025-10-10T00:00:00"
+      },
+      {
+        "id": "https://openalex.org/W4214919759",
+        "doi": "https://doi.org/10.1145/3465405",
+        "title": "Survey of Distributed File System Design Choices",
+        "display_name": "Survey of Distributed File System Design Choices",
+        "relevance_score": 42.554855,
+        "publication_year": 2022,
+        "publication_date": "2022-02-28",
+        "ids": {
+          "openalex": "https://openalex.org/W4214919759",
+          "doi": "https://doi.org/10.1145/3465405"
+        },
+        "language": "en",
+        "primary_location": {
+          "id": "doi:10.1145/3465405",
+          "is_oa": true,
+          "landing_page_url": "https://doi.org/10.1145/3465405",
+          "pdf_url": "https://dl.acm.org/doi/pdf/10.1145/3465405",
+          "source": {
+            "id": "https://openalex.org/S158124317",
+            "display_name": "ACM Transactions on Storage",
+            "issn_l": "1553-3077",
+            "issn": [
+              "1553-3077",
+              "1553-3093"
+            ],
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": true,
+            "listed_in": [
+              "cwts-core",
+              "jufo-1",
+              "norway-1"
+            ],
+            "host_organization": "https://openalex.org/P4310319798",
+            "host_organization_name": "Association for Computing Machinery",
+            "host_organization_lineage": [
+              "https://openalex.org/P4310319798"
+            ],
+            "host_organization_lineage_names": [
+              "Association for Computing Machinery"
+            ],
+            "type": "journal"
+          },
+          "license": "cc-by-nc",
+          "license_id": "https://openalex.org/licenses/cc-by-nc",
+          "version": "publishedVersion",
+          "is_accepted": true,
+          "is_published": true,
+          "raw_source_name": "ACM Transactions on Storage",
+          "raw_type": "journal-article"
+        },
+        "type": "article",
+        "indexed_in": [
+          "crossref"
+        ],
+        "open_access": {
+          "is_oa": true,
+          "oa_status": "hybrid",
+          "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3465405",
+          "any_repository_has_fulltext": false
+        },
+        "authorships": [
+          {
+            "author_position": "first",
+            "author": {
+              "id": null,
+              "display_name": "Peter Macko",
+              "orcid": null,
+              "observed_orcids": []
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I1283576576",
+                "display_name": "NetApp (United States)",
+                "ror": "https://ror.org/05c4cm338",
+                "country_code": "US",
+                "type": "company",
+                "lineage": [
+                  "https://openalex.org/I1283576576"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Peter Macko",
+            "raw_affiliation_strings": [
+              "NetApp, Inc., Waltham, Massachusetts, USA"
+            ],
+            "raw_orcid": null,
+            "affiliations": [
+              {
+                "raw_affiliation_string": "NetApp, Inc., Waltham, Massachusetts, USA",
+                "institution_ids": [
+                  "https://openalex.org/I1283576576"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "last",
+            "author": {
+              "id": "https://openalex.org/A5113847561",
+              "display_name": "Jason Hennessey",
+              "orcid": null,
+              "observed_orcids": []
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I1283576576",
+                "display_name": "NetApp (United States)",
+                "ror": "https://ror.org/05c4cm338",
+                "country_code": "US",
+                "type": "company",
+                "lineage": [
+                  "https://openalex.org/I1283576576"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Jason Hennessey",
+            "raw_affiliation_strings": [
+              "NetApp, Inc., Waltham, Massachusetts, USA"
+            ],
+            "raw_orcid": null,
+            "affiliations": [
+              {
+                "raw_affiliation_string": "NetApp, Inc., Waltham, Massachusetts, USA",
+                "institution_ids": [
+                  "https://openalex.org/I1283576576"
+                ]
+              }
+            ]
+          }
+        ],
+        "institutions": [],
+        "countries_distinct_count": 1,
+        "institutions_distinct_count": 1,
+        "corresponding_author_ids": [],
+        "corresponding_institution_ids": [
+          "https://openalex.org/I1283576576"
+        ],
+        "apc_list": null,
+        "apc_paid": null,
+        "fwci": 2.3326,
+        "has_fulltext": true,
+        "cited_by_count": 21,
+        "citation_normalized_percentile": {
+          "value": 0.88000457,
+          "is_in_top_1_percent": false,
+          "is_in_top_10_percent": false
+        },
+        "cited_by_percentile_year": {
+          "min": 93,
+          "max": 99
+        },
+        "biblio": {
+          "volume": "18",
+          "issue": "1",
+          "first_page": "1",
+          "last_page": "34"
+        },
+        "is_retracted": false,
+        "is_paratext": false,
+        "is_xpac": false,
+        "primary_topic": {
+          "id": "https://openalex.org/T11181",
+          "display_name": "Advanced Data Storage Technologies",
+          "score": 1.0,
+          "subfield": {
+            "id": "https://openalex.org/subfields/1705",
+            "display_name": "Computer Networks and Communications"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/17",
+            "display_name": "Computer Science"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/3",
+            "display_name": "Physical Sciences"
+          }
+        },
+        "topics": [
+          {
+            "id": "https://openalex.org/T11181",
+            "display_name": "Advanced Data Storage Technologies",
+            "score": 1.0,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T11478",
+            "display_name": "Caching and Content Delivery",
+            "score": 0.9995999932289124,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10742",
+            "display_name": "Peer-to-Peer Network Technologies",
+            "score": 0.9994999766349792,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          }
+        ],
+        "keywords": [
+          {
+            "id": "https://openalex.org/keywords/distributed-file-systems",
+            "display_name": "distributed file systems",
+            "score": 1.0
+          },
+          {
+            "id": "https://openalex.org/keywords/design-space",
+            "display_name": "design space",
+            "score": 0.5320000052452087
+          },
+          {
+            "id": "https://openalex.org/keywords/design-trade-offs",
+            "display_name": "design trade-offs",
+            "score": 0.9390000104904175
+          },
+          {
+            "id": "https://openalex.org/keywords/storage-systems",
+            "display_name": "storage systems",
+            "score": 0.6980000138282776
+          },
+          {
+            "id": "https://openalex.org/keywords/system-architecture",
+            "display_name": "system architecture",
+            "score": 0.4309999942779541
+          },
+          {
+            "id": "https://openalex.org/keywords/design-decisions",
+            "display_name": "design decisions",
+            "score": 0.44699999690055847
+          }
+        ],
+        "concepts": [
+          {
+            "id": "https://openalex.org/C41008148",
+            "wikidata": "https://www.wikidata.org/wiki/Q21198",
+            "display_name": "Computer science",
+            "level": 0,
+            "score": 0.8199068307876587
+          },
+          {
+            "id": "https://openalex.org/C2780940931",
+            "wikidata": "https://www.wikidata.org/wiki/Q174989",
+            "display_name": "File system",
+            "level": 2,
+            "score": 0.6308836936950684
+          },
+          {
+            "id": "https://openalex.org/C152043487",
+            "wikidata": "https://www.wikidata.org/wiki/Q1229600",
+            "display_name": "Distributed File System",
+            "level": 2,
+            "score": 0.5496188998222351
+          },
+          {
+            "id": "https://openalex.org/C31352089",
+            "wikidata": "https://www.wikidata.org/wiki/Q3750474",
+            "display_name": "Systems design",
+            "level": 2,
+            "score": 0.5010683536529541
+          },
+          {
+            "id": "https://openalex.org/C82820731",
+            "wikidata": "https://www.wikidata.org/wiki/Q2640620",
+            "display_name": "Self-certifying File System",
+            "level": 3,
+            "score": 0.45185792446136475
+          },
+          {
+            "id": "https://openalex.org/C2522767166",
+            "wikidata": "https://www.wikidata.org/wiki/Q2374463",
+            "display_name": "Data science",
+            "level": 1,
+            "score": 0.38006553053855896
+          },
+          {
+            "id": "https://openalex.org/C120314980",
+            "wikidata": "https://www.wikidata.org/wiki/Q180634",
+            "display_name": "Distributed computing",
+            "level": 1,
+            "score": 0.352742463350296
+          },
+          {
+            "id": "https://openalex.org/C115903868",
+            "wikidata": "https://www.wikidata.org/wiki/Q80993",
+            "display_name": "Software engineering",
+            "level": 1,
+            "score": 0.23012909293174744
+          },
+          {
+            "id": "https://openalex.org/C111919701",
+            "wikidata": "https://www.wikidata.org/wiki/Q9135",
+            "display_name": "Operating system",
+            "level": 1,
+            "score": 0.1870253086090088
+          }
+        ],
+        "mesh": [],
+        "locations_count": 1,
+        "locations": [
+          {
+            "id": "doi:10.1145/3465405",
+            "is_oa": true,
+            "landing_page_url": "https://doi.org/10.1145/3465405",
+            "pdf_url": "https://dl.acm.org/doi/pdf/10.1145/3465405",
+            "source": {
+              "id": "https://openalex.org/S158124317",
+              "display_name": "ACM Transactions on Storage",
+              "issn_l": "1553-3077",
+              "issn": [
+                "1553-3077",
+                "1553-3093"
+              ],
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": true,
+              "listed_in": [
+                "cwts-core",
+                "jufo-1",
+                "norway-1"
+              ],
+              "host_organization": "https://openalex.org/P4310319798",
+              "host_organization_name": "Association for Computing Machinery",
+              "host_organization_lineage": [
+                "https://openalex.org/P4310319798"
+              ],
+              "host_organization_lineage_names": [
+                "Association for Computing Machinery"
+              ],
+              "type": "journal"
+            },
+            "license": "cc-by-nc",
+            "license_id": "https://openalex.org/licenses/cc-by-nc",
+            "version": "publishedVersion",
+            "is_accepted": true,
+            "is_published": true,
+            "raw_source_name": "ACM Transactions on Storage",
+            "raw_type": "journal-article"
+          }
+        ],
+        "best_oa_location": {
+          "id": "doi:10.1145/3465405",
+          "is_oa": true,
+          "landing_page_url": "https://doi.org/10.1145/3465405",
+          "pdf_url": "https://dl.acm.org/doi/pdf/10.1145/3465405",
+          "source": {
+            "id": "https://openalex.org/S158124317",
+            "display_name": "ACM Transactions on Storage",
+            "issn_l": "1553-3077",
+            "issn": [
+              "1553-3077",
+              "1553-3093"
+            ],
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": true,
+            "listed_in": [
+              "cwts-core",
+              "jufo-1",
+              "norway-1"
+            ],
+            "host_organization": "https://openalex.org/P4310319798",
+            "host_organization_name": "Association for Computing Machinery",
+            "host_organization_lineage": [
+              "https://openalex.org/P4310319798"
+            ],
+            "host_organization_lineage_names": [
+              "Association for Computing Machinery"
+            ],
+            "type": "journal"
+          },
+          "license": "cc-by-nc",
+          "license_id": "https://openalex.org/licenses/cc-by-nc",
+          "version": "publishedVersion",
+          "is_accepted": true,
+          "is_published": true,
+          "raw_source_name": "ACM Transactions on Storage",
+          "raw_type": "journal-article"
+        },
+        "sustainable_development_goals": [],
+        "sustainable_development_goals_aurora": [],
+        "study_designs": [],
+        "awards": [],
+        "funders": [],
+        "has_content": {
+          "pdf": true,
+          "grobid_xml": true
+        },
+        "content_urls": {
+          "pdf": "https://content.openalex.org/works/W4214919759.pdf",
+          "grobid_xml": "https://content.openalex.org/works/W4214919759.grobid-xml"
+        },
+        "referenced_works_count": 39,
+        "referenced_works": [
+          "https://openalex.org/W1987281948",
+          "https://openalex.org/W2000394291",
+          "https://openalex.org/W2005373714",
+          "https://openalex.org/W2013451019",
+          "https://openalex.org/W2014977566",
+          "https://openalex.org/W2020765652",
+          "https://openalex.org/W2027758281",
+          "https://openalex.org/W2031771125",
+          "https://openalex.org/W2054485416",
+          "https://openalex.org/W2060440895",
+          "https://openalex.org/W2087966340",
+          "https://openalex.org/W2109706326",
+          "https://openalex.org/W2116142433",
+          "https://openalex.org/W2119245106",
+          "https://openalex.org/W2119738171",
+          "https://openalex.org/W2137760911",
+          "https://openalex.org/W2138744797",
+          "https://openalex.org/W2148575324",
+          "https://openalex.org/W2150676586",
+          "https://openalex.org/W2153612500",
+          "https://openalex.org/W2153704625",
+          "https://openalex.org/W2158049821",
+          "https://openalex.org/W2158978506",
+          "https://openalex.org/W2165222121",
+          "https://openalex.org/W2170316547",
+          "https://openalex.org/W2186001977",
+          "https://openalex.org/W2293862011",
+          "https://openalex.org/W2320955485",
+          "https://openalex.org/W2341655714",
+          "https://openalex.org/W2552349527",
+          "https://openalex.org/W2565376601",
+          "https://openalex.org/W2612261081",
+          "https://openalex.org/W2751343396",
+          "https://openalex.org/W2993345055",
+          "https://openalex.org/W4236944670",
+          "https://openalex.org/W4238584892",
+          "https://openalex.org/W4253455208",
+          "https://openalex.org/W4254263397",
+          "https://openalex.org/W6679046037"
+        ],
+        "related_works": [
+          "https://openalex.org/W1480425691",
+          "https://openalex.org/W2168643770",
+          "https://openalex.org/W2098632277",
+          "https://openalex.org/W2166132536",
+          "https://openalex.org/W2034180469",
+          "https://openalex.org/W2593536136",
+          "https://openalex.org/W4245692688",
+          "https://openalex.org/W2169192442",
+          "https://openalex.org/W2131894525",
+          "https://openalex.org/W2047899835"
+        ],
+        "abstract_inverted_index": {
+          "Decades": [
+            0
+          ],
+          "of": [
+            1,
+            18,
+            28,
+            44,
+            65,
+            84,
+            132
+          ],
+          "research": [
+            2
+          ],
+          "on": [
+            3,
+            115
+          ],
+          "distributed": [
+            4,
+            37,
+            57,
+            116
+          ],
+          "file": [
+            5,
+            38,
+            58,
+            117
+          ],
+          "systems": [
+            6,
+            9
+          ],
+          "and": [
+            7,
+            13,
+            93,
+            119,
+            127
+          ],
+          "storage": [
+            8
+          ],
+          "exists.": [
+            10
+          ],
+          "New": [
+            11
+          ],
+          "researchers": [
+            12
+          ],
+          "engineers": [
+            14
+          ],
+          "have": [
+            15
+          ],
+          "a": [
+            16,
+            24,
+            36,
+            63,
+            81,
+            113
+          ],
+          "lot": [
+            17
+          ],
+          "literature": [
+            19
+          ],
+          "to": [
+            20
+          ],
+          "study,": [
+            21
+          ],
+          "but": [
+            22
+          ],
+          "only": [
+            23
+          ],
+          "comparatively": [
+            25
+          ],
+          "small": [
+            26
+          ],
+          "number": [
+            27
+          ],
+          "high-level": [
+            29
+          ],
+          "design": [
+            30,
+            67,
+            103
+          ],
+          "choices": [
+            31,
+            100
+          ],
+          "are": [
+            32,
+            51,
+            125
+          ],
+          "available": [
+            33
+          ],
+          "when": [
+            34
+          ],
+          "creating": [
+            35
+          ],
+          "system.": [
+            39
+          ],
+          "And": [
+            40
+          ],
+          "within": [
+            41,
+            70
+          ],
+          "each": [
+            42
+          ],
+          "aspect": [
+            43
+          ],
+          "the": [
+            45,
+            73,
+            102,
+            130
+          ],
+          "system,": [
+            46
+          ],
+          "typically": [
+            47
+          ],
+          "several": [
+            48,
+            89
+          ],
+          "common": [
+            49
+          ],
+          "approaches": [
+            50
+          ],
+          "used.": [
+            52
+          ],
+          "So,": [
+            53
+          ],
+          "rather": [
+            54
+          ],
+          "than": [
+            55
+          ],
+          "surveying": [
+            56
+          ],
+          "systems,": [
+            59,
+            118
+          ],
+          "this": [
+            60
+          ],
+          "article": [
+            61
+          ],
+          "presents": [
+            62,
+            80
+          ],
+          "survey": [
+            64
+          ],
+          "important": [
+            66
+          ],
+          "decisions": [
+            68
+          ],
+          "and,": [
+            69
+          ],
+          "those": [
+            71
+          ],
+          "decisions,": [
+            72
+          ],
+          "most": [
+            74
+          ],
+          "commonly": [
+            75
+          ],
+          "used": [
+            76
+          ],
+          "options.": [
+            77
+          ],
+          "It": [
+            78
+          ],
+          "also": [
+            79,
+            121
+          ],
+          "qualitative": [
+            82
+          ],
+          "exploration": [
+            83
+          ],
+          "their": [
+            85,
+            94
+          ],
+          "tradeoffs.": [
+            86
+          ],
+          "We": [
+            87
+          ],
+          "include": [
+            88
+          ],
+          "relatively": [
+            90
+          ],
+          "recent": [
+            91
+          ],
+          "designs": [
+            92
+          ],
+          "variations": [
+            95
+          ],
+          "that": [
+            96,
+            124
+          ],
+          "illustrate": [
+            97
+          ],
+          "other": [
+            98
+          ],
+          "tradeoff": [
+            99
+          ],
+          "in": [
+            101,
+            129
+          ],
+          "space,": [
+            104
+          ],
+          "despite": [
+            105
+          ],
+          "being": [
+            106
+          ],
+          "underexplored.": [
+            107
+          ],
+          "In": [
+            108
+          ],
+          "doing": [
+            109
+          ],
+          "so,": [
+            110
+          ],
+          "we": [
+            111,
+            120
+          ],
+          "provide": [
+            112
+          ],
+          "primer": [
+            114
+          ],
+          "show": [
+            122
+          ],
+          "areas": [
+            123
+          ],
+          "overexplored": [
+            126
+          ],
+          "underexplored,": [
+            128
+          ],
+          "hopes": [
+            131
+          ],
+          "inspiring": [
+            133
+          ],
+          "new": [
+            134
+          ],
+          "research.": [
+            135
+          ]
+        },
+        "counts_by_year": [
+          {
+            "year": 2026,
+            "cited_by_count": 1
+          },
+          {
+            "year": 2025,
+            "cited_by_count": 8
+          },
+          {
+            "year": 2024,
+            "cited_by_count": 5
+          },
+          {
+            "year": 2023,
+            "cited_by_count": 5
+          },
+          {
+            "year": 2022,
+            "cited_by_count": 2
+          }
+        ],
+        "updated_date": "2026-09-29T14:09:16.559479",
+        "created_date": "2025-10-10T00:00:00"
+      },
+      {
+        "id": "https://openalex.org/W2218630110",
+        "doi": null,
+        "title": "Replication Control in Distributed File Systems",
+        "display_name": "Replication Control in Distributed File Systems",
+        "relevance_score": 41.227207,
+        "publication_year": 2004,
+        "publication_date": "2004-04-01",
+        "ids": {
+          "openalex": "https://openalex.org/W2218630110",
+          "mag": "2218630110"
+        },
+        "language": "en",
+        "primary_location": {
+          "id": "pmh:oai:deepblue.lib.umich.edu:2027.42/107880",
+          "is_oa": true,
+          "landing_page_url": "http://hdl.handle.net/2027.42/107880>",
+          "pdf_url": "https://hdl.handle.net/2027.42/107880",
+          "source": {
+            "id": "https://openalex.org/S4306400393",
+            "display_name": "Deep Blue (University of Michigan)",
+            "issn_l": null,
+            "issn": null,
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": false,
+            "listed_in": [],
+            "host_organization": "https://openalex.org/I27837315",
+            "host_organization_name": "University of Michigan",
+            "host_organization_lineage": [
+              "https://openalex.org/I27837315"
+            ],
+            "host_organization_lineage_names": [],
+            "type": "repository"
+          },
+          "license": null,
+          "license_id": null,
+          "version": "submittedVersion",
+          "is_accepted": false,
+          "is_published": false,
+          "raw_source_name": null,
+          "raw_type": "Technical Report"
+        },
+        "type": "report",
+        "indexed_in": [],
+        "open_access": {
+          "is_oa": true,
+          "oa_status": "green",
+          "oa_url": "https://hdl.handle.net/2027.42/107880",
+          "any_repository_has_fulltext": true
+        },
+        "authorships": [
+          {
+            "author_position": "first",
+            "author": {
+              "id": "https://openalex.org/A5100769127",
+              "display_name": "Jiaying Zhang",
+              "orcid": "https://orcid.org/0000-0003-1001-9189",
+              "observed_orcids": [
+                "https://orcid.org/0000-0003-1001-9189"
+              ]
+            },
+            "institutions": [],
+            "countries": [],
+            "is_corresponding": false,
+            "raw_author_name": "Jiaying Zhang",
+            "raw_affiliation_strings": [],
+            "raw_orcid": "https://orcid.org/0000-0003-1001-9189",
+            "affiliations": []
+          },
+          {
+            "author_position": "last",
+            "author": {
+              "id": "https://openalex.org/A5075344172",
+              "display_name": "Peter Honeyman",
+              "orcid": "https://orcid.org/0000-0001-7683-5408",
+              "observed_orcids": [
+                "https://orcid.org/0000-0001-7683-5408"
+              ]
+            },
+            "institutions": [],
+            "countries": [],
+            "is_corresponding": false,
+            "raw_author_name": "Peter Honeyman",
+            "raw_affiliation_strings": [],
+            "raw_orcid": "https://orcid.org/0000-0001-7683-5408",
+            "affiliations": []
+          }
+        ],
+        "institutions": [],
+        "countries_distinct_count": 0,
+        "institutions_distinct_count": 0,
+        "corresponding_author_ids": [],
+        "corresponding_institution_ids": [],
+        "apc_list": null,
+        "apc_paid": null,
+        "fwci": null,
+        "has_fulltext": true,
+        "cited_by_count": 5,
+        "citation_normalized_percentile": null,
+        "cited_by_percentile_year": null,
+        "biblio": {
+          "volume": null,
+          "issue": null,
+          "first_page": null,
+          "last_page": null
+        },
+        "is_retracted": false,
+        "is_paratext": false,
+        "is_xpac": false,
+        "primary_topic": {
+          "id": "https://openalex.org/T11181",
+          "display_name": "Advanced Data Storage Technologies",
+          "score": 0.9998999834060669,
+          "subfield": {
+            "id": "https://openalex.org/subfields/1705",
+            "display_name": "Computer Networks and Communications"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/17",
+            "display_name": "Computer Science"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/3",
+            "display_name": "Physical Sciences"
+          }
+        },
+        "topics": [
+          {
+            "id": "https://openalex.org/T11181",
+            "display_name": "Advanced Data Storage Technologies",
+            "score": 0.9998999834060669,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10772",
+            "display_name": "Distributed systems and fault tolerance",
+            "score": 0.9997000098228455,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T11478",
+            "display_name": "Caching and Content Delivery",
+            "score": 0.9997000098228455,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          }
+        ],
+        "keywords": [
+          {
+            "id": "https://openalex.org/keywords/replication-control",
+            "display_name": "replication control",
+            "score": 0.906000018119812
+          },
+          {
+            "id": "https://openalex.org/keywords/distributed-file-systems",
+            "display_name": "distributed file systems",
+            "score": 0.9950000047683716
+          },
+          {
+            "id": "https://openalex.org/keywords/sequential-consistency",
+            "display_name": "sequential consistency",
+            "score": 0.9959999918937683
+          },
+          {
+            "id": "https://openalex.org/keywords/network-partitions",
+            "display_name": "network partitions",
+            "score": 0.652999997138977
+          },
+          {
+            "id": "https://openalex.org/keywords/fault-detection",
+            "display_name": "fault detection",
+            "score": 0.8109999895095825
+          },
+          {
+            "id": "https://openalex.org/keywords/nfsv4",
+            "display_name": "NFSv4",
+            "score": 0.9620000123977661
+          }
+        ],
+        "concepts": [
+          {
+            "id": "https://openalex.org/C41008148",
+            "wikidata": "https://www.wikidata.org/wiki/Q21198",
+            "display_name": "Computer science",
+            "level": 0,
+            "score": 0.8306546211242676
+          },
+          {
+            "id": "https://openalex.org/C12590798",
+            "wikidata": "https://www.wikidata.org/wiki/Q3933199",
+            "display_name": "Replication (statistics)",
+            "level": 2,
+            "score": 0.644646406173706
+          },
+          {
+            "id": "https://openalex.org/C2780385302",
+            "wikidata": "https://www.wikidata.org/wiki/Q367158",
+            "display_name": "Protocol (science)",
+            "level": 3,
+            "score": 0.5450426340103149
+          },
+          {
+            "id": "https://openalex.org/C120314980",
+            "wikidata": "https://www.wikidata.org/wiki/Q180634",
+            "display_name": "Distributed computing",
+            "level": 1,
+            "score": 0.5167424082756042
+          },
+          {
+            "id": "https://openalex.org/C42812",
+            "wikidata": "https://www.wikidata.org/wiki/Q1082910",
+            "display_name": "Partition (number theory)",
+            "level": 2,
+            "score": 0.500119686126709
+          },
+          {
+            "id": "https://openalex.org/C31258907",
+            "wikidata": "https://www.wikidata.org/wiki/Q1301371",
+            "display_name": "Computer network",
+            "level": 1,
+            "score": 0.4925583004951477
+          },
+          {
+            "id": "https://openalex.org/C84511453",
+            "wikidata": "https://www.wikidata.org/wiki/Q2914952",
+            "display_name": "Concurrency control",
+            "level": 3,
+            "score": 0.4427141547203064
+          },
+          {
+            "id": "https://openalex.org/C2776436953",
+            "wikidata": "https://www.wikidata.org/wiki/Q5163215",
+            "display_name": "Consistency (knowledge bases)",
+            "level": 2,
+            "score": 0.4416111707687378
+          },
+          {
+            "id": "https://openalex.org/C70061542",
+            "wikidata": "https://www.wikidata.org/wiki/Q989016",
+            "display_name": "Distributed database",
+            "level": 2,
+            "score": 0.4270835518836975
+          },
+          {
+            "id": "https://openalex.org/C111919701",
+            "wikidata": "https://www.wikidata.org/wiki/Q9135",
+            "display_name": "Operating system",
+            "level": 1,
+            "score": 0.40617841482162476
+          },
+          {
+            "id": "https://openalex.org/C77088390",
+            "wikidata": "https://www.wikidata.org/wiki/Q8513",
+            "display_name": "Database",
+            "level": 1,
+            "score": 0.23485636711120605
+          },
+          {
+            "id": "https://openalex.org/C75949130",
+            "wikidata": "https://www.wikidata.org/wiki/Q848010",
+            "display_name": "Database transaction",
+            "level": 2,
+            "score": 0.15110519528388977
+          },
+          {
+            "id": "https://openalex.org/C71924100",
+            "wikidata": "https://www.wikidata.org/wiki/Q11190",
+            "display_name": "Medicine",
+            "level": 0,
+            "score": 0.0
+          },
+          {
+            "id": "https://openalex.org/C114614502",
+            "wikidata": "https://www.wikidata.org/wiki/Q76592",
+            "display_name": "Combinatorics",
+            "level": 1,
+            "score": 0.0
+          },
+          {
+            "id": "https://openalex.org/C204787440",
+            "wikidata": "https://www.wikidata.org/wiki/Q188504",
+            "display_name": "Alternative medicine",
+            "level": 2,
+            "score": 0.0
+          },
+          {
+            "id": "https://openalex.org/C154945302",
+            "wikidata": "https://www.wikidata.org/wiki/Q11660",
+            "display_name": "Artificial intelligence",
+            "level": 1,
+            "score": 0.0
+          },
+          {
+            "id": "https://openalex.org/C33923547",
+            "wikidata": "https://www.wikidata.org/wiki/Q395",
+            "display_name": "Mathematics",
+            "level": 0,
+            "score": 0.0
+          },
+          {
+            "id": "https://openalex.org/C105795698",
+            "wikidata": "https://www.wikidata.org/wiki/Q12483",
+            "display_name": "Statistics",
+            "level": 1,
+            "score": 0.0
+          },
+          {
+            "id": "https://openalex.org/C142724271",
+            "wikidata": "https://www.wikidata.org/wiki/Q7208",
+            "display_name": "Pathology",
+            "level": 1,
+            "score": 0.0
+          }
+        ],
+        "mesh": [],
+        "locations_count": 2,
+        "locations": [
+          {
+            "id": "pmh:oai:deepblue.lib.umich.edu:2027.42/107880",
+            "is_oa": true,
+            "landing_page_url": "http://hdl.handle.net/2027.42/107880>",
+            "pdf_url": "https://hdl.handle.net/2027.42/107880",
+            "source": {
+              "id": "https://openalex.org/S4306400393",
+              "display_name": "Deep Blue (University of Michigan)",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": "https://openalex.org/I27837315",
+              "host_organization_name": "University of Michigan",
+              "host_organization_lineage": [
+                "https://openalex.org/I27837315"
+              ],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": null,
+            "raw_type": "Technical Report"
+          },
+          {
+            "id": "mag:2218630110",
+            "is_oa": false,
+            "landing_page_url": "http://citi.umich.edu/techreports/reports/citi-tr-04-1.pdf",
+            "pdf_url": null,
+            "source": null,
+            "license": null,
+            "license_id": null,
+            "version": null,
+            "is_accepted": false,
+            "is_published": null,
+            "raw_source_name": null,
+            "raw_type": null
+          }
+        ],
+        "best_oa_location": {
+          "id": "pmh:oai:deepblue.lib.umich.edu:2027.42/107880",
+          "is_oa": true,
+          "landing_page_url": "http://hdl.handle.net/2027.42/107880>",
+          "pdf_url": "https://hdl.handle.net/2027.42/107880",
+          "source": {
+            "id": "https://openalex.org/S4306400393",
+            "display_name": "Deep Blue (University of Michigan)",
+            "issn_l": null,
+            "issn": null,
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": false,
+            "listed_in": [],
+            "host_organization": "https://openalex.org/I27837315",
+            "host_organization_name": "University of Michigan",
+            "host_organization_lineage": [
+              "https://openalex.org/I27837315"
+            ],
+            "host_organization_lineage_names": [],
+            "type": "repository"
+          },
+          "license": null,
+          "license_id": null,
+          "version": "submittedVersion",
+          "is_accepted": false,
+          "is_published": false,
+          "raw_source_name": null,
+          "raw_type": "Technical Report"
+        },
+        "sustainable_development_goals": [],
+        "sustainable_development_goals_aurora": [],
+        "study_designs": [],
+        "awards": [],
+        "funders": [],
+        "has_content": {
+          "pdf": true,
+          "grobid_xml": true
+        },
+        "content_urls": {
+          "pdf": "https://content.openalex.org/works/W2218630110.pdf",
+          "grobid_xml": "https://content.openalex.org/works/W2218630110.grobid-xml"
+        },
+        "referenced_works_count": 19,
+        "referenced_works": [
+          "https://openalex.org/W274549089",
+          "https://openalex.org/W1512654486",
+          "https://openalex.org/W1578833196",
+          "https://openalex.org/W1600328410",
+          "https://openalex.org/W1782125413",
+          "https://openalex.org/W1984674591",
+          "https://openalex.org/W1993505169",
+          "https://openalex.org/W2048071586",
+          "https://openalex.org/W2054739713",
+          "https://openalex.org/W2071958655",
+          "https://openalex.org/W2088221489",
+          "https://openalex.org/W2094162326",
+          "https://openalex.org/W2102526983",
+          "https://openalex.org/W2121133177",
+          "https://openalex.org/W2126924915",
+          "https://openalex.org/W2144566188",
+          "https://openalex.org/W2148924974",
+          "https://openalex.org/W2153649450",
+          "https://openalex.org/W3137092842"
+        ],
+        "related_works": [
+          "https://openalex.org/W85816877",
+          "https://openalex.org/W2491058909",
+          "https://openalex.org/W1501097611",
+          "https://openalex.org/W68022172",
+          "https://openalex.org/W2157357497",
+          "https://openalex.org/W2865885056",
+          "https://openalex.org/W1878480076",
+          "https://openalex.org/W1979352592",
+          "https://openalex.org/W936633308",
+          "https://openalex.org/W1976144378",
+          "https://openalex.org/W2939213010",
+          "https://openalex.org/W2992633163",
+          "https://openalex.org/W3149587699",
+          "https://openalex.org/W2183533965",
+          "https://openalex.org/W2110212139",
+          "https://openalex.org/W1582404264",
+          "https://openalex.org/W157967169",
+          "https://openalex.org/W2587081325",
+          "https://openalex.org/W2907223697",
+          "https://openalex.org/W3137759927"
+        ],
+        "abstract_inverted_index": {
+          "We": [
+            0,
+            75
+          ],
+          "present": [
+            1
+          ],
+          "a": [
+            2,
+            29
+          ],
+          "replication": [
+            3
+          ],
+          "control": [
+            4
+          ],
+          "protocol": [
+            5,
+            27,
+            79
+          ],
+          "for": [
+            6,
+            23,
+            86
+          ],
+          "distributed": [
+            7,
+            87
+          ],
+          "file": [
+            8
+          ],
+          "systems": [
+            9
+          ],
+          "that": [
+            10
+          ],
+          "can": [
+            11
+          ],
+          "guarantee": [
+            12
+          ],
+          "strict": [
+            13
+          ],
+          "consistency": [
+            14,
+            17
+          ],
+          "or": [
+            15,
+            68
+          ],
+          "sequential": [
+            16
+          ],
+          "while": [
+            18
+          ],
+          "imposing": [
+            19
+          ],
+          "no": [
+            20
+          ],
+          "performance": [
+            21,
+            47
+          ],
+          "overhead": [
+            22
+          ],
+          "normal": [
+            24
+          ],
+          "reads.": [
+            25
+          ],
+          "The": [
+            26
+          ],
+          "uses": [
+            28
+          ],
+          "primary-copy": [
+            30
+          ],
+          "scheme": [
+            31
+          ],
+          "with": [
+            32
+          ],
+          "server": [
+            33
+          ],
+          "redirection": [
+            34
+          ],
+          "when": [
+            35,
+            50
+          ],
+          "concurrent": [
+            36
+          ],
+          "writes": [
+            37
+          ],
+          "occur.": [
+            38
+          ],
+          "It": [
+            39
+          ],
+          "tolerates": [
+            40
+          ],
+          "any": [
+            41
+          ],
+          "number": [
+            42
+          ],
+          "of": [
+            43
+          ],
+          "component": [
+            44
+          ],
+          "omission": [
+            45
+          ],
+          "and": [
+            46,
+            58
+          ],
+          "failures,": [
+            48
+          ],
+          "even": [
+            49
+          ],
+          "these": [
+            51
+          ],
+          "lead": [
+            52
+          ],
+          "to": [
+            53
+          ],
+          "network": [
+            54
+          ],
+          "partition.": [
+            55
+          ],
+          "Failure": [
+            56
+          ],
+          "detection": [
+            57
+          ],
+          "recovery": [
+            59
+          ],
+          "are": [
+            60,
+            73
+          ],
+          "driven": [
+            61
+          ],
+          "by": [
+            62
+          ],
+          "client": [
+            63
+          ],
+          "accesses.": [
+            64
+          ],
+          "No": [
+            65
+          ],
+          "heartbeat": [
+            66
+          ],
+          "messages": [
+            67
+          ],
+          "expensive": [
+            69
+          ],
+          "group": [
+            70
+          ],
+          "communication": [
+            71
+          ],
+          "services": [
+            72
+          ],
+          "required.": [
+            74
+          ],
+          "have": [
+            76
+          ],
+          "implemented": [
+            77
+          ],
+          "the": [
+            78,
+            82
+          ],
+          "in": [
+            80
+          ],
+          "NFSv4,": [
+            81
+          ],
+          "emerging": [
+            83
+          ],
+          "Internet": [
+            84
+          ],
+          "standard": [
+            85
+          ],
+          "filing.": [
+            88
+          ]
+        },
+        "counts_by_year": [
+          {
+            "year": 2014,
+            "cited_by_count": 2
+          },
+          {
+            "year": 2013,
+            "cited_by_count": 1
+          }
+        ],
+        "updated_date": "2026-08-31T07:19:18.363097",
+        "created_date": "2025-10-10T00:00:00"
+      },
+      {
+        "id": "https://openalex.org/W2805570528",
+        "doi": "https://doi.org/10.3390/app8060913",
+        "title": "Developing a File System Structure to Solve Healthy Big Data Storage and Archiving Problems Using a Distributed File System",
+        "display_name": "Developing a File System Structure to Solve Healthy Big Data Storage and Archiving Problems Using a Distributed File System",
+        "relevance_score": 37.73048,
+        "publication_year": 2018,
+        "publication_date": "2018-06-02",
+        "ids": {
+          "openalex": "https://openalex.org/W2805570528",
+          "doi": "https://doi.org/10.3390/app8060913",
+          "mag": "2805570528"
+        },
+        "language": "en",
+        "primary_location": {
+          "id": "doi:10.3390/app8060913",
+          "is_oa": true,
+          "landing_page_url": "https://doi.org/10.3390/app8060913",
+          "pdf_url": "https://www.mdpi.com/2076-3417/8/6/913/pdf?version=1528195057",
+          "source": {
+            "id": "https://openalex.org/S4210205812",
+            "display_name": "Applied Sciences",
+            "issn_l": "2076-3417",
+            "issn": [
+              "2076-3417"
+            ],
+            "is_oa": true,
+            "is_in_doaj": true,
+            "is_core": true,
+            "listed_in": [
+              "cwts-core",
+              "doaj",
+              "norway-1"
+            ],
+            "host_organization": "https://openalex.org/P4310310987",
+            "host_organization_name": "Multidisciplinary Digital Publishing Institute",
+            "host_organization_lineage": [
+              "https://openalex.org/P4310310987"
+            ],
+            "host_organization_lineage_names": [
+              "Multidisciplinary Digital Publishing Institute"
+            ],
+            "type": "journal"
+          },
+          "license": "cc-by",
+          "license_id": "https://openalex.org/licenses/cc-by",
+          "version": "publishedVersion",
+          "is_accepted": true,
+          "is_published": true,
+          "raw_source_name": "Applied Sciences",
+          "raw_type": "journal-article"
+        },
+        "type": "article",
+        "indexed_in": [
+          "crossref",
+          "doaj"
+        ],
+        "open_access": {
+          "is_oa": true,
+          "oa_status": "gold",
+          "oa_url": "https://www.mdpi.com/2076-3417/8/6/913/pdf?version=1528195057",
+          "any_repository_has_fulltext": true
+        },
+        "authorships": [
+          {
+            "author_position": "first",
+            "author": {
+              "id": "https://openalex.org/A5035854245",
+              "display_name": "Atilla Erg\u00fczen",
+              "orcid": "https://orcid.org/0000-0003-4562-2578",
+              "observed_orcids": [
+                "https://orcid.org/0000-0003-4562-2578"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I45642913",
+                "display_name": "K\u0131r\u0131kkale University",
+                "ror": "https://ror.org/01zhwwf82",
+                "country_code": "TR",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I45642913"
+                ]
+              }
+            ],
+            "countries": [
+              "TR"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Atilla Erg\u00fczen",
+            "raw_affiliation_strings": [
+              "Department of Computer Engineering, Faculty of Engineering, K\u0131r\u0131kkale University Ankara Yolu 7. Km, 71450 K\u0131r\u0131kkale, Turkey"
+            ],
+            "raw_orcid": null,
+            "affiliations": [
+              {
+                "raw_affiliation_string": "Department of Computer Engineering, Faculty of Engineering, K\u0131r\u0131kkale University Ankara Yolu 7. Km, 71450 K\u0131r\u0131kkale, Turkey",
+                "institution_ids": [
+                  "https://openalex.org/I45642913"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "last",
+            "author": {
+              "id": "https://openalex.org/A5002482597",
+              "display_name": "Mahmut \u00dcnver",
+              "orcid": "https://orcid.org/0000-0002-5882-2897",
+              "observed_orcids": [
+                "https://orcid.org/0000-0002-5882-2897"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I45642913",
+                "display_name": "K\u0131r\u0131kkale University",
+                "ror": "https://ror.org/01zhwwf82",
+                "country_code": "TR",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I45642913"
+                ]
+              }
+            ],
+            "countries": [
+              "TR"
+            ],
+            "is_corresponding": true,
+            "raw_author_name": "Mahmut \u00dcnver",
+            "raw_affiliation_strings": [
+              "Department of Computer Engineering, Faculty of Engineering, K\u0131r\u0131kkale University Ankara Yolu 7. Km, 71450 K\u0131r\u0131kkale, Turkey"
+            ],
+            "raw_orcid": "https://orcid.org/0000-0003-4562-2578",
+            "affiliations": [
+              {
+                "raw_affiliation_string": "Department of Computer Engineering, Faculty of Engineering, K\u0131r\u0131kkale University Ankara Yolu 7. Km, 71450 K\u0131r\u0131kkale, Turkey",
+                "institution_ids": [
+                  "https://openalex.org/I45642913"
+                ]
+              }
+            ]
+          }
+        ],
+        "institutions": [],
+        "countries_distinct_count": 1,
+        "institutions_distinct_count": 1,
+        "corresponding_author_ids": [
+          "https://openalex.org/A5002482597"
+        ],
+        "corresponding_institution_ids": [
+          "https://openalex.org/I45642913"
+        ],
+        "apc_list": {
+          "value": 2400,
+          "currency": "CHF",
+          "value_usd": 2896
+        },
+        "apc_paid": {
+          "value": 2400,
+          "currency": "CHF",
+          "value_usd": 2896
+        },
+        "fwci": 3.8387,
+        "has_fulltext": true,
+        "cited_by_count": 24,
+        "citation_normalized_percentile": {
+          "value": 0.93578983,
+          "is_in_top_1_percent": false,
+          "is_in_top_10_percent": true
+        },
+        "cited_by_percentile_year": {
+          "min": 88,
+          "max": 99
+        },
+        "biblio": {
+          "volume": "8",
+          "issue": "6",
+          "first_page": "913",
+          "last_page": "913"
+        },
+        "is_retracted": false,
+        "is_paratext": false,
+        "is_xpac": false,
+        "primary_topic": {
+          "id": "https://openalex.org/T11396",
+          "display_name": "Artificial Intelligence in Healthcare",
+          "score": 0.9965000152587891,
+          "subfield": {
+            "id": "https://openalex.org/subfields/3605",
+            "display_name": "Health Information Management"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/36",
+            "display_name": "Health Professions"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/4",
+            "display_name": "Health Sciences"
+          }
+        },
+        "topics": [
+          {
+            "id": "https://openalex.org/T11396",
+            "display_name": "Artificial Intelligence in Healthcare",
+            "score": 0.9965000152587891,
+            "subfield": {
+              "id": "https://openalex.org/subfields/3605",
+              "display_name": "Health Information Management"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/36",
+              "display_name": "Health Professions"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/4",
+              "display_name": "Health Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10273",
+            "display_name": "IoT and Edge/Fog Computing",
+            "score": 0.9898999929428101,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10764",
+            "display_name": "Privacy-Preserving Technologies in Data",
+            "score": 0.9772999882698059,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1702",
+              "display_name": "Artificial Intelligence"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          }
+        ],
+        "keywords": [
+          {
+            "id": "https://openalex.org/keywords/distributed-file-systems",
+            "display_name": "distributed file systems",
+            "score": 0.9620000123977661
+          },
+          {
+            "id": "https://openalex.org/keywords/medical-image-storage",
+            "display_name": "medical image storage",
+            "score": 0.9399999976158142
+          },
+          {
+            "id": "https://openalex.org/keywords/big-data-in-healthcare",
+            "display_name": "big data in healthcare",
+            "score": 0.6819999814033508
+          },
+          {
+            "id": "https://openalex.org/keywords/data-archiving",
+            "display_name": "data archiving",
+            "score": 0.8539999723434448
+          },
+          {
+            "id": "https://openalex.org/keywords/data-security",
+            "display_name": "data security",
+            "score": 0.5429999828338623
+          },
+          {
+            "id": "https://openalex.org/keywords/encryption",
+            "display_name": "encryption",
+            "score": 0.546999990940094
+          },
+          {
+            "id": "https://openalex.org/keywords/scalability",
+            "display_name": "scalability",
+            "score": 0.9539999961853027
+          },
+          {
+            "id": "https://openalex.org/keywords/performance-comparison",
+            "display_name": "performance comparison",
+            "score": 0.4740000069141388
+          },
+          {
+            "id": "https://openalex.org/keywords/nosql-databases",
+            "display_name": "NoSQL databases",
+            "score": 0.6990000009536743
+          },
+          {
+            "id": "https://openalex.org/keywords/relational-database-management-systems",
+            "display_name": "relational database management systems",
+            "score": 0.8360000252723694
+          }
+        ],
+        "concepts": [
+          {
+            "id": "https://openalex.org/C41008148",
+            "wikidata": "https://www.wikidata.org/wiki/Q21198",
+            "display_name": "Computer science",
+            "level": 0,
+            "score": 0.8078429102897644
+          },
+          {
+            "id": "https://openalex.org/C2779599972",
+            "wikidata": "https://www.wikidata.org/wiki/Q82231",
+            "display_name": "NoSQL",
+            "level": 3,
+            "score": 0.719563364982605
+          },
+          {
+            "id": "https://openalex.org/C48044578",
+            "wikidata": "https://www.wikidata.org/wiki/Q727490",
+            "display_name": "Scalability",
+            "level": 2,
+            "score": 0.6651098132133484
+          },
+          {
+            "id": "https://openalex.org/C2780940931",
+            "wikidata": "https://www.wikidata.org/wiki/Q174989",
+            "display_name": "File system",
+            "level": 2,
+            "score": 0.6220993399620056
+          },
+          {
+            "id": "https://openalex.org/C148730421",
+            "wikidata": "https://www.wikidata.org/wiki/Q141090",
+            "display_name": "Encryption",
+            "level": 2,
+            "score": 0.5253614187240601
+          },
+          {
+            "id": "https://openalex.org/C152043487",
+            "wikidata": "https://www.wikidata.org/wiki/Q1229600",
+            "display_name": "Distributed File System",
+            "level": 2,
+            "score": 0.5009424686431885
+          },
+          {
+            "id": "https://openalex.org/C24394798",
+            "wikidata": "https://www.wikidata.org/wiki/Q192588",
+            "display_name": "Relational database management system",
+            "level": 3,
+            "score": 0.49518051743507385
+          },
+          {
+            "id": "https://openalex.org/C110875604",
+            "wikidata": "https://www.wikidata.org/wiki/Q75",
+            "display_name": "The Internet",
+            "level": 2,
+            "score": 0.4765366017818451
+          },
+          {
+            "id": "https://openalex.org/C64448361",
+            "wikidata": "https://www.wikidata.org/wiki/Q623494",
+            "display_name": "Network File System",
+            "level": 5,
+            "score": 0.44452428817749023
+          },
+          {
+            "id": "https://openalex.org/C24885549",
+            "wikidata": "https://www.wikidata.org/wiki/Q339678",
+            "display_name": "Distributed data store",
+            "level": 2,
+            "score": 0.4440215826034546
+          },
+          {
+            "id": "https://openalex.org/C75684735",
+            "wikidata": "https://www.wikidata.org/wiki/Q858810",
+            "display_name": "Big data",
+            "level": 2,
+            "score": 0.4285092055797577
+          },
+          {
+            "id": "https://openalex.org/C77088390",
+            "wikidata": "https://www.wikidata.org/wiki/Q8513",
+            "display_name": "Database",
+            "level": 1,
+            "score": 0.40177032351493835
+          },
+          {
+            "id": "https://openalex.org/C111919701",
+            "wikidata": "https://www.wikidata.org/wiki/Q9135",
+            "display_name": "Operating system",
+            "level": 1,
+            "score": 0.3621724545955658
+          },
+          {
+            "id": "https://openalex.org/C5655090",
+            "wikidata": "https://www.wikidata.org/wiki/Q192588",
+            "display_name": "Relational database",
+            "level": 2,
+            "score": 0.2909027636051178
+          },
+          {
+            "id": "https://openalex.org/C82820731",
+            "wikidata": "https://www.wikidata.org/wiki/Q2640620",
+            "display_name": "Self-certifying File System",
+            "level": 3,
+            "score": 0.26263606548309326
+          },
+          {
+            "id": "https://openalex.org/C88520388",
+            "wikidata": "https://www.wikidata.org/wiki/Q1126823",
+            "display_name": "SSH File Transfer Protocol",
+            "level": 4,
+            "score": 0.1770668923854828
+          }
+        ],
+        "mesh": [],
+        "locations_count": 3,
+        "locations": [
+          {
+            "id": "doi:10.3390/app8060913",
+            "is_oa": true,
+            "landing_page_url": "https://doi.org/10.3390/app8060913",
+            "pdf_url": "https://www.mdpi.com/2076-3417/8/6/913/pdf?version=1528195057",
+            "source": {
+              "id": "https://openalex.org/S4210205812",
+              "display_name": "Applied Sciences",
+              "issn_l": "2076-3417",
+              "issn": [
+                "2076-3417"
+              ],
+              "is_oa": true,
+              "is_in_doaj": true,
+              "is_core": true,
+              "listed_in": [
+                "cwts-core",
+                "doaj",
+                "norway-1"
+              ],
+              "host_organization": "https://openalex.org/P4310310987",
+              "host_organization_name": "Multidisciplinary Digital Publishing Institute",
+              "host_organization_lineage": [
+                "https://openalex.org/P4310310987"
+              ],
+              "host_organization_lineage_names": [
+                "Multidisciplinary Digital Publishing Institute"
+              ],
+              "type": "journal"
+            },
+            "license": "cc-by",
+            "license_id": "https://openalex.org/licenses/cc-by",
+            "version": "publishedVersion",
+            "is_accepted": true,
+            "is_published": true,
+            "raw_source_name": "Applied Sciences",
+            "raw_type": "journal-article"
+          },
+          {
+            "id": "pmh:oai:acikerisim.kku.edu.tr:20.500.12587/2580",
+            "is_oa": true,
+            "landing_page_url": "https://doi.org/10.3390/app8060913",
+            "pdf_url": null,
+            "source": {
+              "id": "https://openalex.org/S7407055314",
+              "display_name": "K\u0131r\u0131kkale University Institutional Repository",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": null,
+              "host_organization_name": null,
+              "host_organization_lineage": [],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": "other-oa",
+            "license_id": "https://openalex.org/licenses/other-oa",
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": null,
+            "raw_type": "Article"
+          },
+          {
+            "id": "pmh:oai:doaj.org/article:22da94de1e664a5f8b935b1c5b1adb0e",
+            "is_oa": false,
+            "landing_page_url": "https://doaj.org/article/22da94de1e664a5f8b935b1c5b1adb0e",
+            "pdf_url": null,
+            "source": {
+              "id": "https://openalex.org/S4306401280",
+              "display_name": "DOAJ (DOAJ: Directory of Open Access Journals)",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": null,
+              "host_organization_name": null,
+              "host_organization_lineage": [],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": "Applied Sciences, Vol 8, Iss 6, p 913 (2018)",
+            "raw_type": "article"
+          }
+        ],
+        "best_oa_location": {
+          "id": "doi:10.3390/app8060913",
+          "is_oa": true,
+          "landing_page_url": "https://doi.org/10.3390/app8060913",
+          "pdf_url": "https://www.mdpi.com/2076-3417/8/6/913/pdf?version=1528195057",
+          "source": {
+            "id": "https://openalex.org/S4210205812",
+            "display_name": "Applied Sciences",
+            "issn_l": "2076-3417",
+            "issn": [
+              "2076-3417"
+            ],
+            "is_oa": true,
+            "is_in_doaj": true,
+            "is_core": true,
+            "listed_in": [
+              "cwts-core",
+              "doaj",
+              "norway-1"
+            ],
+            "host_organization": "https://openalex.org/P4310310987",
+            "host_organization_name": "Multidisciplinary Digital Publishing Institute",
+            "host_organization_lineage": [
+              "https://openalex.org/P4310310987"
+            ],
+            "host_organization_lineage_names": [
+              "Multidisciplinary Digital Publishing Institute"
+            ],
+            "type": "journal"
+          },
+          "license": "cc-by",
+          "license_id": "https://openalex.org/licenses/cc-by",
+          "version": "publishedVersion",
+          "is_accepted": true,
+          "is_published": true,
+          "raw_source_name": "Applied Sciences",
+          "raw_type": "journal-article"
+        },
+        "sustainable_development_goals": [],
+        "sustainable_development_goals_aurora": [],
+        "study_designs": [],
+        "awards": [],
+        "funders": [
+          {
+            "id": "https://openalex.org/F4320318989",
+            "display_name": "K\u0131r\u0131kkale \u00dcniversitesi",
+            "ror": "https://ror.org/01zhwwf82"
+          }
+        ],
+        "has_content": {
+          "pdf": true,
+          "grobid_xml": true
+        },
+        "content_urls": {
+          "pdf": "https://content.openalex.org/works/W2805570528.pdf",
+          "grobid_xml": "https://content.openalex.org/works/W2805570528.grobid-xml"
+        },
+        "referenced_works_count": 29,
+        "referenced_works": [
+          "https://openalex.org/W208654116",
+          "https://openalex.org/W640741134",
+          "https://openalex.org/W1546634085",
+          "https://openalex.org/W1602249588",
+          "https://openalex.org/W1751683294",
+          "https://openalex.org/W1993358787",
+          "https://openalex.org/W1997159848",
+          "https://openalex.org/W1999984505",
+          "https://openalex.org/W2026548343",
+          "https://openalex.org/W2086504823",
+          "https://openalex.org/W2094162326",
+          "https://openalex.org/W2101866620",
+          "https://openalex.org/W2115457697",
+          "https://openalex.org/W2119738171",
+          "https://openalex.org/W2120751691",
+          "https://openalex.org/W2183978533",
+          "https://openalex.org/W2285118877",
+          "https://openalex.org/W2286036512",
+          "https://openalex.org/W2306447822",
+          "https://openalex.org/W2535970128",
+          "https://openalex.org/W2582408542",
+          "https://openalex.org/W2761391034",
+          "https://openalex.org/W2952464298",
+          "https://openalex.org/W3123607434",
+          "https://openalex.org/W4236096494",
+          "https://openalex.org/W4254263397",
+          "https://openalex.org/W6605295113",
+          "https://openalex.org/W6628878979",
+          "https://openalex.org/W6631561271"
+        ],
+        "related_works": [
+          "https://openalex.org/W2295775753",
+          "https://openalex.org/W4381416854",
+          "https://openalex.org/W2603313942",
+          "https://openalex.org/W4306877231",
+          "https://openalex.org/W2143602713",
+          "https://openalex.org/W4241927984",
+          "https://openalex.org/W4236503624",
+          "https://openalex.org/W4214915483",
+          "https://openalex.org/W4386408829",
+          "https://openalex.org/W2765185163"
+        ],
+        "abstract_inverted_index": {
+          "Recently,": [
+            0
+          ],
+          "the": [
+            1,
+            9,
+            26,
+            30,
+            57,
+            69,
+            78,
+            97,
+            133,
+            137,
+            141,
+            161,
+            167,
+            178,
+            199,
+            206,
+            209
+          ],
+          "use": [
+            2,
+            10,
+            146,
+            193
+          ],
+          "of": [
+            3,
+            11,
+            17,
+            32,
+            56,
+            80,
+            99,
+            130,
+            140,
+            147,
+            160,
+            166,
+            208
+          ],
+          "internet": [
+            4
+          ],
+          "has": [
+            5,
+            42,
+            53,
+            75,
+            108,
+            122
+          ],
+          "become": [
+            6
+          ],
+          "widespread,": [
+            7
+          ],
+          "increasing": [
+            8
+          ],
+          "mobile": [
+            12
+          ],
+          "phones,": [
+            13
+          ],
+          "tablets,": [
+            14
+          ],
+          "computers,": [
+            15
+          ],
+          "Internet": [
+            16,
+            149
+          ],
+          "Things": [
+            18
+          ],
+          "(IoT)": [
+            19
+          ],
+          "devices": [
+            20
+          ],
+          "and": [
+            21,
+            62,
+            118,
+            154,
+            172,
+            186,
+            233
+          ],
+          "other": [
+            22,
+            70
+          ],
+          "digital": [
+            23,
+            35,
+            39
+          ],
+          "sources.": [
+            24
+          ],
+          "In": [
+            25,
+            90,
+            175
+          ],
+          "health": [
+            27
+          ],
+          "sector": [
+            28
+          ],
+          "with": [
+            29,
+            87,
+            182
+          ],
+          "help": [
+            31
+          ],
+          "new": [
+            33
+          ],
+          "generation": [
+            34
+          ],
+          "medical": [
+            36,
+            100,
+            134
+          ],
+          "equipment,": [
+            37
+          ],
+          "this": [
+            38,
+            91,
+            112,
+            176
+          ],
+          "world": [
+            40
+          ],
+          "also": [
+            41
+          ],
+          "tended": [
+            43
+          ],
+          "to": [
+            44,
+            64,
+            198
+          ],
+          "grow": [
+            45,
+            66
+          ],
+          "in": [
+            46,
+            50,
+            132
+          ],
+          "an": [
+            47,
+            93,
+            236
+          ],
+          "unpredictable": [
+            48
+          ],
+          "way": [
+            49
+          ],
+          "that": [
+            51,
+            192,
+            205
+          ],
+          "it": [
+            52,
+            202
+          ],
+          "nearly": [
+            54
+          ],
+          "10%": [
+            55
+          ],
+          "global": [
+            58
+          ],
+          "wide": [
+            59
+          ],
+          "data": [
+            60,
+            82,
+            131
+          ],
+          "itself": [
+            61
+          ],
+          "continues": [
+            63
+          ],
+          "keep": [
+            65
+          ],
+          "beyond": [
+            67
+          ],
+          "what": [
+            68
+          ],
+          "sectors": [
+            71
+          ],
+          "have.": [
+            72
+          ],
+          "This": [
+            73
+          ],
+          "progress": [
+            74
+          ],
+          "greatly": [
+            76
+          ],
+          "enlarged": [
+            77
+          ],
+          "amount": [
+            79
+          ],
+          "produced": [
+            81
+          ],
+          "which": [
+            83
+          ],
+          "cannot": [
+            84
+          ],
+          "be": [
+            85,
+            187
+          ],
+          "resolved": [
+            86
+          ],
+          "conventional": [
+            88
+          ],
+          "methods.": [
+            89
+          ],
+          "work,": [
+            92,
+            113
+          ],
+          "efficient": [
+            94
+          ],
+          "model": [
+            95
+          ],
+          "for": [
+            96,
+            126
+          ],
+          "storage": [
+            98
+          ],
+          "images": [
+            101
+          ],
+          "using": [
+            102
+          ],
+          "a": [
+            103,
+            114,
+            217,
+            227
+          ],
+          "distributed": [
+            104
+          ],
+          "file": [
+            105,
+            157
+          ],
+          "system": [
+            106,
+            142,
+            168,
+            179,
+            211,
+            231,
+            238
+          ],
+          "structure": [
+            107,
+            121
+          ],
+          "been": [
+            109,
+            123
+          ],
+          "developed.": [
+            110
+          ],
+          "With": [
+            111
+          ],
+          "robust,": [
+            115
+          ],
+          "available,": [
+            116
+          ],
+          "scalable,": [
+            117
+          ],
+          "serverless": [
+            119
+          ],
+          "solution": [
+            120
+          ],
+          "produced,": [
+            124
+          ],
+          "especially": [
+            125
+          ],
+          "storing": [
+            127
+          ],
+          "large": [
+            128
+          ],
+          "amounts": [
+            129
+          ],
+          "field.": [
+            135
+          ],
+          "Furthermore,": [
+            136
+          ],
+          "security": [
+            138
+          ],
+          "level": [
+            139
+          ],
+          "is": [
+            143,
+            169,
+            203,
+            212
+          ],
+          "extreme": [
+            144
+          ],
+          "by": [
+            145
+          ],
+          "static": [
+            148
+          ],
+          "protocol": [
+            150
+          ],
+          "(IP),": [
+            151
+          ],
+          "user": [
+            152
+          ],
+          "credentials,": [
+            153
+          ],
+          "synchronously": [
+            155
+          ],
+          "encrypted": [
+            156
+          ],
+          "contents.": [
+            158
+          ],
+          "One": [
+            159
+          ],
+          "most": [
+            162
+          ],
+          "important": [
+            163
+          ],
+          "key": [
+            164
+          ],
+          "features": [
+            165
+          ],
+          "high": [
+            170
+          ],
+          "performance": [
+            171,
+            207
+          ],
+          "easy": [
+            173
+          ],
+          "scalability.": [
+            174
+          ],
+          "way,": [
+            177
+          ],
+          "can": [
+            180
+          ],
+          "work": [
+            181
+          ],
+          "fewer": [
+            183
+          ],
+          "hardware": [
+            184
+          ],
+          "elements": [
+            185
+          ],
+          "more": [
+            188
+          ],
+          "robust": [
+            189
+          ],
+          "than": [
+            190,
+            214
+          ],
+          "others": [
+            191
+          ],
+          "name": [
+            194
+          ],
+          "node": [
+            195
+          ],
+          "architecture.": [
+            196
+          ],
+          "According": [
+            197
+          ],
+          "test": [
+            200
+          ],
+          "results,": [
+            201
+          ],
+          "seen": [
+            204
+          ],
+          "designed": [
+            210
+          ],
+          "better": [
+            213
+          ],
+          "97%": [
+            215
+          ],
+          "from": [
+            216,
+            226,
+            235
+          ],
+          "Not": [
+            218
+          ],
+          "Only": [
+            219
+          ],
+          "Structured": [
+            220
+          ],
+          "Query": [
+            221
+          ],
+          "Language": [
+            222
+          ],
+          "(NoSQL)": [
+            223
+          ],
+          "system,": [
+            224
+          ],
+          "80%": [
+            225
+          ],
+          "relational": [
+            228
+          ],
+          "database": [
+            229
+          ],
+          "management": [
+            230
+          ],
+          "(RDBMS),": [
+            232
+          ],
+          "74%": [
+            234
+          ],
+          "operating": [
+            237
+          ],
+          "(OS).": [
+            239
+          ]
+        },
+        "counts_by_year": [
+          {
+            "year": 2024,
+            "cited_by_count": 2
+          },
+          {
+            "year": 2023,
+            "cited_by_count": 5
+          },
+          {
+            "year": 2022,
+            "cited_by_count": 9
+          },
+          {
+            "year": 2021,
+            "cited_by_count": 1
+          },
+          {
+            "year": 2020,
+            "cited_by_count": 4
+          },
+          {
+            "year": 2019,
+            "cited_by_count": 2
+          },
+          {
+            "year": 2018,
+            "cited_by_count": 1
+          }
+        ],
+        "updated_date": "2026-09-23T09:40:40.371523",
+        "created_date": "2025-10-10T00:00:00"
+      },
+      {
+        "id": "https://openalex.org/W1531707100",
+        "doi": null,
+        "title": "Flexible, wide-area storage for distributed systems with WheelFS",
+        "display_name": "Flexible, wide-area storage for distributed systems with WheelFS",
+        "relevance_score": 34.354076,
+        "publication_year": 2009,
+        "publication_date": "2009-04-22",
+        "ids": {
+          "openalex": "https://openalex.org/W1531707100",
+          "mag": "1531707100"
+        },
+        "language": "en",
+        "primary_location": {
+          "id": "pmh:oai:dspace.mit.edu:1721.1/60679",
+          "is_oa": true,
+          "landing_page_url": "http://hdl.handle.net/1721.1/60679",
+          "pdf_url": "http://hdl.handle.net/1721.1/60679",
+          "source": {
+            "id": "https://openalex.org/S4306400425",
+            "display_name": "DSpace@MIT (Massachusetts Institute of Technology)",
+            "issn_l": null,
+            "issn": null,
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": false,
+            "listed_in": [],
+            "host_organization": "https://openalex.org/I63966007",
+            "host_organization_name": "Massachusetts Institute of Technology",
+            "host_organization_lineage": [
+              "https://openalex.org/I63966007"
+            ],
+            "host_organization_lineage_names": [],
+            "type": "repository"
+          },
+          "license": null,
+          "license_id": null,
+          "version": "submittedVersion",
+          "is_accepted": false,
+          "is_published": false,
+          "raw_source_name": "MIT web domain",
+          "raw_type": "http://purl.org/eprint/type/ConferencePaper"
+        },
+        "type": "conference-paper",
+        "indexed_in": [],
+        "open_access": {
+          "is_oa": true,
+          "oa_status": "green",
+          "oa_url": "http://hdl.handle.net/1721.1/60679",
+          "any_repository_has_fulltext": true
+        },
+        "authorships": [
+          {
+            "author_position": "first",
+            "author": {
+              "id": "https://openalex.org/A5109837652",
+              "display_name": "Jeremy Stribling",
+              "orcid": null,
+              "observed_orcids": []
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I4405258931",
+                "display_name": "MIT Computer Science and Artificial Intelligence Laboratory",
+                "ror": "https://ror.org/01e85r662",
+                "country_code": "US",
+                "type": "facility",
+                "lineage": [
+                  "https://openalex.org/I4405258931",
+                  "https://openalex.org/I63966007"
+                ]
+              },
+              {
+                "id": "https://openalex.org/I63966007",
+                "display_name": "Massachusetts Institute of Technology",
+                "ror": "https://ror.org/042nb2s44",
+                "country_code": "US",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I63966007"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Jeremy Stribling",
+            "raw_affiliation_strings": [
+              "MIT CSAIL"
+            ],
+            "raw_orcid": null,
+            "affiliations": [
+              {
+                "raw_affiliation_string": "MIT CSAIL",
+                "institution_ids": [
+                  "https://openalex.org/I4405258931",
+                  "https://openalex.org/I63966007"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "middle",
+            "author": {
+              "id": "https://openalex.org/A5042111537",
+              "display_name": "Yair Sovran",
+              "orcid": null,
+              "observed_orcids": []
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I57206974",
+                "display_name": "New York University",
+                "ror": "https://ror.org/0190ak572",
+                "country_code": "US",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I57206974"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Yair Sovran",
+            "raw_affiliation_strings": [
+              "New York University"
+            ],
+            "raw_orcid": null,
+            "affiliations": [
+              {
+                "raw_affiliation_string": "New York University",
+                "institution_ids": [
+                  "https://openalex.org/I57206974"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "middle",
+            "author": {
+              "id": "https://openalex.org/A5089845483",
+              "display_name": "Irene Y. Zhang",
+              "orcid": "https://orcid.org/0000-0002-0417-1515",
+              "observed_orcids": [
+                "https://orcid.org/0000-0002-0417-1515",
+                "https://orcid.org/0009-0007-9033-3640"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I4405258931",
+                "display_name": "MIT Computer Science and Artificial Intelligence Laboratory",
+                "ror": "https://ror.org/01e85r662",
+                "country_code": "US",
+                "type": "facility",
+                "lineage": [
+                  "https://openalex.org/I4405258931",
+                  "https://openalex.org/I63966007"
+                ]
+              },
+              {
+                "id": "https://openalex.org/I63966007",
+                "display_name": "Massachusetts Institute of Technology",
+                "ror": "https://ror.org/042nb2s44",
+                "country_code": "US",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I63966007"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Irene Zhang",
+            "raw_affiliation_strings": [
+              "MIT CSAIL"
+            ],
+            "raw_orcid": "https://orcid.org/0000-0002-0417-1515",
+            "affiliations": [
+              {
+                "raw_affiliation_string": "MIT CSAIL",
+                "institution_ids": [
+                  "https://openalex.org/I4405258931",
+                  "https://openalex.org/I63966007"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "middle",
+            "author": {
+              "id": "https://openalex.org/A5068105474",
+              "display_name": "Xavid Pretzer",
+              "orcid": null,
+              "observed_orcids": []
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I4405258931",
+                "display_name": "MIT Computer Science and Artificial Intelligence Laboratory",
+                "ror": "https://ror.org/01e85r662",
+                "country_code": "US",
+                "type": "facility",
+                "lineage": [
+                  "https://openalex.org/I4405258931",
+                  "https://openalex.org/I63966007"
+                ]
+              },
+              {
+                "id": "https://openalex.org/I63966007",
+                "display_name": "Massachusetts Institute of Technology",
+                "ror": "https://ror.org/042nb2s44",
+                "country_code": "US",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I63966007"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Xavid Pretzer",
+            "raw_affiliation_strings": [
+              "MIT CSAIL"
+            ],
+            "raw_orcid": null,
+            "affiliations": [
+              {
+                "raw_affiliation_string": "MIT CSAIL",
+                "institution_ids": [
+                  "https://openalex.org/I4405258931",
+                  "https://openalex.org/I63966007"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "middle",
+            "author": {
+              "id": "https://openalex.org/A5100320436",
+              "display_name": "Jinyang Li",
+              "orcid": "https://orcid.org/0009-0000-6057-8937",
+              "observed_orcids": [
+                "https://orcid.org/0009-0000-6057-8937"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I57206974",
+                "display_name": "New York University",
+                "ror": "https://ror.org/0190ak572",
+                "country_code": "US",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I57206974"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Jinyang Li",
+            "raw_affiliation_strings": [
+              "New York University"
+            ],
+            "raw_orcid": null,
+            "affiliations": [
+              {
+                "raw_affiliation_string": "New York University",
+                "institution_ids": [
+                  "https://openalex.org/I57206974"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "middle",
+            "author": {
+              "id": "https://openalex.org/A5109968020",
+              "display_name": "M. Frans Kaashoek",
+              "orcid": "https://orcid.org/0000-0001-7098-586X",
+              "observed_orcids": [
+                "https://orcid.org/0000-0001-7098-586X"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I4405258931",
+                "display_name": "MIT Computer Science and Artificial Intelligence Laboratory",
+                "ror": "https://ror.org/01e85r662",
+                "country_code": "US",
+                "type": "facility",
+                "lineage": [
+                  "https://openalex.org/I4405258931",
+                  "https://openalex.org/I63966007"
+                ]
+              },
+              {
+                "id": "https://openalex.org/I63966007",
+                "display_name": "Massachusetts Institute of Technology",
+                "ror": "https://ror.org/042nb2s44",
+                "country_code": "US",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I63966007"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "M. Frans Kaashoek",
+            "raw_affiliation_strings": [
+              "MIT CSAIL"
+            ],
+            "raw_orcid": null,
+            "affiliations": [
+              {
+                "raw_affiliation_string": "MIT CSAIL",
+                "institution_ids": [
+                  "https://openalex.org/I4405258931",
+                  "https://openalex.org/I63966007"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "last",
+            "author": {
+              "id": "https://openalex.org/A5066545991",
+              "display_name": "Robert Morris",
+              "orcid": "https://orcid.org/0000-0001-8320-2393",
+              "observed_orcids": [
+                "https://orcid.org/0000-0001-8320-2393"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I4405258931",
+                "display_name": "MIT Computer Science and Artificial Intelligence Laboratory",
+                "ror": "https://ror.org/01e85r662",
+                "country_code": "US",
+                "type": "facility",
+                "lineage": [
+                  "https://openalex.org/I4405258931",
+                  "https://openalex.org/I63966007"
+                ]
+              },
+              {
+                "id": "https://openalex.org/I63966007",
+                "display_name": "Massachusetts Institute of Technology",
+                "ror": "https://ror.org/042nb2s44",
+                "country_code": "US",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I63966007"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Robert Morris",
+            "raw_affiliation_strings": [
+              "MIT CSAIL"
+            ],
+            "raw_orcid": "https://orcid.org/0000-0001-8320-2393",
+            "affiliations": [
+              {
+                "raw_affiliation_string": "MIT CSAIL",
+                "institution_ids": [
+                  "https://openalex.org/I4405258931",
+                  "https://openalex.org/I63966007"
+                ]
+              }
+            ]
+          }
+        ],
+        "institutions": [],
+        "countries_distinct_count": 1,
+        "institutions_distinct_count": 3,
+        "corresponding_author_ids": [],
+        "corresponding_institution_ids": [],
+        "apc_list": null,
+        "apc_paid": null,
+        "fwci": 7.7335,
+        "has_fulltext": true,
+        "cited_by_count": 98,
+        "citation_normalized_percentile": {
+          "value": 0.98363921,
+          "is_in_top_1_percent": false,
+          "is_in_top_10_percent": true
+        },
+        "cited_by_percentile_year": {
+          "min": 89,
+          "max": 100
+        },
+        "biblio": {
+          "volume": null,
+          "issue": null,
+          "first_page": "43",
+          "last_page": "58"
+        },
+        "is_retracted": false,
+        "is_paratext": false,
+        "is_xpac": false,
+        "primary_topic": {
+          "id": "https://openalex.org/T11181",
+          "display_name": "Advanced Data Storage Technologies",
+          "score": 1.0,
+          "subfield": {
+            "id": "https://openalex.org/subfields/1705",
+            "display_name": "Computer Networks and Communications"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/17",
+            "display_name": "Computer Science"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/3",
+            "display_name": "Physical Sciences"
+          }
+        },
+        "topics": [
+          {
+            "id": "https://openalex.org/T11181",
+            "display_name": "Advanced Data Storage Technologies",
+            "score": 1.0,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T11478",
+            "display_name": "Caching and Content Delivery",
+            "score": 0.9998999834060669,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10772",
+            "display_name": "Distributed systems and fault tolerance",
+            "score": 0.9997000098228455,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          }
+        ],
+        "keywords": [
+          {
+            "id": "https://openalex.org/keywords/distributed-file-systems",
+            "display_name": "distributed file systems",
+            "score": 0.9819999933242798
+          },
+          {
+            "id": "https://openalex.org/keywords/semantic-cues",
+            "display_name": "semantic cues",
+            "score": 0.6949999928474426
+          },
+          {
+            "id": "https://openalex.org/keywords/consistency",
+            "display_name": "consistency",
+            "score": 0.45500001311302185
+          },
+          {
+            "id": "https://openalex.org/keywords/fault-tolerance",
+            "display_name": "fault tolerance",
+            "score": 0.9649999737739563
+          },
+          {
+            "id": "https://openalex.org/keywords/replica-placement",
+            "display_name": "replica placement",
+            "score": 0.8579999804496765
+          },
+          {
+            "id": "https://openalex.org/keywords/email-services",
+            "display_name": "email services",
+            "score": 0.8199999928474426
+          },
+          {
+            "id": "https://openalex.org/keywords/planetlab",
+            "display_name": "PlanetLab",
+            "score": 0.8389999866485596
+          },
+          {
+            "id": "https://openalex.org/keywords/emulab",
+            "display_name": "Emulab",
+            "score": 0.9950000047683716
+          }
+        ],
+        "concepts": [
+          {
+            "id": "https://openalex.org/C41008148",
+            "wikidata": "https://www.wikidata.org/wiki/Q21198",
+            "display_name": "Computer science",
+            "level": 0,
+            "score": 0.8755918741226196
+          },
+          {
+            "id": "https://openalex.org/C2780940931",
+            "wikidata": "https://www.wikidata.org/wiki/Q174989",
+            "display_name": "File system",
+            "level": 2,
+            "score": 0.5802930593490601
+          },
+          {
+            "id": "https://openalex.org/C82820731",
+            "wikidata": "https://www.wikidata.org/wiki/Q2640620",
+            "display_name": "Self-certifying File System",
+            "level": 3,
+            "score": 0.5189447402954102
+          },
+          {
+            "id": "https://openalex.org/C24885549",
+            "wikidata": "https://www.wikidata.org/wiki/Q339678",
+            "display_name": "Distributed data store",
+            "level": 2,
+            "score": 0.509046733379364
+          },
+          {
+            "id": "https://openalex.org/C120314980",
+            "wikidata": "https://www.wikidata.org/wiki/Q180634",
+            "display_name": "Distributed computing",
+            "level": 1,
+            "score": 0.5032829642295837
+          },
+          {
+            "id": "https://openalex.org/C2780300890",
+            "wikidata": "https://www.wikidata.org/wiki/Q851973",
+            "display_name": "PlanetLab",
+            "level": 3,
+            "score": 0.5025210380554199
+          },
+          {
+            "id": "https://openalex.org/C111919701",
+            "wikidata": "https://www.wikidata.org/wiki/Q9135",
+            "display_name": "Operating system",
+            "level": 1,
+            "score": 0.499025821685791
+          },
+          {
+            "id": "https://openalex.org/C21729314",
+            "wikidata": "https://www.wikidata.org/wiki/Q7896858",
+            "display_name": "Unix file types",
+            "level": 4,
+            "score": 0.49398308992385864
+          },
+          {
+            "id": "https://openalex.org/C56640594",
+            "wikidata": "https://www.wikidata.org/wiki/Q7075068",
+            "display_name": "Object storage",
+            "level": 3,
+            "score": 0.4926801323890686
+          },
+          {
+            "id": "https://openalex.org/C532756234",
+            "wikidata": "https://www.wikidata.org/wiki/Q14658",
+            "display_name": "POSIX",
+            "level": 2,
+            "score": 0.4458339512348175
+          },
+          {
+            "id": "https://openalex.org/C115537543",
+            "wikidata": "https://www.wikidata.org/wiki/Q165596",
+            "display_name": "Cache",
+            "level": 2,
+            "score": 0.425864040851593
+          },
+          {
+            "id": "https://openalex.org/C166807848",
+            "wikidata": "https://www.wikidata.org/wiki/Q3445065",
+            "display_name": "Versioning file system",
+            "level": 4,
+            "score": 0.4241357147693634
+          },
+          {
+            "id": "https://openalex.org/C95637964",
+            "wikidata": "https://www.wikidata.org/wiki/Q82753",
+            "display_name": "Computer file",
+            "level": 2,
+            "score": 0.3250423073768616
+          },
+          {
+            "id": "https://openalex.org/C2225880",
+            "wikidata": "https://www.wikidata.org/wiki/Q579047",
+            "display_name": "Journaling file system",
+            "level": 3,
+            "score": 0.3082103729248047
+          },
+          {
+            "id": "https://openalex.org/C194739806",
+            "wikidata": "https://www.wikidata.org/wiki/Q66221",
+            "display_name": "Computer data storage",
+            "level": 2,
+            "score": 0.30250197649002075
+          },
+          {
+            "id": "https://openalex.org/C13674803",
+            "wikidata": "https://www.wikidata.org/wiki/Q7627301",
+            "display_name": "Stub file",
+            "level": 3,
+            "score": 0.23681703209877014
+          },
+          {
+            "id": "https://openalex.org/C110875604",
+            "wikidata": "https://www.wikidata.org/wiki/Q75",
+            "display_name": "The Internet",
+            "level": 2,
+            "score": 0.1275012195110321
+          }
+        ],
+        "mesh": [],
+        "locations_count": 5,
+        "locations": [
+          {
+            "id": "pmh:oai:dspace.mit.edu:1721.1/60679",
+            "is_oa": true,
+            "landing_page_url": "http://hdl.handle.net/1721.1/60679",
+            "pdf_url": "http://hdl.handle.net/1721.1/60679",
+            "source": {
+              "id": "https://openalex.org/S4306400425",
+              "display_name": "DSpace@MIT (Massachusetts Institute of Technology)",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": "https://openalex.org/I63966007",
+              "host_organization_name": "Massachusetts Institute of Technology",
+              "host_organization_lineage": [
+                "https://openalex.org/I63966007"
+              ],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": "MIT web domain",
+            "raw_type": "http://purl.org/eprint/type/ConferencePaper"
+          },
+          {
+            "id": "pmh:oai:CiteSeerX.psu:10.1.1.149.3225",
+            "is_oa": false,
+            "landing_page_url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.149.3225",
+            "pdf_url": null,
+            "source": null,
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": "http://www.usenix.org/events/nsdi09/tech/full_papers/stribling/stribling.pdf",
+            "raw_type": "text"
+          },
+          {
+            "id": "pmh:oai:CiteSeerX.psu:10.1.1.158.1636",
+            "is_oa": false,
+            "landing_page_url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.158.1636",
+            "pdf_url": null,
+            "source": null,
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": "http://www.news.cs.nyu.edu/~jinyang/pub/wheelfs-nsdi09.pdf",
+            "raw_type": "text"
+          },
+          {
+            "id": "pmh:oai:CiteSeerX.psu:10.1.1.161.904",
+            "is_oa": false,
+            "landing_page_url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.161.904",
+            "pdf_url": null,
+            "source": null,
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": "http://pdos.lcs.mit.edu/~strib/docs/dfs/wheelfs-nsdi09.pdf",
+            "raw_type": "text"
+          },
+          {
+            "id": "mag:1531707100",
+            "is_oa": false,
+            "landing_page_url": "https://pdos.csail.mit.edu/papers/wheelfs:nsdi09/paper.pdf",
+            "pdf_url": null,
+            "source": {
+              "id": "https://openalex.org/S4306420602",
+              "display_name": "Networked Systems Design and Implementation",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": null,
+              "host_organization_name": null,
+              "host_organization_lineage": [],
+              "host_organization_lineage_names": [],
+              "type": "conference"
+            },
+            "license": null,
+            "license_id": null,
+            "version": null,
+            "is_accepted": false,
+            "is_published": null,
+            "raw_source_name": "Networked Systems Design and Implementation",
+            "raw_type": null
+          }
+        ],
+        "best_oa_location": {
+          "id": "pmh:oai:dspace.mit.edu:1721.1/60679",
+          "is_oa": true,
+          "landing_page_url": "http://hdl.handle.net/1721.1/60679",
+          "pdf_url": "http://hdl.handle.net/1721.1/60679",
+          "source": {
+            "id": "https://openalex.org/S4306400425",
+            "display_name": "DSpace@MIT (Massachusetts Institute of Technology)",
+            "issn_l": null,
+            "issn": null,
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": false,
+            "listed_in": [],
+            "host_organization": "https://openalex.org/I63966007",
+            "host_organization_name": "Massachusetts Institute of Technology",
+            "host_organization_lineage": [
+              "https://openalex.org/I63966007"
+            ],
+            "host_organization_lineage_names": [],
+            "type": "repository"
+          },
+          "license": null,
+          "license_id": null,
+          "version": "submittedVersion",
+          "is_accepted": false,
+          "is_published": false,
+          "raw_source_name": "MIT web domain",
+          "raw_type": "http://purl.org/eprint/type/ConferencePaper"
+        },
+        "sustainable_development_goals": [],
+        "sustainable_development_goals_aurora": [],
+        "study_designs": [],
+        "awards": [
+          {
+            "id": "https://openalex.org/G1794486025",
+            "display_name": "CSR-PDOS: ISG: Collaborative Research: Building distributed, wide-area applications using WheelFS",
+            "funder_award_id": "0720644",
+            "funder_id": "https://openalex.org/F4320306076",
+            "funder_display_name": "National Science Foundation"
+          }
+        ],
+        "funders": [
+          {
+            "id": "https://openalex.org/F4320306076",
+            "display_name": "National Science Foundation",
+            "ror": "https://ror.org/021nxhr62"
+          },
+          {
+            "id": "https://openalex.org/F4320308943",
+            "display_name": "Microsoft Research",
+            "ror": "https://ror.org/00d0nc645"
+          },
+          {
+            "id": "https://openalex.org/F4320322392",
+            "display_name": "Tsinghua University",
+            "ror": "https://ror.org/03cve4549"
+          },
+          {
+            "id": "https://openalex.org/F4320333993",
+            "display_name": "Microsoft Research Asia",
+            "ror": "https://ror.org/0300m5276"
+          }
+        ],
+        "has_content": {
+          "pdf": true,
+          "grobid_xml": true
+        },
+        "content_urls": {
+          "pdf": "https://content.openalex.org/works/W1531707100.pdf",
+          "grobid_xml": "https://content.openalex.org/works/W1531707100.grobid-xml"
+        },
+        "referenced_works_count": 44,
+        "referenced_works": [
+          "https://openalex.org/W41204052",
+          "https://openalex.org/W85967438",
+          "https://openalex.org/W125511816",
+          "https://openalex.org/W151129402",
+          "https://openalex.org/W239964209",
+          "https://openalex.org/W1498571599",
+          "https://openalex.org/W1556088231",
+          "https://openalex.org/W1574249592",
+          "https://openalex.org/W1587845443",
+          "https://openalex.org/W1600328410",
+          "https://openalex.org/W1778962283",
+          "https://openalex.org/W1970705443",
+          "https://openalex.org/W1978855656",
+          "https://openalex.org/W1984674591",
+          "https://openalex.org/W1992479210",
+          "https://openalex.org/W1999984505",
+          "https://openalex.org/W2010365467",
+          "https://openalex.org/W2010445731",
+          "https://openalex.org/W2025413686",
+          "https://openalex.org/W2032775246",
+          "https://openalex.org/W2050731094",
+          "https://openalex.org/W2054278783",
+          "https://openalex.org/W2054584570",
+          "https://openalex.org/W2071958655",
+          "https://openalex.org/W2075854425",
+          "https://openalex.org/W2108026089",
+          "https://openalex.org/W2111223826",
+          "https://openalex.org/W2114349788",
+          "https://openalex.org/W2115457697",
+          "https://openalex.org/W2115806861",
+          "https://openalex.org/W2116142433",
+          "https://openalex.org/W2117260615",
+          "https://openalex.org/W2118428193",
+          "https://openalex.org/W2119565742",
+          "https://openalex.org/W2121133177",
+          "https://openalex.org/W2122789368",
+          "https://openalex.org/W2132051999",
+          "https://openalex.org/W2146176543",
+          "https://openalex.org/W2153704625",
+          "https://openalex.org/W2157737097",
+          "https://openalex.org/W2167898414",
+          "https://openalex.org/W2624304035",
+          "https://openalex.org/W2913639706",
+          "https://openalex.org/W2997709458"
+        ],
+        "related_works": [
+          "https://openalex.org/W2798915702",
+          "https://openalex.org/W2147118406",
+          "https://openalex.org/W1829787244",
+          "https://openalex.org/W2022758041",
+          "https://openalex.org/W2913639706",
+          "https://openalex.org/W2117260615",
+          "https://openalex.org/W2074616737",
+          "https://openalex.org/W2119565742",
+          "https://openalex.org/W1807098818",
+          "https://openalex.org/W2152465173",
+          "https://openalex.org/W2126822952",
+          "https://openalex.org/W2261344036",
+          "https://openalex.org/W2164336170",
+          "https://openalex.org/W2153704625",
+          "https://openalex.org/W2402310305",
+          "https://openalex.org/W2136835942",
+          "https://openalex.org/W192446467",
+          "https://openalex.org/W319148406",
+          "https://openalex.org/W237081197",
+          "https://openalex.org/W138289065"
+        ],
+        "abstract_inverted_index": {
+          "WheelFS": [
+            0,
+            18,
+            60,
+            80,
+            146,
+            160
+          ],
+          "is": [
+            1,
+            81,
+            89
+          ],
+          "a": [
+            2,
+            23,
+            28,
+            84,
+            136
+          ],
+          "wide-area": [
+            3,
+            174
+          ],
+          "distributed": [
+            4,
+            24,
+            98,
+            117
+          ],
+          "storage": [
+            5,
+            175
+          ],
+          "system": [
+            6,
+            26,
+            87,
+            112,
+            139
+          ],
+          "intended": [
+            7
+          ],
+          "to": [
+            8,
+            35,
+            52,
+            145,
+            150,
+            164
+          ],
+          "help": [
+            9
+          ],
+          "multi-site": [
+            10
+          ],
+          "applications": [
+            11,
+            34,
+            96,
+            118,
+            126,
+            157
+          ],
+          "share": [
+            12
+          ],
+          "data": [
+            13
+          ],
+          "and": [
+            14,
+            47,
+            57,
+            75,
+            77,
+            88,
+            93,
+            104,
+            169
+          ],
+          "gain": [
+            15
+          ],
+          "fault": [
+            16
+          ],
+          "tolerance.": [
+            17
+          ],
+          "takes": [
+            19
+          ],
+          "the": [
+            20,
+            37,
+            48,
+            131
+          ],
+          "form": [
+            21
+          ],
+          "of": [
+            22,
+            42,
+            116,
+            122
+          ],
+          "file": [
+            25,
+            76,
+            86,
+            106,
+            111,
+            138
+          ],
+          "with": [
+            27,
+            130
+          ],
+          "familiar": [
+            29
+          ],
+          "POSIXinterface.": [
+            30
+          ],
+          "Its": [
+            31
+          ],
+          "design": [
+            32
+          ],
+          "allows": [
+            33,
+            61
+          ],
+          "adjust": [
+            36
+          ],
+          "tradeoff": [
+            38
+          ],
+          "between": [
+            39
+          ],
+          "prompt": [
+            40
+          ],
+          "visibility": [
+            41
+          ],
+          "updates": [
+            43
+          ],
+          "from": [
+            44
+          ],
+          "other": [
+            45
+          ],
+          "sites": [
+            46,
+            51
+          ],
+          "ability": [
+            49
+          ],
+          "for": [
+            50
+          ],
+          "operate": [
+            53
+          ],
+          "independently": [
+            54
+          ],
+          "despite": [
+            55
+          ],
+          "failures": [
+            56
+          ],
+          "long": [
+            58
+          ],
+          "delays.": [
+            59
+          ],
+          "these": [
+            62
+          ],
+          "adjustments": [
+            63
+          ],
+          "via": [
+            64
+          ],
+          "semantic": [
+            65
+          ],
+          "cues,": [
+            66
+          ],
+          "which": [
+            67
+          ],
+          "provide": [
+            68
+          ],
+          "application": [
+            69
+          ],
+          "control": [
+            70
+          ],
+          "over": [
+            71
+          ],
+          "consistency,": [
+            72
+          ],
+          "failure": [
+            73
+          ],
+          "handling,": [
+            74
+          ],
+          "replica": [
+            78
+          ],
+          "placement.": [
+            79
+          ],
+          "implemented": [
+            82
+          ],
+          "as": [
+            83,
+            167
+          ],
+          "user-level": [
+            85
+          ],
+          "deployed": [
+            90
+          ],
+          "on": [
+            91,
+            159
+          ],
+          "PlanetLab": [
+            92
+          ],
+          "Emulab.": [
+            94
+          ],
+          "Three": [
+            95
+          ],
+          "(a": [
+            97
+          ],
+          "Web": [
+            99
+          ],
+          "cache,": [
+            100
+          ],
+          "an": [
+            101
+          ],
+          "email": [
+            102
+          ],
+          "service": [
+            103
+          ],
+          "large": [
+            105
+          ],
+          "distribution)": [
+            107
+          ],
+          "demonstrate": [
+            108
+          ],
+          "that": [
+            109,
+            156,
+            171
+          ],
+          "WheelFS\u2019s": [
+            110
+          ],
+          "interface": [
+            113
+          ],
+          "simplifies": [
+            114
+          ],
+          "construction": [
+            115
+          ],
+          "by": [
+            119,
+            135,
+            142
+          ],
+          "allowing": [
+            120
+          ],
+          "reuse": [
+            121
+          ],
+          "existing": [
+            123
+          ],
+          "software.": [
+            124
+          ],
+          "These": [
+            125
+          ],
+          "would": [
+            127
+          ],
+          "perform": [
+            128
+          ],
+          "poorly": [
+            129
+          ],
+          "strict": [
+            132
+          ],
+          "semantics": [
+            133
+          ],
+          "implied": [
+            134
+          ],
+          "traditional": [
+            137
+          ],
+          "interface,": [
+            140
+          ],
+          "but": [
+            141
+          ],
+          "providing": [
+            143
+          ],
+          "cues": [
+            144
+          ],
+          "they": [
+            147
+          ],
+          "are": [
+            148
+          ],
+          "able": [
+            149
+          ],
+          "achieve": [
+            151
+          ],
+          "good": [
+            152
+          ],
+          "performance.": [
+            153
+          ],
+          "Measurements": [
+            154
+          ],
+          "show": [
+            155
+          ],
+          "built": [
+            158
+          ],
+          "deliver": [
+            161
+          ],
+          "comparable": [
+            162
+          ],
+          "performance": [
+            163
+          ],
+          "services": [
+            165
+          ],
+          "such": [
+            166
+          ],
+          "CoralCDN": [
+            168
+          ],
+          "BitTorrent": [
+            170
+          ],
+          "use": [
+            172
+          ],
+          "specialized": [
+            173
+          ],
+          "systems.": [
+            176
+          ],
+          "1": [
+            177
+          ]
+        },
+        "counts_by_year": [
+          {
+            "year": 2025,
+            "cited_by_count": 1
+          },
+          {
+            "year": 2024,
+            "cited_by_count": 1
+          },
+          {
+            "year": 2023,
+            "cited_by_count": 1
+          },
+          {
+            "year": 2022,
+            "cited_by_count": 3
+          },
+          {
+            "year": 2021,
+            "cited_by_count": 5
+          },
+          {
+            "year": 2020,
+            "cited_by_count": 3
+          },
+          {
+            "year": 2019,
+            "cited_by_count": 7
+          },
+          {
+            "year": 2018,
+            "cited_by_count": 8
+          },
+          {
+            "year": 2017,
+            "cited_by_count": 5
+          },
+          {
+            "year": 2016,
+            "cited_by_count": 9
+          },
+          {
+            "year": 2015,
+            "cited_by_count": 6
+          },
+          {
+            "year": 2014,
+            "cited_by_count": 14
+          },
+          {
+            "year": 2013,
+            "cited_by_count": 6
+          },
+          {
+            "year": 2012,
+            "cited_by_count": 7
+          }
+        ],
+        "updated_date": "2026-09-24T07:57:37.273135",
+        "created_date": "2025-10-10T00:00:00"
+      }
+    ],
+    "group_by": []
+  }
+}

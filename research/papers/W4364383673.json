@@ -1,0 +1,60 @@
+{
+  "id": "W4364383673",
+  "title": "On Extend-Only Directed Posets and Derived Byzantine-Tolerant Replicated Data Types",
+  "doi": "https://doi.org/10.1145/3578358.3591333",
+  "publication_date": "2023-05-02",
+  "publication_year": 2023,
+  "type": "conference-paper",
+  "cited_by_count": 1,
+  "authors": [
+    "Florian Jacob",
+    "Hannes Hartenstein"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3578358.3591333",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4364383673.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4364383673.grobid-xml"
+  },
+  "abstract": "We uncover the extend-only directed posets (EDP) structure as unification of recently discussed DAG-based Byzantine-tolerant conflict-free replicated data types (CRDT). We also derive an EDP-based key-value map, and give an outlook on an EDP-based systemic access control CRDT as formalization of the CRDT used in the Matrix messaging system.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Data Storage Technologies",
+    "Parallel Computing and Optimization Techniques"
+  ],
+  "references": [
+    "https://openalex.org/W240635900",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1973501242",
+    "https://openalex.org/W2077470755",
+    "https://openalex.org/W2520278146",
+    "https://openalex.org/W2962931968",
+    "https://openalex.org/W3015714379",
+    "https://openalex.org/W3028769118",
+    "https://openalex.org/W3047610092",
+    "https://openalex.org/W3104510503",
+    "https://openalex.org/W3156764758",
+    "https://openalex.org/W4281290384",
+    "https://openalex.org/W4287268095",
+    "https://openalex.org/W4287569461",
+    "https://openalex.org/W4293232534",
+    "https://openalex.org/W4300748666",
+    "https://openalex.org/W6888004579"
+  ],
+  "cited_by": [
+    {
+      "id": "W4394865968",
+      "title": "Logical Clocks and Monotonicity for Byzantine-Tolerant Replicated Data Types",
+      "abstract": "Replicated event logbooks are ubiquitous in decentralized systems designed to cope with Byzantine-faulty replicas. Recently, there is a growing subclass that only partially orders its logbooks by hash-linking inscribed events to their causal past. Thereby, these approaches forgo coordination and consensus to gain scalability and availability under partition. We investigate these approaches to explicate their underlying construction by connecting their design to the concept of logical monotonicity and by providing an abstraction as a delta-state conflict-free replicated data type. In particular, we analyze what makes a clock Byzantine-tolerant, and show that these hash-linked causal logbooks represent Byzantine-tolerant clocks. Based on these insight, we model real-world group communication systems as Byzantine monotonic compositions, and analyze their monotonicity properties to understand the guarantees they provide to the application layer."
+    }
+  ]
+}

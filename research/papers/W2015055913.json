@@ -1,0 +1,180 @@
+{
+  "id": "W2015055913",
+  "title": "Merging semantics for conflict updates in geo-distributed file systems",
+  "doi": "https://doi.org/10.1145/2757667.2757683",
+  "publication_date": "2015-05-19",
+  "publication_year": 2015,
+  "type": "conference-paper",
+  "cited_by_count": 23,
+  "authors": [
+    "Vinh Tao",
+    "Marc Shapiro",
+    "Vianney Rancurel"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://inria.hal.science/hal-01248190",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": false,
+    "grobid_xml": false
+  },
+  "content_urls": null,
+  "abstract": "We present our model of file systems and our merging semantics for resolving conflict updates in geo-distributed file systems. The system model fully describes a file system with all of its components including hard links. This model is able to identify all conflict cases which are classified into direct, such as concurrent updates to the same file, and indirect, such as cycles in the namespace of the file system. The merging semantics resolve all types of conflicts while being able to preserve the effect of all conflict updates. Our implementation of the system and the merging semantics outperforms the existing systems in terms of feature completeness.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Data Storage Technologies",
+    "Distributed and Parallel Computing Systems"
+  ],
+  "references": [
+    "https://openalex.org/W102635649",
+    "https://openalex.org/W182346126",
+    "https://openalex.org/W1494640588",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1547343000",
+    "https://openalex.org/W1689093460",
+    "https://openalex.org/W1979481420",
+    "https://openalex.org/W1998061371",
+    "https://openalex.org/W2033757277",
+    "https://openalex.org/W2040627684",
+    "https://openalex.org/W2054584570",
+    "https://openalex.org/W2078775767",
+    "https://openalex.org/W2085631457",
+    "https://openalex.org/W2095135670",
+    "https://openalex.org/W2116142433",
+    "https://openalex.org/W2117260615",
+    "https://openalex.org/W2118242633",
+    "https://openalex.org/W2119636671",
+    "https://openalex.org/W2124074197",
+    "https://openalex.org/W2145388050",
+    "https://openalex.org/W2153704625",
+    "https://openalex.org/W2154193287",
+    "https://openalex.org/W2170849273",
+    "https://openalex.org/W2172038085",
+    "https://openalex.org/W2341655714",
+    "https://openalex.org/W3083050090",
+    "https://openalex.org/W4232736069",
+    "https://openalex.org/W4234552710",
+    "https://openalex.org/W4285719527"
+  ],
+  "cited_by": [
+    {
+      "id": "W3206444683",
+      "title": "A Highly-Available Move Operation for Replicated Trees",
+      "abstract": "Replicated tree data structures are a fundamental building block of distributed filesystems, such as Google Drive and Dropbox, and collaborative applications with a JSON or XML data model. These systems need to support amoveoperation that allows a subtree to be moved to a new location within the tree. However, such a move operation is difficult to implement correctly if different replicas can concurrently perform arbitrary move operations, and we demonstrate bugs in Google Drive and Dropbox that arise with concurrent moves. In this article we present a CRDT algorithm that handles arbitrary concurrent modifications on trees, while ensuring that the tree structure remains valid (in particular, no cycles are introduced), and guaranteeing that all replicas converge towards the same consistent state. Our algorithm requires no synchronous coordination between replicas, making it highly available in the face of network partitions. We formally prove the correctness of our algorithm using the Isabelle/HOL proof assistant, and evaluate the performance of our formally verified implementation in a geo-replicated setting."
+    },
+    {
+      "id": "W4229448458",
+      "title": "Architecture of virtual edge data center with intelligent metadata service of a geo-distributed file system",
+      "abstract": null
+    },
+    {
+      "id": "W4302306230",
+      "title": "OrderlessChain",
+      "abstract": "Existing permissioned blockchains often rely on coordination-based consensus protocols to ensure the safe execution of applications in a Byzantine environment. Furthermore, the protocols serialize the transactions by ordering them in a global order. The serializ-ability preserves the correctness of the application's state stored on the blockchain. However, coordination-based protocols limit the throughput and scalability and induce high latency. In contrast, application-level correctness requirements exist that are not dependent on the order of transactions, known as invariant-confluence (I-confluence). The I-confluent applications can execute transactions in a coordination-free manner, benefiting from the improved scalability compared to the coordination-based approaches. The safety and liveness of I-confluent applications are studied in non-Byzantine environments, but the correct execution of such applications remains a challenge in Byzantine coordination-free environments. We introduce OrderlessChain, a novel permissioned blockchain based on a novel BFT coordination-free protocol for the safe and live execution of I-confluent applications in a Byzantine environment. We implemented a prototype of our system, and our evaluation results show that our coordination-free approach performs significantly better than coordination-based blockchains."
+    },
+    {
+      "id": "W2775924136",
+      "title": "Co-Design and Verification of an Available File System",
+      "abstract": null
+    },
+    {
+      "id": "W3202087829",
+      "title": "Highly-available and consistent group collaboration at the edge with colony",
+      "abstract": "Edge applications, such as gaming, cooperative engineering, or in-the-field information sharing, enjoy immediate response, autonomy and availability by distributing and replicating data at the edge. However, application developers and users demand the highest possible consistency guarantees, and specific support for group collaboration. To address this challenge, Colony guarantees Transactional Causal Plus Consistency (TCC+) globally, strengthened to Snapshot Isolation within edge groups. To help with scalability, fault tolerance and security, its logical communication topology is forest-like, with replicated roots in the core cloud, but with the flexibility to migrate a node or a group. Despite this hybrid approach, applications enjoy the same semantics everywhere in the topology. Our experiments show that local caching and peer groups improve throughput and response time significantly, performance is not affected in offline mode, and that migration is seamless."
+    },
+    {
+      "id": "W4309542899",
+      "title": "Data Synchronization: A Complete Theoretical Solution for Filesystems",
+      "abstract": "Data reconciliation in general, and filesystem synchronization in particular, lacks rigorous theoretical foundation. This paper presents, for the first time, a complete analysis of synchronization for two replicas of a theoretical filesystem. Synchronization has two main stages: identifying the conflicts, and resolving them. All existing (both theoretical and practical) synchronizers are operation-based: they define, using some rationale or heuristics, how conflicts are to be resolved without considering the effect of the resolution on subsequent conflicts. Instead, our approach is declaration-based: we define what constitutes the resolution of all conflicts, and for each possible scenario we prove the existence of sequences of operations/commands which convert the replicas into a common synchronized state. These sequences consist of operations rolling back some local changes, followed by operations performed on the other replica. The set of rolled-back operations provides the user with clear and intuitive information on the proposed changes, so she can easily decide whether to accept them or ask for other alternatives. All possible synchronized states are described by specifying a set of conflicts, a partial order on the conflicts describing the order in which they need to be resolved, as well as the effect of each decision on subsequent conflicts. Using this classification, the outcomes of different conflict resolution policies can be investigated easily."
+    },
+    {
+      "id": "W4409095581",
+      "title": "Directed Acyclic Graph CRDTs",
+      "abstract": "Directed Acyclic Graphs (DAGs) are essential for applications like modeling task dependencies. Maintaining DAG integrity in distributed and collaborative systems is challenging, especially in environments prioritizing high availability over strong consistency. These challenges are amplified by unreliable connectivity or offline operations, where clients replicate and independently modify the graph. Ensuring invariants such as cycle freedom and valid edge connections under concurrent updates is crucial."
+    },
+    {
+      "id": "W3156764758",
+      "title": "Access Control Conflict Resolution in Distributed File Systems using CRDTs",
+      "abstract": "Distributed file systems have become an essential service for sharing data among users. An important aspect of a file system is its ability to keep its contents secure from unauthorized access. To investigate the interplay of security and consistency in distributed file systems, we formalize the three properties related to data security, namely confidentiality, integrity and accessibility. Based on these properties, we provide an impossibility result that indicates that these properties cannot be achieved together in a highly-available partition-tolerant setting. We further discuss a CRDT-based model, implementing the traditional POSIX access control policy, that guarantees confidentiality and integrity while precluding accessibility only in rare situations. Our conclusion is that the POSIX policies are not suitable in a distributed system setting, but that a more fine-grained model is required to obtain the security semantics that reflect the users' intention."
+    },
+    {
+      "id": "W4367675111",
+      "title": "A Study of Semantics for CRDT-based Collaborative Spreadsheets",
+      "abstract": "Online collaboration is becoming prevalent in our day-today work. As commercial applications show, next to texts, spreadsheets are an essential tool for storing and organizing shared data. However, concurrent modifications of a collaborative spreadsheet can lead to unexpected results when they reflect implementation decisions rather than user intention."
+    },
+    {
+      "id": "W3184631214",
+      "title": "CRDTs for truly concurrent file systems",
+      "abstract": "Building scalable and highly available geo-replicated file systems is hard. These systems need to resolve conflicts that emerge in concurrent operations in a way that maintains file system invariants, is meaningful to the user, and does not depart from the traditional file system interface. Conflict resolution in existing systems often leads to unexpected or inconsistent results. This paper introduces ElmerFS, a geo-replicated, truly concurrent file system designed with the aim of addressing these challenges. ElmerFS is based on two key ideas: (1) the use of Conflict-Free Replicated Data Types (CRDTs) for representing file system structures, which ensures that replicas converge to a correct state, and (2) conflict resolution rules, which are determined by the choice of CRDT types and their composition, are designed with the principle of being intuitive to the user. We argue that if the state of the file system after resolving a conflict conveys to the user the resolved conflict in an intuitive way, the user can complement or reverse it using traditional file system operations. We discuss the challenges in the design of geo-replicated weakly consistent file systems, and present the design of ElmerFS."
+    },
+    {
+      "id": "W3215654064",
+      "title": "On the Impossibility of Confidentiality, Integrity and Accessibility in Highly-Available File Systems",
+      "abstract": null
+    },
+    {
+      "id": "W2948127449",
+      "title": "Syncpal: A Simple and Iterative Reconciliation Algorithm for File Synchronizers",
+      "abstract": null
+    },
+    {
+      "id": "W2050357788",
+      "title": "A Name Is Not A Name",
+      "abstract": "The automatic resolution for resolving conflict updates in cloud storage services has been well studied, however, how to correctly implement the resolution in real-world systems remains challenging. In this paper, we present the challenges we experienced when implementing our cloud storage system. They include (1) detecting the intended object for an update when the intended object has been automatically changed by the conflict resolution, and (2) producing no different intermediate results when resolving the conflict updates from more than two replicas. We present our solution of using the mechanism of the conflict resolution to redirect an update to its intended object and of using Conflict-Free Replicated Data Type (CRDT) for a \"clean\" implementation of conflict resolution without different intermediate results."
+    },
+    {
+      "id": "W4404331970",
+      "title": "Next-Generation Collaborative Electronic Medical Record: Resolving Concurrent Conflicts with a Tree CRDT",
+      "abstract": "Modern medical issues can cover multiple fields and disciplines, requiring inter-organizational collaboration among healthcare professionals from different specialized background. Shareable medical systems support the distribution of patients' electronic medical record (EMRs) to a variety of specialists, but most of them have no effective resolution mechanisms for concurrent update conflicts on the same EMR, hindering their collaborative abilities."
+    },
+    {
+      "id": "W4309647894",
+      "title": "OrderlessFile",
+      "abstract": "Cloud storage has gained popularity as an affordable and available cloud-based file storage. However, despite its apparent advantages, clients must rely on cloud providers to safely and securely store the files. A few blockchain-based file storage systems have been introduced as trusted alternatives. However, their limited scalability and use of off-chain storage restrict their applicability. To address these issues, we introduce OrderlessFile, a CRDT-based on-chain permissioned blockchain for file storage."
+    },
+    {
+      "id": "W3205664920",
+      "title": "Algebra of Data Reconciliation",
+      "abstract": "With distributed computing and mobile applications becoming ever more prevalent, synchronizing diverging replicas of the same data is a common problem. Reconciliation \u2013 bringing two replicas of the same data structure as close as possible without overriding local changes \u2013 is investigated in an algebraic model. Our approach is to consider two sequences of simple commands that describe the changes in the replicas compared to the original structure, and then determine the maximal subsequences of each that can be propagated to the other. The proposed command set is shown to be functionally complete, and an update detection algorithm is presented which produces a command sequence transforming the original data structure into the replica while traversing both simultaneously. Syntactical characterization is provided in terms of a rewriting system for semantically equivalent command sequences. Algebraic properties of sequence pairs that are applicable to the same data structure are investigated. Based on these results the reconciliation problem is shown to have a unique maximal solution. In addition, syntactical properties of the maximal solution allow for an efficient algorithm that produces it."
+    },
+    {
+      "id": "W4378906522",
+      "title": "Synchronizing Many Filesystems in Near Linear Time",
+      "abstract": "Finding a provably correct subquadratic synchronization algorithm for many filesystem replicas is one of the main theoretical problems in operational transformation (OT) and conflict-free replicated data types (CRDT) frameworks. Based on the algebraic theory of filesystems, which incorporates non-commutative filesystem commands natively, we developed and built a proof-of-concept implementation of an algorithm suite which synchronizes an arbitrary number of replicas. The result is provably correct, and the synchronized system is created in linear space and time after an initial sorting phase. It works by identifying conflicting command pairs and requesting one of the commands to be removed. The method can be guided to reach any of the theoretically possible synchronized states. The algorithm also allows asynchronous usage. After the client sends a synchronization request, the local replica remains available for further modifications. When the synchronization instructions arrive, they can be merged with the changes made since the synchronization request. The suite also works on filesystems with a directed acyclic graph-based path structure in place of the traditional tree-like arrangement. Consequently, our algorithms apply to filesystems with hard or soft links as long as the links create no loops."
+    },
+    {
+      "id": "W3109099245",
+      "title": "Byzantine Eventual Consistency and the Fundamental Limits of Peer-to-Peer Databases",
+      "abstract": "Sybil attacks, in which a large number of adversary-controlled nodes join a network, are a concern for many peer-to-peer database systems, necessitating expensive countermeasures such as proof-of-work. However, there is a category of database applications that are, by design, immune to Sybil attacks because they can tolerate arbitrary numbers of Byzantine-faulty nodes. In this paper, we characterize this category of applications using a consistency model we call Byzantine Eventual Consistency (BEC). We introduce an algorithm that guarantees BEC based on Byzantine causal broadcast, prove its correctness, and demonstrate near-optimal performance in a prototype implementation."
+    },
+    {
+      "id": "W4205403068",
+      "title": "The Difference Between Legal Control and Material Control - Coordination of Access Rights in Shared Workspaces",
+      "abstract": "Abstract Research purpose. Modern work is increasingly taking place in temporary workgroups embedded in decentralized work environments that transcend organizational boundaries. The first implementations of the shared workspace idea emerged in the 1990s in the CSCW research area and are now firmly integrated into the working world with systems such as Google Drive, OneDrive or Dropbox. However, when it comes to accessing documents, problems arise in terms of coordinating access to documents. Who can access the documents, modify them, and upload them back to the shared workspace? It should be noted that concurrent changes can lead to inconsistencies. Furthermore, incorrect changes to the content of documents can have economic and legal consequences. Who is responsible for this? Strict access control can avoid this problem if necessary. However, it contradicts the approach of agile cooperation, which benefits, among other things, from access to documents that is not restricted in terms of time and place. Design / Methodology / Approach. The article proposes a semantic approach for access coordination of shared workspaces. Its basis is the legal distinction between the levels of legal control (owner) and material control (possessor). The owner of an object has the right and the duty to allow the other participants of the shared workspace to access it, i.e., to have material control. This is done through an agreement between the owner and the possessor, which specifies the conditions of material control. In addition to coordinating access, the owner is also responsible for arbitrating in case of conflict and deciding which changes are valid and which are not. Findings. Transferring the distinction between owner and possessor leads to three possible classes of conflicts: Ownership vs ownership, ownership vs possession, and possession vs possession. Conflict schemes within these classes of conflict are analyzed in detail. On the one hand, it is possible to use strict, conflict-avoiding settings, but this tends to limit cooperation. On the other hand, greater cooperation agility can be enabled if the owner situationally controls access or if the owner has preset flexible response tactics in case a conflict arises. A closer look at possible conflict classes shows that it is necessary to adapt the legal concepts of owner and possessor to the cooperation situation. Originality / Value / Practical implications. The concept of the legal distinction between owner and possessor has not yet been applied to the domain of access coordination in shared workspaces. This approach can introduce the previously missing semantics for access coordination, at least on an informal basis. It also improves participants\u2019 awareness of the context of cooperation."
+    },
+    {
+      "id": "W4292974104",
+      "title": "An Efficient Approach to Move Elements in a Distributed Geo-Replicated Tree",
+      "abstract": "Replicated tree data structures are extensively used in collaborative applications and distributed file systems, where clients often perform move operations. Local move operations at different replicas may be safe. However, remote move operations may not be safe. When clients perform arbitrary move operations concurrently on different replicas, it could result in various bugs, making this operation challenging to implement. Previous work has revealed bugs such as data duplication and cycling in replicated trees. In this paper, we present an efficient algorithm to perform move operations on the distributed replicated tree while ensuring eventual consistency. The proposed technique is primarily concerned with resolving conflicts efficiently, requires no interaction between replicas, and works well with network partitions. We use the last write win semantics for conflict resolution based on globally unique timestamps of operations. The proposed solution requires only one compensation operation to avoid cycles being formed when move operations are applied. The proposed approach achieves an effective speedup of 14.6\u00d7 to 68.19\u00d7 over the state-of-the-art approach in a geo-replicated setting."
+    },
+    {
+      "id": "W4388824069",
+      "title": "Industrial-Metadata Intelligent Service for Geo-Distributed File System",
+      "abstract": null
+    },
+    {
+      "id": "W7149319187",
+      "title": "Designing safe and highly available distributed applications",
+      "abstract": "Conception d'applications distribu\u00e9es correctes et hautement disponibles La conception d'applications distribu\u00e9es implique fondamentalement un compromis entre la s\u00fbret\u00e9 et les performances. Nous nous concentrons sur les cas o\u00f9 la s\u00fbret\u00e9 est la principale exigence. Dans le cadre des syst\u00e8mes distribu\u00e9s bas\u00e9s sur l'\u00e9tat, nous proposons une m\u00e9thodologie de preuve pour \u00e9tablir qu'une application donn\u00e9e maintient un invariant donn\u00e9. Notre approche permet de raisonner sur les op\u00e9rations individuelles s\u00e9par\u00e9ment. Nous d\u00e9montrons que nos r\u00e8gles sont correctes et, \u00e0 l'aide d'un moteur de preuve, nous illustrons leur utilisation par quelques exemples repr\u00e9sentatifs. Pour les op\u00e9rations conflictuelles, le d\u00e9veloppeur peut choisir entre la r\u00e9solution de conflit ou la coordination. Nous pr\u00e9sentons une nouvelle structure de donn\u00e9es en forme d'arbre r\u00e9pliqu\u00e9 qui prend en charge les d\u00e9placements atomiques concurrents sans coordination et qui maintient l'invariant de l'arbre. Notre analyse identifie les cas o\u00f9 les d\u00e9placements concurrents sont intrins\u00e8quement s\u00fbrs. Pour les autres cas, nous concevons un algorithme de r\u00e9solution des conflits. La contrepartie est que dans certains cas, une op\u00e9ration de d\u00e9placement est \"perdante\". \u00c9tant donn\u00e9 la coordination requise par certaines applications pour la s\u00fbret\u00e9, elle peut \u00eatre impl\u00e9ment\u00e9e de nombreuses fa\u00e7ons diff\u00e9rentes. M\u00eame en se limitant aux verrous, ceux-ci peuvent utiliser diverses configurations qui diff\u00e8rent par: la granularit\u00e9, le type et le placement. La performance de chaque configuration d\u00e9pend de la charge de travail. Nous \u00e9tudions le \"treillis de coordination\", l'espace de conception des configurations de verrouillage, et d\u00e9finissons un ensemble de mesures pour y naviguer syst\u00e9matiquement."
+    },
+    {
+      "id": "W7151089712",
+      "title": "Colony : a Hybrid Consistency System for Highly-Available Collaborative Edge Computing",
+      "abstract": "Colony : un syst\u00e8me \u00e0 coh\u00e9rence hybride pour l'informatique collaborative en p\u00e9riph\u00e9rie \u00e0 haute disponibilit\u00e9 La distribution et la r\u00e9plication des donn\u00e9es en p\u00e9riph\u00e9rie du r\u00e9seau apportent une r\u00e9ponse imm\u00e9diate, une autonomie et une disponibilit\u00e9 aux applications de p\u00e9riph\u00e9rie, telles que les jeux, l\u2019ing\u00e9nierie coop\u00e9rative ou le partage d\u2019informations sur le terrain. Cependant, les d\u00e9veloppeurs d\u2019applications et les utilisateurs exigent les meilleures garanties de coh\u00e9rence possibles, ainsi qu\u2019un support sp\u00e9cifique pour la collaboration de groupe. Pour relever ce d\u00e9fi, Colony garantit la coh\u00e9rence Transactional Causal Plus Consistency (TCC+) \u00e0 \u00e9chelle plan\u00e9taire, en compl\u00e9ment de l\u2019isolation des instantan\u00e9s au sein des groupes de p\u00e9riph\u00e9rie. Pour favoriser le passage \u00e0 l\u2019\u00e9chelle, la tol\u00e9rance aux pannes et la s\u00e9curit\u00e9, sa topologie de communication logique est arborescente, avec des racines r\u00e9pliqu\u00e9es dans le nuage principal, mais avec la possibilit\u00e9 de migrer un n\u0153ud ou un groupe. Malgr\u00e9 cette approche hybride, les applications b\u00e9n\u00e9ficient de la m\u00eame s\u00e9mantique partout dans la topologie. Nos exp\u00e9riences montrent que la mise en cache locale et les groupes collaboratifs am\u00e9liorent consid\u00e9rablement le d\u00e9bit et le temps de r\u00e9ponse, que les performances ne sont pas affect\u00e9es en mode hors ligne et que la migration est transparente."
+    }
+  ]
+}

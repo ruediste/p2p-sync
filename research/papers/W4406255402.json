@@ -1,0 +1,35 @@
+{
+  "id": "W4406255402",
+  "title": "CFS: Enhancing Metadata Management in Cross-Domain File Systems with CRDTs",
+  "doi": "https://doi.org/10.18293/seke2024-074",
+  "publication_date": "2024-10-28",
+  "publication_year": 2024,
+  "type": "conference-paper",
+  "cited_by_count": 0,
+  "authors": [
+    "Qiwen Ke",
+    "Yiming Zhang"
+  ],
+  "venue": "Proceedings/Proceedings of the ... International Conference on Software Engineering and Knowledge Engineering",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "bronze",
+    "oa_url": "https://doi.org/10.18293/seke2024-074",
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4406255402.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4406255402.grobid-xml"
+  },
+  "abstract": "Traditional local disk file systems like Ext4, XFS, and Btrfs excel in managing file data but struggle with metadata-intensive workloads and small file accesses, especially across distributed and cross-domain environments.In this paper, we present CrossFS (CFS), a new cross-domain file system designed to overcome these challenges.CrossFS leverages Conflict-free Replicated Data Types (CRDTs) for efficient metadata synchronization and merging, enhancing both performance and consistency across systems.We organize metadata into a single sparse table using a Log-Structured Merge Tree (LSMT), minimizing metadata overhead and optimizing access efficiency.Additionally, by stacking another local file system as an object store, our system ensures efficient large file allocation and access, while preserving local performance through FUSE integration and rest rpc framework, for cross-regional capabilities.Experimental evaluations demonstrate significant performance enhancements over existing solutions, with our system achieving up to 2\u00d7 the performance of traditional local file systems and a 40% improvement over distributed systems.",
+  "topics": [
+    "Advanced Data Storage Technologies",
+    "Digital Rights Management and Security"
+  ],
+  "references": [],
+  "cited_by": []
+}

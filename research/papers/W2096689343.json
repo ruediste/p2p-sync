@@ -1,0 +1,259 @@
+{
+  "id": "W2096689343",
+  "title": "Replicated Data Management for Mobile Computing",
+  "doi": "https://doi.org/10.1007/978-3-031-02477-1",
+  "publication_date": "2008-01-01",
+  "publication_year": 2008,
+  "type": "book",
+  "cited_by_count": 24,
+  "authors": [
+    "Douglas B. Terry"
+  ],
+  "venue": "Synthesis lectures on mobile and pervasive computing",
+  "open_access": {
+    "is_oa": false,
+    "oa_status": "closed",
+    "oa_url": null,
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "grobid_xml": false,
+    "pdf": false
+  },
+  "content_urls": null,
+  "abstract": null,
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Context-Aware Activity Recognition Systems",
+    "Opportunistic and Delay-Tolerant Networks"
+  ],
+  "references": [
+    "https://openalex.org/W31510694",
+    "https://openalex.org/W63241962",
+    "https://openalex.org/W93864743",
+    "https://openalex.org/W135878858",
+    "https://openalex.org/W141164410",
+    "https://openalex.org/W182346126",
+    "https://openalex.org/W1485389564",
+    "https://openalex.org/W1502259085",
+    "https://openalex.org/W1510918321",
+    "https://openalex.org/W1525865893",
+    "https://openalex.org/W1535062612",
+    "https://openalex.org/W1578968375",
+    "https://openalex.org/W1586701723",
+    "https://openalex.org/W1722709380",
+    "https://openalex.org/W1736140659",
+    "https://openalex.org/W1762472983",
+    "https://openalex.org/W1790374458",
+    "https://openalex.org/W1943176887",
+    "https://openalex.org/W1965311471",
+    "https://openalex.org/W1968574122",
+    "https://openalex.org/W1980446225",
+    "https://openalex.org/W1981173460",
+    "https://openalex.org/W1983961395",
+    "https://openalex.org/W1989814541",
+    "https://openalex.org/W1992489843",
+    "https://openalex.org/W1992503234",
+    "https://openalex.org/W1992757438",
+    "https://openalex.org/W1993817276",
+    "https://openalex.org/W1998061371",
+    "https://openalex.org/W1999981671",
+    "https://openalex.org/W2001803004",
+    "https://openalex.org/W2015787538",
+    "https://openalex.org/W2020299987",
+    "https://openalex.org/W2028511743",
+    "https://openalex.org/W2036027002",
+    "https://openalex.org/W2038122051",
+    "https://openalex.org/W2038562061",
+    "https://openalex.org/W2043671329",
+    "https://openalex.org/W2048071586",
+    "https://openalex.org/W2050062861",
+    "https://openalex.org/W2052191249",
+    "https://openalex.org/W2055120841",
+    "https://openalex.org/W2059328141",
+    "https://openalex.org/W2061796263",
+    "https://openalex.org/W2074250816",
+    "https://openalex.org/W2074871523",
+    "https://openalex.org/W2078775767",
+    "https://openalex.org/W2084069552",
+    "https://openalex.org/W2087668037",
+    "https://openalex.org/W2088721436",
+    "https://openalex.org/W2095990846",
+    "https://openalex.org/W2096841105",
+    "https://openalex.org/W2097607609",
+    "https://openalex.org/W2099184519",
+    "https://openalex.org/W2104483571",
+    "https://openalex.org/W2108805674",
+    "https://openalex.org/W2109595453",
+    "https://openalex.org/W2110096104",
+    "https://openalex.org/W2111586962",
+    "https://openalex.org/W2112316694",
+    "https://openalex.org/W2112973376",
+    "https://openalex.org/W2115223984",
+    "https://openalex.org/W2115806861",
+    "https://openalex.org/W2116142433",
+    "https://openalex.org/W2117260615",
+    "https://openalex.org/W2117530150",
+    "https://openalex.org/W2118828464",
+    "https://openalex.org/W2119112746",
+    "https://openalex.org/W2119636671",
+    "https://openalex.org/W2122594532",
+    "https://openalex.org/W2124074197",
+    "https://openalex.org/W2125310458",
+    "https://openalex.org/W2125930899",
+    "https://openalex.org/W2126356880",
+    "https://openalex.org/W2128258320",
+    "https://openalex.org/W2130284263",
+    "https://openalex.org/W2131073792",
+    "https://openalex.org/W2138368466",
+    "https://openalex.org/W2142849519",
+    "https://openalex.org/W2144910430",
+    "https://openalex.org/W2145220267",
+    "https://openalex.org/W2145695845",
+    "https://openalex.org/W2148907143",
+    "https://openalex.org/W2150070321",
+    "https://openalex.org/W2151847079",
+    "https://openalex.org/W2152893947",
+    "https://openalex.org/W2153578205",
+    "https://openalex.org/W2154193287",
+    "https://openalex.org/W2156027558",
+    "https://openalex.org/W2157483698",
+    "https://openalex.org/W2160170050",
+    "https://openalex.org/W2160378916",
+    "https://openalex.org/W2161854128",
+    "https://openalex.org/W2166656739",
+    "https://openalex.org/W2169699407",
+    "https://openalex.org/W2170552254",
+    "https://openalex.org/W2295541535",
+    "https://openalex.org/W2295717447",
+    "https://openalex.org/W2661156422",
+    "https://openalex.org/W2750228999",
+    "https://openalex.org/W3106811648",
+    "https://openalex.org/W3137220996",
+    "https://openalex.org/W3139445662",
+    "https://openalex.org/W3143795508",
+    "https://openalex.org/W4285719527"
+  ],
+  "cited_by": [
+    {
+      "id": "W2046654145",
+      "title": "Principles of Eventual Consistency",
+      "abstract": "In globally distributed systems, shared state is never perfect. When communication is neither fast nor reliable, we cannot achieve strong consistency, low latency, and availability at the same time. Unfortunately, abandoning strong consistency has wide ramifications. Eventual consistency, though attractive from a performance viewpoint, is challenging to understand and reason about, both for system architects and programmers. To provide robust abstractions, we need not just systems, but also principles: we need the ability to articulate what a consistency protocol is supposed to guarantee, and the ability to prove or refute such claims. In this tutorial, we carefully examine both the what and the how of consistency in distributed systems. First, we deconstruct consistency into individual guarantees relating the data type, the conflict resolution, and the ordering, and then reassemble them into a hierarchy of consistency models that starts with linearizability and gradually descends into sequential, causal, eventual, and quiescent consistency. Second, we present a collection of consistency protocols that illustrate common techniques, and include templates for implementations of arbitrary replicated data types that are fully available under partitions. Third, we demonstrate that our formalizations serve their purpose of enabling proofs and refutations, by proving both positive results (the correctness of the protocols) and a negative result (a version of the CAP theorem for sequential consistency)."
+    },
+    {
+      "id": "W137525769",
+      "title": "Hyder - A Transactional Record Manager for Shared Flash",
+      "abstract": "Hyder supports reads and writes on indexed records within classi-cal multi-step transactions. It is designed to run on a cluster of servers that have shared access to a large pool of network-addressable raw flash chips. The flash chips store the indexed records as a multiversion log-structured database. Log-structuring leverages the high random I/O rate of flash and automatically wear-levels it. Hyder uses a data-sharing architecture that scales out without partitioning the database or application. Each transac-tion executes on a snapshot, logs its updates in one record, and broadcasts the log record to all servers. Each server rolls forward the log against its locally-cached partial-copy of the last committed state, using optimistic concurrency control to determine whether each transaction commits. This paper explains the architecture of the overall system and its three main components: the log, the index, and the roll-forward algorithm. Simulations and prototype measurements are presented that show Hyder can scale out to support high transaction rates. 1."
+    },
+    {
+      "id": "W2142912368",
+      "title": "Synthesis Lectures on Data Management",
+      "abstract": null
+    },
+    {
+      "id": "W2108152445",
+      "title": "Reading and writing the electronic book",
+      "abstract": null
+    },
+    {
+      "id": "W1998688529",
+      "title": "Rethinking eventual consistency",
+      "abstract": "There has been a resurgence of work on replicated, distributed database systems to meet the demands of intermittently-connected clients and of disaster-tolerant databases that span data centers. Many systems weaken the criteria for replica-consistency or isolation, and in some cases add new mechanisms, to improve partition-tolerance, availability, and performance. We present a framework for comparing these criteria and mechanisms, to help architects navigate through this complex design space."
+    },
+    {
+      "id": "W2604765981",
+      "title": "Legion",
+      "abstract": "Many web applications are built around direct interactions among users, from collaborative applications and social networks to multi-user games. Despite being user-centric, these applications are usually supported by services running on servers that mediate all interactions among clients. When users are in close vicinity of each other, relying on a centralized infrastructure for mediating user interactions leads to unnecessarily high latency while hampering fault-tolerance and scalability."
+    },
+    {
+      "id": "W2008097699",
+      "title": "Simba",
+      "abstract": "Developers of cloud-connected mobile apps need to ensure the consistency of application and user data across multiple devices. Mobile apps demand different choices of distributed data consistency under a variety of usage scenarios. The apps also need to gracefully handle intermittent connectivity and disconnections, limited bandwidth, and client and server failures. The data model of the apps can also be complex, spanning inter-dependent structured and unstructured data, and needs to be atomically stored and updated locally, on the cloud, and on other mobile devices."
+    },
+    {
+      "id": "W2584262307",
+      "title": "Geo-distribution of actor-based services",
+      "abstract": "Many service applications use actors as a programming model for the middle tier, to simplify synchronization, fault-tolerance, and scalability. However, efficient operation of such actors in multiple, geographically distant datacenters is challenging, due to the very high communication latency. Caching and replication are essential to hide latency and exploit locality; but it is not a priori clear how to combine these techniques with the actor programming model. We present Geo, an open-source geo-distributed actor system that improves performance by caching actor states in one or more datacenters, yet guarantees the existence of a single latest version by virtue of a distributed cache coherence protocol. Geo's programming model supports both volatile and persistent actors, and supports updates with a choice of linearizable and eventual consistency. Our evaluation on several workloads shows substantial performance benefits, and confirms the advantage of supporting both replicated and single-instance coherence protocols as configuration choices. For example, replication can provide fast, always-available reads and updates globally, while batching of linearizable storage accesses at a single location can boost the throughput of an order processing workload by 7x."
+    },
+    {
+      "id": "W2014819730",
+      "title": "Docx2Go",
+      "abstract": "Docx2Go is a new framework to support editing of shared documents on mobile devices. Three high-level requirements influenced its design -- namely, the need to adapt content, especially textual content, on the fly according to the quality of the network connection and the form factor of each device; support for concurrent, uncoordinated editing on different devices, whose effects will later be merged on all devices in a convergent and consistent manner without sacrificing the semantics of the edits; and a flexible replication architecture that accommodates both device-to-device and cloud-mediated synchronization. Docx2Go supports on-the-go editing for XML documents, such as documents in Microsoft Word and other commonly used formats. It combines the best practices from content adaptation systems, weakly consistent replication systems, and collaborative editing systems, while extending the state of the art in each of these fields. The implementation of Docx2Go has been evaluated based on a workload drawn from Wikipedia."
+    },
+    {
+      "id": "W3084934441",
+      "title": "Practical client-side replication",
+      "abstract": "Client-side replication and direct client-to-client synchronization can be used to create highly available, low-latency interactive applications. Causal consistency, the strongest available consistency model under network partitions, is an attractive consistency model for these applications. This paper focuses on how client misbehaviour impacts causal consistency. We analyze the possible attacks to causal consistency and derive secure consistency models that preclude different types of misbehaviour. We propose a set of techniques for implementing such secure consistency models, which exhibit different trade-offs between the application guarantees, and the latency and communication overhead. Our evaluation shows that secure consistency models impose low overhead when compared with their insecure counterparts, while providing low user-to-user latency and server load compared with traditional client-server architectures. Secure consistency models can be used to enrich server-based architectures with fast and secure peer-to-peer interactions."
+    },
+    {
+      "id": "W3112240483",
+      "title": "WedgeChain: A Trusted Edge-Cloud Store With Asynchronous (Lazy) Trust",
+      "abstract": "We propose WedgeChain, a data store that spans both edge and cloud nodes (an edge-cloud system). WedgeChain consists of a logging layer and a data indexing layer. In this study, we encounter two challenges: (1) edge nodes are untrusted and potentially malicious, and (2) edge-cloud coordination is expensive. WedgeChain tackles these challenges by the following proposals: (1) Lazy (asynchronous) certification: where data is committed at the untrusted edge and then lazily certified at the cloud node. This lazy certification method takes advantage of the observation that an untrusted edge node is unlikely to act maliciously if it knows it will be detected (and punished) eventually. Our lazy certification method guarantees that malicious acts (i.e., lying) are eventually detected. (2) Data-free certification: our lazy certification method only needs to send digests of data to the cloud-instead of sending all data to the cloud-which enables saving network and cloud resources and reduce costs. (3) LSMerkle: we extend a trusted index (mLSM [32]) to enable indexing data at the edge while utilizing lazy and data-free certification."
+    },
+    {
+      "id": "W2792567365",
+      "title": "Cloudkit: structured storage for mobile applications",
+      "abstract": "CloudKit is Apple's cloud backend service and application development framework that provides strongly-consistent storage for structured data and makes it easy to synchronize data across user devices or share it among multiple users. Launched more than 3 years ago, CloudKit forms the foundation for more than 50 Apple apps, including many of our most important and popular applications such as Photos, iCloud Drive, Notes, Keynote, and News, as well as many third-party apps. To deliver this at large scale, CloudKit explicitly leverages multi-tenancy at the application level as well as at the user level to guide efficient data placement and distribution. By using CloudKit application developers are free to focus on delivering the application front-end and logic while relying on CloudKit for scale, consistency, durability and security. CloudKit manages petabytes of data and handles hundreds of millions of users around the world on a daily basis."
+    },
+    {
+      "id": "W3193052453",
+      "title": "Tackling Consistency-related Design Challenges of Distributed Data-Intensive Systems",
+      "abstract": "Background: Distributed data-intensive systems are increasingly designed to be only eventually consistent. Persistent data is no longer processed with serialized and transactional access, exposing applications to a range of potential concurrency anomalies that need to be handled by the application itself. Controlling concurrent data access in monolithic systems is already challenging, but the problem is exacerbated in distributed systems. To make it worse, only little systematic engineering guidance is provided by the software architecture community regarding this issue. Aims: In this paper, we report on our study of the effectiveness and applicability of the novel design guidelines we are proposing in this regard. Method: We used action research and conducted it in the context of the software architecture design process of a multi-site platform development project. Results: Our hypotheses regarding effectiveness and applicability have been accepted in the context of the study. The initial design guidelines were refined throughout the study. Thus, we also contribute concrete guidelines for architecting distributed data-intensive systems with eventually consistent data. The guidelines are an advancement of Domain-Driven Design and provide additional patterns for the tactical design part. Conclusions: Based on our results, we recommend using the guidelines to architect safe eventually consistent systems. Because of the relevance of distributed data-intensive systems, we will drive this research forward and evaluate it in further domains."
+    },
+    {
+      "id": "W1986411155",
+      "title": "Fidelity-Aware Replication for Mobile Devices",
+      "abstract": "Mobile devices often store data in reduced resolutions or custom formats in order to accommodate resource constraints and tailor-made software. The Polyjuz framework enables sharing and synchronization of data across a collection of personal devices that use formats of different fidelity. Layered transparently between the application and an off-the-shelf replication platform, Polyjuz bridges the isolated worlds of different data formats. With Polyjuz, data items created or updated on high-fidelity devices-such as laptops and desktops-are automatically replicated onto low-fidelity, mobile devices. Similarly, data items updated on low-fidelity devices are reintegrated with their high-fidelity counterparts when possible. Polyjuz performs these fidelity reductions and reintegrations as devices exchange data in a peer-to-peer manner, ultimately extending the eventual-consistency guarantee of the underlying replication platform to the multifidelity universe. In this paper, we present the design and implementation of Polyjuz and demonstrate its benefits for fidelity-aware contacts management and picture sharing applications."
+    },
+    {
+      "id": "W2589996673",
+      "title": "Fidelity-aware replication for mobile devices",
+      "abstract": "Mobile devices often store data in reduced resolutions or custom formats in order to accommodate resource constraints and tailor-made software. The Polyjuz framework enables sharing and synchronization of data across a collection of personal devices that use formats of different fidelity. Layered transparently between the application and an off-the-shelf replication platform, Polyjuz bridges the isolated worlds of different data formats. With Polyjuz, data items created or updated on high-fidelity devices-such as laptops and desktops-are automatically replicated onto low-fidelity, mobile devices. Similarly, data items updated on low-fidelity devices are reintegrated with their high-fidelity counterparts, when the application permits it. Polyjuz performs these fidelity reductions and reintegrations as devices exchange data in a peer-to-peer manner, ultimately extending the eventual-consistency guarantee of the underlying replication platform to the multi-fidelity universe."
+    },
+    {
+      "id": "W2711989938",
+      "title": "Semantics-Driven Optimistic Data Replication: Towards a Framework Supporting Software Architects and Developers",
+      "abstract": "Optimistic data replication is an important enabling technology for high availability and scalability, but the disadvantage is that it can only guarantee eventual consistency. Inconsequence, apps might observe stale data and write conflicts. In practice, optimistic data replication is usually part of data base systems that implement detection and resolution of conflicts with purely syntactic techniques. On the downside, this can lead to conflicts that are impossible to detect and resolve correctly by using the database framework only, ultimately resulting in concurrency anomalies. In order to avoid concurrency anomalies, developers are forced to use error-prone workarounds, there by increasing application complexity significantly. An alternative to using existing database replication would be to implement a custom solution tailored to the application semantics that could minimize the occurrence of write conflicts and concurrency anomalies. However, the realization of custom solutions driven by application semantics is very difficult in practice, due to the complexity of concurrency control in distributed systems. In this position paper we demonstrate practical problems related to state of-the-practice optimistic data replication and motivate the need for semantics-driven solutions. Our research aims at simplifying the development of custom solutions by delivering a frame workfor semantics-driven optimistic data replication. This frame work consists of a technical part and accompanying concepts for the design of extended domain models optimized for optimistic data replication and conflict minimization."
+    },
+    {
+      "id": "W70676416",
+      "title": "The Duality between Message Routing and Epidemic Data Replication.",
+      "abstract": "Several domains of networking such as Delay Tolerant Networks (DTNs), Mobile Ad hoc Networks (MANETs), and Peer-to-Peer (P2P) networks have the common goal of transporting messages to their intended destinations. These networking domains share many requirements and employ routing protocols that are often composed of similar mechanisms. In this paper, we explore the synergy between message routing and data replication and propose the use of topology-independent weakly consistent partial replication systems as a messaging substrate for the above networking domains. These replication systems provide the key properties of eventual consistency, disruption tolerance, and at-most-once delivery, which translate into guaranteed delivery, failure resilience, and bandwidth efficiency\u2014three much desired and repeatedly implemented aspects of message routing. We outline an implementation of a messaging system on top of a replication platform with content-based filtering and show that our design is general enough to implement many different routing policies employed in DTNs, MANETs, and P2P networks."
+    },
+    {
+      "id": "W2790170122",
+      "title": "Enhancing Mobile Backend as a service framework to support synchronization of large object",
+      "abstract": "Mobile enterprise applications are primarily developed for existing backend enterprise systems and some usage scenarios require storing of large files on the mobile devices. These files range from large PDFs to media files in various formats (MPEG videos).These files needs to be used offline, sometimes updated and shared among users. In this paper, we enhanced a Mobile Backend as a service (M)BaaS platform that allows resource-limited mobile devices to access large objects from the cloud. Simba [1] is a framework that has support for both table and objects data models, three consistency semantics, resembling strong, causal and eventual consistency. We studied the Simba (MBaaS) framework in detail and found that Simba can be enhanced mainly in three areas of data storage, support for large files and how to handle the scenario of poorly written Mobile apps not to affect the singleton Simba Content Service daemon. Based on our findings, we propose enhanced (M)BaaS framework, a system with improved sync protocol supporting the streaming access to large objects and novel techniques to improve the access speed and sync efficiency for large files for mobile cloud storage services. The Simba client data storage is improved with a storage system capable of supporting both file system and database workloads efficiently using a single, versatile data structure: Variable- Transmission tree (VT-tree), instead of the current implementation of using LevelDB, which is a key value store (KVS) based on a log-structured merge (LSM) tree. The required modifications for the Sync protocol at the client and server side are also discussed."
+    },
+    {
+      "id": "W2016640285",
+      "title": "Chive: A Simulation Tool for Epidemic Data Replication Protocols Benchmarking",
+      "abstract": "Epidemic data replication protocols are an interesting approach to address the scalability limitations of classic distributed databases. However, devising a system layout that takes full advantage of epidemic replication is a challenging task due to the high number of associated configuration parameters (e.g., replication layers, number of replicas per layer, etc.). The purpose of this paper is to present a Java-based simulation tool that simulates the execution of epidemic data replication protocols on user-defined configurations under different workloads. Conducted experiments show that by using the proposed approach (1) the internal dynamics of epidemic data replication protocols under a specific scenario are better understood, (2) the distributed database system design process is considerably speeded up, and (3) different system configurations can be rapidly prototyped."
+    },
+    {
+      "id": "W2506666897",
+      "title": "A Service-Based Framework to Model Mobile Enterprise Architectures",
+      "abstract": "This chapter presents and discusses a resource-based and service-oriented metamodel and EA framework, in which mobility is introduced naturally from scratch, constituting the basis for some guidelines on which EA resources should be mobilized. Several simple scenarios are presented in the light of this metamodel and framework."
+    },
+    {
+      "id": "W1541643617",
+      "title": "Service\u2010Oriented Architecture",
+      "abstract": "This chapter contains sections titled: Services and Procedures Service-Oriented Architecture (SOA) Service Design Principles Service-Oriented Architecture (SOA) Governance Standardized Service Contract Service Loose Coupling Service Abstraction Service Reusability Service Autonomy Service Statelessness Service Discoverability Further Patterns Further Reading References"
+    },
+    {
+      "id": "W4285128151",
+      "title": "Ps-Crdts: Crdts in Highly Volatile Environments",
+      "abstract": null
+    },
+    {
+      "id": "W1506276460",
+      "title": "Appendix B: Time in Distributed Systems",
+      "abstract": "This appendix contains sections titled: What Time Is It? Time and Causality Applications of Logical and Vector Time Virtual Time Further Reading References"
+    },
+    {
+      "id": "W2916376932",
+      "title": "DEMONSTRATION OF A COMMON WORLD MODEL",
+      "abstract": "ABSTRACT A crucial part of facilitating the cooperation of multi-robot and human-robot teams is a Common World Model \u2013 a shared knowledge base with both physical information (e.g., ground map) and semantic information (e.g, locations of threats and goals) \u2013 that can be used to provide high-level guidance to heterogeneous robot teams. Past work performed by Johns Hopkins University Applied Physics Laboratory (JHU/APL) has shown that the Advanced Explosive Ordnance Disposal Robotic System (AEODRS) architecture \u2013 a Modular Open Systems Approach (MOSA) architecture leveraging the JAUS (Joint Architecture for Unmanned Systems) standard for definition of its logical interfaces \u2013 can be effectively used to develop and integrate the subsystems of a teleoperated ground vehicle for use in a complex environment. This demonstration tackles the next challenge, which is to extend the AEODRS architecture to facilitate multi-robot and human-robot teams."
+    }
+  ]
+}

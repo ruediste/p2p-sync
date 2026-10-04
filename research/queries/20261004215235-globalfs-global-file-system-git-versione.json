@@ -1,0 +1,1493 @@
+{
+  "query": {
+    "search": "GlobalFS global file system git versioned metadata",
+    "filter": "open_access.is_oa:true",
+    "per-page": 10,
+    "sort": "relevance_score:desc"
+  },
+  "url": "https://api.openalex.org/works?search=GlobalFS+global+file+system+git+versioned+metadata&filter=open_access.is_oa%3Atrue&per-page=10&sort=relevance_score%3Adesc",
+  "response": {
+    "meta": {
+      "count": 2,
+      "db_response_time_ms": 57,
+      "page": 1,
+      "per_page": 10,
+      "groups_count": null,
+      "x_query": {
+        "oql": "get works where full text has (GlobalFS global file system git versioned metadata)\n  and open access is (true)",
+        "oqo": {
+          "get_rows": "works",
+          "filter_rows": [
+            {
+              "column_id": "fulltext.search",
+              "value": "GlobalFS global file system git versioned metadata",
+              "operator": "has"
+            },
+            {
+              "column_id": "open_access.is_oa",
+              "value": true
+            }
+          ]
+        },
+        "url": "/works?filter=fulltext.search:GlobalFS global file system git versioned metadata,open_access.is_oa:true&per_page=10"
+      },
+      "cost_usd": 0.001
+    },
+    "results": [
+      {
+        "id": "https://openalex.org/W4392269970",
+        "doi": null,
+        "title": "Assurance de disponibilit\u00e9 et coh\u00e9rence dirigeante dans syst\u00e8mes de fichiers g\u00e9o-reproduits",
+        "display_name": "Assurance de disponibilit\u00e9 et coh\u00e9rence dirigeante dans syst\u00e8mes de fichiers g\u00e9o-reproduits",
+        "relevance_score": 8.660106,
+        "publication_year": 2017,
+        "publication_date": "2017-12-08",
+        "ids": {
+          "openalex": "https://openalex.org/W4392269970"
+        },
+        "language": "en",
+        "primary_location": {
+          "id": "pmh:oai:HAL:tel-01673030v2",
+          "is_oa": true,
+          "landing_page_url": "https://theses.hal.science/tel-01673030",
+          "pdf_url": "https://theses.hal.science/tel-01673030v2/file/2017PA066521.pdf",
+          "source": {
+            "id": "https://openalex.org/S4306402512",
+            "display_name": "HAL (Le Centre pour la Communication Scientifique Directe)",
+            "issn_l": null,
+            "issn": null,
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": false,
+            "listed_in": [],
+            "host_organization": "https://openalex.org/I1294671590",
+            "host_organization_name": "Centre National de la Recherche Scientifique",
+            "host_organization_lineage": [
+              "https://openalex.org/I1294671590"
+            ],
+            "host_organization_lineage_names": [],
+            "type": "repository"
+          },
+          "license": null,
+          "license_id": null,
+          "version": "submittedVersion",
+          "is_accepted": false,
+          "is_published": false,
+          "raw_source_name": "Systems and Control [cs.SY]. Universit\u00e9 Pierre et Marie Curie - Paris VI, 2017. English. &#x27E8;NNT : 2017PA066521&#x27E9;",
+          "raw_type": "info:eu-repo/semantics/doctoralThesis"
+        },
+        "type": "dissertation",
+        "indexed_in": [],
+        "open_access": {
+          "is_oa": true,
+          "oa_status": "green",
+          "oa_url": "https://theses.hal.science/tel-01673030v2/file/2017PA066521.pdf",
+          "any_repository_has_fulltext": true
+        },
+        "authorships": [
+          {
+            "author_position": "first",
+            "author": {
+              "id": "https://openalex.org/A5077397061",
+              "display_name": "Vinh Tao Thanh",
+              "orcid": null,
+              "observed_orcids": []
+            },
+            "institutions": [],
+            "countries": [],
+            "is_corresponding": true,
+            "raw_author_name": "Tao Thanh, Vinh",
+            "raw_affiliation_strings": [
+              "Large-Scale Distributed Systems and Applications"
+            ],
+            "raw_orcid": null,
+            "affiliations": [
+              {
+                "raw_affiliation_string": "Large-Scale Distributed Systems and Applications",
+                "institution_ids": []
+              }
+            ]
+          }
+        ],
+        "institutions": [],
+        "countries_distinct_count": 0,
+        "institutions_distinct_count": 0,
+        "corresponding_author_ids": [
+          "https://openalex.org/A5077397061"
+        ],
+        "corresponding_institution_ids": [],
+        "apc_list": null,
+        "apc_paid": null,
+        "fwci": null,
+        "has_fulltext": true,
+        "cited_by_count": 1,
+        "citation_normalized_percentile": null,
+        "cited_by_percentile_year": null,
+        "biblio": {
+          "volume": null,
+          "issue": null,
+          "first_page": null,
+          "last_page": null
+        },
+        "is_retracted": false,
+        "is_paratext": false,
+        "is_xpac": false,
+        "primary_topic": {
+          "id": "https://openalex.org/T11181",
+          "display_name": "Advanced Data Storage Technologies",
+          "score": 0.998199999332428,
+          "subfield": {
+            "id": "https://openalex.org/subfields/1705",
+            "display_name": "Computer Networks and Communications"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/17",
+            "display_name": "Computer Science"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/3",
+            "display_name": "Physical Sciences"
+          }
+        },
+        "topics": [
+          {
+            "id": "https://openalex.org/T11181",
+            "display_name": "Advanced Data Storage Technologies",
+            "score": 0.998199999332428,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10715",
+            "display_name": "Distributed and Parallel Computing Systems",
+            "score": 0.9959999918937683,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10772",
+            "display_name": "Distributed systems and fault tolerance",
+            "score": 0.9699000120162964,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          }
+        ],
+        "keywords": [
+          {
+            "id": "https://openalex.org/keywords/optimistic-replication",
+            "display_name": "optimistic replication",
+            "score": 0.8330000042915344
+          },
+          {
+            "id": "https://openalex.org/keywords/conflict-detection",
+            "display_name": "conflict detection",
+            "score": 0.7549999952316284
+          },
+          {
+            "id": "https://openalex.org/keywords/conflict-resolution",
+            "display_name": "conflict resolution",
+            "score": 0.9810000061988831
+          },
+          {
+            "id": "https://openalex.org/keywords/tofu",
+            "display_name": "tofu",
+            "score": 0.7260000109672546
+          },
+          {
+            "id": "https://openalex.org/keywords/high-availability",
+            "display_name": "high availability",
+            "score": 0.6230000257492065
+          },
+          {
+            "id": "https://openalex.org/keywords/network-partitions",
+            "display_name": "network partitions",
+            "score": 0.4860000014305115
+          }
+        ],
+        "concepts": [
+          {
+            "id": "https://openalex.org/C41008148",
+            "wikidata": "https://www.wikidata.org/wiki/Q21198",
+            "display_name": "Computer science",
+            "level": 0,
+            "score": 0.6374846696853638
+          },
+          {
+            "id": "https://openalex.org/C2776436953",
+            "wikidata": "https://www.wikidata.org/wiki/Q5163215",
+            "display_name": "Consistency (knowledge bases)",
+            "level": 2,
+            "score": 0.5862422585487366
+          },
+          {
+            "id": "https://openalex.org/C95637964",
+            "wikidata": "https://www.wikidata.org/wiki/Q82753",
+            "display_name": "Computer file",
+            "level": 2,
+            "score": 0.5288206934928894
+          },
+          {
+            "id": "https://openalex.org/C2780940931",
+            "wikidata": "https://www.wikidata.org/wiki/Q174989",
+            "display_name": "File system",
+            "level": 2,
+            "score": 0.48111599683761597
+          },
+          {
+            "id": "https://openalex.org/C77088390",
+            "wikidata": "https://www.wikidata.org/wiki/Q8513",
+            "display_name": "Database",
+            "level": 1,
+            "score": 0.40345391631126404
+          },
+          {
+            "id": "https://openalex.org/C111919701",
+            "wikidata": "https://www.wikidata.org/wiki/Q9135",
+            "display_name": "Operating system",
+            "level": 1,
+            "score": 0.3200508654117584
+          },
+          {
+            "id": "https://openalex.org/C154945302",
+            "wikidata": "https://www.wikidata.org/wiki/Q11660",
+            "display_name": "Artificial intelligence",
+            "level": 1,
+            "score": 0.061291247606277466
+          }
+        ],
+        "mesh": [],
+        "locations_count": 3,
+        "locations": [
+          {
+            "id": "pmh:oai:HAL:tel-01673030v2",
+            "is_oa": true,
+            "landing_page_url": "https://theses.hal.science/tel-01673030",
+            "pdf_url": "https://theses.hal.science/tel-01673030v2/file/2017PA066521.pdf",
+            "source": {
+              "id": "https://openalex.org/S4306402512",
+              "display_name": "HAL (Le Centre pour la Communication Scientifique Directe)",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": "https://openalex.org/I1294671590",
+              "host_organization_name": "Centre National de la Recherche Scientifique",
+              "host_organization_lineage": [
+                "https://openalex.org/I1294671590"
+              ],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": "Systems and Control [cs.SY]. Universit\u00e9 Pierre et Marie Curie - Paris VI, 2017. English. &#x27E8;NNT : 2017PA066521&#x27E9;",
+            "raw_type": "info:eu-repo/semantics/doctoralThesis"
+          },
+          {
+            "id": "pmh:2017PA066521",
+            "is_oa": true,
+            "landing_page_url": "http://www.theses.fr/2017PA066521/document",
+            "pdf_url": null,
+            "source": {
+              "id": "https://openalex.org/S4406923047",
+              "display_name": "theses.fr (ABES)",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": null,
+              "host_organization_name": null,
+              "host_organization_lineage": [],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": "other-oa",
+            "license_id": "https://openalex.org/licenses/other-oa",
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": null,
+            "raw_type": "Electronic Thesis or Dissertation"
+          },
+          {
+            "id": "pmh:oai:HAL:tel-01817612v1",
+            "is_oa": true,
+            "landing_page_url": "https://tel.archives-ouvertes.fr/tel-01817612",
+            "pdf_url": null,
+            "source": null,
+            "license": "other-oa",
+            "license_id": "https://openalex.org/licenses/other-oa",
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": "https://tel.archives-ouvertes.fr/tel-01817612",
+            "raw_type": "info:eu-repo/semantics/doctoralThesis"
+          }
+        ],
+        "best_oa_location": {
+          "id": "pmh:oai:HAL:tel-01673030v2",
+          "is_oa": true,
+          "landing_page_url": "https://theses.hal.science/tel-01673030",
+          "pdf_url": "https://theses.hal.science/tel-01673030v2/file/2017PA066521.pdf",
+          "source": {
+            "id": "https://openalex.org/S4306402512",
+            "display_name": "HAL (Le Centre pour la Communication Scientifique Directe)",
+            "issn_l": null,
+            "issn": null,
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": false,
+            "listed_in": [],
+            "host_organization": "https://openalex.org/I1294671590",
+            "host_organization_name": "Centre National de la Recherche Scientifique",
+            "host_organization_lineage": [
+              "https://openalex.org/I1294671590"
+            ],
+            "host_organization_lineage_names": [],
+            "type": "repository"
+          },
+          "license": null,
+          "license_id": null,
+          "version": "submittedVersion",
+          "is_accepted": false,
+          "is_published": false,
+          "raw_source_name": "Systems and Control [cs.SY]. Universit\u00e9 Pierre et Marie Curie - Paris VI, 2017. English. &#x27E8;NNT : 2017PA066521&#x27E9;",
+          "raw_type": "info:eu-repo/semantics/doctoralThesis"
+        },
+        "sustainable_development_goals": [],
+        "sustainable_development_goals_aurora": [
+          {
+            "display_name": "Climate action",
+            "score": 0.4099999964237213,
+            "id": "https://metadata.un.org/sdg/13"
+          }
+        ],
+        "study_designs": [],
+        "awards": [],
+        "funders": [],
+        "has_content": {
+          "pdf": true,
+          "grobid_xml": true
+        },
+        "content_urls": {
+          "pdf": "https://content.openalex.org/works/W4392269970.pdf",
+          "grobid_xml": "https://content.openalex.org/works/W4392269970.grobid-xml"
+        },
+        "referenced_works_count": 0,
+        "referenced_works": [],
+        "related_works": [
+          "https://openalex.org/W753420207",
+          "https://openalex.org/W2353896575",
+          "https://openalex.org/W2379000728",
+          "https://openalex.org/W2389631998",
+          "https://openalex.org/W2362483455",
+          "https://openalex.org/W2355113374",
+          "https://openalex.org/W2391476234",
+          "https://openalex.org/W37549629",
+          "https://openalex.org/W2461556223",
+          "https://openalex.org/W2368354671"
+        ],
+        "abstract_inverted_index": {
+          "Geo-distributed": [
+            0
+          ],
+          "file": [
+            1,
+            77,
+            134,
+            171
+          ],
+          "systems": [
+            2,
+            19,
+            78,
+            106
+          ],
+          "suffer": [
+            3
+          ],
+          "from": [
+            4
+          ],
+          "high": [
+            5,
+            16
+          ],
+          "latency": [
+            6
+          ],
+          "and": [
+            7,
+            13,
+            27,
+            46,
+            60,
+            103,
+            128,
+            190,
+            211,
+            219
+          ],
+          "network": [
+            8
+          ],
+          "partitions.": [
+            9
+          ],
+          "Because": [
+            10
+          ],
+          "of": [
+            11,
+            81,
+            101,
+            130,
+            168
+          ],
+          "this,": [
+            12
+          ],
+          "to": [
+            14,
+            69,
+            121,
+            145,
+            182
+          ],
+          "ensure": [
+            15
+          ],
+          "availability,": [
+            17
+          ],
+          "such": [
+            18
+          ],
+          "typically": [
+            20
+          ],
+          "commit": [
+            21
+          ],
+          "updates": [
+            22,
+            45
+          ],
+          "locally,": [
+            23
+          ],
+          "with": [
+            24,
+            71
+          ],
+          "no": [
+            25
+          ],
+          "latency,": [
+            26
+          ],
+          "propagate": [
+            28
+          ],
+          "them": [
+            29,
+            48,
+            192
+          ],
+          "in": [
+            30,
+            49,
+            125,
+            193
+          ],
+          "the": [
+            31,
+            83,
+            113,
+            122,
+            126,
+            147
+          ],
+          "background.": [
+            32
+          ],
+          "Such": [
+            33
+          ],
+          "optimistic": [
+            34,
+            75,
+            152
+          ],
+          "replication": [
+            35
+          ],
+          "faces": [
+            36
+          ],
+          "two": [
+            37
+          ],
+          "major": [
+            38
+          ],
+          "challenges:": [
+            39
+          ],
+          "(i)": [
+            40
+          ],
+          "detecting": [
+            41
+          ],
+          "conflicts": [
+            42,
+            185
+          ],
+          "between": [
+            43
+          ],
+          "concurrent": [
+            44,
+            99
+          ],
+          "resolving": [
+            47
+          ],
+          "a": [
+            50,
+            131,
+            141,
+            162,
+            169,
+            194
+          ],
+          "way": [
+            51,
+            195
+          ],
+          "meaningful": [
+            52
+          ],
+          "for": [
+            53
+          ],
+          "users,": [
+            54
+          ],
+          "while": [
+            55,
+            150
+          ],
+          "maintaining": [
+            56
+          ],
+          "system": [
+            57
+          ],
+          "integrity": [
+            58
+          ],
+          "invariants;": [
+            59
+          ],
+          "(ii)": [
+            61
+          ],
+          "supporting": [
+            62
+          ],
+          "legacy": [
+            63,
+            114,
+            148
+          ],
+          "applications": [
+            64
+          ],
+          "that": [
+            65,
+            111,
+            196,
+            206
+          ],
+          "are": [
+            66
+          ],
+          "not": [
+            67,
+            89
+          ],
+          "prepared": [
+            68
+          ],
+          "deal": [
+            70
+          ],
+          "concurrency": [
+            72
+          ],
+          "anomalies.": [
+            73
+          ],
+          "Existing": [
+            74
+          ],
+          "geo-distributed": [
+            76,
+            133
+          ],
+          "fall": [
+            79
+          ],
+          "short": [
+            80
+          ],
+          "addressing": [
+            82
+          ],
+          "challenges.": [
+            84
+          ],
+          "For": [
+            85
+          ],
+          "instance,": [
+            86
+          ],
+          "Dropbox": [
+            87
+          ],
+          "does": [
+            88
+          ],
+          "support": [
+            90,
+            146
+          ],
+          "hard": [
+            91,
+            176
+          ],
+          "links;": [
+            92
+          ],
+          "Andrew": [
+            93
+          ],
+          "File": [
+            94
+          ],
+          "System": [
+            95
+          ],
+          "fails": [
+            96
+          ],
+          "on": [
+            97,
+            161,
+            186
+          ],
+          "some": [
+            98
+          ],
+          "renaming": [
+            100
+          ],
+          "directories;": [
+            102
+          ],
+          "all": [
+            104,
+            166,
+            184
+          ],
+          "existing": [
+            105,
+            217
+          ],
+          "use": [
+            107
+          ],
+          "automatic": [
+            108
+          ],
+          "conflict": [
+            109
+          ],
+          "resolution": [
+            110
+          ],
+          "violates": [
+            112
+          ],
+          "POSIX": [
+            115
+          ],
+          "semantics.": [
+            116
+          ],
+          "We": [
+            117
+          ],
+          "present": [
+            118
+          ],
+          "our": [
+            119,
+            157
+          ],
+          "solution": [
+            120,
+            158
+          ],
+          "above": [
+            123
+          ],
+          "problems": [
+            124
+          ],
+          "design": [
+            127,
+            139
+          ],
+          "implementation": [
+            129
+          ],
+          "prototype": [
+            132
+          ],
+          "system,": [
+            135,
+            172
+          ],
+          "named": [
+            136
+          ],
+          "Tofu.": [
+            137
+          ],
+          "Its": [
+            138
+          ],
+          "includes": [
+            140
+          ],
+          "new": [
+            142
+          ],
+          "session": [
+            143
+          ],
+          "abstraction": [
+            144
+          ],
+          "API,": [
+            149
+          ],
+          "allowing": [
+            151
+          ],
+          "updates.": [
+            153
+          ],
+          "Unlike": [
+            154
+          ],
+          "previous": [
+            155
+          ],
+          "approaches,": [
+            156
+          ],
+          "is": [
+            159,
+            180,
+            208
+          ],
+          "based": [
+            160
+          ],
+          "formal": [
+            163
+          ],
+          "model": [
+            164
+          ],
+          "covering": [
+            165
+          ],
+          "aspects": [
+            167
+          ],
+          "Unix-like": [
+            170
+          ],
+          "including": [
+            173
+          ],
+          "directories,": [
+            174
+          ],
+          "inodes,": [
+            175
+          ],
+          "links,": [
+            177
+          ],
+          "etc.": [
+            178
+          ],
+          "It": [
+            179
+          ],
+          "able": [
+            181
+          ],
+          "detect": [
+            183
+          ],
+          "those": [
+            187
+          ],
+          "data": [
+            188
+          ],
+          "structures,": [
+            189
+          ],
+          "resolves": [
+            191
+          ],
+          "we": [
+            197
+          ],
+          "believe": [
+            198
+          ],
+          "users": [
+            199
+          ],
+          "will": [
+            200
+          ],
+          "find": [
+            201
+          ],
+          "generally": [
+            202
+          ],
+          "reasonable.": [
+            203
+          ],
+          "Experiments": [
+            204
+          ],
+          "show": [
+            205
+          ],
+          "Tofu": [
+            207
+          ],
+          "highly": [
+            209
+          ],
+          "scalable,": [
+            210
+          ],
+          "incurs": [
+            212
+          ],
+          "linear": [
+            213
+          ],
+          "overhead,": [
+            214
+          ],
+          "improving": [
+            215
+          ],
+          "over": [
+            216
+          ],
+          "academic": [
+            218
+          ],
+          "industrial": [
+            220
+          ],
+          "systems.": [
+            221
+          ]
+        },
+        "counts_by_year": [
+          {
+            "year": 2021,
+            "cited_by_count": 1
+          }
+        ],
+        "updated_date": "2026-09-25T08:18:29.962427",
+        "created_date": "2025-10-10T00:00:00"
+      },
+      {
+        "id": "https://openalex.org/W2101322220",
+        "doi": null,
+        "title": "CONTEXT-AWARE SOURCE CODE IDENTIFIER SPLITTING AND EXPANSION FOR SOFTWARE MAINTENANCE",
+        "display_name": "CONTEXT-AWARE SOURCE CODE IDENTIFIER SPLITTING AND EXPANSION FOR SOFTWARE MAINTENANCE",
+        "relevance_score": 4.141528,
+        "publication_year": 2013,
+        "publication_date": "2013-08-01",
+        "ids": {
+          "openalex": "https://openalex.org/W2101322220",
+          "mag": "2101322220"
+        },
+        "language": "en",
+        "primary_location": {
+          "id": "pmh:oai:publications.polymtl.ca:1203",
+          "is_oa": true,
+          "landing_page_url": "https://publications.polymtl.ca/1203/1/2013_LatifaGuerrouj.pdf",
+          "pdf_url": "https://publications.polymtl.ca/1203/1/2013_LatifaGuerrouj.pdf",
+          "source": {
+            "id": "https://openalex.org/S4306401013",
+            "display_name": "PolyPublie (\u00c9cole Polytechnique de Montr\u00e9al)",
+            "issn_l": null,
+            "issn": null,
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": false,
+            "listed_in": [],
+            "host_organization": "https://openalex.org/I45683168",
+            "host_organization_name": "Polytechnique Montr\u00e9al",
+            "host_organization_lineage": [
+              "https://openalex.org/I45683168"
+            ],
+            "host_organization_lineage_names": [],
+            "type": "repository"
+          },
+          "license": null,
+          "license_id": null,
+          "version": "submittedVersion",
+          "is_accepted": false,
+          "is_published": false,
+          "raw_source_name": null,
+          "raw_type": "M\u00e9moire ou th\u00e8se"
+        },
+        "type": "dissertation",
+        "indexed_in": [],
+        "open_access": {
+          "is_oa": true,
+          "oa_status": "green",
+          "oa_url": "https://publications.polymtl.ca/1203/1/2013_LatifaGuerrouj.pdf",
+          "any_repository_has_fulltext": true
+        },
+        "authorships": [
+          {
+            "author_position": "first",
+            "author": {
+              "id": "https://openalex.org/A5005179951",
+              "display_name": "Latifa Guerrouj",
+              "orcid": null,
+              "observed_orcids": []
+            },
+            "institutions": [],
+            "countries": [],
+            "is_corresponding": true,
+            "raw_author_name": "Latifa Guerrouj",
+            "raw_affiliation_strings": [],
+            "raw_orcid": null,
+            "affiliations": []
+          }
+        ],
+        "institutions": [],
+        "countries_distinct_count": 0,
+        "institutions_distinct_count": 0,
+        "corresponding_author_ids": [
+          "https://openalex.org/A5005179951"
+        ],
+        "corresponding_institution_ids": [],
+        "apc_list": null,
+        "apc_paid": null,
+        "fwci": null,
+        "has_fulltext": true,
+        "cited_by_count": 0,
+        "citation_normalized_percentile": null,
+        "cited_by_percentile_year": null,
+        "biblio": {
+          "volume": null,
+          "issue": null,
+          "first_page": null,
+          "last_page": null
+        },
+        "is_retracted": false,
+        "is_paratext": false,
+        "is_xpac": false,
+        "primary_topic": {
+          "id": "https://openalex.org/T10679",
+          "display_name": "Service-Oriented Architecture and Web Services",
+          "score": 0.9998000264167786,
+          "subfield": {
+            "id": "https://openalex.org/subfields/1710",
+            "display_name": "Information Systems"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/17",
+            "display_name": "Computer Science"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/3",
+            "display_name": "Physical Sciences"
+          }
+        },
+        "topics": [
+          {
+            "id": "https://openalex.org/T10679",
+            "display_name": "Service-Oriented Architecture and Web Services",
+            "score": 0.9998000264167786,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1710",
+              "display_name": "Information Systems"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T12127",
+            "display_name": "Software System Performance and Reliability",
+            "score": 0.9987000226974487,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10639",
+            "display_name": "Advanced Software Engineering Methodologies",
+            "score": 0.9943000078201294,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1702",
+              "display_name": "Artificial Intelligence"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          }
+        ],
+        "keywords": [
+          {
+            "id": "https://openalex.org/keywords/software-maintenance",
+            "display_name": "software maintenance",
+            "score": 0.9459999799728394
+          },
+          {
+            "id": "https://openalex.org/keywords/refactoring",
+            "display_name": "refactoring",
+            "score": 0.46399998664855957
+          }
+        ],
+        "concepts": [
+          {
+            "id": "https://openalex.org/C154504017",
+            "wikidata": "https://www.wikidata.org/wiki/Q853614",
+            "display_name": "Identifier",
+            "level": 2,
+            "score": 0.6459447741508484
+          },
+          {
+            "id": "https://openalex.org/C41008148",
+            "wikidata": "https://www.wikidata.org/wiki/Q21198",
+            "display_name": "Computer science",
+            "level": 0,
+            "score": 0.6255965232849121
+          },
+          {
+            "id": "https://openalex.org/C101317890",
+            "wikidata": "https://www.wikidata.org/wiki/Q940053",
+            "display_name": "Software maintenance",
+            "level": 4,
+            "score": 0.5444608330726624
+          },
+          {
+            "id": "https://openalex.org/C2779343474",
+            "wikidata": "https://www.wikidata.org/wiki/Q3109175",
+            "display_name": "Context (archaeology)",
+            "level": 2,
+            "score": 0.5391945838928223
+          },
+          {
+            "id": "https://openalex.org/C2777904410",
+            "wikidata": "https://www.wikidata.org/wiki/Q7397",
+            "display_name": "Software",
+            "level": 2,
+            "score": 0.47457006573677063
+          },
+          {
+            "id": "https://openalex.org/C2776760102",
+            "wikidata": "https://www.wikidata.org/wiki/Q5139990",
+            "display_name": "Code (set theory)",
+            "level": 3,
+            "score": 0.45278120040893555
+          },
+          {
+            "id": "https://openalex.org/C43126263",
+            "wikidata": "https://www.wikidata.org/wiki/Q128751",
+            "display_name": "Source code",
+            "level": 2,
+            "score": 0.4389744997024536
+          },
+          {
+            "id": "https://openalex.org/C199360897",
+            "wikidata": "https://www.wikidata.org/wiki/Q9143",
+            "display_name": "Programming language",
+            "level": 1,
+            "score": 0.3885332942008972
+          },
+          {
+            "id": "https://openalex.org/C529173508",
+            "wikidata": "https://www.wikidata.org/wiki/Q638608",
+            "display_name": "Software development",
+            "level": 3,
+            "score": 0.2865438461303711
+          },
+          {
+            "id": "https://openalex.org/C177264268",
+            "wikidata": "https://www.wikidata.org/wiki/Q1514741",
+            "display_name": "Set (abstract data type)",
+            "level": 2,
+            "score": 0.1843574345111847
+          },
+          {
+            "id": "https://openalex.org/C95457728",
+            "wikidata": "https://www.wikidata.org/wiki/Q309",
+            "display_name": "History",
+            "level": 0,
+            "score": 0.08436131477355957
+          },
+          {
+            "id": "https://openalex.org/C166957645",
+            "wikidata": "https://www.wikidata.org/wiki/Q23498",
+            "display_name": "Archaeology",
+            "level": 1,
+            "score": 0.0
+          }
+        ],
+        "mesh": [],
+        "locations_count": 2,
+        "locations": [
+          {
+            "id": "pmh:oai:publications.polymtl.ca:1203",
+            "is_oa": true,
+            "landing_page_url": "https://publications.polymtl.ca/1203/1/2013_LatifaGuerrouj.pdf",
+            "pdf_url": "https://publications.polymtl.ca/1203/1/2013_LatifaGuerrouj.pdf",
+            "source": {
+              "id": "https://openalex.org/S4306401013",
+              "display_name": "PolyPublie (\u00c9cole Polytechnique de Montr\u00e9al)",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": "https://openalex.org/I45683168",
+              "host_organization_name": "Polytechnique Montr\u00e9al",
+              "host_organization_lineage": [
+                "https://openalex.org/I45683168"
+              ],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": null,
+            "raw_type": "M\u00e9moire ou th\u00e8se"
+          },
+          {
+            "id": "mag:2101322220",
+            "is_oa": false,
+            "landing_page_url": "http://publications.polymtl.ca/1203/1/2013_LatifaGuerrouj.pdf",
+            "pdf_url": null,
+            "source": null,
+            "license": null,
+            "license_id": null,
+            "version": null,
+            "is_accepted": false,
+            "is_published": null,
+            "raw_source_name": null,
+            "raw_type": null
+          }
+        ],
+        "best_oa_location": {
+          "id": "pmh:oai:publications.polymtl.ca:1203",
+          "is_oa": true,
+          "landing_page_url": "https://publications.polymtl.ca/1203/1/2013_LatifaGuerrouj.pdf",
+          "pdf_url": "https://publications.polymtl.ca/1203/1/2013_LatifaGuerrouj.pdf",
+          "source": {
+            "id": "https://openalex.org/S4306401013",
+            "display_name": "PolyPublie (\u00c9cole Polytechnique de Montr\u00e9al)",
+            "issn_l": null,
+            "issn": null,
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": false,
+            "listed_in": [],
+            "host_organization": "https://openalex.org/I45683168",
+            "host_organization_name": "Polytechnique Montr\u00e9al",
+            "host_organization_lineage": [
+              "https://openalex.org/I45683168"
+            ],
+            "host_organization_lineage_names": [],
+            "type": "repository"
+          },
+          "license": null,
+          "license_id": null,
+          "version": "submittedVersion",
+          "is_accepted": false,
+          "is_published": false,
+          "raw_source_name": null,
+          "raw_type": "M\u00e9moire ou th\u00e8se"
+        },
+        "sustainable_development_goals": [],
+        "sustainable_development_goals_aurora": [],
+        "study_designs": [],
+        "awards": [],
+        "funders": [],
+        "has_content": {
+          "pdf": true,
+          "grobid_xml": true
+        },
+        "content_urls": {
+          "pdf": "https://content.openalex.org/works/W2101322220.pdf",
+          "grobid_xml": "https://content.openalex.org/works/W2101322220.grobid-xml"
+        },
+        "referenced_works_count": 96,
+        "referenced_works": [
+          "https://openalex.org/W103650626",
+          "https://openalex.org/W169378430",
+          "https://openalex.org/W1490674333",
+          "https://openalex.org/W1491587310",
+          "https://openalex.org/W1536229846",
+          "https://openalex.org/W1542917673",
+          "https://openalex.org/W1555930296",
+          "https://openalex.org/W1612015840",
+          "https://openalex.org/W1639784222",
+          "https://openalex.org/W1647671624",
+          "https://openalex.org/W1660390307",
+          "https://openalex.org/W1965177473",
+          "https://openalex.org/W1965876361",
+          "https://openalex.org/W1972420078",
+          "https://openalex.org/W1973681806",
+          "https://openalex.org/W1978394996",
+          "https://openalex.org/W1982036946",
+          "https://openalex.org/W1986536877",
+          "https://openalex.org/W1992055950",
+          "https://openalex.org/W1992602600",
+          "https://openalex.org/W2003333103",
+          "https://openalex.org/W2004247102",
+          "https://openalex.org/W2009543464",
+          "https://openalex.org/W2009570821",
+          "https://openalex.org/W2012313588",
+          "https://openalex.org/W2013638584",
+          "https://openalex.org/W2018663431",
+          "https://openalex.org/W2019912855",
+          "https://openalex.org/W2022675432",
+          "https://openalex.org/W2028633384",
+          "https://openalex.org/W2034688095",
+          "https://openalex.org/W2034929864",
+          "https://openalex.org/W2045922551",
+          "https://openalex.org/W2051669404",
+          "https://openalex.org/W2052424802",
+          "https://openalex.org/W2059379914",
+          "https://openalex.org/W2062445258",
+          "https://openalex.org/W2068160829",
+          "https://openalex.org/W2068382122",
+          "https://openalex.org/W2077155146",
+          "https://openalex.org/W2077537588",
+          "https://openalex.org/W2077548463",
+          "https://openalex.org/W2079136077",
+          "https://openalex.org/W2086699924",
+          "https://openalex.org/W2097750323",
+          "https://openalex.org/W2098162425",
+          "https://openalex.org/W2099294614",
+          "https://openalex.org/W2099571428",
+          "https://openalex.org/W2104994910",
+          "https://openalex.org/W2107031757",
+          "https://openalex.org/W2108036122",
+          "https://openalex.org/W2110220994",
+          "https://openalex.org/W2111014165",
+          "https://openalex.org/W2112999860",
+          "https://openalex.org/W2115998851",
+          "https://openalex.org/W2117577756",
+          "https://openalex.org/W2119109877",
+          "https://openalex.org/W2122581326",
+          "https://openalex.org/W2122963002",
+          "https://openalex.org/W2123551785",
+          "https://openalex.org/W2125682153",
+          "https://openalex.org/W2128160875",
+          "https://openalex.org/W2128581098",
+          "https://openalex.org/W2128737833",
+          "https://openalex.org/W2129559874",
+          "https://openalex.org/W2130344546",
+          "https://openalex.org/W2130388803",
+          "https://openalex.org/W2136540032",
+          "https://openalex.org/W2138378644",
+          "https://openalex.org/W2139543149",
+          "https://openalex.org/W2142190098",
+          "https://openalex.org/W2147152072",
+          "https://openalex.org/W2147296306",
+          "https://openalex.org/W2149072143",
+          "https://openalex.org/W2149231960",
+          "https://openalex.org/W2150071570",
+          "https://openalex.org/W2151159559",
+          "https://openalex.org/W2151860493",
+          "https://openalex.org/W2152161325",
+          "https://openalex.org/W2152474046",
+          "https://openalex.org/W2154027310",
+          "https://openalex.org/W2155280192",
+          "https://openalex.org/W2155368638",
+          "https://openalex.org/W2155829706",
+          "https://openalex.org/W2156050524",
+          "https://openalex.org/W2157943826",
+          "https://openalex.org/W2162363818",
+          "https://openalex.org/W2163349045",
+          "https://openalex.org/W2163665793",
+          "https://openalex.org/W2163960678",
+          "https://openalex.org/W2164425715",
+          "https://openalex.org/W2165995531",
+          "https://openalex.org/W2171051433",
+          "https://openalex.org/W2173434715",
+          "https://openalex.org/W2262977669",
+          "https://openalex.org/W2495580237"
+        ],
+        "related_works": [
+          "https://openalex.org/W1557022498",
+          "https://openalex.org/W1998971036",
+          "https://openalex.org/W2132526849",
+          "https://openalex.org/W2846742989",
+          "https://openalex.org/W2847799004",
+          "https://openalex.org/W2974941833",
+          "https://openalex.org/W2774742292",
+          "https://openalex.org/W2973678870",
+          "https://openalex.org/W2824130558",
+          "https://openalex.org/W2926607946",
+          "https://openalex.org/W2821658919",
+          "https://openalex.org/W2875900212",
+          "https://openalex.org/W3026209662",
+          "https://openalex.org/W2929116874",
+          "https://openalex.org/W3041394904",
+          "https://openalex.org/W2735028696",
+          "https://openalex.org/W2810261602",
+          "https://openalex.org/W2831845441",
+          "https://openalex.org/W2848194060",
+          "https://openalex.org/W2875538322"
+        ],
+        "abstract_inverted_index": {
+          "This": [
+            0
+          ],
+          "dissertation": [
+            1
+          ],
+          "is": [
+            2
+          ],
+          "dedicated": [
+            3
+          ],
+          "to": [
+            4
+          ],
+          "my": [
+            5
+          ],
+          "parents.": [
+            6
+          ],
+          "For": [
+            7
+          ],
+          "their": [
+            8
+          ],
+          "endless": [
+            9
+          ],
+          "love,": [
+            10
+          ],
+          "support": [
+            11
+          ],
+          "and": [
+            12
+          ],
+          "encouragement": [
+            13
+          ]
+        },
+        "counts_by_year": [],
+        "updated_date": "2026-09-29T14:09:16.559479",
+        "created_date": "2025-10-10T00:00:00"
+      }
+    ],
+    "group_by": []
+  }
+}

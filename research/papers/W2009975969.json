@@ -1,0 +1,142 @@
+{
+  "id": "W2009975969",
+  "title": "A mobility-aware file system for partially connected operation",
+  "doi": "https://doi.org/10.1145/254784.254789",
+  "publication_date": "1997-01-01",
+  "publication_year": 1997,
+  "type": "article",
+  "cited_by_count": 22,
+  "authors": [
+    "D.S. Dwyer",
+    "Vaduvur Bharghavan"
+  ],
+  "venue": "ACM SIGOPS Operating Systems Review",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "bronze",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/254784.254789",
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2009975969.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2009975969.grobid-xml"
+  },
+  "abstract": "The advent of affordable off-the-shelf wide-area wireless networking solutions for portable computers will result in partial (or intermittent) connectivity becoming the common networking mode for mobile users. This paper presents the design of PFS, a mobility-aware file system specially designed for partially connected operation.PFS supports the extreme modes of full connection and disconnection gracefully, but unlike other mobile file systems, it also provides an interrace for mobility-aware applications to direct the file system in its caching and consistency decisions in order to fully exploit intermittent connectivity. Using PFS, it is possible for an application to maintain consistency on only the critical portions of its data files. Since PFS provides adaptation at the file system level, even unaware applications can 'act' mobile-aware as a result of the transparent adaptation provided by PFS.",
+  "topics": [
+    "Advanced Data Storage Technologies",
+    "Caching and Content Delivery",
+    "Distributed systems and fault tolerance"
+  ],
+  "references": [
+    "https://openalex.org/W1485389564",
+    "https://openalex.org/W1506476204",
+    "https://openalex.org/W1570073551",
+    "https://openalex.org/W1964086315",
+    "https://openalex.org/W1980446225",
+    "https://openalex.org/W2086093528",
+    "https://openalex.org/W2108805674",
+    "https://openalex.org/W2111242607",
+    "https://openalex.org/W2117260615",
+    "https://openalex.org/W2131414602",
+    "https://openalex.org/W2150048640",
+    "https://openalex.org/W2151847079",
+    "https://openalex.org/W2171907114",
+    "https://openalex.org/W3029719327",
+    "https://openalex.org/W3031614139",
+    "https://openalex.org/W6630188457"
+  ],
+  "cited_by": [
+    {
+      "id": "W4390532817",
+      "title": "DistressNet-NG: A Resilient Data Storage and Sharing Framework for Mobile Edge Computing in Cyber-Physical Systems"
+    },
+    {
+      "id": "W4312566540",
+      "title": "R-Drive: Resilient Data Storage and Sharing for Mobile Edge Clouds"
+    },
+    {
+      "id": "W2089248005",
+      "title": "File System Aware Storage Virtualization Management"
+    },
+    {
+      "id": "W2123932468",
+      "title": "A framework for application adaptation in mobile computing environments"
+    },
+    {
+      "id": "W2078097909",
+      "title": "Mimic"
+    },
+    {
+      "id": "W1555980138",
+      "title": "Software Architectural Support for Disconnected Operation in Highly Distributed Environments"
+    },
+    {
+      "id": "W2134011938",
+      "title": "A Classification of Disconnected Operation Techniques"
+    },
+    {
+      "id": "W2135846515",
+      "title": "On the Impact of Mobile Hosts in Peer-to-Peer Data Networks"
+    },
+    {
+      "id": "W2156416871",
+      "title": "Scheduling data reads and writes using feedback control on a weakly connected environment"
+    },
+    {
+      "id": "W2043911588",
+      "title": "Mobile hosts participating in peer-to-peer data networks: challenges and solutions"
+    },
+    {
+      "id": "W2396183427",
+      "title": "\u00c9tat de l\u2019art de la gestion de cache logiciel pour tol\u00e9rer les d\u00e9connexions en environnements mobiles"
+    },
+    {
+      "id": "W2042330517",
+      "title": "A design pattern for mobile-distributed knowledge spaces"
+    },
+    {
+      "id": "W1819256339",
+      "title": "Metaspaces and mobile computing: Promises and challenges"
+    },
+    {
+      "id": "W2098538934",
+      "title": "A CORBA-Based Transaction System for the Wireless Communication Environment"
+    },
+    {
+      "id": "W2258799036",
+      "title": "Um sistema de transa\u00e7\u00f5es adaptavel para o ambiente de comunica\u00e7\u00e3o sem fio"
+    },
+    {
+      "id": "W1598680049",
+      "title": "DORMIA: a distributed system for mobile information access"
+    },
+    {
+      "id": "W1934635679",
+      "title": "Adaptive file system consistency for unreliable mobile computing environments"
+    },
+    {
+      "id": "W2027616047",
+      "title": "Operating systems architecture future directions for heterogeneous communication systems"
+    },
+    {
+      "id": "W2234638867",
+      "title": "Contributions aux syst\u00e8mes r\u00e9partis en environnements ubiquitaires : adaptation, sensibilit\u00e9 au contexte et tol\u00e9rance aux fautes"
+    },
+    {
+      "id": "W2269183150",
+      "title": "User-activity aware strategies for mobile information access"
+    },
+    {
+      "id": "W2285255899",
+      "title": "Reliable Communications over Heterogeneous Wireless Networks"
+    },
+    {
+      "id": "W2311755509",
+      "title": "Application acceleration for wireless and mobile data networks"
+    }
+  ]
+}

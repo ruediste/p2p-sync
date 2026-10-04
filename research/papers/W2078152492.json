@@ -1,0 +1,256 @@
+{
+  "id": "W2078152492",
+  "title": "Replication, history, and grafting in the Ori file system",
+  "doi": "https://doi.org/10.1145/2517349.2522721",
+  "publication_date": "2013-10-08",
+  "publication_year": 2013,
+  "type": "conference-paper",
+  "cited_by_count": 38,
+  "authors": [
+    "Ali Jos\u00e9 Mashtizadeh",
+    "Andrea Bittau",
+    "Yifeng Frank Huang",
+    "David Mazi\u00e8res"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/2517349.2522721",
+    "any_repository_has_fulltext": null
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2078152492.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2078152492.grobid-xml"
+  },
+  "abstract": "Ori is a file system that manages user data in a modern setting where users have multiple devices and wish to access files everywhere, synchronize data, recover from disk failure, access old versions, and share data. The key to satisfying these needs is keeping and replicating file system history across devices, which is now practical as storage space has outpaced both wide-area network (WAN) bandwidth and the size of managed data. Replication provides access to files from multiple devices. History provides synchronization and offline access. Replication and history together subsume backup by providing snapshots and avoiding any single point of failure. In fact, Ori is fully peer-to-peer, offering opportunistic synchronization between user devices in close proximity and ensuring that the file system is usable so long as a single replica remains. Cross-file system data sharing with history is provided by a new mechanism called grafting. An evaluation shows that as a local file system, Ori has low overhead compared to a File system in User Space (FUSE) loopback driver; as a network file system, Ori over a WAN outperforms NFS over a LAN.",
+  "topics": [
+    "Advanced Data Storage Technologies",
+    "Distributed systems and fault tolerance",
+    "Caching and Content Delivery"
+  ],
+  "references": [
+    "https://openalex.org/W1962291",
+    "https://openalex.org/W39567018",
+    "https://openalex.org/W122161529",
+    "https://openalex.org/W161866744",
+    "https://openalex.org/W182346126",
+    "https://openalex.org/W1508811426",
+    "https://openalex.org/W1540879848",
+    "https://openalex.org/W1576397915",
+    "https://openalex.org/W1591638986",
+    "https://openalex.org/W1600255172",
+    "https://openalex.org/W1667592029",
+    "https://openalex.org/W1978855656",
+    "https://openalex.org/W1993596350",
+    "https://openalex.org/W2037874752",
+    "https://openalex.org/W2056980397",
+    "https://openalex.org/W2084445812",
+    "https://openalex.org/W2098881120",
+    "https://openalex.org/W2100100130",
+    "https://openalex.org/W2114349788",
+    "https://openalex.org/W2116142433",
+    "https://openalex.org/W2151227991",
+    "https://openalex.org/W2266338101",
+    "https://openalex.org/W2561675875",
+    "https://openalex.org/W2913639706",
+    "https://openalex.org/W4254234063",
+    "https://openalex.org/W6601579922"
+  ],
+  "cited_by": [
+    {
+      "id": "W2025018396",
+      "title": "SibylFS",
+      "abstract": "Systems depend critically on the behaviour of file systems, but that behaviour differs in many details, both between implementations and between each implementation and the POSIX (and other) prose specifications. Building robust and portable software requires understanding these details and differences, but there is currently no good way to systematically describe, investigate, or test file system behaviour across this complex multi-platform interface."
+    },
+    {
+      "id": "W2929535911",
+      "title": "WPaxos: Wide Area Network Flexible Consensus",
+      "abstract": "WPaxos is a multileader Paxos protocol that provides low-latency and high-throughput consensus across wide-area network (WAN) deployments. WPaxos uses multileaders, and partitions the object-space among these multileaders. Unlike statically partitioned multiple Paxos deployments, WPaxos is able to adapt to the changing access locality through object stealing. Multiple concurrent leaders coinciding in different zones steal ownership of objects from each other using phase-1 of Paxos, and then use phase-2 to commit update-requests on these objects locally until they are stolen by other leaders. To achieve fast phase-2 commits, WPaxos adopts the flexible quorums idea in a novel manner, and appoints phase-2 acceptors to be close to their respective leaders. We implemented WPaxos and evaluated it over WAN deployments across 5 AWS regions. The dynamic partitioning of the objectspace and emphasis on zone-local commits allow WPaxos to significantly outperform both partitioned Paxos deployments and leaderless Paxos approaches."
+    },
+    {
+      "id": "W2274037101",
+      "title": "Logical Physical Clocks",
+      "abstract": null
+    },
+    {
+      "id": "W2440548006",
+      "title": "TARDiS",
+      "abstract": "This paper presents the design, implementation, and evaluation of TARDiS (Transactional Asynchronously Replicated Divergent Store), a transactional key-value store explicitly designed for weakly-consistent systems. Reasoning about these systems is hard, as neither causal consistency nor per-object eventual convergence allow applications to deal satisfactorily with write-write conflicts. TARDiS instead exposes as its fundamental abstraction the set of conflicting branches that arise in weakly-consistent systems. To this end, TARDiS introduces a new concurrency control mechanism: branch-on-conflict. On the one hand, TARDiS guarantees that storage will appear sequential to any thread of execution that extends a branch, keeping application logic simple. On the other, TARDiS provides applications, when needed, with the tools and context necessary to merge branches atomically, when and how applications want. Since branch-on-conflict in TARDiS is fast, weakly-consistent applications can benefit from adopting this paradigm not only for operations issued by different sites, but also, when appropriate, for conflicting local operations. We find that TARDiS reduces coding complexity for these applications and that judicious branch-on-conflict can improve their local throughput at each site by two to eight times."
+    },
+    {
+      "id": "W2946640457",
+      "title": "Charon: A Secure Cloud-of-Clouds System for Storing and Sharing Big Data",
+      "abstract": "We presentCharon, a cloud-backed storage system capable of storing and sharing big data in a secure, reliable, and efficient way using multiple cloud providers and storage repositories to comply with the legal requirements of sensitive personal data.Charonimplements three distinguishing features: (1) it does not require trust on any single entity, (2) it does not require any client-managed server, and (3) it efficiently deals with large files over a set of geo-dispersed storage services. Besides that, we developed a novel Byzantine-resilient data-centric leasing protocol to avoid write-write conflicts between clients accessing shared repositories. We evaluateCharonusing micro and application-based benchmarks simulating representative workflows from bioinformatics, a prominent big data domain. The results show that our unique design is not only feasible but also presents an end-to-end performance of up to$2.5\\times$2.5\u00d7better than other cloud-backed solutions."
+    },
+    {
+      "id": "W2218485375",
+      "title": "MetaSync: file synchronization across multiple untrusted storage services",
+      "abstract": "Cloud-based file synchronization services, such as Drop-box, are a worldwide resource for many millions of users. However, individual services often have tight resource limits, suffer from temporary outages or even shutdowns, and sometimes silently corrupt or leak user data. We design, implement, and evaluate MetaSync, a se-cure and reliable file synchronization service that uses multiple cloud synchronization services as untrusted storage providers. To make MetaSync work correctly, we devise a novel variant of Paxos that provides efficient and consistent updates on top of the unmodified APIs exported by existing services. Our system automatically redistributes files upon reconfiguration of providers. Our evaluation shows that MetaSync provides low up-date latency and high update throughput while being more trustworthy and available. MetaSync outperforms its underlying cloud services by 1.2-10 \u00d7 on three realis-tic workloads. 1"
+    },
+    {
+      "id": "W2522846515",
+      "title": "The Freeze-Frame File System",
+      "abstract": "Many applications perform real-time analysis on data streams. We argue that existing solutions are poorly matched to the need, and introduce our new Freeze-Frame File System. Freeze-Frame FS is able to accept streams of updates while satisfying \"temporal reads\" on demand. The system is fast and accurate: we keep all update history in a memory-mapped log, cache recently retrieved data for repeat reads, and use a hybrid of a real-time and a logical clock to respond to read requests in a manner that is both temporally precise and causally consistent. When RDMA hardware is available, the write and read throughput of a single client reaches 2.6GB/s for writes and 5GB/s for reads, close to the limit (about 6GB/s) on the RDMA hardware used in our experiments. Even without RDMA, Freeze Frame FS substantially outperforms existing options for our target settings."
+    },
+    {
+      "id": "W2023813947",
+      "title": "I'm Cloud 2.0, and I'm Not Just a Data Center",
+      "abstract": "Cloud service providers invest significant effort into designing, building, and empowering cloud infrastructures to deliver a growing number of services in a scalable and cost-efficient fashion. At the same time, technology advances are commoditizing small devices with powerful compute, storage, and communication capabilities at unprecedented scale. What if such devices could extend the boundaries of the traditional cloud model to form an even more flexible, resource-aware, and better-performing cloud? The author has termed this approach Cloud 2.0."
+    },
+    {
+      "id": "W2184209422",
+      "title": "Future Internet Bandwidth Trends: An Investigation on Current and Future Disruptive Technologies",
+      "abstract": "Executive Summary New technologies sometimes result in disruptive changes to the existing infrastructure. Without adequate foresight, industry, academia, and government can be caught flat-footed. In this work, we focus on the trends surrounding home Internet bandwidth \u2014 the bandwidth required by end user applications at home. As building and managing last mile network infrastructure incurs substantial cost, the foresight of such trends is necessary to plan upgrades. Using a bottom-up approach, we look at four potentially disruptive technologies, including millimeter wave wireless (mm-wave), the Internet of Things (IoT), Fog Computing, and Software Defined Networking (SDN). We examine use cases proposed by academia and industry, delve into the bandwidth requirements for proposed applications, and use this data to forecast future traffic demands for typical home users. Our projections show that bandwidth changes at end user devices will most likely be driven by two of the above technologies: millimeter wave wireless and Fog Computing. These technologies not only change the peak bandwidth, but also have noticeable secondary effects on bandwidth such as increasing upload bandwidth use, improving flash crowd tolerance, and increasing off-peak demand. While IoT and SDN are important, innovative technologies, they will not drastically alter the bandwidth usage patterns of ordinary users at home. We hope that the data and recommendations from this study can help business leaders and policy makers get an early jump on emerging technologies before they begin to shape the economy and society. \u2217This paper was written with financial support from the Time Warner Cable Research Program on Digital Communications, 2013. The views expressed are those of the author(s) and not necessarily those of Time Warner Cable or the Time Warner Cable Research Program on Digital Communications."
+    },
+    {
+      "id": "W2516402643",
+      "title": "Logical Physical Clocks and Consistent Snapshots in Globally Distributed Databases",
+      "abstract": "There is a gap between the theory and practice of distributed systems in terms of the use of time. The theory of distributed systems shunned the notion of time, and introduced \u201ccausality tracking\u201d as a clean abstraction to reason about concurrency. The practical systems employed physical time (NTP) information but in a best effort manner due to the difficulty of achieving tight clock synchronization. In an effort to bridge this gap and reconcile the theory and practice of distributed systems on the topic of time, we propose a hybrid logical clock, HLC, that combines the best of logical clocks and physical clocks. HLC captures the causality relationship like logical clocks, and enables easy identification of consistent snapshots in distributed systems. Dually, HLC can be used in lieu of physical/NTP clocks since it maintains its logical clock to be always close to the NTP clock. Moreover HLC fits in to 64 bits NTP timestamp format, and is masking tolerant to NTP kinks and uncertainties. We show that HLC has many benefits for wait-free transaction ordering and performing snapshot reads in multiversion globally distributed databases."
+    },
+    {
+      "id": "W2735305156",
+      "title": "DeltaCFS: Boosting Delta Sync for Cloud Storage Services by Learning from NFS",
+      "abstract": "Cloud storage services, such as Dropbox, iCloud Drive, Google Drive, and Microsoft OneDrive, have greatly facilitated users' synchronizing files across heterogeneous devices. Among them, Dropbox-like services are particularly beneficial owing to the delta sync functionality that strives towards greater network-level efficiency. However, when delta sync trades computation overhead for network-traffic saving, the tradeoff could be highly unfavorable under some typical workloads. We refer to this problem as the abuse of delta sync. To address this problem, we propose DeltaCFS, a novel file sync framework for cloud storage services by learning from the design of conventional NFS (Network File System). Specifically, we combine delta sync with NFS-like file RPC in an adaptive manner, thus significantly cutting computation overhead on both the client and server sides while preserving the network-level efficiency. DeltaCFS also enables a neat design for guaranteeing causal consistency and fine-grained version control of files. In our FUSE-based prototype system (which is open-source), DeltaCFS outperforms Dropbox by generating up to 11x less data transfer and up to 100x less computation overhead under concerned workloads."
+    },
+    {
+      "id": "W2736120443",
+      "title": "Efficient Distributed Coordination at WAN-Scale",
+      "abstract": "Traditional coordination services for distributed applications do not scale well over wide-area networks (WAN): centralized coordination fails to scale with respect to the increasing distances in the WAN, and distributed coordination fails to scale with respect to the number of nodes involved. We argue that it is possible to achieve scalability over WAN using a hierarchical coordination architecture and a smart token migration mechanism, and lay down the foundation of a novel design for a flexible-consistent coordination framework, called WanKeeper. We implemented WanKeeper based on the ZooKeeper API and deployed it over WAN as a proof of concept. Our experimental results based on the Yahoo! Cloud Serving Benchmark (YCSB), Apache BookKeeper replicated log service, and the Shared Cloud-backed File System (SCFS) show that WanKeeper provides multiple folds improvement in write/update performance in WAN compared to ZooKeeper, while keeping the same read performance."
+    },
+    {
+      "id": "W2945661666",
+      "title": "Distributed Personal Cloud Storage without Third Parties",
+      "abstract": "We present the \u201cIt's My Data file system\u201d (IMDfs), a personal, version-tracking, distributed file system that allows users to take custody of their cross-device data management needs, without depending on cloud storage providers. Such a system may be desirable to privacy-conscious users, who worry about the increasing number of cloud storage incidents involving data leakage and corruption, or simply want to synchronize their devices without depending on third parties. IMDfs provides a global, unified view of a user's distributed data collection from any device, user-controlled replication of data across devices, transparent remote access, and support for non-restrictive conflict management. IMDfs achieves all this without sacrificing fault-tolerance or performance and with modest storage overhead. We present the design, implementation, and detailed performance evaluation of IMDfs using benchmarks and traces from real workloads, and we demonstrate that: 1) IMDfs, as a local file system, has reasonable overhead compared with a FUSE loopback file system and Wayback, a local versioning file system, and 2) IMDfs, as a network file system, outperforms NFS and Ori, a state-of-the-art file system for cross-device data management."
+    },
+    {
+      "id": "W3024683107",
+      "title": "Privacy preserving distributed training of neural networks",
+      "abstract": null
+    },
+    {
+      "id": "W4392399504",
+      "title": "UPSS: A Global, Least-Privileged Storage System with Stronger Security and Better Performance",
+      "abstract": "Strong confidentiality, integrity, user control, reliability and performance are critical requirements in privacy-sensitive applications. Such applications would benefit from a data storage and sharing infrastructure that provides these properties even in decentralized topologies with untrusted storage backends, but users today are forced to choose between systemic security properties and system reliability or performance. As an alternative to this status quo we present UPSS: the user-centric private sharing system, a cryptographic storage system that can be used as a conventional filesystem or as the foundation for security-sensitive applications such as redaction with integrity and private revision control. We demonstrate that both the security and performance properties of UPSS exceed that of existing cryptographic filesystems and that its performance is comparable to mature conventional filesystems - in some cases, even superior. Whether used directly via its Rust API or as a conventional filesystem, UPSS provides strong security and practical performance on untrusted storage."
+    },
+    {
+      "id": "W4281250824",
+      "title": "Consolidating incentivization in distributed neural network training via decentralized autonomous organization",
+      "abstract": null
+    },
+    {
+      "id": "W3147516568",
+      "title": "Using distributed ledger technology to democratize neural network training",
+      "abstract": null
+    },
+    {
+      "id": "W3164765047",
+      "title": "DeSI: A Decentralized Software-Defined Network Architecture for Internet Exchange Points",
+      "abstract": "Applications of Software-Defined Networking (SDN) to the Internet Routing hold great promises for supporting the ever-growing performance requirements of Internet applications. The inherent centralization of these SDN approaches on the Internet routing comes with the following concerns: 1)privacy, the operators are reluctant to share private routing information, 2)separation of responsibilities, the Internet eXchange Point (IXP) running the centralized controller is involved in the routing and forwarding at too many levels, and 3)scalability, the growing number of IP prefixes routed on the Internet (i.e., hundreds of thousands) pose extremely high requirements at both the control- and data-planes, e.g., several minutes for policy compilations and a large number of forwarding rules, in SDN. In this paper, we proposeDeSIto apply SDN at IXPs by considering the above concerns. We break this centralization by devising an SDN-enabled IXP architecture in which each member connects to an SDN-enabled IXP through its SDN controller and SDN switches, thus tackling privacy, scalability, and separation of concerns issues. To spur adoption, we introduce an expressive, yet simple, language to configure the routing policies of the members. Our evaluation shows thatDeSIneedsntimes fewer forwarding table entries for an IXP in whichnis the number of IXP members.DeSIalso gives the possibility of slowly migrating to the SDN-enabled IXPs."
+    },
+    {
+      "id": "W2945530803",
+      "title": "Learnae: Distributed and Resilient Deep Neural Network Training for Heterogeneous Peer to Peer Topologies",
+      "abstract": null
+    },
+    {
+      "id": "W3135555981",
+      "title": "A social link based private storage cloud",
+      "abstract": "In this paper, we present O3, a social link based private storage cloud for decentralized collaboration. O3allows users to share and collaborate on collections of files (shared folders) with others, in a decentralized manner, without the need for intermediaries (such as public cloud storage servers) to intervene. Thus, users can keep their working relationships (who they work with) and what they work on private from third parties. Using benchmarks and traces from real workloads, we experimentally evaluate O3and demonstrate that the system scales linearly when synchronizing increasing numbers of concurrent users, while performing on-par with the ext4 non-version-tracking filesystem."
+    },
+    {
+      "id": "W2604174485",
+      "title": "Knockoff: Cheap Versions in the Cloud.",
+      "abstract": "Cloud-based storage provides reliability and ease-of-management. Unfortunately, it can also incur significant costs for both storing and communicating data, even after using techniques such as chunk-based deduplication and delta compression. The current trend of providing access to past versions of data exacerbates both costs.\r\n\r\nIn this paper, we show that deterministic recomputation of data can substantially reduce the cost of cloud storage. Borrowing a well-known dualism from the fault-tolerance community, we note that any data can be equivalently represented by a log of the nondeterministic inputs needed to produce that data. We design a file system, called Knockoff, that selectively substitutes nondeterministic inputs for file data to reduce communication and storage costs. Knockoff compresses both data and computation logs: it uses chunk-based deduplication for file data and delta compression for logs of nondeterminism. In two studies, Knockoff reduces the average cost of sending files to the cloud without versioning by 21% and 24%; the relative benefit increases as versions are retained more frequently."
+    },
+    {
+      "id": "W2739902990",
+      "title": "An Efficient Replication Approach based on Trust for Distributed Self-healing Systems",
+      "abstract": "Replication typically occurs in a wide range of open distributed systems, especially in self-healing systems (i.e., mainly for fault-tolerance purposes) and in high-performance computing (i.e., mainly for fast response times). All these systems face a common issue: how can replicas automatically and efficiently be managed in a system despite changing requirements of their environment? One way to overcome this issue is trust. The contribution of this paper is a novel approach based on trust that provides a good management of replicas --- especially for those of important services --- despite uncertainties in the behavior of nodes. Depending on the importance level of a service possessing the replicas and the assessment of the trustworthiness of a node, we can optimize the trust distribution of replicas at runtime. For evaluation purposes we applied our approach to an evaluator based on the TEM middleware. In this testbed, the usage of trust reduced the replication overhead by about 1 4% while providing a much better placement of important replicas than without trust."
+    },
+    {
+      "id": "W2883392458",
+      "title": "Rio: a personal storage system in multi-device and cloud",
+      "abstract": null
+    },
+    {
+      "id": "W3080561856",
+      "title": "Challenges in Designing a Distributed Cryptographic File System",
+      "abstract": null
+    },
+    {
+      "id": "W1970730635",
+      "title": "The PocketLocker Personal Cloud Storage System",
+      "abstract": "PocketLocker creates scalable, reliable, and performant personal storage clouds out of available space distributed across multiple personal devices. Designed to store rarely-changed files on both interactive devices with limited storage (such as smartphones) and non-interactive devices with large am"
+    },
+    {
+      "id": "W2050357788",
+      "title": "A Name Is Not A Name",
+      "abstract": "The automatic resolution for resolving conflict updates in cloud storage services has been well studied, however, how to correctly implement the resolution in real-world systems remains challenging. In this paper, we present the challenges we experienced when implementing our cloud storage system. They include (1) detecting the intended object for an update when the intended object has been automatically changed by the conflict resolution, and (2) producing no different intermediate results when resolving the conflict updates from more than two replicas. We present our solution of using the mechanism of the conflict resolution to redirect an update to its intended object and of using Conflict-Free Replicated Data Type (CRDT) for a \"clean\" implementation of conflict resolution without different intermediate results."
+    },
+    {
+      "id": "W4413360588",
+      "title": "RACS-SADL: Robust and Understandable Randomized Consensus in the Cloud",
+      "abstract": "Widely deployed consensus protocols in the cloud are often leader-based and optimized for low latency under synchronous network conditions. However, cloud networks can experience disruptions such as network partitions, high-loss links, and configuration errors. These disruptions interfere with the operation of leader-based protocols, as their view change mechanisms interrupt the normal case replication and cause the system to stall. We propose RACS, a novel randomized consensus protocol that ensures robustness against adversarial network conditions. RACS achieves optimal one-round trip latency under synchronous network conditions while remaining resilient to adversarial network conditions. RACS follows a simple design inspired by Raft, the most widely used consensus protocol in the cloud, and therefore enables seamless integration with the existing cloud software stack. Experiments with a prototype running on Amazon EC2 show that RACS achieves 28k cmd/sec throughput, ninefold higher than Raft under adversarial cloud network conditions. Under synchronous network conditions, RACS matches the performance of Multi-Paxos and Raft, achieving a throughput of 200k cmd/sec with a median latency of 300ms, confirming that RACS introduces no unnecessary overhead. Finally, SADL-RACS, a throughput-optimized version of RACS, achieves a throughput of 500k cmd/sec, delivering 150 percent higher throughput than Raft."
+    },
+    {
+      "id": "W2765880527",
+      "title": "ZX: A network file system for high\u2010latency networks",
+      "abstract": "Summary Using a central file server is good for interactive access to files, because of the coherency implied by a centralized design. In fact, within local area networks, this is a common case. However, distributed environments in use today may exhibit round\u2010trip times on the order of 50 or 100 ms. This is a problem for interactive file access to a central file server because of the resulting access times. Although aggressive caching and loosely synchronized replicas may be used for distributed file access, there are cases where the better coherency provided by a central server is still desirable. In this paper, we present ZX, a distributed file system and protocol designed with latency in mind. It can use caching, but it does not require caching or batching to address latency issues. ZX relies on a novel channel\u2010based file system interface. It includes find requests and leverages streaming requests to work well under high\u2010latency conditions. Unlike other protocols designed for distributed access to a central server, ZX tolerates round\u2010trip times on the order of 50 or 100 ms to access a central file server for interactive usage such as compiling shared sources, running binaries, editing documents, and other similar workloads. It can be used on UNIX using a FUSE adaptor while permitting native ZX speakers to run faster."
+    },
+    {
+      "id": "W11055604",
+      "title": "Arquitectura para Acceso Remoto",
+      "abstract": "En la actualidad, la utilizaci\u00f3n de fuentes de datos compartidas facilita el trabajo en equipo. Por este motivo las organizaciones implementan en sus locaciones sistemas con controles de acceso para compartir los datos de acuerdo a los privilegios de los usuarios. Nuevas formas de trabajo son la distribuci\u00f3n de los miembros de un equipo en distintos lugares f\u00edsicos, el trabajo desde las casas de los empleados, el traslado temporal a otra locaci\u00f3n. Por todas estas razones, acceder a los datos en forma remota es una necesidad en crecimiento. Una respuesta a esta necesidad es la propuesta de una arquitectura referente en capas ICSAD (Interfaz, Control y Sistemas de Archivos Distribuidos). La misma permite construir una implementaci\u00f3n que facilita la descarga de los documentos y el control de versionado para el caso en el que varios usuarios est\u00e9n accediendo en modo modificaci\u00f3n. En el laboratorio de sistemas distribuidos comenzamos a trabajar en la implementaci\u00f3n de la arquitectura propuesta."
+    },
+    {
+      "id": "W2184803658",
+      "title": "Device-independent on demand synchronization in the Unico file system",
+      "abstract": "As people increasingly use a wide variety of devices throughout their day, it becomes important to give users consistent and efficient access to their data in all their devices, while at the same time take into consideration the resource limitations in each device. This dissertation presents a storage platform that presents users with a single view of all their data, independently of the device they are using. Each of the user\u2019s devices has full and up-to-date information about the entire data structure and metadata, and is able to retrieve any file transparently as needed. File content, including history, is efficiently distributed among the user\u2019s own devices according to where it is used, with no need for centralized storage and no data stored in devices that are not owned by the user. Peers communicate with each other directly to maintain a consistent state. Users also have no need to know where the data is stored, or to remember in which device the latest update to a file has been performed. The user is able to adapt the platform to devices with different storage and network characteristics. While the latency to access content is affected, and some data may not be available at all times if some devices are disconnected, applications have access to tools that allow them to adapt to data availability."
+    },
+    {
+      "id": "W2197565756",
+      "title": "Toward eidetic distributed file systems",
+      "abstract": "We propose a new point in the design space of versioning and provenance-aware file systems in which the entire operating system, not just the file system, supports such functionality. We leverage deterministic record-and-replay to substitute computation for data. This leads to a new file system design where the log of nondeterministic inputs, not file data, is the fundamental unit of persistent storage. We outline a distributed storage system design based on these principles and describe the challenges we foresee for achieving our vision."
+    },
+    {
+      "id": "W2295980245",
+      "title": "Flexible Desktop Application Management and Its Influence on Green Computing",
+      "abstract": "Environmentally sustainable computing and green computing have been studied addressing the need of reducing power consumption mainly in area of high performance computing systems(HPC), mostly on the server side. However, desktop applications in wide-spread use of large organizations and companies are given relatively less focus. In this paper, we study the application fast deployment and fast crash restore through lightweight application virtualization, which can actually conserve energy by significantly reducing application installation/start up time and application crash restore time. We demonstrate that the proposed lightweight application virtualization method has little performance degradation with a noticeable energy saving by carrying out experiments on lots of commonly used real-world work applications. In addition, we implement the prototype system to help users to continue normal work quickly without losing data after crashing. Several novel mechanisms are utilized to make the process fast. We evaluate the system from aspects of start up time, runtime performance and application compatibility, and using a power evaluation model to measure the effectiveness of the system."
+    },
+    {
+      "id": "W2607754875",
+      "title": "CloudEFS: Efficient and secure file system for cloud storage",
+      "abstract": "Although outsourcing data to the cloud has many advantages, cloud computing introduces new privacy and security requirements on how data is stored and accessed. To ensure data confidentiality, use of encryption is a common strategy. A problem with this strategy is that for large data it becomes difficult to access and update data, and to ensure data integrity and data provenance without decrypting all the data. The problem becomes severe when it comes to accessing and modifying large files using mobile devices with limited processing and bandwidth capabilities. In this paper, we present CloudEFS, a novel storage framework to efficiently access and update large encrypted data. A new cached hash algorithm enables efficient updates of data integrity and provenance information. CloudEFS provides improved privacy by hiding not only content but also metadata such as data size, file count, file structure and file history."
+    },
+    {
+      "id": "W2912079945",
+      "title": "Analiza w\u0142a\u015bciwo\u015bci wybranych rozwi\u0105za\u0144 rozproszonych system\u00f3w plik\u00f3w",
+      "abstract": "W artykule przedstawiono analiz\u0119 por\u00f3wnawcz\u0105 trzech najpopularniejszych rozproszonych system\u00f3w plik\u00f3w: Ceph, LizardFS, GlusterFS. G\u0142\u00f3wnym kryterium oceny badanych system\u00f3w by\u0142a ich wydajno\u015b\u0107, rozumiana jako liczba operacji zapisu i odczytu w jednostce czasu oraz maksymalny transfer danych. Analiz\u0119 oparto na wynikach licznych eksperyment\u00f3w przeprowadzonych w opracowanym w tym celu stanowisku badawczym. Cz\u0119\u015b\u0107 badawcz\u0105 poprzedzono przegl\u0105dem technologii oraz najpopularniejszych istniej\u0105cych system\u00f3w tego typu. W pracy przedstawiono wyniki eksperyment\u00f3w, ich analiz\u0119 oraz praktyczne wnioski. In this paper we present a comparative analysis of three most popular distributed file systems: Ceph, LizardFS nad GlusterFS. The main evaluation criterion was the efficiency of systems, meant as the number of read and write operation per second and maximum data transfer rate. The analysis is based on results of many experiments conducted in experimental testbed, prepared for this purpose. Experimental part of the paper is preceded with a survey of technology related to most important distributed file systems. The results of experiments have been presented and analyzed, also some practical conclusions have been formulated."
+    },
+    {
+      "id": "W2921750579",
+      "title": "Chain of Equipments: A Scheme for Life-Time Personal Photo Storage",
+      "abstract": "Photographs in digital form is much more difficult to preserve than in films and prints. While long-term digital preservation has long been studied, the methods are for organizations, and are far from realistic for personal use. This paper proposes a new scheme for life-time personal photo preservation. In the scheme called a chain of equipments, a long-term photo preservation policy is determined first, and then manufacturers supply tailored storage devices, called ring equipments, under the policy. Complicated tasks for migration is encapsulated in the ring equipments, and a chain of ring equipments preserves photo data for a long time. The specifications of ring equipments are constrained only by the policy, and then the manufacturers can avoid technology obsolescence."
+    },
+    {
+      "id": "W4233220155",
+      "title": "Device-independent on demand synchronization in the Unico file system",
+      "abstract": "This paper presents Unico, a storage platform that presents users with a single view of all their data, independently of the device they are using. Each of the user's devices has full and up-to-date information about the entire data structure and metadata, and is able to retrieve any file transparently as needed. File content is efficiently distributed among the user's own devices according to where it is used, with no need for centralized storage and no data stored in devices that are not owned by the user. Peers communicate with each other directly to maintain a consistent state. Users also have no need to know where the data is stored, or to remember in which device the latest update to a file has been performed. Unico is able to work with devices with different storage characteristics, and provides mechanisms for applications to adapt to data availability."
+    },
+    {
+      "id": "W7148346884",
+      "title": "Ensuring availability and managing consistency in geo-replicated file systems",
+      "abstract": "Assurance de disponibilit\u00e9 et coh\u00e9rence dirigeante dans syst\u00e8mes de fichiers g\u00e9o-reproduits Les syst\u00e8mes de fichiers g\u00e9o-distribu\u00e9s souffrent de latences \u00e9lev\u00e9es et de partitions r\u00e9seau. \u00c0 cause de cela, et pour assurer une haute disponibilit\u00e9, de tels syst\u00e8mes effectuent g\u00e9n\u00e9ralement des mises \u00e0 jour localement, sans latence, et les propagent ensuite en arri\u00e8re-plan. Cette r\u00e9plication optimiste est confront\u00e9e \u00e0 deux d\u00e9fis majeurs : (i) d\u00e9tecter les conflits entre les mises \u00e0 jour simultan\u00e9es et les r\u00e9soudre d'une mani\u00e8re significative pour les utilisateurs, tout en maintenant les invariants d'int\u00e9grit\u00e9 du syst\u00e8me; et (ii) la prise en charge d'applications qui n'ont pas \u00e9t\u00e9 con\u00e7ues pour g\u00e9rer les anomalies de concurrence. Les syst\u00e8mes de fichiers g\u00e9o-distribu\u00e9s optimistes existants ne permettent pas de relever ces d\u00e9fis. Par exemple, Dropbox ne supporte pas les liens mat\u00e9riels. Le syst\u00e8me de fichiers AndrewFS \u00e9choue sur certains changements de noms de r\u00e9pertoires; et tous les syst\u00e8mes existants utilisent la r\u00e9solution automatique des conflits qui viole la s\u00e9mantique POSIX. Nous pr\u00e9sentons notre solution aux probl\u00e8mes pos\u00e9s ci-dessus dans la conception et la mise en \u0153uvre d'un prototype de syst\u00e8me de fichiers g\u00e9o-distribu\u00e9, nomm\u00e9 Tofu. Sa conception inclut une nouvelle abstraction de session pour prendre en charge l'API, tout en permettant des mises \u00e0 jour optimistes. Il est capable de d\u00e9tecter tous les conflits sur ces structures de donn\u00e9es et de les r\u00e9soudre d'une fa\u00e7on que nous pensons que les utilisateurs trouveront raisonnable. Les exp\u00e9riences montrent que Tofu est hautement \u00e9volutif et qu'il entra\u00eene des surco\u00fbts lin\u00e9aires, am\u00e9liorant ainsi les syst\u00e8mes acad\u00e9miques et industriels existants."
+    },
+    {
+      "id": "W7163517220",
+      "title": "SplitFUSE: A Highly Compatible Framework for I/O Acceleration of User-Level File Systems",
+      "abstract": "User-level file systems are widely adopted in research and production environments due to their flexibility and reduced risk of kernel crashes. Filesystem in Userspace (FUSE) is a general-purpose framework for developing user-level file systems in Linux. Compared with library-based file systems, FUSE adopts a cooperative architecture between kernel modules and userspace libraries, ensuring metadata security and compliance with standard portable operating system interface (POSIX) semantics. However, this architecture introduces substantial context-switching overhead. Existing optimization approaches for high-performance computing environments often improve input/output (I/O) performance at the expense of FUSE's cross environment compatibility and kernel-level security guarantees. To address this limitation, this study proposes SplitFUSE, an I/O-acceleration framework for user-level file systems that preserves high compatibility and strong security. SplitFUSE introduces a split architecture that decouples metadata and data-request processing. Specifically, the kernel maintains full metadata consistency, while the userspace retains only a minimal metadata subset required to validate and process data requests that bypass the kernel securely. Implemented as a self-contained mechanism, SplitFUSE preserves the same cross environment compatibility as conventional FUSE. Experimental results demonstrate that, under I/O-intensive small-write workloads, SplitFUSE achieves up to 4\ufffd6 times higher write bandwidth than native FUSE and outperforms state-of-the-art alternatives. For common file system workloads, it delivers substantial performance improvements with minimal migration overhead."
+    }
+  ]
+}

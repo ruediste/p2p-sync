@@ -1,0 +1,156 @@
+{
+  "id": "W4293232534",
+  "title": "Making CRDTs Byzantine fault tolerant",
+  "doi": "https://doi.org/10.1145/3517209.3524042",
+  "publication_date": "2022-03-23",
+  "publication_year": 2022,
+  "type": "conference-paper",
+  "cited_by_count": 16,
+  "authors": [
+    "Martin Kleppmann"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3517209.3524042",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4293232534.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4293232534.grobid-xml"
+  },
+  "abstract": "It is often claimed that Conflict-free Replicated Data Types (CRDTs) ensure consistency of replicated data in peer-to-peer systems. However, peer-to-peer systems usually consist of untrusted nodes that may deviate from the specified protocol (i.e. exhibit Byzantine faults), and most existing CRDT algorithms cannot guarantee consistency in the presence of such faults. This paper shows how to adapt existing non-Byzantine CRDT algorithms and make them Byzantine fault-tolerant. The proposed scheme can tolerate any number of Byzantine nodes (making it immune to Sybil attacks), guarantees Strong Eventual Consistency, and requires only modest changes to existing CRDT algorithms.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Peer-to-Peer Network Technologies",
+    "Caching and Content Delivery"
+  ],
+  "references": [
+    "https://openalex.org/W155189069",
+    "https://openalex.org/W1497499786",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1520914943",
+    "https://openalex.org/W1553354167",
+    "https://openalex.org/W1600255172",
+    "https://openalex.org/W1794148987",
+    "https://openalex.org/W1836078613",
+    "https://openalex.org/W1977401017",
+    "https://openalex.org/W1988655303",
+    "https://openalex.org/W2003214215",
+    "https://openalex.org/W2076866478",
+    "https://openalex.org/W2090724834",
+    "https://openalex.org/W2110880385",
+    "https://openalex.org/W2118242633",
+    "https://openalex.org/W2119636671",
+    "https://openalex.org/W2134308710",
+    "https://openalex.org/W2137286918",
+    "https://openalex.org/W2151541805",
+    "https://openalex.org/W2166707941",
+    "https://openalex.org/W2170849273",
+    "https://openalex.org/W2295616151",
+    "https://openalex.org/W2336063532",
+    "https://openalex.org/W2511929112",
+    "https://openalex.org/W2519790116",
+    "https://openalex.org/W2548120315",
+    "https://openalex.org/W2596218679",
+    "https://openalex.org/W2604765981",
+    "https://openalex.org/W2607481172",
+    "https://openalex.org/W2727092525",
+    "https://openalex.org/W2978907169",
+    "https://openalex.org/W2981750966",
+    "https://openalex.org/W3084934441",
+    "https://openalex.org/W3104510503",
+    "https://openalex.org/W3126834977",
+    "https://openalex.org/W3137092842",
+    "https://openalex.org/W3137220996",
+    "https://openalex.org/W3166837804",
+    "https://openalex.org/W3171842021"
+  ],
+  "cited_by": [
+    {
+      "id": "W4319069004",
+      "title": "BeauForT: Robust Byzantine Fault Tolerance for Client-Centric Mobile Web Applications",
+      "abstract": "In recent years, part of the web is shifting to a client-centric, decentralized model where web clients become the leading execution environment for application logic and data storage. However, current solutions to build decentralized web applications with multiple distrusting parties often involve a decentralized backend of servers running a BFT protocol between them. Existing consensus protocols using either all-to-all communication, or leader-based gossip suffer from performance degradation in unstable network conditions. In this paper, we present BeauForT, a purely browser-based platform for decentralized BFT consensus in client-centric, community-driven applications. We propose a novel, optimistic, leaderless, gossip-based consensus protocol, tolerating Byzantine replicas, combined with a robust and efficient state-based synchronization protocol. This protocol makes BeauForT well suited for the decentralized client-centric web and its dynamic nature with many network disruptions or node failures."
+    },
+    {
+      "id": "W4312038601",
+      "title": "Reversible conflict-free replicated data types",
+      "abstract": "Conflict-free replicated data types (CRDTs) are popular for optimistic replication and ensuring strong eventual consistency (SEC) in distributed systems. However, reversibility is an underdeveloped functionality for CRDTs, despite its usefulness in system restoration from an erroneous state or undoing unwanted operations. In this paper, we define the concept and design of reversible CRDTs (rCRDTs). Reverse operations compensate for the effect of reversed updates, and they extend existing CRDT interfaces. Three abstractions for reversibility are proposed: reversing a single update, multiple causally related updates, and multiple logically related updates that capture the user intention behind the updates. Moreover, a replicated and distributed key-value store, rKVCRDT, is implemented as a proof of concept that integrates the support of reversible CRDTs. The rCRDTs' evaluation show that although adding reversibility affects the system's performance, the end result depends on multiple factors and varies based on the underlying CRDTs. System designers must consider the trade-off between the benefit of reversibility and the performance impact."
+    },
+    {
+      "id": "W4387673910",
+      "title": "Secure RDTs: Enforcing Access Control Policies for Offline Available JSON Data",
+      "abstract": "Replicated Data Types (RDTs) are a type of data structure that can be replicated over a network, where each replica can be kept (eventually) consistent with the other replicas. They are used in applications with intermittent network connectivity, since local (offline) edits can later be merged with the other replicas. Applications that want to use RDTs often have an inherent security component that restricts data access for certain clients. However, access control for RDTs is difficult to enforce for clients that are not running within a secure environment, e.g., web applications where the client-side software can be freely tampered with. In essence, an application cannot prevent a client from reading data which they are not supposed to read, and any malicious changes will also affect well-behaved clients. This paper proposes Secure RDTs (SRDTs), a data type that specifies role-based access control for offline-available JSON data. In brief, a trusted application server specifies a security policy based on roles with read and write privileges for certain fields of an SRDT. The server enforces read privileges by projecting the data and security policy to omit any non-readable fields for the user's given role, and it acts as an intermediary to enforce write privileges. The approach is presented as an operational semantics engineered in PLT Redex, which is validated by formal proofs and randomised testing in Redex to ensure that the formal specification is secure."
+    },
+    {
+      "id": "W4411673179",
+      "title": "Uma investiga\u00e7\u00e3o sobre toler\u00e2ncia a falhas no servidor de comunica\u00e7\u00e3o Synapse",
+      "abstract": "Synapse \u00e9 um servidor de comunica\u00e7\u00e3o de c\u00f3digo aberto projetado de acordo com o protocolo de comunica\u00e7\u00e3o Matrix. O protocolo Matrix \u00e9 descentralizado, federado e de c\u00f3digo aberto, proporcionando controle total do servidor de mensagens pela organiza\u00e7\u00e3o. As mensagens trocadas entre usu\u00e1rios s\u00e3o criptografadas de ponta a ponta e o protocolo ainda pode interagir com outros sistemas de mensagens propriet\u00e1rios e tecnologias, atuando como um middleware. No entanto, uma quest\u00e3o fundamental para a ampla ado\u00e7\u00e3o do protocolo \u00e9 a sua capacidade de continuar seus servi\u00e7os mesmo diante de falhas. Nesse sentido, o objetivo deste trabalho \u00e9 investigar, atrav\u00e9s de um experimento pr\u00e1tico, a capacidade do servidor Synapse de tolerar falhas e de sincronizar as mensagens perdidas ap\u00f3s sua recupera\u00e7\u00e3o."
+    },
+    {
+      "id": "W4309326834",
+      "title": "Secure replication for client-centric data stores",
+      "abstract": "Decentralized, peer-to-peer systems using Conflict-free Replicated Data Types (CRDTs) can offer a more privacy-friendly alternative to centralized solutions that are often used by Big Tech. However, traditional CRDTs assume that all replicas are trusted, which is not necessarily the case in a peer-to-peer system. This paper presents a protocol for secure state-based CRDTs which provide fine-grained confidentiality and integrity by using encryption per field in every (sub)-document. Our protocol guarantees Strong Eventual Consistency despite any Byzantine replicas. It provides a fine-grained, dynamic membership and key management system, without violating Strong Eventual Consistency or losing concurrent updates. Our evaluation shows that the protocol is suitable for use in interactive, collaborative applications."
+    },
+    {
+      "id": "W4394865968",
+      "title": "Logical Clocks and Monotonicity for Byzantine-Tolerant Replicated Data Types",
+      "abstract": "Replicated event logbooks are ubiquitous in decentralized systems designed to cope with Byzantine-faulty replicas. Recently, there is a growing subclass that only partially orders its logbooks by hash-linking inscribed events to their causal past. Thereby, these approaches forgo coordination and consensus to gain scalability and availability under partition. We investigate these approaches to explicate their underlying construction by connecting their design to the concept of logical monotonicity and by providing an abstraction as a delta-state conflict-free replicated data type. In particular, we analyze what makes a clock Byzantine-tolerant, and show that these hash-linked causal logbooks represent Byzantine-tolerant clocks. Based on these insight, we model real-world group communication systems as Byzantine monotonic compositions, and analyze their monotonicity properties to understand the guarantees they provide to the application layer."
+    },
+    {
+      "id": "W4309357418",
+      "title": "Secure and resilient data replication for the client-centric decentralized web",
+      "abstract": "Part of the web is shifting to a client-centric, decentralized model where web clients become the leading execution environment for application logic and data storage. However, the basic paradigm of the web and the browser is still server-centric. The key data is stored, served, processed and analyzed on central servers owned by the service provider. This means that a good internet connection is required, otherwise the application will be slow, or even unreachable when there is no internet. Furthermore, user data can be stolen, modified, deleted or sold by the service provider itself, or by an external attacker targeting the service provider."
+    },
+    {
+      "id": "W4364383673",
+      "title": "On Extend-Only Directed Posets and Derived Byzantine-Tolerant Replicated Data Types",
+      "abstract": "We uncover the extend-only directed posets (EDP) structure as unification of recently discussed DAG-based Byzantine-tolerant conflict-free replicated data types (CRDT). We also derive an EDP-based key-value map, and give an outlook on an EDP-based systemic access control CRDT as formalization of the CRDT used in the Matrix messaging system."
+    },
+    {
+      "id": "W4408061126",
+      "title": "Making CRDTs Not So Eventual",
+      "abstract": "Conflict-free replicated data types (CRDTs) are highly available and performant data replication solutions for distributed applications. However, their eventual consistency guarantees are often insufficient for ensuring application correctness, especially in the presence of Byzantine failures. Naively applying traditional consensus and Byzantine fault tolerance (BFT) protocols to CRDT updates for stronger guarantees, while intuitive, negates the performance benefits of CRDTs. We introduce a novel programming model called reliable CRDTs that expands CRDTs with additional guarantees: users can query strongly or eventually consistent values, enforce a total order among selected operations, and define data-type level invariants while remaining operational in the presence of Byzantine failures. Reliable CRDTs enable the use of CRDTs in scenarios where strong consistency is needed while maintaining their performance advantages. We present an implementation of reliable CRDTs named Janus. It enhances CRDTs with the aforementioned features by functioning as a middleware that facilitates CRDT communication and asynchronously runs a BFT consensus protocol. Our evaluation demonstrates that Janus achieves 21\u00d7 higher throughput than naively applying state-of-the-art BFT protocols such as HotStuff achieves, and it remains responsive even under heavy loads."
+    },
+    {
+      "id": "W4310493679",
+      "title": "Programming Support for Local-First Software: Enabling the Design of Privacy-Preserving Distributed Software without Relying on the Cloud",
+      "abstract": "Local-first software manages and processes private data locally while still enabling collaboration between multiple parties connected via partially unreliable networks. Such software typically involves interactions with users and the execution environment (the outside world). The decentralized nature of local-first software paired with the unpredictability of interactions driven from the outside world impede reasoning about their correctness. Yet, existing solutions to develop local-first software do not provide safety guarantees and instead expect developers to reason about concurrent interactions in an environment with unreliable network conditions. This is too much to ask of application developers, who are usually not experts in designing distributed systems."
+    },
+    {
+      "id": "W4391593915",
+      "title": "Peer-to-Peer Permissionless Consensus via Reputation",
+      "abstract": "Public Internet forums suffer from excess and abuse, such as SPAM and fake news. Centralized platforms employ filtering and anti-abuse policies, but imply full trust from users. We propose a permissionless Sybil-resistant peer-to-peer protocol for content sharing. Our main contribution is a reputation system that moderates content and, at the same time, delivers network consensus. We can trace a parallel with Bitcoin as follows: consolidated posts create reputation (vs proof-of-work), likes and dislikes transfer reputation (vs transactions), and aggregate reputation determines consensus (vs longest chain). The reputation mechanism depends exclusively on the human authoring ability (proof-of-authoring), which is slow and scarce, thus suitable to establish consensus."
+    },
+    {
+      "id": "W4409095543",
+      "title": "Proof-Carrying CRDTs allow Succinct Non-Interactive Byzantine Update Validation",
+      "abstract": "Conflict-free replicated data types (CRDTs) are distributed algorithms that enable concurrent queries and updates without coordination with other processes, but still provide eventual consistency. In crash fault environments, processes adhere to the protocol and only send valid CRDT updates. But in Byzantine environments, processes need to individually ensure the validity of all updates. As the validity of an update may depend on all previous updates, Byzantine-tolerant CRDT processes typically must keep a grow-only set of all applied updates. We apply the concept of proof-carrying data to CRDTs to enable succinct non-interactive validation of updates, i.e., processes neither need knowledge of all previous updates nor coordination. Such proof-carrying CRDTs allow update validation in constant time and space, even in Byzantine environments. In a case study, we implemented and evaluated the performance of two proof-carrying CRDTs: a straightforward increment-only counter, as well as an update history CRDT based on the Matrix group communication system. We conclude that proof-carrying data has achieved practical relevance for applications in Byzantine CRDTs."
+    },
+    {
+      "id": "W4411010462",
+      "title": "To the Best of Knowledge and Belief: On Eventually Consistent Access Control",
+      "abstract": "We are used to the conventional model in which access control is provided by a trusted central entity or by a set of distributed entities that coordinate to mimic a central entity.Authorization decisions are based on a single, append-only total ordering of all actions, including policy updates, which leads to strong consistency guarantees.Recent systems based on conflict-free replicated data types (CRDTs) break with this conceptual model to gain fundamental advantages in latency, availability, resilience, and Byzantine fault tolerance.These systems replace up-front coordination with subsequent reconciliation of decentralized authorization decisions and policy updates.One of these is the Matrix group communication system, whose massive public sector deployments in Europe necessitate timely characterization of the underlying alternative conceptual model.Similarly to eventually consistent replication in CRDTs, we define 'eventually consistent access control' and present its consequences.Our model postulates thinking in two orderings of actions with different consequences for authorization: a partial ordering for storage, where the past of an action is final knowledge, and a total ordering for execution, where the past of an action is a mutable belief."
+    },
+    {
+      "id": "W7164325202",
+      "title": "EC-VDIC: A Scalable and Verifiable Adaptive Erasure Coding Framework for Decentralized IPFS Clusters",
+      "abstract": "Off-chain storage solutions like the InterPlanetary File System (IPFS) are vital for overcoming blockchain storage limitations. While IPFS Clusters ensure data availability, traditional replication-based models introduce high resource overhead and scalability bottlenecks. The Verifiable Decentralized IPFS Cluster (VDIC) addresses data integrity but remains limited by inefficient storage utilization. We propose EC-VDIC, an adaptive framework that integrates Reed-Solomon erasure coding to optimize verifiable storage. Using an adaptive gateway, EC-VDIC dynamically applies replication to small metadata and erasure coding to large data blocks. Evaluated across 3 to 20 nodes, EC-VDIC achieved a 62.05% reduction in physical storage compared to standard VDIC. Additionally, while replication-based models showed a double latency spike when scaling from 10 to 20 nodes, EC-VDIC maintained a small 12.3% increase. Our results confirm EC-VDIC as a scalable, storage-efficient, and verifiable solution for decentralized data management."
+    },
+    {
+      "id": "W7164881233",
+      "title": "Did:Crdt: Coordination-Free Decentralised Identifiers VIA Signed Crdts",
+      "abstract": "Existing Decentralised Identifier (DID) methods require coordination, an agreed global order of operations, to update a DID document: blockchain-anchored methods incur fees and latency; lightweight peer methods (did:key, did:peer) offer no update mechanism; and Sidetree methods still require blockchain ordering for finality. We present did:crdt, a DID method that targets W3C DID Core and removes the need for coordination entirely: there is no ledger, no sequencer, and no global total order. Each DID document is composed of signed Conflict-Free Replicated Data Types (CRDTs), one per document field, each chosen so that concurrent edits merge deterministically. By the CALM Theorem, the state-merge path is then confluent: replicas that see the same updates reach the same document in any arrival order. The signed-delta path needs only causal delivery, applying an update after those it builds on, which is far weaker than the total ordering ledgers impose and needs no agreement protocol. We are explicit about scope: every untrusted-peer path is authenticated, so Byzantine fault tolerance (safety even when peers lie or send malformed data) holds for signed deltas and verified-bundle replay, while the unauthenticated state-merge path is a trusted-domain optimisation and key-compromise recovery is bounded by revocation semantics. We give the data and threat model, CRUD semantics, conflict resolution, and a Rust reference implementation with property-based convergence tests and microsecond-scale merge latency."
+    },
+    {
+      "id": "W7207551260",
+      "title": "Syncordian: managing adversarial behavior and interleaving anomalies in CRDTs",
+      "abstract": null
+    }
+  ]
+}

@@ -1,0 +1,298 @@
+{
+  "id": "W2145388050",
+  "title": "An algebraic approach to file synchronization",
+  "doi": "https://doi.org/10.1145/503209.503233",
+  "publication_date": "2001-09-01",
+  "publication_year": 2001,
+  "type": "conference-paper",
+  "cited_by_count": 50,
+  "authors": [
+    "Norman F. Ramsey",
+    "Elod P. Csirmaz"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://dash.harvard.edu/bitstream/1/23853813/1/tr-05-01.pdf",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2145388050.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2145388050.grobid-xml"
+  },
+  "abstract": "A file synchronizer restores consistency after multiple replicas of a filesystem have been changed independently. We present an algebra for reasoning about operations on filesystems and show that it is sound and complete with respect to a simple model. The algebra enables us to specify a file-synchronization algorithm that can be combined with several different conflict-resolution policies. By contrast, previous work builds the conflict-resolution policy into the specification, or worse, does not specify the synchronizer's behavior precisely. We classify synchronizers by asking whether conflicts can be resolved at a single disconnected replica and whether all replicas are identical after synchronization. We also discuss timestamps and argue that there is no good way to propagate timestamps when there is severe clock skew between replicas.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Data Storage Technologies",
+    "Parallel Computing and Optimization Techniques"
+  ],
+  "references": [
+    "https://openalex.org/W1467798801",
+    "https://openalex.org/W1614703486",
+    "https://openalex.org/W1652742168",
+    "https://openalex.org/W1986466161",
+    "https://openalex.org/W2001907377",
+    "https://openalex.org/W2085631457",
+    "https://openalex.org/W2116746874",
+    "https://openalex.org/W2154193287",
+    "https://openalex.org/W2161835696",
+    "https://openalex.org/W4285719527"
+  ],
+  "cited_by": [
+    {
+      "id": "W2295541535",
+      "title": "Optimistic replication",
+      "abstract": "Data replication is a key technology in distributed systems that enables higher availability and performance. This article surveys optimistic replication algorithms. They allow replica contents to diverge in the short term to support concurrent work practices and tolerate failures in low-quality communication links. The importance of such techniques is increasing as collaboration through wide-area and mobile networks becomes popular.Optimistic replication deploys algorithms not seen in traditional \u201cpessimistic\u201d systems. Instead of synchronous replica coordination, an optimistic algorithm propagates changes in the background, discovers conflicts after they happen, and reaches agreement on the final contents incrementally.We explore the solution space for optimistic replication algorithms. This article identifies key challenges facing optimistic replication systems---ordering operations, detecting and resolving conflicts, propagating changes efficiently, and bounding replica divergence---and provides a comprehensive survey of techniques developed for addressing these challenges."
+    },
+    {
+      "id": "W2897034345",
+      "title": "Fog-Based Computing and Storage Offloading for Data Synchronization in IoT",
+      "abstract": "With the development of Internet of Things (IoT) technologies, increasingly many devices are connected, and large amounts of data are produced. By offloading the computing-intensive tasks to the edge devices, cloud-based storage technology has become the mainstream. However, if the end IoT devices send all of their data to the cloud, then data privacy becomes a great issue. In this paper, we propose a new architecture for data synchronization based on fog computing. By offloading part of computing and storage work to the fog servers, the data privacy can be guaranteed. Moreover, to decrease the communication cost and reduce the latency, we design a differential synchronization algorithm. Furthermore, we extend the method by introducing Reed-Solomon code for security consideration. We prove that our architecture and algorithm really have better performance than traditional cloud-based solutions in terms of both efficiency and security through a series of experiments."
+    },
+    {
+      "id": "W2510332240",
+      "title": "A Conflict-Free Replicated JSON Datatype",
+      "abstract": "Many applications model their data in a general-purpose storage format such as JSON. This data structure is modified by the application as a result of user input. Such modifications are well understood if performed sequentially on a single copy of the data, but if the data is replicated and modified concurrently on multiple devices, it is unclear what the semantics should be. In this paper we present an algorithm and formal semantics for a JSON data structure that automatically resolves concurrent modifications such that no updates are lost, and such that all replicas converge towards the same state (a conflict-free replicated datatype or CRDT). It supports arbitrarily nested list and map types, which can be modified by insertion, deletion and assignment. The algorithm performs all merging client-side and does not depend on ordering guarantees from the network, making it suitable for deployment on mobile devices with poor network connectivity, in peer-to-peer networks, and in messaging systems with end-to-end encryption."
+    },
+    {
+      "id": "W2154193287",
+      "title": "The IceCube approach to the reconciliation of divergent replicas",
+      "abstract": "We describe a novel approach to log-based reconciliation called IceCube. It is general and is parameterised by application and object semantics. IceCube considers more flexible orderings and is designed to ease the burden of reconciliation on the application programmers. IceCube captures the static and dynamic reconciliation constraints between all pairs of actions, proposes schedules that satisfy the static constraints, and validates them against the dynamic constraints."
+    },
+    {
+      "id": "W2118871086",
+      "title": "Semantics-Based Reconciliation for Collaborative and Mobile Environments",
+      "abstract": null
+    },
+    {
+      "id": "W2099676315",
+      "title": "Improved file synchronization techniques for maintaining large replicated collections over slow networks",
+      "abstract": "We study the problem of maintaining large replicated collections of files or documents in a distributed environment with limited bandwidth. This problem arises in a number of important applications, such as synchronization of data between accounts or devices, content distribution and Web caching networks, Web site mirroring, storage networks, and large scale Web search and mining. At the core of the problem lies the following challenge, called the file synchronization problem: given two versions of a file on different machines, say an outdated and a current one, how can we update the outdated version with minimum communication cost, by exploiting the significant similarity between the versions? While a popular open source tool for this problem called rsync is used in hundreds of thousands of installations, there have been only very few attempts to improve upon this tool in practice. We propose a framework for remote file synchronization and describe several new techniques that result in significant bandwidth savings. Our focus is on applications where very large collections have to be maintained over slow connections. We show that a prototype implementation of our framework and techniques achieves significant improvements over rsync. As an example application, we focus on the efficient synchronization of very large Web page collections for the purpose of search, mining, and content distribution."
+    },
+    {
+      "id": "W2736314372",
+      "title": "Design and Implementation of Atlas P2P Architecture",
+      "abstract": "International audience"
+    },
+    {
+      "id": "W2015055913",
+      "title": "Merging semantics for conflict updates in geo-distributed file systems",
+      "abstract": "We present our model of file systems and our merging semantics for resolving conflict updates in geo-distributed file systems. The system model fully describes a file system with all of its components including hard links. This model is able to identify all conflict cases which are classified into direct, such as concurrent updates to the same file, and indirect, such as cycles in the namespace of the file system. The merging semantics resolve all types of conflicts while being able to preserve the effect of all conflict updates. Our implementation of the system and the merging semantics outperforms the existing systems in terms of feature completeness."
+    },
+    {
+      "id": "W2113288486",
+      "title": "Exploiting schemas in data synchronization",
+      "abstract": null
+    },
+    {
+      "id": "W2108572348",
+      "title": "Improved single-round protocols for remote file synchronization",
+      "abstract": "Given two versions of a file, a current version located on one machine and an outdated version known only to another machine, the remote file synchronization problem is how to update the outdated version over a network with a minimal amount of communication. In particular, when the versions are very similar, the total data transmitted should be significantly smaller than the file size. File synchronization problems arise in many application scenarios such as Web site mirroring, file system backup and replication, and Web access over slow links. An open source tool for this problem, called rsync and included in many Linux distributions, is widely used in such scenarios, rsync uses a single round of messages between the two machines. While recent research has shown that significant additional savings in bandwidth consumption are possible through the use of optimized multi-round protocols, there are many scenarios where multiple rounds are undesirable. In this paper, we study single-round protocols for file synchronization that offer significant improvements over rsync. Our main contribution is a new approach to file synchronization based on the use of erasure codes. Using this approach, we design a single-round protocol that is provably efficient with respect to common measures of file distance, and another optimized practical protocol that shows promising improvements over rsync on our data sets. In addition, we show how to obtain moderate improvements by engineering the rsync approach."
+    },
+    {
+      "id": "W2290177015",
+      "title": "Mysteries of DropBox: Property-Based Testing of a Distributed Synchronization Service",
+      "abstract": "File synchronization services such as Dropbox are used by hundreds ofmillions of people to replicate vital data. Yet rigorous models of theirbehavior are lacking. We present the first formal -- and testable -- model ofthe core behavior of a modern file synchronizer, and we use it to discoversurprising behavior in two widely deployed synchronizers. Our model isbased on a technique for testing nondeterministic systems that avoidsrequiring that the system's internal choices be made visible to the testing framework."
+    },
+    {
+      "id": "W2169039581",
+      "title": "Algorithms for Low-Latency Remote File Synchronization",
+      "abstract": "The remote file synchronization problem is how to update an outdated version of a file located on one machine to the current version located on another machine with a minimal amount of network communication. It arises in many scenarios including Web site mirroring, file system backup and replication, or web access over slow links. A widely used open-source tool called rsync uses a single round of messages to solve this problem (plus an initial round for exchanging meta information). While research has shown that significant additional savings in bandwidth are possible by using multiple rounds, such approaches are often not desirable due to network latencies, increased protocol complexity, and higher I/O and CPU overheads at the endpoints. We study single-round synchronization techniques that achieve savings in bandwidth consumption while preserving many of the advantages of the rsync approach. In particular, we propose a new and simple algorithm for file synchronization based on set reconciliation techniques. We then show how to integrate sampling techniques into our approach in order to adaptively select the most suitable algorithm and parameter setting for a given data set. Experimental results on several data sets show that the resulting protocol gives significant benefits over rsync, particularly on data sets with high degrees of redundancy between the versions."
+    },
+    {
+      "id": "W1490062955",
+      "title": "Replication: Optimistic Approaches",
+      "abstract": "No abstract"
+    },
+    {
+      "id": "W2775924136",
+      "title": "Co-Design and Verification of an Available File System",
+      "abstract": null
+    },
+    {
+      "id": "W1562876780",
+      "title": "Conflict Resolution of Data Synchronization in Mobile Environment",
+      "abstract": null
+    },
+    {
+      "id": "W2327470348",
+      "title": "Replication Management and Optimistic Replication Challenges in Mobile Environment",
+      "abstract": "Wireless and mobile communication is an important technology that improves user's daily life and facilitates the development of some new technology such as electronic commerce and mobile commerce.Replication is a fundamental technique for supporting concurrent work practices in mobile environments.Optimistic replication algorithms allow replica contents to become stale but in a controlled way.In return, they become far more efficient and available than traditional replication algorithms that keep all the replicas consistent, especially when the network and computers are unreliable.The use of optimistic replication has grown explosively due to the proliferation of the use of the Internet and mobile computing devices, but its systematic study has begun only recently.This paper explores the various replication strategies, replication in mobile environment, benefits and challenges of optimistic replication in mobile applications."
+    },
+    {
+      "id": "W2099139781",
+      "title": "Reconciliation in the APPA P2P system",
+      "abstract": "In peer-to-peer (P2P) systems, there has been little work on managing data replication in the presence of updates. However, important P2P applications that involve collaboration require multi-master replication support. In this paper, we adopt optimistic replication and propose a novel distributed algorithm to reconcile conflicting updates in the context of APPA (Atlas peer-to-peer architecture) data management system. APPA has a network-independent architecture that can be implemented over various P2P networks. Our algorithm for distributed semantic reconciliation (DSR) enables multi-master replication and assures eventual consistency among replicas. We validated the DSR algorithm through implementation and simulation using Java and SimJava. The experimental results show that DSR has good performance and scale up."
+    },
+    {
+      "id": "W2097218702",
+      "title": "Rufis: mobile data sharing using a generic constraint-oriented reconciler",
+      "abstract": "Existing systems for disconnected data access and reconciliation are monolithic, complex and somewhat ad-hoc. In contrast, we demonstrate here a principled approach based on a general-purpose reconciliation engine. We describe the Reconcilable and Undoable File System, Rufis, implemented on top of the IceCube reconciler. IceCube is generic but supports application-specific reconciliation invariants. Consequently, the code for Rufis is quite small and simple, and the reconciliation logic is well separated from the main file system code. Furthermore, Rufis supports specialised reconciliation for files containing data of known types and enables ad-hoc user scenarios involving multiple applications."
+    },
+    {
+      "id": "W1483547670",
+      "title": "Exploiting Schemas in Data Synchronization",
+      "abstract": null
+    },
+    {
+      "id": "W1581415913",
+      "title": "Scaling Optimistic Replication",
+      "abstract": null
+    },
+    {
+      "id": "W2240138193",
+      "title": "File Synchronization with Vector Time Pairs",
+      "abstract": "Vector time pairs are a new method for trackingsynchronization metadata. A vector time pairconsists of two vector times: one tracking filemodification history and one tracking filesynchronization history. Because the vectortimes are maintained separately and used fordifferent purposes, different algorithms andoptimizations can be applied to each. As aresult, vector time pairs impose no restrictionon synchronization patterns, never falsely detectconflicts, require no space to store deletionnotices, require network bandwidth proportionalonly to the number of files changed, and supportpartial synchronizations. No other currentsynchronization method has all these properties.Results from an implementation of vector timepairs in a new user-level file synchronizercalled Tra confirm the benefits of vectortime pairs."
+    },
+    {
+      "id": "W118426524",
+      "title": "Schema-Directed Data Synchronization",
+      "abstract": "Increased reliance on optimistic data replication has led to burgeoning interest in tools and frameworks for synchronizing disconnected updates to replicated data. We have implemented a generic, synchronization framework, called Harmony, that can be instantiated to yield state-based synchronizers for a wide variety of tree-structured data formats. A novel feature of this framework is that the synchronization process\u2014in particular, the recognition of situations where changes are in conflict\u2014is driven by the schema of the structures being synchronized.\\nWe formalize Harmony\u2019s synchronization algorithm, prove that it obeys a simple and intuitive specification, and illustrate how it can be used to synchronize a variety of specific forms of application data\u2014sets, records, tuples, and relations."
+    },
+    {
+      "id": "W1496566662",
+      "title": "Database Replication Based on Group Communication: Implementation Issues",
+      "abstract": null
+    },
+    {
+      "id": "W2039367546",
+      "title": "Post-partition reconciliation protocols for maintaining consistency",
+      "abstract": "This paper addresses design exploration for protocols that are employed in systems with availability-consistency tradeoffs. Distributed data is modelled as states of objects replicated across a network, and whose updates require satisfaction of integrity constraints over multiple objects. Upon detection of a partition, such a network will continue to provide delivery of services in parallel partitions; but only for updates with non-critical integrity constraints. Once the degraded mode ends, the parallel network partitions are reconciled to arrive at one partition.Using a formal treatment of the reconciliation process, three algorithms are proposed and studied in terms of their influence on service outage duration. The longer the reconciliation time, the lower is system availability; since the interval in which no services are provided is longer. However, the reconciliation time in turn is affected by the time to construct the post-partition system state. The shorter the construction time the higher is the number of updates that took place in the degraded mode but that will not be taken up in the reconciled partition. This will lead to a longer interval for rejecting/redoing these operations and thereby increase reconciliation time."
+    },
+    {
+      "id": "W2137510754",
+      "title": "Restoring Consistency after Network Partitions",
+      "abstract": "The software industry is facing a great challenge. While systems get more complex and distributed across the world, users are becoming more dependent on their availability. As systems increase in size and complexity so does the risk that some part will fail. Unfortunately, it has proven hard to tackle faults in distributed systems without a rigorous approach. Therefore, it is crucial that the scientific community can provide answers to how distributed computer systems can continue functioning despite faults. Our contribution in this thesis is regarding a special class of faults which occurs whennetwork links fail in such a way that parts of the network become isolated, such faults are termed network partitions. We consider the problem of how systems that have integrity constraints on data can continue operating in presence of a network partition. Such a system must act optimistically while the network is split and then perform a some kind of reconciliation to restore consistency afterwards. We have formally described four reconciliation algorithms and proven them correct. The novelty of these algorithms lies in the fact that they can restore consistency after network partitions in a system with integrity constraints and that one of the protocols allows the system to provide service during the reconciliation. We have implemented and evaluated the algorithms using simulation and as part of a partition-tolerant CORBA middleware. The results indicate that it pays o\ufb00 to act optimistically and that it is worthwhile to provide service during reconciliation."
+    },
+    {
+      "id": "W2948127449",
+      "title": "Syncpal: A Simple and Iterative Reconciliation Algorithm for File Synchronizers",
+      "abstract": null
+    },
+    {
+      "id": "W1761568514",
+      "title": "Fixing Collaborative Edition on Typed Documents",
+      "abstract": null
+    },
+    {
+      "id": "W4240907591",
+      "title": "Middleware extensions that trade consistency for availability",
+      "abstract": "Abstract Replicated distributed object systems are deployed to provide timely and reliable services to actors at distributed locations. This paper treats applications in which data updates are dependent on satisfaction of integrity constraints over multiple objects. Network partitions, caused by occasional link failures, overload or attacks create problems in keeping both consistency and availability in such networks. We propose a means of achieving higher availability by providing partition\u2010awareness in middleware. The general approach has been illustrated by implementing a number of CORBA extensions that trade consistency for availability during network partitions. This paper contains a thorough experimental evaluation that presents the gains and costs of our approach. The experiments clearly illustrate the benefit of our protocols in terms of significantly higher availability and the number of performed operations. Copyright \u00a9 2009 John Wiley & Sons, Ltd."
+    },
+    {
+      "id": "W2011949233",
+      "title": "Automatic Synchronization of Common Parameters in Configuration Files",
+      "abstract": "In an information system, applications often make use of services that they access using the parameters described in their configuration files. Various applications then use different codes to denote the same parameters. When access parameters of a service are modified, it is necessary to update them in every configuration file using them. These changes are necessary, for example because of security policies involving regular changes of passwords, or departure of some system administrators. The database password could be changed for example. When system administrators can not immediately identify all services affected by a change or when they feel they don\u2019t have the skills to edit these files, these parameters remain unchanged, creating critical security flaws. This was observed in more than 80% of the organizations we studied. It then becomes necessary to ensure automatic synchronization of all affected files when changing certain settings. Conventional synchronization solutions are difficult to apply when the relevant applications have already been developed by third parties. In this paper, we propose and implement a solution to automatically update all configuration files affected by a change, respecting their structure and codification. It combines a parameters database, a mapping between the configuration files parameters codes and those of the database, and templates for the generation of files. It achieves the objective for all non-encrypted configuration files."
+    },
+    {
+      "id": "W2063121796",
+      "title": "An Improved File System Synchronous Algorithm",
+      "abstract": "In order to timely synchronize the nodes in unstable network environment and reduce the space overhead of the operation log, we mix the operation transfer-based and state transfer-based synchronous models. In this paper, for file system synchronization, we design an improved file system synchronous algorithm -- the combination of state transform algorithm and operation merge algorithm. The experimental results show that the improved algorithm can completely merge file system changes into updates operation in millisecond. The key to mix the two ways is to unify updating granularity and semantic level, which will be taken by both models. The mixed model can meet the demand of instant response and the less resource-consuming at the same time."
+    },
+    {
+      "id": "W2610205631",
+      "title": "Context Aware Data Synchronisation During Emergencies",
+      "abstract": null
+    },
+    {
+      "id": "W3205664920",
+      "title": "Algebra of Data Reconciliation",
+      "abstract": "With distributed computing and mobile applications becoming ever more prevalent, synchronizing diverging replicas of the same data is a common problem. Reconciliation \u2013 bringing two replicas of the same data structure as close as possible without overriding local changes \u2013 is investigated in an algebraic model. Our approach is to consider two sequences of simple commands that describe the changes in the replicas compared to the original structure, and then determine the maximal subsequences of each that can be propagated to the other. The proposed command set is shown to be functionally complete, and an update detection algorithm is presented which produces a command sequence transforming the original data structure into the replica while traversing both simultaneously. Syntactical characterization is provided in terms of a rewriting system for semantically equivalent command sequences. Algebraic properties of sequence pairs that are applicable to the same data structure are investigated. Based on these results the reconciliation problem is shown to have a unique maximal solution. In addition, syntactical properties of the maximal solution allow for an efficient algorithm that produces it."
+    },
+    {
+      "id": "W2116335447",
+      "title": "What's in Unison? A Formal Specification and Reference Implementation of a File Synchronizer",
+      "abstract": "A file synchronizer is a tool that reconciles disconnected modifications to a replicated directory structure. Trustworthy synchronizers are difficult to build, since they must deal correctly with both the semantic complexities of file systems and the unpredictable failure modes arising from distributed operation. On the other hand, synchronizers are often packaged as stand-alone, user-level utilities, whose intended behavior is relatively easy to isolate from the other functions of the system. This combination of subtlety and isolability makes file synchronizers attractive candidates for precise mathematical specification.\\nWe present here a detailed specification of a particular file synchronizer called Unison, sketch an idealized reference implementation of our specification, and discuss the relation between our idealized implementation and the actual code base."
+    },
+    {
+      "id": "W2132864070",
+      "title": "Efficient semantics-aware reconciliation for optimistic write sharing",
+      "abstract": "The IceCube system provides near-optimal reconciliation for optimistically-replicated data. Optimistic replication lets multiple users write to shared data with no remote synchronisation, thus allowing decentralised access immune to network latency and isolation. However such replicas diverge and must be reconciled. Reconciliation depends on the semantics of the shared data and the intents of the users. In IceCube, both applications and shared data types advertise the true dependencies between update actions. IceCube suggests reconciliation schedules that respect these dependencies, using a heuristic search algorithm. IceCube is an application-independent system that enables seamless reconciliation across diverse applications and data types. It has a simple, high-level API that can express a wide range of semantics. It drastically simplifies the development of a reconcilable application. This paper presents the IceCube system in depth and reports on application experience. Evaluation using realistic benchmarks indicates that IceCube runs at reasonable speeds and scales to large input sets."
+    },
+    {
+      "id": "W2116894174",
+      "title": "Disconnected Discoveries: Availability Studies in Partitioned Networks",
+      "abstract": "This thesis is concerned with exploring methods for making computing systems more resilient to problems in the network communication, both in the setting of existing infrastructure but also in the case where no infrastructure is available. Specifically, we target a situation called network partitions which means that a computer or device network is split in two or more parts that cannot communicate with each other. The first of the two tracks in the thesis is concerned with upholding system availability during a network partition even when there are integrity constraints on data. This means that the system will optimistically accept requests since it is impossible to coordinate nodes that have no means of communicating during finite intervals; thus requiring a reconciliation process to take place once the network is healed. We provide several different algorithms for reconciling divergent states of the nodes, one of which is able to allow the system to continue accepting operations during the reconciliation phase as opposed to having to stop all invocations. The algorithms are evaluated analytically, proving correctness and the conditions for termination. The performance of the algorithms has been analysed using simulations and as a middleware plugin in an emulated setting. The second track considers more extreme conditions where the network is partitioned by its nature. The nodes move around in an area and opportunistically exchange messages with nodes that they meet. This as a model of the situation in a disaster area where the telecommunication networks are disabled. This scenario poses a number of challenges where protocols need to be both partition-tolerant and energy-efficient to handle node mobility, while still providing good delivery and latency properties. We analyse worst-case latency for message dissemination in such intermittently connected networks. Since the analysis is highly dependent on the mobility of the nodes, we provide a model for characterising connectivity of dynamic networks. This model captures in an abstract way how fast a protocol can spread a message in such a setting. We show how this model can be derived analytically as well as from actual trace files. Finally, we introduce a manycast protocol suited for disaster area networks. This protocol has been evaluated using simulations which shows that it provides very good performance under the circumstances, and it has been implemented as a proof-of-concept on real hardware."
+    },
+    {
+      "id": "W2224417275",
+      "title": "Exploring filesystem synchronization with lightweight modeling and analysis",
+      "abstract": "Thesis (S.M.)--Massachusetts Institute of Technology, Dept. of Electrical Engineering and Computer Science, 2002."
+    },
+    {
+      "id": "W1549468247",
+      "title": "A Dynamic Distributed Algorithm for Semantic Reconciliation",
+      "abstract": "International audience"
+    },
+    {
+      "id": "W2185479422",
+      "title": "Minimizing remote storage usage and synchronization time using deduplication and multichunking: Syncany as an example",
+      "abstract": "School of Business Informatics and Mathematics Laboratory for Dependable Distributed Systems"
+    },
+    {
+      "id": "W1880537716",
+      "title": "Bringing Harmony to Optimism: An Experiment in Synchronizing Heterogeneous Tree-Structured Data",
+      "abstract": "Increased reliance on optimistic data replication has led to burgeoning interest in tools and frameworks for synchronizing disconnected updates to replicated data. To better understand the issues underlying the design of generic and heterogeneous synchronizers, we have implemented an experimental framework, called Harmony, that can be used to build synchronizers for tree-structured data stored in a variety of concrete formats.\\nWe present Harmony\u2019s architecture, formalize its key components (a simple core synchronization algorithm together with a set of user-defined mappings between diverse concrete data formats and common abstract schemas suitable for synchronization), and discuss how the framework can be used to synchronize a variety of specific types of application data by suitable encodings into trees\u2014including sets, records, tuples, relations, and, with some limitations, lists and ordered XML data."
+    },
+    {
+      "id": "W1838189517",
+      "title": "Set Reconciliation and File Synchronization Using Invertible Bloom Lookup Tables",
+      "abstract": "As more and more data migrate to the cloud, and the same files become accessible from \\nmultiple different machines, finding effective ways to ensure data consistency is becoming increasingly important.\\nIn this thesis, we cover current methods for efficiently maintaining sets of objects without the use of logs or other prior context, which is better known as the set reconciliation problem. We also discuss the state of the art for file synchronization, including methods that use set reconciliation techniques as an intermediate step.\\nWe explain the design and implementation of a novel file synchronization protocol tailored\\nto minimize transmission complexity and targeted for files with relatively few changes. \\nWe also propose an extension of our file synchronization protocol for more general file directory synchronization. \\nWe describe IBLTsync, our implementation of the aforementioned file \\nsynchronization protocol, and benchmark it against a na\u00efve file transmission protocol and rsync, a popular file synchronization library. We find that for files with relatively few changes, IBLTsync transmits significantly less data than the na\u00efve protocol, and moderately less data than rsync. In addition, we provide the first (to our knowledge) implementation of multi-party\\nset reconciliation using Invertible Bloom Lookup Tables, a hash based data structure, and evaluate its performance for message propagation in large networks."
+    },
+    {
+      "id": "W30765679",
+      "title": "Formal Development of a Distributed Logging Mechanism Supporting Disconnected Updates",
+      "abstract": null
+    },
+    {
+      "id": "W40283719",
+      "title": "SqlIceCube: Automatic Semantics-Based Reconciliation for Mobile Databases",
+      "abstract": "In a distributed system, optimistic replication enables users on different sites to query and update their local replicas of shared databases without a priori synchronization. Replicas may diverge, and updates must be reconciled; reconciliation is a difficult problem in the presence of conflicts, alternative execution paths, and dependencies between transactions. We present SqlIce-Cube, a general-purpose reconciliation system. SqlIceCube automatically extracts significant semantic relations from the program text of transactions. Examples of relations are a transaction that depends on another, helps another, hinders another, constitutes an alternative to another, etc. In turn these semantic relations feed into the SqlIceCube scheduler, which generates and executes a combination of transactions with the highest possible value. The approach is general and supports combinations of transactions across a variety of different applications. Application experience and benchmarks show the viability of the approach. SqlIceCube correctly extracts semantic relations from an interesting variety of application transactions, performs well, and scales well to large input sizes. 1"
+    },
+    {
+      "id": "W627336927",
+      "title": "Duplication et coh\u00e9rence configurables dans les applications r\u00e9parties \u00e0 base de composants",
+      "abstract": "This thesis focuses on replication and consistency configuration in distributed applications. It aims to define configuration mechanisms that do not impose modifications to the business code of applications and that allow reuse of replication and consistency management code. The first point responds to the need to execute applications in different contexts. The second point allows replication protocols to be used in different applications. The thesis objectives are considered in the case of component-based applications. Non intrusive replication configuration is based on the separation between the components' business code and their system code. Replication code reuse is achieved through modeling of protocols in terms of application-independent components. The proposed models for programming, composition and execution of protocols and applications are validated using a Java prototype implementation. We measure the cost of our replication management and analyze the way its principles can be applied to the EJB and CCM environments. We show the configuration and reuse facilities of our prototype through several experiments involving different applications, as well as different replication protocols."
+    },
+    {
+      "id": "W1521357695",
+      "title": "Modelling Replication Protocols with Actions and Constraints",
+      "abstract": "We describe a number of replication algorithms in a unified model based on actions and constraints. Applications submit actions (operations) to be executed and arbitrary constraints on those actions; object invariants are also expressed as constraints; and replication protocols impose further constraints. Any given site executes the actions it knows according to a schedule that satisfies the constraints. The goal of a protocol is to add constraints until its schedules are consistent. A replication protocol is consistent, if it maintains a local safety invariant (schedules are sound), a global invariant (local decisions do not conflict), and is live (every action eventually stabilises at all sites)."
+    },
+    {
+      "id": "W2223906130",
+      "title": "Algebraic File Synchronization: Adequacy and Completeness",
+      "abstract": "With distributed computing and mobile applications, synchronizing diverging replicas of data structures is a more and more common problem. We use algebraic methods to reason about filesystem operations, and introduce a simplified definition of conflicting updates to filesystems. We also define algorithms for update detection and reconciliation and present rigorous proofs that they not only work as intended, but also cannot be improved on. To achieve this, we introduce a novel, symmetric set of filesystem commands with higher information content, which removes edge cases and increases the predictive powers of our algebraic model. We also present a number of generally useful classes and properties of sequences of commands. While these results are often intuitive, providing exact proofs for them is far from trivial. They contribute to our understanding of this special type of algebraic model, and toward building more complete algebras of filesystem trees and extending algebraic approaches to other data storage protocols. They also form a theoretical basis for specifying and guaranteeing the error-free operation of applications that implement an algebraic approach to synchronization."
+    },
+    {
+      "id": "W2602566763",
+      "title": "XML-aware data synchronization for mobile devices",
+      "abstract": "In everyday life, and when using computer systems in particular, it is sometimes the case that a logical datum is replicated into multiple copies, such as when we send a document by electronic mail, or inform interested parties of a new address of residence. If the datum for some reason changes, we would then also like the changes to be reflected in the copies. The problem of keeping the copies up-to-date with respect to each other is studied under the heading of data synchronization. In this thesis, we address data synchronization for mobile devices with limited energy resources and limited connectivity to the Internet, such as mobile phones. The importance of data synchronization is emphasized here, as it becomes infeasible to communicate continuously and in high volumes about the current state of each copy. The established conventions of the Internet and mobile computing environments on such matters as storage interfaces and data formats define an overall system architecture, into which we as seamlessly as possible want to incorporate our proposal. By focusing on interoperability we lower the threshold for utilizing our research in practice. We present a comprehensive approach to data synchronization for mobile devices that is optimistic and state-based, and which targets opaque and XML files on a standard file system. We consider how to use the available connectivity in an economical manner, and so that existing sources of data on the Internet can be utilized. We focus on XML synchronization, where we identify an opportunity to utilize the structure of the data the format exposes. Specifically, we present an algorithm for merging concurrent changes to XML documents which supports subtree moves, an efficient heuristic algorithm for computing tree-level changes between two XML documents, and an overall architecture and algorithms to support the use of lazily instantiated XML documents. Our data synchronization approach is evaluated quantitatively in several experiments, as well as qualitatively by constructing applications that build on top of the approach. One of our applications is an editor that processes 1 GB XML files on a mobile phone."
+    },
+    {
+      "id": "W2146584260",
+      "title": "Normalization of edit sequences for text synchronization",
+      "abstract": "It often occurs that local copies of a text are modified by users but that the local modifications are not synchronized (thus allowing the merged text to become the source for later editions) until later when, for instance the network connection is reestablished. Since text editions usually affect a small fraction of the whole content, the history of edit operations provides a compact representation of the modified file. In this paper, we define a normal form for these records which will permit for the comparison of all text files that have been obtained by editing a common source S when the difference between each output file Oi and the source file is given as a sequence Li of edit operations. We show that the normalized sequence is unique for all the equivalent text editions and provide efficient procedures with which to compute this normal form and to obtain the edit sequence LM transforming S into a merged file M which integrates all the local modifications. We also discuss how these normalization can be integrated into the operational transformation paradigm for optimistic replication."
+    },
+    {
+      "id": "W2481614823",
+      "title": "Data Replication Support for Collaboration in Mobile and Ubiquitous Computing Environments",
+      "abstract": "We analyze state-of-the art solutions, discussing their strengths and weaknesses along three main effectiveness dimensions: (i) faster strong consistency, (ii) with less aborted work, while (iii) minimizing both the amount of data exchanged between and stored at replicas; and identify open research issues."
+    },
+    {
+      "id": "W2553069654",
+      "title": "FileSyncer: Design, Implementation, and Performance Evaluation",
+      "abstract": "With the pervasiveness of information technology, one of the growing trends today is a phenomenon which can be termed one-user-to-manycomputing-devices.In many cases, the need to manage information across multiple electronic devices and storage media arises.The challenge therefore is finding a file synchronization system that can effectively replicate files across these different devices.This paper presents the design, implementation, and evaluation of FileSyncer, a rapid and efficient file synchronization tool that, in addition to the traditional synchronization capabilities, supports manual update selection and mechanism to revert a synchronization process back to the last previous state.The system employs last modified time, file size and CRC checksum for update detection and to ensure integrity of synchronized files.The synchronization times of the system for files of different sizes were compared with those of four existing file synchronization systems.Results showed increased efficiency in terms of time taken by FileSyncer to complete a synchronization operation with increase in file size compared to the other systems.In the future, we plan to release FileSyncer to the open source community for further development."
+    },
+    {
+      "id": "W2667218079",
+      "title": "R\u00e9plication asynchrone des donn\u00e9es dans trois contextes: entrep\u00f4ts, grappes et syst\u00e8mes pair-\u00e0-pair",
+      "abstract": "In this HDR thesis, we present our contributions to improve data freshness and to manage strong consistency in single master and multi-master lazy replication configurations, respecting the autonomy of the database internals. This means that all the components necessary to support our protocols are implemented outside de DBMS. These contributions were motivated by distributed database system applications such as small scale Oneline Analysis Processing (OLAP) and small and large scale Oneline Transaction Processing (OLTP) in database cluster systems. Large-scale distributed collaborative applications are getting common as a result of rapid progress in distributed technologies (grid, P2P, and mobile computing). As an example of such applications, consider a second generation Wiki that works over a peer-to-peer (P2P) network and supports users on the elaboration and maintenance of shared documents in a collaborative and lazy manner. For simplicity, we consider three main classes: unstructured, structured, and super-peer networks. P2P systems allow decentralized data sharing by distributing data storage across all peers of a P2P network. Since these peers can join and leave the system at any time, the shared data may become unavailable. To cope with this problem, a solution is to replicate data over the P2P network. Several data replication solutions have been proposed in P2P systems to improve availability within the overlay network. Most of these solutions are based on lazy single master replication built for file systems. On the other hand, very few replication solutions have been proposed to handle the application requirements. Our research contributions for managing lazy multi-master data replication in P2P systems are related to specific collaborative applications. We adopt optimistic replication due to its flexibility which is necessary in dynamic and large scale environments. The first contribution in this subject is a P2P Topology Aware Semantic Reconciliation engine. Another important contribution is related to the improvement of performance on providing data availability in structured P2P systems in the presence of multiple replicas of a given object, given dynamicity and failures. In this context, we proposed a data replication service that uses the concept of currency over a distributed timestamp protocol."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+# Distributed Directory Service in the Farsite File System (Douceur & Howell, OSDI 2004)
+
+This paper describes how Farsite replaced a centralized metadata server with a fully distributed directory service across unreliable desktop machines — directly relevant to building a multi-master distributed file system for ~10 nodes that tolerate offline periods.
+
+Key concrete mechanisms:
+
+- **Tree-structured file identifiers**: Each file/dir has an ID that encodes its ancestor chain. This enables **dynamically partitioning the metadata namespace at arbitrary granularity** across machines — each node owns metadata for the subtree it is authoritative for. Partitioning can shift as nodes join/leave without central coordination, and IDs remain stable under renames of ancestors (the ID tree is decoupled from the name tree).
+- **Recursive path leases**: To keep path-name resolution consistent while metadata is distributed, a node resolving a path obtains leases on the ancestors it traverses. Leases are recursive (covering the whole path) and expire, so they tolerate node unavailability: after expiry, ownership and layout assumptions are re-validated rather than assumed. This is a principled way to bound staleness of namespace views instead of requiring global synchrony.
+- **Cross-machine operation protocol**: Operations touching files managed by different machines (e.g., rename/move across ownership domains) are executed via a two-phase style protocol that ensures the operation either completes atomically on all involved machines or is cleanly undone — crucial for **directory rename/move conflicts**, the primary concern of the target system. Moves that would create cycles are detected and rejected.
+- **Disjunctive leases and file-field leases**: Different fields of a file's metadata (content location, directory entries, attributes) can be leased to different machines, and a disjunctive lease lets any one of a set of machines hold it — mitigating hotspots and avoiding a single point of failure.
+
+Relevance: Farsite demonstrates eventual-consistent namespace partitioning without a central authority, lease-based consistency maintenance robust to nodes going offline, and atomic cross-node handling of directory moves/renames — though it preserves full single-system semantics rather than explicitly keeping conflicting versions, so content-conflict policy must come from elsewhere.

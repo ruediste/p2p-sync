@@ -1,0 +1,175 @@
+{
+  "id": "W4379534068",
+  "title": "Type-Checking CRDT Convergence",
+  "doi": "https://doi.org/10.1145/3591276",
+  "publication_date": "2023-06-06",
+  "publication_year": 2023,
+  "type": "article",
+  "cited_by_count": 16,
+  "authors": [
+    "George Zakhour",
+    "Pascal Weisenburger",
+    "Guido Salvaneschi"
+  ],
+  "venue": "Proceedings of the ACM on Programming Languages",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "diamond",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3591276",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4379534068.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4379534068.grobid-xml"
+  },
+  "abstract": "Conflict-Free Replicated Data Types (CRDTs) are a recent approach for keeping replicated data consistent while guaranteeing the absence of conflicts among replicas. For correct operation, CRDTs rely on a merge function that is commutative, associative and idempotent. Ensuring that such algebraic properties are satisfied by implementations, however, is left to the programmer, resulting in a process that is complex and error-prone. While techniques based on testing, automatic verification of a model, and mechanized or handwritten proofs are available, we lack an approach that is able to verify such properties on concrete CRDT implementations. In this paper, we present Propel, a programming language with a type system that captures the algebraic properties required by a correct CRDT implementation. The Propel type system deduces such properties by case analysis and induction: sum types guide the case analysis and algebraic properties in function types enable induction for free. Propel\u2019s key feature is its capacity to reason about algebraic properties (a) in terms of rewrite rules and (b) to derive the equality or inequality of expressions from the properties. We provide an implementation of Propel as a Scala embedding, we implement several CRDTs, verify them with Propel and compare the verification process with four state-of-the-art verification tools. Our evaluation shows that Propel is able to automatically deduce the properties that are relevant for common CRDT implementations found in open-source libraries even in cases in which competitors timeout.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Parallel Computing and Optimization Techniques",
+    "Logic, programming, and type systems"
+  ],
+  "references": [
+    "https://openalex.org/W174956004",
+    "https://openalex.org/W757064370",
+    "https://openalex.org/W927144782",
+    "https://openalex.org/W1480909796",
+    "https://openalex.org/W1506927614",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1540063690",
+    "https://openalex.org/W1547069398",
+    "https://openalex.org/W1553352239",
+    "https://openalex.org/W1556837122",
+    "https://openalex.org/W1558175043",
+    "https://openalex.org/W1575501012",
+    "https://openalex.org/W1856554806",
+    "https://openalex.org/W1980786790",
+    "https://openalex.org/W2000178662",
+    "https://openalex.org/W2016017569",
+    "https://openalex.org/W2016709615",
+    "https://openalex.org/W2024914463",
+    "https://openalex.org/W2043416466",
+    "https://openalex.org/W2045900383",
+    "https://openalex.org/W2097281451",
+    "https://openalex.org/W2109261022",
+    "https://openalex.org/W2110768875",
+    "https://openalex.org/W2122049982",
+    "https://openalex.org/W2146306932",
+    "https://openalex.org/W2148387264",
+    "https://openalex.org/W2154326517",
+    "https://openalex.org/W2295616151",
+    "https://openalex.org/W2341655714",
+    "https://openalex.org/W2408152518",
+    "https://openalex.org/W2460592738",
+    "https://openalex.org/W2510332240",
+    "https://openalex.org/W2765112575",
+    "https://openalex.org/W2767258384",
+    "https://openalex.org/W2799184718",
+    "https://openalex.org/W2946388133",
+    "https://openalex.org/W2966783104",
+    "https://openalex.org/W2974174239",
+    "https://openalex.org/W2997905744",
+    "https://openalex.org/W3001530932",
+    "https://openalex.org/W3015714379",
+    "https://openalex.org/W3023405642",
+    "https://openalex.org/W3047610092",
+    "https://openalex.org/W3083991646",
+    "https://openalex.org/W3103287347",
+    "https://openalex.org/W3109957654",
+    "https://openalex.org/W3125985216",
+    "https://openalex.org/W3185574054",
+    "https://openalex.org/W3216290363",
+    "https://openalex.org/W4225922019",
+    "https://openalex.org/W4236824789",
+    "https://openalex.org/W4244488020",
+    "https://openalex.org/W4246691913",
+    "https://openalex.org/W4250846042",
+    "https://openalex.org/W4307887050",
+    "https://openalex.org/W6931619885"
+  ],
+  "cited_by": [
+    {
+      "id": "W4396564044",
+      "title": "Automated Infrastructure as Code Program Testing",
+      "abstract": "Infrastructure as Code (IaC) enables efficient deployment and operation, which are crucial to releasing software quickly. As setups can be complex, developers implement IaC programs in general-purpose programming languages like TypeScript and Python, using PL-IaC solutions like Pulumi and AWS CDK. The reliability of such IaC programs is even more relevant than in traditional software because a bug in IaC impacts the whole system. Yet, even though testing is a standard development practice, it is rarely used for IaC programs. For instance, in August 2022, less than 1% of the public Pulumi IaC programs on GitHub implemented tests. Available IaC program testing techniques severely limit the development velocity or require much development effort.To solve these issues, we propose Automated Configuration Testing (ACT), a methodology to test IaC programs in many configurations quickly and with low effort. ACT automatically mocks all resource definitions in the IaC program and uses generator and oracle plugins for test generation and validation. We implement ACT inProTI, a testing tool for Pulumi TypeScript with a type-based generator and oracle, and support for application specifications. Our evaluation with 6 081 programs from GitHub and artificial benchmarks shows thatProTIcan directly be applied to existing IaC programs, quickly finds bugs where current techniques are infeasible, and enables reusing existing generators and oracles thanks to its pluggable architecture."
+    },
+    {
+      "id": "W4389245905",
+      "title": "LoRe: A Programming Model for Verifiably Safe Local-first Software",
+      "abstract": "Local-first software manages and processes private data locally while still enabling collaboration between multiple parties connected via partially unreliable networks. Such software typically involves interactions with users and the execution environment (the outside world). The unpredictability of such interactions paired with their decentralized nature make reasoning about the correctness of local-first software a challenging endeavor. Yet, existing solutions to develop local-first software do not provide support for automated safety guarantees and instead expect developers to reason about concurrent interactions in an environment with unreliable network conditions. We propose LoRe , a programming model and compiler that automatically verifies developer-supplied safety properties for local-first applications. LoRe combines the declarative data flow of reactive programming with static analysis and verification techniques to precisely determine concurrent interactions that violate safety invariants and to selectively employ strong consistency through coordination where required. We propose a formalized proof principle and demonstrate how to automate the process in a prototype implementation that outputs verified executable code. Our evaluation shows that LoRe simplifies the development of safe local-first software when compared to state-of-the-art approaches and that verification times are acceptable."
+    },
+    {
+      "id": "W4406221767",
+      "title": "Dis/Equality Graphs",
+      "abstract": "E-graphs are a data structure to compactly represent a program space and reason about equality of program terms. E-graphs have been successfully applied to a number of domains, including program optimization and automated theorem proving. In many applications, however, it is necessary to reason about disequality of terms as well as equality. While disequality reasoning can be encoded, direct support for disequalities increases performance and simplifies the metatheory. In this paper, we develop a framework independent of a specific implementation to formally reason about e-graphs. For the first time, we prove the equivalence of e-graphs to the reflexive, symmetric, transitive, and congruent closure of the equivalence relation they are expected to encode. We use these results to present the first formalization of an extension of e-graphs that directly supports disequalities and prove an analytical result about their superior efficiency compared to embedding techniques that are commonly used in SMT solvers and automated verifiers. We further profile an SMT solver and find that it spends a measurable amount of time handling disequalities. We implement our approach in an extension to egg, a popular e-graph Rust library. We evaluate our solution in an SMT solver and an automated theorem prover using standard benchmarks. The results indicate that direct support for disequalities outperforms other encodings based on equality embedding, confirming the results obtained analytically."
+    },
+    {
+      "id": "W4399851414",
+      "title": "Automated Verification of Fundamental Algebraic Laws",
+      "abstract": "Algebraic laws of functions in mathematics \u2013 such as commutativity, associativity, and idempotence \u2013 are often used as the basis to derive more sophisticated properties of complex mathematical structures and are heavily used in abstract computational thinking. Algebraic laws of functions in coding , however, are rarely considered. Yet, they are essential. For example, commutativity and associativity are crucial to ensure correctness of a variety of software systems in numerous domains, such as compiler optimization, big data processing, data flow processing, machine learning or distributed algorithms and data structures. Still, most programming languages lack built-in mechanisms to enforce and verify that operations adhere to such properties. In this paper, we propose a verifier specialized on a set of fundamental algebraic laws that ensures that such laws hold in application code. The verifier can conjecture auxiliary properties and can reason about both equalities and inequalities of expressions, which is crucial to prove a given property when other competitors do not succeed. We implement these ideas in the Propel verifier. Our evaluation against five state-of-the-art verifiers on a total of 142 instances of algebraic properties shows that Propel is able to automatically deduce algebraic properties in different domains that rely on such properties for correctness, even in cases where competitors fail to verify the same properties or time out."
+    },
+    {
+      "id": "W4409311190",
+      "title": "Bolt-On Strong Consistency: Specification, Implementation, and Verification",
+      "abstract": "Strongly-consistent replicated data stores are a popular foundation for many kinds of online services, but their implementations are very complex. Strong replication is not available under network partitions, and so achieving a functional degree of fault-tolerance requires correctly implementing consensus algorithms like Raft and Paxos. These algorithms are notoriously difficult to reason about, and many data stores implement custom variations to support unique performance tradeoffs, presenting an opportunity for automated verification tools. Unfortunately, existing tools that have been applied to distributed consensus demand too much developer effort, a problem stemming from the low-level programming model in which consensus and strong replication are implemented\u2014asynchronous message passing\u2014which thwarts decidable automation by exposing the details of asynchronous communication. In this paper, we consider the implementation and automated verification of strong replication systems as applications of weak replicated data stores. Weak stores, being available under partition, are a suitable foundation for performant distributed applications. Crucially, they abstract asynchronous communication and allow us to derive local-scope conditions for the verification of consensus safety. To evaluate this approach, we have developed a verified-programming framework for the weak replicated state model, called Super-V. This framework enables SMT-based verification based on local-scope artifacts called stable update preconditions, replacing standard-practice global inductive invariants. We have used our approach to implement and verify a strong replication system based on an adaptation of the Raft consensus algorithm."
+    },
+    {
+      "id": "W4403295750",
+      "title": "Consistent Local-First Software: Enforcing Safety and Invariants for Local-First Applications",
+      "abstract": "Local-first software embraces data replication as a means to achieve scalability and offline availability. A crucial ingredient of local-first software are mergeable data types, like conflict-free replicated data types (CRDTs), which feature eventual consistency by enabling processes to access data locally and later merge it with other replicas in an asynchronous manner. Notably, the merging process needs to adhere to application constraints for correctness. Ensuring such application-level invariants poses a challenge, as developers must reason about the replicated program state and resort to manual synchronization of specific application components to enforce the invariant. This paper introducesConLoc(Consistent Local-First Software), a novel system designed to automatically enforce safety and maintain invariants in local-first applications.ConLoceffectively addresses the issue of preserving invariants in the execution of programs with replicated data types, including CRDTs. Our approach is able to verify the correctness of many CRDTs examined in the literature and in implementations, such the ones used in the Riak database.ConLocensures that applications are automatically synchronized correctly, resulting in substantial latency and throughput improvements when compared to sequential execution, while upholding the same set of invariants."
+    },
+    {
+      "id": "W4409311143",
+      "title": "Hambazi: Spatial Coordination Synthesis for Augmented Reality",
+      "abstract": "Augmented reality (AR) seamlessly overlays virtual objects onto the real world, enabling an exciting new range of applications. Multiple users view and interact with virtual objects, which are replicated and shown on each user\u2019s display. A key requirement of AR is that the replicas should be quickly updated and converge to the same state; otherwise, users may have laggy or inconsistent views of the virtual object, which negatively affects their experience. A second key requirement is that the movements of virtual objects in space should preserve certain integrity properties either due to physical boundaries in the real world, or privacy and safety preferences of the user. For example, a virtual cup should not sink into a table, or a private virtual whiteboard should stay within an office. The challenge tackled in this paper is the coordination of virtual objects with low latency, spatial integrity properties and convergence. We introduce \u201cwell-organized\u201d replicated data types that guarantee these two properties. Importantly, they capture a local notion of conflict that supports more concurrency and lower latency. To implement well-organized virtual objects, we introduce a credit scheme and replication protocol that further facilitate local execution, and prove the protocol\u2019s correctness. Given an AR environment, we automatically derive conflicting actions through constraint solving, and statically instantiate the protocol to synthesize custom coordination. We evaluate our implementation, H ambazi , on off-the-shelf Android AR devices and show a latency reduction of 30.5-88.4% and a location staleness reduction of 35.6-75.6%, compared to three baselines, for varying numbers of devices, AR environments, request loads, and network conditions."
+    },
+    {
+      "id": "W4399550620",
+      "title": "Performance optimisation techniques for Conflict-free Replicated Data Types (CRDT)",
+      "abstract": "The research relevance is determined by the need for distributed data handling optimisation that does not cause conflicts during replication, since the introduction of such types of data leads to an increase in the need for their optimisation and performance. The study aims to develop techniques to improve the efficiency of various types of data with conflict-free replication. To achieve this goal, the methods of analysis and experimentation were used. The study results demonstrate that the use of certain optimised methods of conflict-free data types in replication leads to a significant improvement in efficiency and reduction of resource costs. The results show that caching and precomputation, asynchronous synchronisation, and local processing are the most effective methods for improving the efficiency of Conflict-free Replicated Data Types. It is established that the choice of a specific method for improving the performance of Conflict-free Replicated Data Types should be justified and based on a careful analysis of the requirements and characteristics of a particular distributed system. This takes into account user needs, data criticality, edit frequency, etc. The research includes the development and optimisation of synchronisation algorithms that significantly improve the performance of these types of data in distributed systems. The work includes simple software implementations for detailed analysis and study of methods for optimising the performance of data types in conflict-free replications. The introduction of distributed computing has made it possible to optimise the processes of data replication and synchronisation, which helps to reduce overheads and improve system performance. It is concluded that the study is of practical importance since the use of optimised conflict-free data types with replication in real distributed systems can improve their efficiency and reliability. The practical significance of the study lies in the possibility of applying optimised methods of data types with conflict-free replication in real distributed systems, which will increase their performance and ensure efficient operation under conditions of high load and limited resource potential"
+    },
+    {
+      "id": "W4399550585",
+      "title": null,
+      "abstract": "Bulletin of ChSTU is a peer-reviewed collection of scientific works in the field of technical sciences published by Cherkasy State Technological University. Founded in 1991, Bulletin of ChSTU is included in the List of Scientific Professional Journals of Ukraine (category \"\u0411\")"
+    },
+    {
+      "id": "W4387793389",
+      "title": "Safe Combination of Data-Centric and Operation-Centric Consistency",
+      "abstract": "Programming distributed systems requires maintaining consistency among data replicas. In recent years, various frameworks have proposed language-level abstractions for this, falling into two fundamental approaches: data-centric and operation-centric solutions. The former allow developers to explicitly assign consistency levels to data, the latter enable attaching consistency constraints to operations. In practice, developers may benefit from both in the same application: data-centric consistency harmonizes well with object-oriented programming, yet one may need the flexibility to access the same data with a different consistency level depending on the operation. Currently, there is no solution that integrates both: it is a conceptual challenge to unify these two models and design a type system capable of ensuring their correct interaction. We present ConOpY, a programming language that integrates both data-centric and operation-centric consistency into the same design. The ConOpY type system guarantees the proper usage of consistency levels, preventing consistency violations resulting from an improper mix of consistency models. ConOpY is implemented as a Java extension based on annotations."
+    },
+    {
+      "id": "W4409310624",
+      "title": "Peepco: Batch-Based Consistency Optimization",
+      "abstract": "We present batch-based consistency, a new approach for consistency optimization that allows programmers to specialize consistency with application-level integrity properties. We implement the approach with a two-step process: we statically infer optimal consistency requirements for executions of bounded sets of operations, and then, use the inferred requirements to parameterize a new distributed protocol to relax operation reordering at run time when it is safe to do so. Our approach supports standard notions of consistency. We implement batch-based consistency in Peepco , demonstrate its expressiveness for partial data replication, and examine Peepco\u2019s run-time performance impact in different settings."
+    },
+    {
+      "id": "W4410294555",
+      "title": "Crust: A Modular Framework for Conflict-Free Replicated Data Types (CRDTs) Development, Validation, and Benchmarking",
+      "abstract": "Conflict-free Replicated Data Types (CRDTs) are vital for achieving strong eventual consistency in distributed systems, but their development and evaluation face significant challenges by inadequate tooling. While CRDT research focus on algorithms and applications, critical gaps persist in validation and performance benchmarking. To address this, a novel Rust-based framework \u201cCrust\u201d designed to offer a modular, configurable, and extensible platform for developing, validating, and benchmarking CRDT implementations. Crust includes Core, Config, Network, Validation, and Benchmark moduels, supporting various synchronization methods and emphasizing correctness and performance analysis. This paper details Crust\u2019s design and theoretical basis, showing how it bridges the gap between CRDT theory and practice, addressing tooling gaps to enhance adoption and real-world use."
+    },
+    {
+      "id": "W4410716058",
+      "title": "Concurrency Contracts for Designing Highly Available Replicated Data Types",
+      "abstract": "ABSTRACT Introduction Distributed system programmers rely on Replicated Data Types (RDTs), which resemble sequential data types but incorporate conflict resolution strategies to guarantee convergence when conflicts occur. The semantics of RDTs depend on the underlying conflict resolution strategy, but these cannot be customized. Moreover, ensuring state convergence alone is not enough because the resulting state may break application\u2010specific invariants. Although some approaches support application\u2010level invariants atop existing RDTs, they do not help build the RDT in the first place. As a result, custom RDTs are implemented using ad hoc approaches, which are known to be error\u2010prone and result in brittle systems. We previously proposed Explicitly Consistent Replicated Objects (ECROs) to address these issues, enabling programmers to build custom RDTs by augmenting sequential data types with a distributed specification. However, the specification requires a complete first\u2010order logic formalization of the data type and its operations, which is hard to develop. Furthermore, subtle errors in the specification may result in runtime anomalies such as state divergence and broken invariants. Methods To tackle these problems, we combine the ECRO programming model with automated program verification. The result is EFx, a minimalist object\u2010oriented programming language whose core consists of a contract system that simplifies the development of RDTs. EFx does not require tedious first\u2010order logic specifications because it analyses the data type's implementation, thereby preventing runtime anomalies due to errors in the specification. Results We reconstruct the original portfolio of ECROs in EFx to validate our approach. We consistently achieve a 2x to 4x reduction of the code size. Additionally, we implement several applications, such as the RUBiS auction system, the SmallBank benchmark, a distributed voting game, and an airline reservation system. Conclusion Our evaluation shows that EFx simplifies the development of RDTs."
+    },
+    {
+      "id": "W7163956054",
+      "title": "Versioned E-Graphs",
+      "abstract": "E-Graphs are an efficient encoding for discovering and maintaining sets of equalities, commonly adopted in the context of formal proofs, program analysis, and optimization. In several scenarios, equalities may hold only conditionally, i.e., under certain assumptions. For example, in automated provers the proof is often split into multiple branches, such that each branch considers a different set of equalities. A limitation of traditional e-graphs is that they can only encode a single set of equalities at a time. Conditional equalities are then handled by maintaining multiple e-graphs, e.g., one for each branch in the proof, which is inefficient as equalities shared among branches are simply replicated many times. In this paper, we introduce versioned e-graphs, which efficiently encode multiple equivalence sets at the same time, maximizing shared information among them. We formalize for versioned e-graphs and prove their correctness. We evaluate our solution against widely-adopted solutions which maintain multiple e-graphs and show that versioned e-graphs are up to 5 \u2212 30 % more memory efficient and up to 4 \u00d7 faster depending on the case study, especially when solution spaces are large both in explored program terms and number of branches."
+    },
+    {
+      "id": "W7164325202",
+      "title": "EC-VDIC: A Scalable and Verifiable Adaptive Erasure Coding Framework for Decentralized IPFS Clusters",
+      "abstract": "Off-chain storage solutions like the InterPlanetary File System (IPFS) are vital for overcoming blockchain storage limitations. While IPFS Clusters ensure data availability, traditional replication-based models introduce high resource overhead and scalability bottlenecks. The Verifiable Decentralized IPFS Cluster (VDIC) addresses data integrity but remains limited by inefficient storage utilization. We propose EC-VDIC, an adaptive framework that integrates Reed-Solomon erasure coding to optimize verifiable storage. Using an adaptive gateway, EC-VDIC dynamically applies replication to small metadata and erasure coding to large data blocks. Evaluated across 3 to 20 nodes, EC-VDIC achieved a 62.05% reduction in physical storage compared to standard VDIC. Additionally, while replication-based models showed a double latency spike when scaling from 10 to 20 nodes, EC-VDIC maintained a small 12.3% increase. Our results confirm EC-VDIC as a scalable, storage-efficient, and verifiable solution for decentralized data management."
+    },
+    {
+      "id": "W7215028644",
+      "title": "Composing CRDTs Convergent by Construction",
+      "abstract": "Conflict-Free Replicated Data Types (CRDTs) are abstract data types that ensure eventual convergence among data replicas in distributed systems. As they provide convergence out-of-the-box, CRDTs have become key building blocks for highly available, collaborative, and offline-capable systems, powering applications from real-time editors to distributed databases. Adopting an individual CRDT is straightforward, but real-world software routinely requires composing them. For example, an application might store a set of counters, combining a set CRDT with a counter CRDT. Unfortunately, classical CRDT theory does not guarantee that a composition of convergent CRDTs converges, forcing developers to reason about convergence again - the very burden CRDTs were introduced to remove. In this paper, we introduce a compositional framework for a broad class of operation-based CRDTs. It assembles CRDTs from five principal combinators -- Product, MapState, Associate, Traverse, and MapInterpretation -- each with built-in convergence guarantees. Any CRDT assembled from these combinators is itself a CRDT, preserving convergence by construction. This set is free of redundancy and subsumes previously proposed combinators. We develop the framework, its underlying theory, and its proofs entirely in Lean 4, producing a single artifact that serves as both the formal model and an executable, verified implementation. Our reusable library, Crdtlib, provides implementations and proofs for every combinator and CRDT in this paper. Our case studies (i) implement common CRDTs from Shapiro et al., (ii) apply the combinators in a complete application, and (iii) encode a JSON-structured tree CRDT as expressive as Automerge, with competitive runtime and memory use. These case studies show that developers can compose CRDTs without re-proving convergence for each composite."
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "id": "W4414647796",
+  "title": "Local-First Software for Green IT",
+  "doi": "https://doi.org/10.1109/ict4s68164.2025.00015",
+  "publication_date": "2025-06-09",
+  "publication_year": 2025,
+  "type": "conference-paper",
+  "cited_by_count": 1,
+  "authors": [
+    "Lylian Siffre",
+    "Thomas Ledoux",
+    "Renaud Pawlak",
+    "John Guery"
+  ],
+  "venue": "International Conference on ICT for Sustainability (ICT4S)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://hal.science/hal-05037019v1/file/Position_Paper.pdf",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4414647796.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4414647796.grobid-xml"
+  },
+  "abstract": "The growing energy footprint of Information and Communication Technology (ICT) services has become a critical environmental concern. While current approaches mainly focus on optimizing existing architectures, this position paper advocates for investigating a more fundamental shift: moving from Cloud-centric to Local-First Software architectures, where data and computation primarily reside on end-user devices. Through a preliminary study, we examine the energy consumption implications of such an architectural shift. We first develop a framework identifying the main potential impacts across the service stack (server, network, and client devices). We then discuss these impacts through three real-world examples, demonstrating how Local-First Software approaches could reduce energy consumption. Our analysis reveals both opportunities and challenges in this architectural transformation. While most impacts could contribute to energy reduction, particularly through decreased server and network usage, some negative impacts emerge, mainly around synchronization and client-side computation. These initial findings suggest that Local-First Software architectures, when appropriately implemented, could significantly reduce the energy footprint of digital services. This position paper aims to stimulate discussion and research in energy-efficient software architectures, laying the groundwork for future empirical studies on Local-First Software approaches in sustainable computing.",
+  "topics": [
+    "Green IT and Sustainability",
+    "Energy Efficiency in Computing",
+    "Cloud Computing and Resource Management"
+  ],
+  "references": [
+    "https://openalex.org/W182605591",
+    "https://openalex.org/W1503091156",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1859105143",
+    "https://openalex.org/W1991238593",
+    "https://openalex.org/W1993158854",
+    "https://openalex.org/W2054482349",
+    "https://openalex.org/W2054584570",
+    "https://openalex.org/W2088710327",
+    "https://openalex.org/W2097101984",
+    "https://openalex.org/W2134308710",
+    "https://openalex.org/W2145625823",
+    "https://openalex.org/W2234255316",
+    "https://openalex.org/W2341635397",
+    "https://openalex.org/W2472365307",
+    "https://openalex.org/W2734204574",
+    "https://openalex.org/W2889621261",
+    "https://openalex.org/W2922165330",
+    "https://openalex.org/W2934940064",
+    "https://openalex.org/W2944401168",
+    "https://openalex.org/W2960645717",
+    "https://openalex.org/W2970214107",
+    "https://openalex.org/W2979846168",
+    "https://openalex.org/W3101698344",
+    "https://openalex.org/W3129790647",
+    "https://openalex.org/W3141699076",
+    "https://openalex.org/W3174997142",
+    "https://openalex.org/W3175111539",
+    "https://openalex.org/W4206818383",
+    "https://openalex.org/W4252215110",
+    "https://openalex.org/W4253055375",
+    "https://openalex.org/W4302780356",
+    "https://openalex.org/W4309617332",
+    "https://openalex.org/W4318478969",
+    "https://openalex.org/W4382938527",
+    "https://openalex.org/W4386127739",
+    "https://openalex.org/W4390767225",
+    "https://openalex.org/W4404234447"
+  ],
+  "cited_by": [
+    {
+      "id": "W7117682076",
+      "title": "Local Computing vs. Cloud Computing: An Empirical Study of Energy Consumption",
+      "abstract": "The dominance of Software-as-a-Service (SaaS) has raised sustainability concerns due to its reliance on centralized cloud infrastructure and increasing energy consumption. This paper investigates a core principle of the Local-First Software (LoFi) paradigm, local processing (LP), as a potential alternative. Through a controlled empirical study using SeekTune, an open-source music recognition application, we compare the end-user device and server energy consumption and data usage of an LP architecture against a traditional SaaS model for a computationally intensive task. Our results demonstrate that, while LP consumes more energy on the client device, the combined energy cost of data transmission and server-side computation in the SaaS model often results in a larger total systemic footprint. In addition, LP transmits considerably less data over the network than SaaS. For modern mobile devices, processing locally can be significantly more energy-efficient overall. These findings challenge the long-held assumption that cloud offloading is inherently superior, and position the LP aspect of LoFi as a crucial consideration for sustainable software design."
+    }
+  ]
+}

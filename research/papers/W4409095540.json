@@ -1,0 +1,57 @@
+{
+  "id": "W4409095540",
+  "title": "CRDTs for Approximate Membership Queries",
+  "doi": "https://doi.org/10.1145/3721473.3722146",
+  "publication_date": "2025-03-30",
+  "publication_year": 2025,
+  "type": "conference-paper",
+  "cited_by_count": 0,
+  "authors": [
+    "Junbo Xiong Trovato",
+    "Berkay Gulcan",
+    "Burcu Kulahcioglu Ozkan"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3721473.3722146",
+    "any_repository_has_fulltext": null
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4409095540.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4409095540.grobid-xml"
+  },
+  "abstract": "Probabilistic data structures are used in applications that manage large datasets due to their time and space efficiency. These applications can accommodate approximate results from probabilistic data structures and replicated systems that use them can take advantage of the efficiency gained from weaker synchronization and consistency among replicas.",
+  "topics": [
+    "Advanced Database Systems and Queries",
+    "Distributed systems and fault tolerance",
+    "Data Management and Algorithms"
+  ],
+  "references": [
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1967373117",
+    "https://openalex.org/W2037070664",
+    "https://openalex.org/W2040135593",
+    "https://openalex.org/W2090828855",
+    "https://openalex.org/W2118242633",
+    "https://openalex.org/W2122011234",
+    "https://openalex.org/W2123845384",
+    "https://openalex.org/W2125770033",
+    "https://openalex.org/W2170849273",
+    "https://openalex.org/W2510332240",
+    "https://openalex.org/W2578924578",
+    "https://openalex.org/W2808068568",
+    "https://openalex.org/W2962931968",
+    "https://openalex.org/W3103287347",
+    "https://openalex.org/W4255148642",
+    "https://openalex.org/W4284887785",
+    "https://openalex.org/W4367675041",
+    "https://openalex.org/W4387360014"
+  ],
+  "cited_by": []
+}

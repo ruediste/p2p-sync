@@ -1,0 +1,860 @@
+{
+  "id": "W2001803004",
+  "title": "Flexible update propagation for weakly consistent replication",
+  "doi": "https://doi.org/10.1145/268998.266711",
+  "publication_date": "1997-10-01",
+  "publication_year": 1997,
+  "type": "conference-paper",
+  "cited_by_count": 476,
+  "authors": [
+    "Karin Petersen",
+    "Mike J. Spreitzer",
+    "Douglas B. Terry",
+    "Marvin M. Theimer",
+    "Alan J. Demers"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/268998.266711",
+    "any_repository_has_fulltext": null
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2001803004.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2001803004.grobid-xml"
+  },
+  "abstract": "Bayou's anti-entropy protocol for update propagation between weakly consistent storage replicas is based on pair-wise communication, the propagation of write operations, and a set of ordering and closure.constraints on the propagation of the writes.The simplicity of the design makes the protocol very flexible, thereby providing support for diverse networking environments and usage scenarios.It accommodates a variety of policies for when and where to propagate updates.It operates over diverse network topologies, including low-bandwidth links.It is incremental.It enables replica convergence, and updates can be propagated using floppy disks and similar transportable media.Moreover, the protocol handles replica creation and retirement in a light-weight manner.Each of these features is enabled by only one or two of the protocol's design choices, and can be independently incorporated in other systems.This paper presents the anti-entropy protocol in detail, describing the design decisions and resulting features.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Data Storage Technologies",
+    "Caching and Content Delivery"
+  ],
+  "references": [
+    "https://openalex.org/W1525865893",
+    "https://openalex.org/W1586701723",
+    "https://openalex.org/W1980446225",
+    "https://openalex.org/W2009312542",
+    "https://openalex.org/W2032325066",
+    "https://openalex.org/W2038562061",
+    "https://openalex.org/W2043671329",
+    "https://openalex.org/W2059328141",
+    "https://openalex.org/W2059432328",
+    "https://openalex.org/W2111586962",
+    "https://openalex.org/W2116142433",
+    "https://openalex.org/W2117260615",
+    "https://openalex.org/W2123737479",
+    "https://openalex.org/W2124074197",
+    "https://openalex.org/W2125011947",
+    "https://openalex.org/W2125930899",
+    "https://openalex.org/W2131414602",
+    "https://openalex.org/W2156027558",
+    "https://openalex.org/W3137220996"
+  ],
+  "cited_by": [
+    {
+      "id": "W1572481965",
+      "title": "Epidemic routing for partially-connected ad hoc networks"
+    },
+    {
+      "id": "W2150013559",
+      "title": "PNUTS"
+    },
+    {
+      "id": "W2056980397",
+      "title": "A low-bandwidth network file system"
+    },
+    {
+      "id": "W2295541535",
+      "title": "Optimistic replication"
+    },
+    {
+      "id": "W1516319412",
+      "title": "Conflict-Free Replicated Data Types"
+    },
+    {
+      "id": "W1997369208",
+      "title": "Astrolabe"
+    },
+    {
+      "id": "W2161730338",
+      "title": "Don't settle for eventual"
+    },
+    {
+      "id": "W2143339817",
+      "title": "OpenDHT"
+    },
+    {
+      "id": "W2096122599",
+      "title": "Giggle: A Framework for Constructing Scalable Replica Location Services"
+    },
+    {
+      "id": "W1524103123",
+      "title": "Chain replication for supporting high throughput and availability"
+    },
+    {
+      "id": "W2115806861",
+      "title": "Design and evaluation of a conit-based continuous consistency model for replicated services"
+    },
+    {
+      "id": "W2144499729",
+      "title": "A scalable distributed information management system"
+    },
+    {
+      "id": "W1916848204",
+      "title": "Making Geo-Replicated Systems Fast as Possible, Consistent when Necessary"
+    },
+    {
+      "id": "W2121510533",
+      "title": "Attested append-only memory"
+    },
+    {
+      "id": "W2034747525",
+      "title": "Middleware based data replication providing snapshot isolation"
+    },
+    {
+      "id": "W12688243",
+      "title": "Stronger Semantics for Low-Latency Geo-Replicated Storage"
+    },
+    {
+      "id": "W2098618284",
+      "title": "Bolt-on causal consistency"
+    },
+    {
+      "id": "W2800277550",
+      "title": "A Survey on NoSQL Stores"
+    },
+    {
+      "id": "W3139430581",
+      "title": "Depot"
+    },
+    {
+      "id": "W2209943643",
+      "title": "Coordination avoidance in database systems"
+    },
+    {
+      "id": "W2148009787",
+      "title": "System support for pervasive applications"
+    },
+    {
+      "id": "W2101027550",
+      "title": "Weak Consistency: A Generalized Theory and Optimistic Implementations for Distributed Transactions"
+    },
+    {
+      "id": "W2998583855",
+      "title": "A low-bandwidth network file system"
+    },
+    {
+      "id": "W2090204040",
+      "title": "Mojim"
+    },
+    {
+      "id": "W2613970404",
+      "title": "Cicada"
+    },
+    {
+      "id": "W2046654145",
+      "title": "Principles of Eventual Consistency"
+    },
+    {
+      "id": "W2111113897",
+      "title": "GentleRain"
+    },
+    {
+      "id": "W1981851173",
+      "title": "ChainReaction"
+    },
+    {
+      "id": "W2970352341",
+      "title": "Blockchain meets database"
+    },
+    {
+      "id": "W2112612200",
+      "title": "Orbe"
+    },
+    {
+      "id": "W2186001977",
+      "title": "Consistency in Non-Transactional Distributed Storage Systems"
+    },
+    {
+      "id": "W2758102451",
+      "title": "Distributed shared persistent memory"
+    },
+    {
+      "id": "W1667592029",
+      "title": "Cimbiosys: A platform for content-based partial replication"
+    },
+    {
+      "id": "W1771264736",
+      "title": "Cloud Types for Eventual Consistency"
+    },
+    {
+      "id": "W2023718005",
+      "title": "Lineage-driven Fault Injection"
+    },
+    {
+      "id": "W2131460078",
+      "title": "Eventually Consistent Transactions"
+    },
+    {
+      "id": "W2195205682",
+      "title": "Write Fast, Read in the Past"
+    },
+    {
+      "id": "W2971005438",
+      "title": "SLOG"
+    },
+    {
+      "id": "W1980392765",
+      "title": "Implementing linearizability at large scale and low latency"
+    },
+    {
+      "id": "W2607118653",
+      "title": "Saturn"
+    },
+    {
+      "id": "W2020299987",
+      "title": "Design and evaluation of a continuous consistency model for replicated services"
+    },
+    {
+      "id": "W4242183123",
+      "title": "Giggle: A Framework for Constructing Scalable Replica Location Services"
+    },
+    {
+      "id": "W2124351345",
+      "title": "XMIDDLE: A Data-Sharing Middleware for Mobile Computing"
+    },
+    {
+      "id": "W2154193287",
+      "title": "The IceCube approach to the reconciliation of divergent replicas"
+    },
+    {
+      "id": "W2166755212",
+      "title": "SWIM: scalable weakly-consistent infection-style process group membership protocol"
+    },
+    {
+      "id": "W2041180570",
+      "title": "Lazy database replication with snapshot isolation"
+    },
+    {
+      "id": "W2085631457",
+      "title": "What is a file synchronizer?"
+    },
+    {
+      "id": "W4237945458",
+      "title": "OpenDHT"
+    },
+    {
+      "id": "W2127428602",
+      "title": "Declarative programming over eventually consistent data stores"
+    },
+    {
+      "id": "W1745268285",
+      "title": "Transactional consistency and automatic management in an application data cache"
+    },
+    {
+      "id": "W2039176376",
+      "title": "The potential dangers of causal consistency and an explicit solution"
+    },
+    {
+      "id": "W3006291258",
+      "title": "Attested append-only memory"
+    },
+    {
+      "id": "W3215967691",
+      "title": "Distributed Event Routing in Publish/Subscribe Communication Systems: A Survey"
+    },
+    {
+      "id": "W2288327952",
+      "title": "Chapar: certified causally consistent distributed key-value stores"
+    },
+    {
+      "id": "W2170907411",
+      "title": "Lazy database replication with ordering guarantees"
+    },
+    {
+      "id": "W2099105350",
+      "title": "The costs and limits of availability for replicated services"
+    },
+    {
+      "id": "W2100076195",
+      "title": "Understanding and mitigating the impact of load imbalance in the memory caching tier"
+    },
+    {
+      "id": "W2086838666",
+      "title": "Depot: cloud storage with minimal trust"
+    },
+    {
+      "id": "W2148176468",
+      "title": "Load management and high availability in the Medusa distributed stream processing system"
+    },
+    {
+      "id": "W1561336685",
+      "title": "Object storage on CRAQ: high-throughput chain replication for read-mostly workloads"
+    },
+    {
+      "id": "W2154708596",
+      "title": "Turning the postal system into a generic digital communication mechanism"
+    },
+    {
+      "id": "W1505678522",
+      "title": "On the Availability of Non-strict Quorum Systems"
+    },
+    {
+      "id": "W1981521402",
+      "title": "SwiftCloud: Fault-Tolerant Geo-Replication Integrated all the Way to the Client Machine"
+    },
+    {
+      "id": "W2938600385",
+      "title": "A Review of Polyglot Persistence in the Big Data World"
+    },
+    {
+      "id": "W1998688529",
+      "title": "Rethinking eventual consistency"
+    },
+    {
+      "id": "W2900394527",
+      "title": "Hamsaz: replication coordination analysis and synthesis"
+    },
+    {
+      "id": "W1978115992",
+      "title": "Niobe"
+    },
+    {
+      "id": "W1982242771",
+      "title": "Minimizing Commit Latency of Transactions in Geo-Replicated Data Stores"
+    },
+    {
+      "id": "W2037683905",
+      "title": "Keypad"
+    },
+    {
+      "id": "W2076529635",
+      "title": "P2P Data synchronization for product lifecycle management"
+    },
+    {
+      "id": "W2408257745",
+      "title": "A DECENTRALIZED WIKI ENGINE FOR COLLABORATIVE WIKIPEDIA HOSTING"
+    },
+    {
+      "id": "W2333527583",
+      "title": "Survey on NoSQL for Management of Big Data"
+    },
+    {
+      "id": "W2766827230",
+      "title": "CausalSpartan: Causal Consistency for Distributed Data Stores Using Hybrid Logical Clocks"
+    },
+    {
+      "id": "W2266338101",
+      "title": "Eyo: Device-Transparent Personal Storage"
+    },
+    {
+      "id": "W2045384056",
+      "title": "A partial replication approach for anywhere anytime mobile commenting"
+    },
+    {
+      "id": "W4381329151",
+      "title": "Detock: High Performance Multi-region Transactions at Scale"
+    },
+    {
+      "id": "W2605921527",
+      "title": "Achieving convergent causal consistency and high availability for cloud storage"
+    },
+    {
+      "id": "W2284445379",
+      "title": "The Ignite Distributed Collaborative Scientific Visualization System"
+    },
+    {
+      "id": "W2138368466",
+      "title": "Epidemic algorithms for replicated databases"
+    },
+    {
+      "id": "W2145475590",
+      "title": "A Peer-to-Peer Replica Location Service Based on a Distributed Hash Table"
+    },
+    {
+      "id": "W1999255105",
+      "title": "The costs and limits of availability for replicated services"
+    },
+    {
+      "id": "W2038223391",
+      "title": "Developing Ambient Intelligence Systems: A Solution based on Web Services"
+    },
+    {
+      "id": "W2037476089",
+      "title": "Distributed computing research issues in grid computing"
+    },
+    {
+      "id": "W1993994360",
+      "title": "Using the transformational approach to build a safe and generic data synchronizer"
+    },
+    {
+      "id": "W2087966294",
+      "title": "Tolerating malicious gossip"
+    },
+    {
+      "id": "W2166851716",
+      "title": "Improving availability and performance with application-specific data replication"
+    },
+    {
+      "id": "W3163946495",
+      "title": "A scalable distributed information management system"
+    },
+    {
+      "id": "W197675523",
+      "title": "TierStore: a distributed filesystem for challenged networks in developing regions"
+    },
+    {
+      "id": "W1581707651",
+      "title": "A middleware service for mobile ad hoc data sharing, enhancing data availability"
+    },
+    {
+      "id": "W2164157692",
+      "title": "An adaptive quality of service aware middleware for replicated services"
+    },
+    {
+      "id": "W2102863400",
+      "title": "Trading replication consistency for performance and availability: an adaptive approach"
+    },
+    {
+      "id": "W2165916313",
+      "title": "So-Grid"
+    },
+    {
+      "id": "W1778962283",
+      "title": "PADS: a policy architecture for distributed storage systems"
+    },
+    {
+      "id": "W2007980883",
+      "title": "Building a Peer-to-peer Information System in Grids via Self-organizing Agents"
+    },
+    {
+      "id": "W2069184945",
+      "title": "Reorganization and discovery of grid information with epidemic tuning"
+    },
+    {
+      "id": "W2962998221",
+      "title": "Causal consistency and latency optimality"
+    },
+    {
+      "id": "W1645067580",
+      "title": "Causal Consistency for Geo-Replicated Cloud Storage under Partial Replication"
+    },
+    {
+      "id": "W2042380414",
+      "title": "Asynchronous reconciliation based on operational transformation for P2P collaborative environments"
+    },
+    {
+      "id": "W1992210939",
+      "title": "Enhanced Product Lifecycle Information Management using \u201ccommunicating materials\u201d"
+    },
+    {
+      "id": "W2096689343",
+      "title": "Replicated Data Management for Mobile Computing"
+    },
+    {
+      "id": "W2616529795",
+      "title": "Causal consistency algorithms for partially replicated and fully replicated systems"
+    },
+    {
+      "id": "W1484631715",
+      "title": "Caching and Replication in Mobile Data Management."
+    },
+    {
+      "id": "W1548777079",
+      "title": "Warranties for faster strong consistency"
+    },
+    {
+      "id": "W2182414627",
+      "title": "Scalable and Accurate Causality Tracking for Eventually Consistent Stores"
+    },
+    {
+      "id": "W2014819730",
+      "title": "Docx2Go"
+    },
+    {
+      "id": "W2022238631",
+      "title": "Using structural characteristics for autonomous operation"
+    },
+    {
+      "id": "W4243779006",
+      "title": "Middleware Service for Mobile Ad Hoc Data Sharing, Enhancing Data Availability"
+    },
+    {
+      "id": "W2043994652",
+      "title": "Effective and efficient compromise recovery for weakly consistent replication"
+    },
+    {
+      "id": "W3158171563",
+      "title": "Highly Scalable Distributed Architecture for NoSQL Datastore Supporting Strong Consistency"
+    },
+    {
+      "id": "W4251162132",
+      "title": "Mojim"
+    },
+    {
+      "id": "W4255546732",
+      "title": "Chapar: certified causally consistent distributed key-value stores"
+    },
+    {
+      "id": "W2809158440",
+      "title": "Karma: Cost-Effective Geo-Replicated Cloud Storage with Dynamic Enforcement of Causal Consistency"
+    },
+    {
+      "id": "W2899422128",
+      "title": "The fuzzylog: a partially ordered shared log"
+    },
+    {
+      "id": "W2222159378",
+      "title": "FlashPatch"
+    },
+    {
+      "id": "W2060547001",
+      "title": "Design and Evaluation of a Parallel Invocation Protocol for Transactional Applications over the Web"
+    },
+    {
+      "id": "W88220746",
+      "title": "Distributed event routing in publish/subscribe communication systems"
+    },
+    {
+      "id": "W2158159099",
+      "title": "Data consistency in intermittently connected distributed systems"
+    },
+    {
+      "id": "W2099184519",
+      "title": "Designing and implementing asynchronous collaborative applications with Bayou"
+    },
+    {
+      "id": "W114083770",
+      "title": "The Case for Non-transparent Replication: Examples from Bayou."
+    },
+    {
+      "id": "W1490062955",
+      "title": "Replication: Optimistic Approaches"
+    },
+    {
+      "id": "W2137286918",
+      "title": "The hash history approach for reconciling mutual inconsistency"
+    },
+    {
+      "id": "W1524423063",
+      "title": "Segank: A Distributed Mobile Storage System"
+    },
+    {
+      "id": "W1578968375",
+      "title": "Safety, Visibility, and Performance in a Wide-Area File System"
+    },
+    {
+      "id": "W2128149590",
+      "title": "An adaptive framework for tunable consistency and timeliness using replication"
+    },
+    {
+      "id": "W1605176624",
+      "title": "Peer-to-Peer Semantic Wikis"
+    },
+    {
+      "id": "W2130154287",
+      "title": "QoS-based dissemination of content in Grids"
+    },
+    {
+      "id": "W1511720574",
+      "title": "Simplifying cyber foraging"
+    },
+    {
+      "id": "W205319591",
+      "title": "Spreading rumors cheaply, quickly, and reliably"
+    },
+    {
+      "id": "W2138359846",
+      "title": "The Fluid Computing Middleware: Bringing Application Fluidity to the Mobile Internet"
+    },
+    {
+      "id": "W1544072436",
+      "title": "Wide-scale data stream management"
+    },
+    {
+      "id": "W2140625536",
+      "title": "A weakly coupled adaptive gossip protocol for application level active networks"
+    },
+    {
+      "id": "W2404379539",
+      "title": "On the use of Clocks to Enforce Consistency in the Cloud."
+    },
+    {
+      "id": "W2143840116",
+      "title": "Enhancing Service Location Protocol for efficiency, scalability and advanced discovery"
+    },
+    {
+      "id": "W2155788099",
+      "title": "A Fast Operational Transformation Algorithm for Mobile and Asynchronous Collaboration"
+    },
+    {
+      "id": "W3016035540",
+      "title": "Declarative programming over eventually consistent data stores"
+    },
+    {
+      "id": "W792569288",
+      "title": "A delay tolerant networking and system architecture for developing regions"
+    },
+    {
+      "id": "W1589608580",
+      "title": "LOUP: the principles and practice of intra-domain route dissemination"
+    },
+    {
+      "id": "W2022009647",
+      "title": "Personalized multi-user view and content synchronization and retrieval in real-time mobile social software applications"
+    },
+    {
+      "id": "W2948219221",
+      "title": "Putting Order in Strong Eventual Consistency"
+    },
+    {
+      "id": "W2775924136",
+      "title": "Co-Design and Verification of an Available File System"
+    },
+    {
+      "id": "W3202087829",
+      "title": "Highly-available and consistent group collaboration at the edge with colony"
+    },
+    {
+      "id": "W1989736908",
+      "title": "OPCAM"
+    },
+    {
+      "id": "W2005320886",
+      "title": "Exploiting Service Usage Information for Optimizing Server Resource Management"
+    },
+    {
+      "id": "W2141297235",
+      "title": "A Scalable Conflict-Free Replicated Set Data Type"
+    },
+    {
+      "id": "W3106247424",
+      "title": "Checking causal consistency of distributed databases"
+    },
+    {
+      "id": "W2042146788",
+      "title": "A dynamic data/currency protocol for mobile database design and reconfiguration"
+    },
+    {
+      "id": "W2170826368",
+      "title": "Scalable data fusion using Astrolabe"
+    },
+    {
+      "id": "W1986411155",
+      "title": "Fidelity-Aware Replication for Mobile Devices"
+    },
+    {
+      "id": "W3042319093",
+      "title": "Hampa: Solver-Aided Recency-Aware Replication"
+    },
+    {
+      "id": "W4256061602",
+      "title": "Mojim"
+    },
+    {
+      "id": "W4289533951",
+      "title": "Subspace Embedding Based New Paper Recommendation"
+    },
+    {
+      "id": "W4231366538",
+      "title": "The Ignite Distributed Collaborative Scientific Visualization System"
+    },
+    {
+      "id": "W2168067335",
+      "title": "Stronger consistency and semantics for low-latency geo-replicated storage"
+    },
+    {
+      "id": "W1587548215",
+      "title": "Programming for Pervasive Computing Environments"
+    },
+    {
+      "id": "W1502259085",
+      "title": "Efficient Numerical Error Bounding for Replicated Network Services"
+    },
+    {
+      "id": "W1918075888",
+      "title": "Neptune: scalable replication management and programming support for cluster-based network services"
+    },
+    {
+      "id": "W1581520692",
+      "title": "Context Modelling and Management in Ambient-Aware Pervasive Environments"
+    },
+    {
+      "id": "W2096414445",
+      "title": "PersonalRAID: mobile storage for distributed and disconnected computers"
+    },
+    {
+      "id": "W1954011048",
+      "title": "Middleware for mobile computing: awareness vs. transparency"
+    },
+    {
+      "id": "W2098617685",
+      "title": "Reperasure: replication protocol using erasure-code in peer-to-peer storage network"
+    },
+    {
+      "id": "W1530666332",
+      "title": "Optimistic Replication for Internet Data Services"
+    },
+    {
+      "id": "W2165868391",
+      "title": "Building replicated Internet services using TACT: a toolkit for tunable availability and consistency tradeoffs"
+    },
+    {
+      "id": "W2154833213",
+      "title": "Version stamps-decentralized version vectors"
+    },
+    {
+      "id": "W2156976263",
+      "title": "Fuego: Experiences with Mobile Data Communication and Synchronization"
+    },
+    {
+      "id": "W1978749232",
+      "title": "ACMS: the Akamai configuration management system"
+    },
+    {
+      "id": "W1992208760",
+      "title": "Strongly consistent replication for a bargain"
+    },
+    {
+      "id": "W2119351251",
+      "title": "Combining generality and practicality in a conit-based continuous consistency model for wide-area replication"
+    },
+    {
+      "id": "W2104077740",
+      "title": "Clustering support and replication management for scalable network services"
+    },
+    {
+      "id": "W120608525",
+      "title": "Towards a dependable architecture for internet-scale sensing"
+    },
+    {
+      "id": "W1552054694",
+      "title": "Transparent information dissemination"
+    },
+    {
+      "id": "W139219924",
+      "title": "SDIMS: A Scalable Distributed Information Management System"
+    },
+    {
+      "id": "W2011091448",
+      "title": "Application-independent reconciliation for nomadic applications"
+    },
+    {
+      "id": "W1659460993",
+      "title": "Towards global storage management and data placement"
+    },
+    {
+      "id": "W2172038085",
+      "title": "Models and Software Model Checking of a Distributed File Replication System"
+    },
+    {
+      "id": "W2167740772",
+      "title": "A mechanism for replicated data consistency in mobile computing environments"
+    },
+    {
+      "id": "W4211009496",
+      "title": "Replicated Data Management for Mobile Computing"
+    },
+    {
+      "id": "W2266775510",
+      "title": "S2d2: a framework for scalable and secure optimistic replication"
+    },
+    {
+      "id": "W2589996673",
+      "title": "Fidelity-aware replication for mobile devices"
+    },
+    {
+      "id": "W118548596",
+      "title": "{PRACTI} Replication for Large-Scale Systems"
+    },
+    {
+      "id": "W4254801822",
+      "title": "Turning the postal system into a generic digital communication mechanism"
+    },
+    {
+      "id": "W2027357437",
+      "title": "Automated and user involved data synchronization in collaborative e-health environments"
+    },
+    {
+      "id": "W2119039082",
+      "title": "Flexible on-device service object replication with replets"
+    },
+    {
+      "id": "W2130008303",
+      "title": "Efficient Locally Trackable Deduplication in Replicated Systems"
+    },
+    {
+      "id": "W2005436270",
+      "title": "Concurrency Control and Awareness Support for Multi-synchronous Collaborative Editing"
+    },
+    {
+      "id": "W2168674192",
+      "title": "Dual-Quorum: A Highly Available and Consistent Replication System for Edge Services"
+    },
+    {
+      "id": "W2187409650",
+      "title": "Edelweiss"
+    },
+    {
+      "id": "W4240855578",
+      "title": "FlashPatch"
+    },
+    {
+      "id": "W1481811720",
+      "title": "An Agent Based Semi-informed Protocol for Resource Discovery in Grids"
+    },
+    {
+      "id": "W2056012812",
+      "title": "The PerDiS FS"
+    },
+    {
+      "id": "W2294085711",
+      "title": "Towards a Scalable, Distributed Metadata Service for Causal Consistency under Partial Geo-replication"
+    },
+    {
+      "id": "W189226382",
+      "title": "Partially Ordered Knowledge Sharing and Fractionated Systems in the Context of other Models for Distributed Computing"
+    },
+    {
+      "id": "W1690403259",
+      "title": "A Local Approach to Fast Failure Recovery of LISP Ingress Tunnel Routers"
+    },
+    {
+      "id": "W171635350",
+      "title": "Update Propagation in a Streaming Warehouse"
+    },
+    {
+      "id": "W2068986758",
+      "title": "Dealing with server corruption in weakly consistent replicated data systems"
+    },
+    {
+      "id": "W2141899839",
+      "title": "Improving Resource Utilization, Scalability, and Availability in Replication Systems Using Object Ownership Distribution"
+    },
+    {
+      "id": "W2187790783",
+      "title": "Intellectual scaling in a distributed cloud application architecture: A message classification algorithm"
+    },
+    {
+      "id": "W2327470348",
+      "title": "Replication Management and Optimistic Replication Challenges in Mobile Environment"
+    },
+    {
+      "id": "W2485601117",
+      "title": "Efficient Replica Consistency Model (ERCM) for update propagation in Data Grid Environment"
+    },
+    {
+      "id": "W2294605253",
+      "title": "Approximate causal consistency for partially replicated geo-replicated cloud storage"
+    },
+    {
+      "id": "W2494413709",
+      "title": "Performance of Causal Consistency Algorithms for Partially Replicated Systems"
+    }
+  ]
+}

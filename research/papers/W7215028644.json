@@ -1,0 +1,70 @@
+{
+  "id": "W7215028644",
+  "title": "Composing CRDTs Convergent by Construction",
+  "doi": "https://doi.org/10.1145/3839478",
+  "publication_date": "2026-10-01",
+  "publication_year": 2026,
+  "type": "article",
+  "cited_by_count": 0,
+  "authors": [
+    "Alexander St\u00e4ding Dominguez",
+    "George Zakhour",
+    "Pascal Weisenburger",
+    "Guido Salvaneschi"
+  ],
+  "venue": "Proceedings of the ACM on Programming Languages",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "diamond",
+    "oa_url": "https://doi.org/10.1145/3839478",
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "pdf": false,
+    "grobid_xml": false
+  },
+  "content_urls": null,
+  "abstract": "Conflict-Free Replicated Data Types (CRDTs) are abstract data types that ensure eventual convergence among data replicas in distributed systems. As they provide convergence out-of-the-box, CRDTs have become key building blocks for highly available, collaborative, and offline-capable systems, powering applications from real-time editors to distributed databases. Adopting an individual CRDT is straightforward, but real-world software routinely requires composing them. For example, an application might store a set of counters, combining a set CRDT with a counter CRDT. Unfortunately, classical CRDT theory does not guarantee that a composition of convergent CRDTs converges, forcing developers to reason about convergence again - the very burden CRDTs were introduced to remove. In this paper, we introduce a compositional framework for a broad class of operation-based CRDTs. It assembles CRDTs from five principal combinators -- Product, MapState, Associate, Traverse, and MapInterpretation -- each with built-in convergence guarantees. Any CRDT assembled from these combinators is itself a CRDT, preserving convergence by construction. This set is free of redundancy and subsumes previously proposed combinators. We develop the framework, its underlying theory, and its proofs entirely in Lean 4, producing a single artifact that serves as both the formal model and an executable, verified implementation. Our reusable library, Crdtlib, provides implementations and proofs for every combinator and CRDT in this paper. Our case studies (i) implement common CRDTs from Shapiro et al., (ii) apply the combinators in a complete application, and (iii) encode a JSON-structured tree CRDT as expressive as Automerge, with competitive runtime and memory use. These case studies show that developers can compose CRDTs without re-proving convergence for each composite.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Database Systems and Queries",
+    "Scientific Computing and Data Management"
+  ],
+  "references": [
+    "https://openalex.org/W2046654145",
+    "https://openalex.org/W2127428602",
+    "https://openalex.org/W2143725230",
+    "https://openalex.org/W2282477915",
+    "https://openalex.org/W2295616151",
+    "https://openalex.org/W2510332240",
+    "https://openalex.org/W2788555411",
+    "https://openalex.org/W2954192490",
+    "https://openalex.org/W2962936862",
+    "https://openalex.org/W2963097596",
+    "https://openalex.org/W2964963187",
+    "https://openalex.org/W2979846168",
+    "https://openalex.org/W2981188613",
+    "https://openalex.org/W3015714379",
+    "https://openalex.org/W3019483537",
+    "https://openalex.org/W3040288220",
+    "https://openalex.org/W3094813857",
+    "https://openalex.org/W3108570993",
+    "https://openalex.org/W3137220996",
+    "https://openalex.org/W3177430373",
+    "https://openalex.org/W4285130431",
+    "https://openalex.org/W4302302496",
+    "https://openalex.org/W4307886470",
+    "https://openalex.org/W4307887050",
+    "https://openalex.org/W4361230065",
+    "https://openalex.org/W4379534068",
+    "https://openalex.org/W4389245905",
+    "https://openalex.org/W4399851414",
+    "https://openalex.org/W4403295750",
+    "https://openalex.org/W4409095581",
+    "https://openalex.org/W4416526869",
+    "https://openalex.org/W7091378744",
+    "https://openalex.org/W7161349549",
+    "https://openalex.org/W7170614333"
+  ],
+  "cited_by": []
+}

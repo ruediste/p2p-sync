@@ -1,0 +1,182 @@
+{
+  "id": "W4214919759",
+  "title": "Survey of Distributed File System Design Choices",
+  "doi": "https://doi.org/10.1145/3465405",
+  "publication_date": "2022-02-28",
+  "publication_year": 2022,
+  "type": "article",
+  "cited_by_count": 21,
+  "authors": [
+    "Peter Macko",
+    "Jason Hennessey"
+  ],
+  "venue": "ACM Transactions on Storage",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "hybrid",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3465405",
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4214919759.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4214919759.grobid-xml"
+  },
+  "abstract": "Decades of research on distributed file systems and storage systems exists. New researchers and engineers have a lot of literature to study, but only a comparatively small number of high-level design choices are available when creating a distributed file system. And within each aspect of the system, typically several common approaches are used. So, rather than surveying distributed file systems, this article presents a survey of important design decisions and, within those decisions, the most commonly used options. It also presents a qualitative exploration of their tradeoffs. We include several relatively recent designs and their variations that illustrate other tradeoff choices in the design space, despite being underexplored. In doing so, we provide a primer on distributed file systems, and we also show areas that are overexplored and underexplored, in the hopes of inspiring new research.",
+  "topics": [
+    "Advanced Data Storage Technologies",
+    "Caching and Content Delivery",
+    "Peer-to-Peer Network Technologies"
+  ],
+  "references": [
+    "https://openalex.org/W1987281948",
+    "https://openalex.org/W2000394291",
+    "https://openalex.org/W2005373714",
+    "https://openalex.org/W2013451019",
+    "https://openalex.org/W2014977566",
+    "https://openalex.org/W2020765652",
+    "https://openalex.org/W2027758281",
+    "https://openalex.org/W2031771125",
+    "https://openalex.org/W2054485416",
+    "https://openalex.org/W2060440895",
+    "https://openalex.org/W2087966340",
+    "https://openalex.org/W2109706326",
+    "https://openalex.org/W2116142433",
+    "https://openalex.org/W2119245106",
+    "https://openalex.org/W2119738171",
+    "https://openalex.org/W2137760911",
+    "https://openalex.org/W2138744797",
+    "https://openalex.org/W2148575324",
+    "https://openalex.org/W2150676586",
+    "https://openalex.org/W2153612500",
+    "https://openalex.org/W2153704625",
+    "https://openalex.org/W2158049821",
+    "https://openalex.org/W2158978506",
+    "https://openalex.org/W2165222121",
+    "https://openalex.org/W2170316547",
+    "https://openalex.org/W2186001977",
+    "https://openalex.org/W2293862011",
+    "https://openalex.org/W2320955485",
+    "https://openalex.org/W2341655714",
+    "https://openalex.org/W2552349527",
+    "https://openalex.org/W2565376601",
+    "https://openalex.org/W2612261081",
+    "https://openalex.org/W2751343396",
+    "https://openalex.org/W2993345055",
+    "https://openalex.org/W4236944670",
+    "https://openalex.org/W4238584892",
+    "https://openalex.org/W4253455208",
+    "https://openalex.org/W4254263397",
+    "https://openalex.org/W6679046037"
+  ],
+  "cited_by": [
+    {
+      "id": "W4409548511",
+      "title": "Privacy preservation techniques through data lifecycle: A comprehensive literature survey",
+      "abstract": null
+    },
+    {
+      "id": "W4410601015",
+      "title": "Lustre Unveiled: Evolution, Design, Advancements, and Current Trends",
+      "abstract": "The Lustre filesystem serves as a vital element in high-performance parallel storage, meeting the rising demands of scientific, research, and enterprise environments. Widely deployed across HPC environments, ranging from small-scale applications in AI/ML, to domains like oil and gas, drug discovery, and meteorology, and manufacturing, Lustre addresses the universal challenge of efficiently accessing vast and ever-increasing volumes of data. Lustre is the filesystem of choice on six out of the top 10 fastest supercomputers in the world today, over 65% of the top 100, and also for over 60% of the top 500. Despite its widespread popularity, there is a lack of a complete and up-to-date reference, covering Lustre\u2019s evolution, design, and various advancements made over the years. In this journal, we aim to fill this gap by providing a comprehensive journey of Lustre, including its history with significant contributions to HPC, detailed architecture and design elements, exploration of advancements added through its evolution, and future directions. Additionally, we present a comparison of Lustre with other prominent storage technologies of the era. To illustrate the current state of Lustre, we analyze several filesystem trends, including utilization, performance, and usage patterns on Orion, the Lustre filesystem on the first exascale supercomputer Frontier. We hope that this journal serves as a comprehensive educational reference for the current and future generations interested in HPC filesystem storage aspects."
+    },
+    {
+      "id": "W4401568101",
+      "title": "LoADM: Load-Aware Directory Migration Policy in Distributed File Systems",
+      "abstract": "Distributed file systems often suffer from load imbalance when encountering skewed workloads. A few directories can become hotspots due to frequent access. Failure to migrate these high-load directories promptly will result in node overload, which can seriously degrade the performance of the system. To solve this challenge, in this paper, we propose a novel load-aware directory migration policy named LoADM to alleviate the load imbalance caused by hot directories. LoADM consists of three parts, i.e. learning-based directory hotness model, urgency analysis and multidimensional directory migration model. Specifically, we use a directory hotness model to identify potentially high-load directories in advance. Second, by combining the predicted directory hotness and system node status, the urgency analysis determines when to trigger a migration or tolerate an imbalance. Then, peer directory co-migration is proposed to better exploit data locality. Finally, we migrate high-load directories to appropriate storage nodes through a Particle Swarm Optimization based directory migration model. Extensive experiments show that our approach provides a promising data migration policy and can greatly improve performance compared to the state-of-the-art."
+    },
+    {
+      "id": "W4411735343",
+      "title": "Proposing blockchain based framework to mitigate VUCA realm problems for automobile life cycle",
+      "abstract": "In today\u2019s automotive industry, characterized by demand volatility, process uncertainty, supply chain complexity, and information ambiguity, achieving operational excellence has become increasingly challenging. To address these issues, we propose a novel framework that integrates blockchain technology into the life cycle of an automobile. Specifically, our solution employs Delegated Proof of Stake (DPoS) as a consensus mechanism and utilizes a Private Interplanetary File System (IPFS) for data storage and retrieval. This framework aims to enhance transparency, traceability, and data integrity across all stages of an automobile\u2019s life cycle. We provide a detailed delegate\u2019s election process in DPoS and data storage and retrieval on Private IPFS through sequence diagrams. By mitigating vulnerabilities and reducing uncertainties, our approach improves operational efficiency and stakeholder satisfaction, offering a robust solution to the challenges within the VUCA (volatility, uncertainty, complexity, ambiguity) realm in the automotive industry."
+    },
+    {
+      "id": "W4362668908",
+      "title": "Cache-Based Matrix Technology for Efficient Write and Recovery in Erasure Coding Distributed File Systems",
+      "abstract": "With the development of various information and communication technologies, the amount of big data has increased, and distributed file systems have emerged to store them stably. The replication technique divides the original data into blocks and writes them on multiple servers for redundancy and fault tolerance. However, there is a symmetrical space efficiency problem that arises from the need to store blocks larger than the original data. When storing data, the Erasure Coding (EC) technique generates parity blocks through encoding calculations and writes them separately on each server for fault tolerance and data recovery purposes. Even if a specific server fails, original data can still be recovered through decoding calculations using the parity blocks stored on the remaining servers. However, matrices generated during encoding and decoding are redundantly generated during data writing and recovery, which leads to unnecessary overhead in distributed file systems. This paper proposes a cache-based matrix technique that uploads the matrices generated during encoding and decoding to cache memory and reuses them, rather than generating new matrices each time encoding or decoding occurs. The design of the cache memory applies the Weighting Size and Cost Replacement Policy (WSCRP) algorithm to efficiently upload and reuse matrices to cache memory using parameters known as weights and costs. Furthermore, the cache memory table can be managed efficiently because the weight\u2013cost model sorts and updates matrices using specific parameters, which reduces replacement cost. The experiment utilized the Hadoop Distributed File System (HDFS) as the distributed file system, and the EC volume was composed of Reed\u2013Solomon code with parameters (6, 3). As a result of the experiment, it was possible to reduce the write, read, and recovery times associated with encoding and decoding. In particular, for up to three node failures, systems using WSCRP were able to reduce recovery time by about 30 s compared to regular HDFS systems."
+    },
+    {
+      "id": "W4382792018",
+      "title": "Efficient Management and Scheduling of Massive Remote Sensing Image Datasets",
+      "abstract": "The rapid development of remote sensing image sensor technology has led to exponential increases in available image data. The real-time scheduling of gigabyte-level images and the storage and management of massive image datasets are incredibly challenging for current hardware, networking and storage systems. This paper\u2019s three novel strategies (ring caching, multi-threading and tile-prefetching mechanisms) are designed to comprehensively optimize the remote sensing image scheduling process from image retrieval, transmission and visualization perspectives. A novel remote sensing image management and scheduling system (RSIMSS) is designed using these three strategies as its core algorithm, the PostgreSQL database and HDFS distributed file system as its underlying storage system, and the multilayer Hilbert spatial index and image tile pyramid to organize massive remote sensing image datasets. Test results show that the RSIMSS provides efficient and stable image storage performance and allows real-time image scheduling and view roaming."
+    },
+    {
+      "id": "W4387682279",
+      "title": "Performance Analysis of Distributed File System Based on RAID Storage for Tapeless Storage",
+      "abstract": "Tape storage is used as a long-term data storage solution in institutions and research centers around the world, contributing to the advancement of business and scientific research. Despite the existence of other storage media, tape storage has gained popularity owing to its low cost per storage capacity, making it an affordable option for initial implementation. However, recently, the strengths of tape storage have become ambiguous, and their drawbacks have become more evident. In the current storage system, tape storage requires complex management compared to other storage media, which incurs additional human resource costs, making it less cost effective. On the other side, other storage media continue to become cheaper and have larger storage capacities. Therefore, companies and research centers are no longer required to continuously purchase tape storage. With this trend, distributed file systems can be an alternative to tape storage. Distributed file systems combine storage nodes into a network through Reliable Array of Independent Nodes (RAIN). Erasure coding is used to store data in this file system, which makes the system cost-effective and highly reliable. This allows the construction of a safe and efficient storage system. In this study, we constructed and evaluated a distributed file system based on Redundant Array of Independent Disks (RAID) storage. We configured and evaluated distributed file systems that use Reed-Solomon in the same environment, providing the performance characteristics of each distributed file system."
+    },
+    {
+      "id": "W4402258777",
+      "title": "Humkinar: Construction of a Large Scale Web Repository and Information System for Low Resource Urdu Language",
+      "abstract": "Online content availability, commercial viability, and technological advancements for English and European languages direct mainstream search engines to prioritize the search results of these high-resource languages. This makes it challenging for low-resource language users to access the search results in regional languages which is essential to promote literacy, inclusion, and digital accessibility. In this article, we create Humkinar\u2013 a Urdu language search engine using open-source tools. Our search engine is designed with five key components: computing infrastructure, data collector, search manager, web analytics engine, and user interface. First, our in-house computing infrastructure offers 160 GB RAM, 80 cores, and 30 TB memory to support the operations of the search engine. Next, we customize an open-source web crawler with a specialized Urdu language-focused URL selection algorithm, webpage parser, and content selection mechanism to collect Urdu webpages with optimized computing and Internet resources. We also employ specialized content scrapers to collect targeted and high-priority Urdu content like news articles, Wikipedia, poetry, and books. Overall, our data collector module has successfully curated a repository containing 14 million crawled webpages and 2.2 million scraped Urdu documents. Also, we design post-processing tools for tasks such as topic classification, de-duplication, profanity assessment, text summarization, and the scoring of website quality specific to the Urdu language. In addition, acknowledging the limitations of applying conventional ranking signals to Urdu language, search manager utilizes our seven derived ranking signals for search results. These signals are tuned to emphasize the richness and quality of Urdu language websites and content in search results. Moreover, we incorporate a web analytics engine into our search engine to collect and analyze user actions and metadata to enhance the overall functionality and effectiveness of the search engine. Our web analytics engine has recorded 400K user interactions from 83 countries conducted through the interactive user interface. Finally, we conduct usability testing of search engine with native Urdu language speakers to assess the strengths and weaknesses of our search engine."
+    },
+    {
+      "id": "W4404027397",
+      "title": "Using Deep Reinforcement Learning (DRL) for minimizing power consumption in Video-on-Demand (VoD) storage systems",
+      "abstract": null
+    },
+    {
+      "id": "W4413922519",
+      "title": "SwiftKV: A Metadata Indexing Scheme Integrating LSM-Tree and Learned Index for Distributed KV Stores",
+      "abstract": "Optimizing metadata indexing remains critical for enhancing distributed file system performance. The Traditional Log-Structured Merge-Trees (LSM-Trees) architecture, while effective for write-intensive operations, exhibits significant limitations when handling massive metadata workloads, particularly manifesting as suboptimal read performance and substantial indexing overhead. Although existing learned indexes perform well on read-only workloads, they struggle to support modifications such as inserts and updates effectively. This paper proposes SwiftKV, a novel metadata indexing scheme that combines LSM-Tree and learned indexes to address these issues. Firstly, SwiftKV employs a dynamic partition strategy to narrow the metadata search range. Secondly, a two-level learned index block, consisting of Greedy Piecewise Linear Regression (Greedy-PLR) and Linear Regression (LR) models, is leveraged to replace the typical Sorted String Table (SSTable) index block for faster location prediction than binary search. Thirdly, SwiftKV incorporates a load-aware construction mechanism and parallel optimization to minimize training overhead and enhance efficiency. This work bridges the gap between LSM-Trees\u2019 write efficiency and learned indexes\u2019 query performance, offering a scalable and high-performance solution for modern distributed file systems. This paper implements the prototype of SwiftKV based on RocksDB. The experimental results show that it narrows the memory usage of index blocks by 30.06% and reduces read latency by 1.19\u00d7~1.60\u00d7 without affecting write performance. Furthermore, SwiftKV\u2019s two-level learned index achieves a 15.13% reduction in query latency and a 44.03% reduction in memory overhead compared to a single-level model. For all YCSB workloads, SwiftKV outperforms other schemes."
+    },
+    {
+      "id": "W7155513199",
+      "title": "SwitchFS: Asynchronous Metadata Updates for Distributed Filesystems with In-Network Coordination",
+      "abstract": "Distributed filesystem metadata updates are typically synchronous. This creates inherent challenges for access efficiency, load balancing, and directory contention, especially under dynamic and skewed workloads. This paper argues that synchronous updates are overly conservative. We propose SwitchFS with asynchronous metadata updates that allow operations to return early and defer directory updates until reads, both hiding latency and amortizing overhead. The key challenge lies in efficiently maintaining the synchronous POSIX semantics of metadata updates. To address this, SwitchFS is co-designed with a programmable switch, leveraging the limited on-switch resources to track directory states with negligible overhead. This allows SwitchFS to aggregate and apply delayed updates efficiently, using batching and consolidation before directory reads. Evaluation shows that SwitchFS achieves up to 13.34\u00d7 and 3.85\u00d7 higher throughput, and 61.6% and 57.3% lower latency than two state-of-the-art distributed filesystems, Emulated-InfiniFS and Emulated-CFS, respectively, under skewed workloads. For real-world workloads, SwitchFS improves end-to-end throughput by 21.1\u00d7, 1.1\u00d7, and 0.3\u00d7 over CephFS, Emulated-InfiniFS, and Emulated-CFS, respectively."
+    },
+    {
+      "id": "W4313226861",
+      "title": "Time Administration of Virtual File System Operations",
+      "abstract": "A file system is a collection of rules that govern how files are labelled, maintained, and accessed from a storage medium. Initially, there were a lot of different file systems within different servers and machines. Various file operations are allowed only between the files present in the same operating systems. When we have files in different operating systems these operations cannot be performed as the file system does not allow it. The virtual file system becomes an abstract overlay over a more tangible file system, which allows heterogeneous file transfer among different Operating Systems. Although the features offered by both the File Systems are similar, the Virtual File System provides us with an environment, wherein the Files can be accessed by any Operating System type and File System type. This paper focuses on comparing the time it takes to complete the different file operations like creating, reading, writing, deleting a file, etc. using the VFS and a traditional FS. We believe this study would help in better understanding the benefits of using a VFS."
+    },
+    {
+      "id": "W4313317649",
+      "title": "Self-Tuning Parameters for Decision Tree Algorithm Based on Big Data Analytics",
+      "abstract": "Big data is usually unstructured, and many applications require the analysis in real-time. Decision tree (DT) algorithm is widely used to analyze big data. Selecting the optimal depth of DT is time-consuming process as it requires many iterations. In this paper, we have designed a modified version of a (DT). The tree aims to achieve optimal depth by self-tuning running parameters and improving the accuracy. The efficiency of the modified (DT) was verified using two datasets (airport and fire datasets). The airport dataset has 500000 instances and the fire dataset has 600000 instances. A comparison has been made between the modified (DT) and standard (DT) with results showing that the modified performs better. This comparison was conducted on multi-node on Apache Spark tool using Amazon web services. Resulting in accuracy with an increase of 6.85% for the first dataset and 8.85% for the airport dataset. In conclusion, the modified DT showed better accuracy in handling different-sized datasets compared to standard DT algorithm."
+    },
+    {
+      "id": "W4399529899",
+      "title": "Design and Implementation of an Android-based Intelligent Archive System for Talent Cultivation",
+      "abstract": "With the popularization of mobile internet, smartphones have become an indispensable tool in people's lives. In order to adapt to the development of the times, universities have also developed mobile application software. Talent cultivation is an important component of teaching work in universities and plays a crucial role in improving teaching quality. The article was based on the Android platform to design and implement an intelligent talent cultivation file system, which realized functions such as attendance management, score query, class ranking, and exam score analysis for students, and tested and optimized the system. The experimental results showed that the system had high processing efficiency (Max: 94.7%) and short response time (Min: 196ms), which could more effectively provide technical support for students and teachers."
+    },
+    {
+      "id": "W4401879096",
+      "title": "Formalization and Verification of OpenStack Swift Using CSP",
+      "abstract": "OpenStack Swift is an object storage system that is part of the open-source cloud platform OpenStack. It adopts a fully symmetric architecture design and is extensively employed in production environments to offer users highly available storage services. In this paper, we model OpenStack Swift's basic architecture, as well as its replication service using communication sequential processes (CSP). Additionally, we extend the audit service in Swift and provide a formal model of it. Various properties of our model are subsequently verified using the model checker PAT. The properties include Deadlock Freedom, Data Reachability, Consistency, Availability, Partition Tolerance (CAP), Basically Available, Soft State, Eventually Consistent (BASE), and Data Integrity. The verification results show that the design of OpenStack Swift satisfies both the CAP and the BASE theories and it achieves Data Integrity. In light of our results, it can be safely concluded that OpenStack Swift provides users with highly available and fault-tolerant services."
+    },
+    {
+      "id": "W4388983755",
+      "title": "All You Need to Know About Cloud Elasticity Technologies",
+      "abstract": null
+    },
+    {
+      "id": "W4391128615",
+      "title": "Survey of Distributed File Systems: Concepts, Implementations, and Challenges",
+      "abstract": "Modern computing now relies heavily on Distributed File Systems (DFS), which make it possible to store, manage, and retrieve data across remote contexts in an effective manner. Therefore, it is essential to comprehend the DFS environment to optimize data management and storage solutions. We explore DFS in this thorough overview work, discussing its foundational ideas, well-known applications, related difficulties, and potential future research avenues."
+    },
+    {
+      "id": "W4416409788",
+      "title": "CrossFS: Improving Cross-Domain File System Performance with CRDT-Based Metadata Synchronization",
+      "abstract": "Modern data-intensive applications increasingly demand efficient and scalable file systems that can operate across distributed and cross-domain environments. However, existing file systems are inefficient in metadata management, synchronization efficiency, and system scalability under high-concurrency and metadata-intensive workloads in cross-domain environments. To address these challenges, this article introduces CrossFS (CFS), a cross-domain distributed file system that enhances consistency guarantees and metadata indexing. Specifically, CFS leverages conflict-free replicated data types (CRDTs) to synchronize metadata, achieving strong eventual consistency with minimal synchronization overhead, even across network partitions. Furthermore, CFS employs a Hybrid Tree indexing structure, tailored for distributed environments, which optimizes metadata operations by reducing query latency by up to 33.4% and write amplification by 30.7%. Additionally, CFS achieves adaptive caching strategies and a hybrid synchronization model that effectively balances consistency latency with data availability. Extensive evaluations show that CFS outperforms CephFS and GlusterFS, achieving up to 33.9% higher metadata throughput, 36% lower latency, and 42% better data operation efficiency."
+    },
+    {
+      "id": "W4417510002",
+      "title": "DocuMed: Docker-Based Peer-to-Peer File Sharing System for Medical Records",
+      "abstract": "This research introduces DocuMed, a Docker-based file-sharing system using Peer-to-peer (P2P) technique to increase efficiency and reliability of transferred data in healthcare, where transfer of large records and diagnostic files in short-time inter-vals in a secure manner is essential. Conventional centralized file-sharing systems are susceptible to causes of bottlenecks, privacy leakages, and failure at one point, which are not suitable for high-stakes data transfers. To overcome these constraints, the proposed system makes use of P2P architecture so that the users can transact files securely without them passing through the central server, thus enhancing the fast sharing of files. In addition, it includes file integrity verification to ensure proper data transfers, and it offers a command-line interface for easy operation. The system successfully provided accurate and concurrent file sharing on isolated nodes within a simulated healthcare network through implementation and testing."
+    },
+    {
+      "id": "W7116661443",
+      "title": "HDFS: The Backbone of Big Data - A Review of High Availability, Scalability, and Performance Using Quorum Journal Manager and Dynamic Federated Metadata Management",
+      "abstract": "Working in tandem, the Hadoop Distributed File System (HDFS) plays a crucial role in managing large-scale data across distributed clusters. The basic structure of HDFS comprises the NameNode, which manages the file system namespace and client interactions, and the Data Nodes, which handle storage and data arrangement duties. Although HDFS faces constraints, particularly regarding scaling the NameNode, which is responsible for managing metadata, these constraints impact namespace scalability and performance. Therefore, this paper discusses the two architectures, the Quorum Journal Manager (QJM) components and the active and standby NameNodes, which enable the sharing of edit logs between them. To mitigate the risk of metadata corruption from split-brain scenarios, the system ensures that only a single NameNode writes to the JournalNodes. Through the utilization of the QJM, HDFS attains High Availability (HA), enabling swift failover in the event of machine crashes or scheduled maintenance. Dynamic Federated Metadata Management (DFMM) addresses the limitations of the current Hadoop architecture by distributing metadata management across multiple federated components. It entails dispersing metadata management among various federated components. HDFS can overcome the problems of connected block storage, namespace scalability, and performance bottlenecks by dynamically managing metadata on an exabyte scale. This work summarizes the key findings and presents a comparative analysis of both architectures. QJM performs a vital function that ensures the high availability, reliability, and fault tolerance of the NameNode in Hadoop\u2019s HDFS. DFMM enhances the fault tolerance, scalability, and performance of distributed file systems by distributing metadata across multiple servers or nodes."
+    },
+    {
+      "id": "W7124867101",
+      "title": "IPFS for the long term digital preservation",
+      "abstract": "This paper presents a model for a storage infrastructure designed for the long term preservation of digital cultural heritage, based on InterPlanetary File System (IPFS). The model explores the viability of using a private IPFS network as a distributed preservation infrastructure that a) is fully open source at the software level, b) minimizes risks of dependency on hardware solutions, c) minimizes risks arising from data centralization in large data centers, d) leverages simplicity as a driver for efficiency and resilience, and e) is based on stakeholders\u2019 cooperation."
+    }
+  ]
+}

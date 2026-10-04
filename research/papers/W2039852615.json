@@ -1,0 +1,107 @@
+{
+  "id": "W2039852615",
+  "title": "Controlled conflict resolution for replicated document",
+  "doi": "https://doi.org/10.4108/icst.collaboratecom.2012.250461",
+  "publication_date": "2012-01-01",
+  "publication_year": 2012,
+  "type": "conference-paper",
+  "cited_by_count": 7,
+  "authors": [
+    "St\u00e9phane Martin",
+    "Mehdi Ahmed-Nacer",
+    "Pascal Urso"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "http://eudl.eu/pdf/10.4108/icst.collaboratecom.2012.250461",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2039852615.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2039852615.grobid-xml"
+  },
+  "abstract": "Collaborative working is increasingly popular, but it presents challenges due to the need for high responsiveness and disconnected work support. To address these challenges the data is optimistically replicated at the edges of the network, i.e. personal computers or mobile devices. This replication",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Service-Oriented Architecture and Web Services",
+    "Context-Aware Activity Recognition Systems"
+  ],
+  "references": [
+    "https://openalex.org/W120162134",
+    "https://openalex.org/W155189069",
+    "https://openalex.org/W1489177980",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1572892291",
+    "https://openalex.org/W1602193077",
+    "https://openalex.org/W1689093460",
+    "https://openalex.org/W1761568514",
+    "https://openalex.org/W1971443766",
+    "https://openalex.org/W1980969664",
+    "https://openalex.org/W1985961858",
+    "https://openalex.org/W1996958808",
+    "https://openalex.org/W1999202438",
+    "https://openalex.org/W2021818638",
+    "https://openalex.org/W2032843080",
+    "https://openalex.org/W2054584570",
+    "https://openalex.org/W2067810673",
+    "https://openalex.org/W2088721436",
+    "https://openalex.org/W2107138518",
+    "https://openalex.org/W2117260615",
+    "https://openalex.org/W2118242633",
+    "https://openalex.org/W2121843890",
+    "https://openalex.org/W2129388329",
+    "https://openalex.org/W2145220267",
+    "https://openalex.org/W2151943351",
+    "https://openalex.org/W2154193287",
+    "https://openalex.org/W2170849273",
+    "https://openalex.org/W2295541535",
+    "https://openalex.org/W3147102747",
+    "https://openalex.org/W6606332851",
+    "https://openalex.org/W6629390547",
+    "https://openalex.org/W6631069680",
+    "https://openalex.org/W6667513819"
+  ],
+  "cited_by": [
+    {
+      "id": "W2105986479",
+      "title": "Putting consistency back into eventual consistency",
+      "abstract": "Geo-replicated storage systems are at the core of current Internet services. The designers of the replication protocols used by these systems must choose between either supporting low-latency, eventually-consistent operations, or ensuring strong consistency to ease application correctness. We propose an alternative consistency model, Explicit Consistency, that strengthens eventual consistency with a guarantee to preserve specific invariants defined by the applications. Given these application-specific invariants, a system that supports Explicit Consistency identifies which operations would be unsafe under concurrent execution, and allows programmers to select either violation-avoidance or invariant-repair techniques. We show how to achieve the former, while allowing operations to complete locally in the common case, by relying on a reservation system that moves coordination off the critical path of operation execution. The latter, in turn, allows operations to execute without restriction, and restore invariants by applying a repair operation to the database state. We present the design and evaluation of Indigo, a middleware that provides Explicit Consistency on top of a causally-consistent data store. Indigo guarantees strong application invariants while providing similar latency to an eventually-consistent system in the common case."
+    },
+    {
+      "id": "W2732036458",
+      "title": "A Framework for Performance Evaluation of Decentralized Eventual Consistency Algorithms",
+      "abstract": "Eventual Consistency (EC) model is adopted by numerous large-scale distributed systems. To ensure performance and scalability, this model allows any replica to accept updates without remote synchronization. Nowadays, many EC algorithms are developed to control the behavior of the replicated data in"
+    },
+    {
+      "id": "W2093508675",
+      "title": "Improving Textual Merge Result",
+      "abstract": "In asynchronous collaborative systems, merging is an essential component. It allows to reconcile modifications made concurrently as well as managing software change through branching. The collaborative system is in charge to propose a merge result that includes user's modifications. The users now h"
+    },
+    {
+      "id": "W2071414419",
+      "title": "Collaborative offline web applications using conflict-free replicated data types",
+      "abstract": "The use cases for Conflict-free Replicated Data Types (CRDTs) that are studied in the literature are limited to collaborative editing applications and data stores. The communication protocols used to distribute replica updates in these scenarios are usually assumed to be some form of highly scalable gossip protocol. In this paper, a new type of application for CRDTs is introduced and studied: collaborative offline web applications. We demonstrate the feasibility of CRDTs in this scenario, and analyze the trade-offs of three existing communication protocols that can be employed for these applications."
+    },
+    {
+      "id": "W2250656952",
+      "title": "\u211eCML: A Prescription for Safely Relaxing Synchrony",
+      "abstract": null
+    },
+    {
+      "id": "W2394902319",
+      "title": "Merging By Decentralized Eventual Consistency Algorithms",
+      "abstract": "Merging mechanism is an essential operation for version control systems.When each member of collaborative development works on an individual copy of the project, software merging allows to reconcile modifications made concurrently as well as managing software change through branching.The collaborative system is in charge to propose a merge result that includes user's modifications.T h e u s e rs n o w h a v e t o c h e ck a n d adapt this result.The adaptation should be as effort-less as possible, otherwise, the users may get frustrated and will quit the collaboration.This paper aims to reduce the conflicts d u r i ng t h e c o l l aboration a n d i m p r ove t h e p r o d uctivity.I t h a s thr objectives: study the users' behavior during the collaboration, evaluate the quality of textual merging results produced by specific a lgorithms a nd p ropose a s olution t o improve t he r esult q uality p roduced b y t he default merge tool of distributed version control systems.Through a study of eight open-source repositories totaling more than 3 million lines of code, we observe the behavior of the concurrent modifications d uring t he m erge p rocedure.We i dentified wh en th e ex isting merge techniques under-perform, and we propose solutions to improve the quality of the merge.We finally compare with the traditional merge tool through a large corpus of collaborative editing."
+    },
+    {
+      "id": "W2612583995",
+      "title": "The research of intelligent feedback mechanism between document control and production system",
+      "abstract": "In semiconductor industry, strong executive ability reflects not only in one's response time, but also in accurate implementation. Generally speaking, engineers follow the rule defined in document to arrange inline production. No one can ensure zero-missing once the document is updated, and this is mainly due to the \u201cmanual talk\u201d between document control center (DCC) and inline production. Currently, there isn't a channel to link DCC and inline production. This research aims to develop an intelligent feedback mechanism which links DCC and inline production system to replace the traditional \u201cmanual talk\u201d mode and achieve accurate implementation."
+    }
+  ]
+}

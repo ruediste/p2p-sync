@@ -1,0 +1,59 @@
+{
+  "id": "W4367675071",
+  "title": "AMC: Towards Trustworthy and Explorable CRDT Applications with the Automerge Model Checker",
+  "doi": "https://doi.org/10.1145/3578358.3591326",
+  "publication_date": "2023-05-02",
+  "publication_year": 2023,
+  "type": "conference-paper",
+  "cited_by_count": 1,
+  "authors": [
+    "Andrew Jeffery",
+    "Richard Mortier"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3578358.3591326",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4367675071.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4367675071.grobid-xml"
+  },
+  "abstract": "Conflict-free Replicated Data Types (CRDTs) enable local-first operations and asynchronous collaboration without the need for always-on centralised services. CRDTs can have a high overhead, so implementations need to be optimised, but this optimisation can lead to bugs despite the use of test suites and fuzzing. Furthermore, using CRDTs in applications is complex, observing unexpected conflict resolution, issues synchronising documents and difficulties implementing appropriate data models. Automerge is a library, exposing a JSON CRDT, that sees users having difficulties in modelling their problems, understanding their edge cases and implementing applications correctly. We introduce the Automerge Model Checker (AMC), empowering application developers to check properties about their implementations and explore them dynamically. AMC can check a range of applications as well as being able to check properties about the core of Automerge itself, helping to make more trustworthy Automerge applications.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Software System Performance and Reliability",
+    "Cloud Computing and Resource Management"
+  ],
+  "references": [
+    "https://openalex.org/W927144782",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1550959033",
+    "https://openalex.org/W2510332240",
+    "https://openalex.org/W2548120315",
+    "https://openalex.org/W2954660873",
+    "https://openalex.org/W3015972331",
+    "https://openalex.org/W3103287347",
+    "https://openalex.org/W3109099245",
+    "https://openalex.org/W3156764758",
+    "https://openalex.org/W3184631214",
+    "https://openalex.org/W4284887785",
+    "https://openalex.org/W4287569461",
+    "https://openalex.org/W6632879528",
+    "https://openalex.org/W6843822396",
+    "https://openalex.org/W6847086994"
+  ],
+  "cited_by": [
+    {
+      "id": "W7110323366",
+      "title": "ER-\u03c0: Exhaustive Interleaving Replay for Testing Replicated Data Library Integration",
+      "abstract": "Modern replicated data systems often rely on libraries integrated with application code. These replicated data libraries exchange asynchronous messages, whose execution orderings are non-deterministic, allowing any message interleaving to occur during system execution. Testing the integration of application code with library code requires considering all possible interleavings, whose detection and simulation pose significant challenges for application developers. In this paper, we present ER-\u03c0, a middleware system, designed to detect and replay possible interleavings in replicated data systems. ER-\u03c0 identifies potential interleavings for a given code segment and applies four novel pruning techniques to reduce the complexity of the problem space. Subsequently, it replays the remaining interleavings to perform the specified integration testing tasks. To assess the applicability and efficacy of ER-\u03c0, we integrated it with third-party replicated data libraries across various programming languages. Our experiments demonstrate ER-\u03c0 's capability to replicate 12 known bugs and uncover 5 types of common misconceptions associated with replicated data libraries. Given that integration testing is essential for ensuring correctness and robustness, the design of ER-\u03c0 holds promise in extending these testing benefits to the realm of replicated data systems."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "id": "W4394865965",
+  "title": "Extending JSON CRDTs with Move Operations",
+  "doi": "https://doi.org/10.1145/3642976.3653030",
+  "publication_date": "2024-04-16",
+  "publication_year": 2024,
+  "type": "conference-paper",
+  "cited_by_count": 5,
+  "authors": [
+    "Liangrun Da",
+    "Martin Kleppmann"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://arxiv.org/pdf/2311.14007",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4394865965.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4394865965.grobid-xml"
+  },
+  "abstract": "Conflict-Free Replicated Data Types (CRDTs) for JSON allow users to concurrently update a JSON document and automatically merge the updates into a consistent state. Moving a subtree in a map or reordering elements in a list within a JSON CRDT is challenging: naive merge algorithms may introduce unexpected results such as duplicates or cycles. In this paper, we introduce an algorithm for move operations in a JSON CRDT that handles the interaction with concurrent non-move operations, and uses novel optimisations to improve performance. We plan to integrate this algorithm into the Automerge CRDT library.",
+  "topics": [
+    "Advanced Database Systems and Queries",
+    "Data Management and Algorithms",
+    "Semantic Web and Ontologies"
+  ],
+  "references": [
+    "https://openalex.org/W1985225835",
+    "https://openalex.org/W2118242633",
+    "https://openalex.org/W2151541805",
+    "https://openalex.org/W2170849273",
+    "https://openalex.org/W2510332240",
+    "https://openalex.org/W2979846168",
+    "https://openalex.org/W3015972331",
+    "https://openalex.org/W3103287347",
+    "https://openalex.org/W3206444683",
+    "https://openalex.org/W4285130431",
+    "https://openalex.org/W4293232396"
+  ],
+  "cited_by": [
+    {
+      "id": "W4402853512",
+      "title": "MyWebstrates: Webstrates as Local-first Software",
+      "abstract": "Webstrates are web substrates, a practical realization of shareable dynamic media under which distributability, shareability, and malleability are fundamental software principles. Webstrates blur the distinction between application and document in a way that enables users to share, repurpose, and refit software across a variety of domains, but its reliance on a central server constrains its use; it is at odds with personal and collective control of data; and limits applications to the web. We extend the fundamental principles to include interoperability and sovereignty over data and propose MyWebstrates, an implementation of Webstrates on top of a new, lower-level substrate for synchronization built around local-first software principles. MyWebstrates registers itself in the user\u2019s browser and function as a piece of local software that can selectively synchronise data over sync servers or peer-to-peer connections. We show how MyWebstrates extends Webstrates to enable offline collaborative use, interoperate between Webstrates on non-web technologies such as Unity, and maintain personal and collective sovereignty over data. We demonstrate how this enables new types of applications of Webstrates and discuss limitations of this approach and new challenges that it reveals."
+    },
+    {
+      "id": "W4404239275",
+      "title": "SVGDoc: A CRDT for Collaborative Vector Graphics Editing",
+      "abstract": "Conflict-free Replicated Data Types (CRDTs) are a class of algorithms that allow decentralized editing of documents as data structures in which concurrent operations are commutative, while there has been extensive research on generic CRDTs which allow CRDTs to be modeled according to application data. Current generic CRDTs use a CRDT map or an operation log which lack a tree structure with support for move operations to represent a vector graphics document or does not preserve updates that are concurrent to deletions. In this paper, a set of concurrent editing scenarios that are frequently made by user's of collaborative vector graphics editing are described. A CRDT for collaborative vector graphics editing which cover these scenarios named SVGDoc is then introduced. The main idea of SVGDoc is to use the UWMap (Update-Wins Map) as described by Preguica to allow updates to be preserved when concurrently made to deletions in combination with the move operation log described by Kleppmann et al to allow move operations among nodes in a tree. SVGDoc is also tested through unit testing and further validated by applying it to a minimal collaborative vector graphics editor."
+    },
+    {
+      "id": "W4411272168",
+      "title": "Semantic-Aware Replicated Data Types for Improved Conflict Resolution in Near-Synchronous Code Collaboration",
+      "abstract": "This dissertation addresses the limitations of convergence in near-synchronous code collaboration. Current techniques predominantly rely on string-based synchronization, which often results in conflict resolution that fails to address the underlying structural, syntactic, or semantic context of the code. This work proposes a semantic-aware approach that explores different levels of granularity in replicated data types (RDT) to overcome these limitations while enabling near-synchronous visualization of code evolution, enhancing interactive programming environments. The main contributions include: (1) a classification of conflict scenarios and intent-preserving code merging behavior, (2) a novel RDT approach exploring different granularity levels, (3) near-synchronous visualization of code semantics, and (4) extended RDT approaches utilizing nested replicated data types for improved conflict resolution in educational programming contexts."
+    },
+    {
+      "id": "W4414564581",
+      "title": "Denicek: Computational Substrate for Document-Oriented End-User Programming",
+      "abstract": null
+    },
+    {
+      "id": "W7212256259",
+      "title": "Automatic Generation of Local-First, Collaborative Modeling Languages",
+      "abstract": "Modeling languages provide engineers with shared, domain-specific concepts for collaboratively structuring domain knowledge. Although modern language workbenches can generate much of the language-specific tooling from a metamodel, collaborative editing usually relies on external infrastructure that requires additional integration. In particular, existing solutions provide insufficient support for hybrid collaborative modeling, in which modelers alternate seamlessly between online and offline editing and their changes are automatically reconciled upon reconnection. This article presents an approach for automatically generating metamodel-specific replicated model runtimes directly from Ecore metamodels. We define a translation from a practically relevant subset of EMF/Ecore to compositions of Conflict-free Replicated Data Types (CRDTs), each encapsulating a well-defined conflict-resolution policy. The resulting runtimes expose model APIs for creating, updating, and querying replicated model states, while their constituent CRDTs define how concurrent updates are reconciled. The approach is implemented as a configurable code generator and evaluated through three case-study runtimes and all 5,475 Ecore files in ModelSet v0.9.4. The results quantify the generator\u2019s end-to-end coverage and provide complementary formal and empirical evidence for convergence within the stated scope and assumptions."
+    }
+  ]
+}

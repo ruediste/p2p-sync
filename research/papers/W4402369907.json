@@ -1,0 +1,195 @@
+{
+  "id": "W4402369907",
+  "title": "Approaches to Conflict-free Replicated Data Types",
+  "doi": "https://doi.org/10.1145/3695249",
+  "publication_date": "2024-09-09",
+  "publication_year": 2024,
+  "type": "article",
+  "cited_by_count": 17,
+  "authors": [
+    "Paulo S\u00e9rgio Almeida"
+  ],
+  "venue": "ACM Computing Surveys",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://arxiv.org/pdf/2310.18220",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4402369907.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4402369907.grobid-xml"
+  },
+  "abstract": "Conflict-free Replicated Data Types (CRDTs) allow optimistic replication in a principled way. Different replicas can proceed independently, being available even under network partitions and always converging deterministically: Replicas that have received the same updates will have equivalent state, even if received in different orders. After a historical tour of the evolution from sequential data types to CRDTs, we present in detail the two main approaches to CRDTs, operation-based and state-based, including two important variations, the pure operation-based and the delta-state based. Intended for prospective CRDT researchers and designers, this article provides solid coverage of the essential concepts, clarifying some misconceptions that frequently occur, but also presents some novel insights gained from considerable experience in designing both specific CRDTs and approaches to CRDTs.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Parallel Computing and Optimization Techniques",
+    "Optimization and Search Problems"
+  ],
+  "references": [
+    "https://openalex.org/W16746212",
+    "https://openalex.org/W30931339",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1572892291",
+    "https://openalex.org/W1855301476",
+    "https://openalex.org/W1855509919",
+    "https://openalex.org/W1971443766",
+    "https://openalex.org/W1981521402",
+    "https://openalex.org/W1985225835",
+    "https://openalex.org/W1985349143",
+    "https://openalex.org/W1989814541",
+    "https://openalex.org/W2006242427",
+    "https://openalex.org/W2022162666",
+    "https://openalex.org/W2026697016",
+    "https://openalex.org/W2027657506",
+    "https://openalex.org/W2038562061",
+    "https://openalex.org/W2046654145",
+    "https://openalex.org/W2049911096",
+    "https://openalex.org/W2054584570",
+    "https://openalex.org/W2067119609",
+    "https://openalex.org/W2070908350",
+    "https://openalex.org/W2085407655",
+    "https://openalex.org/W2088721436",
+    "https://openalex.org/W2090828855",
+    "https://openalex.org/W2095135670",
+    "https://openalex.org/W2101939036",
+    "https://openalex.org/W2104274479",
+    "https://openalex.org/W2111132249",
+    "https://openalex.org/W2117260615",
+    "https://openalex.org/W2118153508",
+    "https://openalex.org/W2118242633",
+    "https://openalex.org/W2119636671",
+    "https://openalex.org/W2124927340",
+    "https://openalex.org/W2125930899",
+    "https://openalex.org/W2126087831",
+    "https://openalex.org/W2126924915",
+    "https://openalex.org/W2131791649",
+    "https://openalex.org/W2133692519",
+    "https://openalex.org/W2134308710",
+    "https://openalex.org/W2143725230",
+    "https://openalex.org/W2145459199",
+    "https://openalex.org/W2151541805",
+    "https://openalex.org/W2153704625",
+    "https://openalex.org/W2156027558",
+    "https://openalex.org/W2156076209",
+    "https://openalex.org/W2170849273",
+    "https://openalex.org/W2186001977",
+    "https://openalex.org/W2295541535",
+    "https://openalex.org/W2295616151",
+    "https://openalex.org/W2341655714",
+    "https://openalex.org/W2506181100",
+    "https://openalex.org/W2548120315",
+    "https://openalex.org/W2606145427",
+    "https://openalex.org/W2607118653",
+    "https://openalex.org/W2625806096",
+    "https://openalex.org/W2954660873",
+    "https://openalex.org/W2962936862",
+    "https://openalex.org/W2979846168",
+    "https://openalex.org/W2987907651",
+    "https://openalex.org/W3023216518",
+    "https://openalex.org/W3137220996",
+    "https://openalex.org/W3162884575",
+    "https://openalex.org/W4233580922",
+    "https://openalex.org/W4236824789",
+    "https://openalex.org/W4245021137",
+    "https://openalex.org/W4293232492",
+    "https://openalex.org/W4301521827",
+    "https://openalex.org/W4311179508",
+    "https://openalex.org/W4367694481",
+    "https://openalex.org/W4387259573",
+    "https://openalex.org/W4414538340",
+    "https://openalex.org/W6665984022",
+    "https://openalex.org/W6745351655"
+  ],
+  "cited_by": [
+    {
+      "id": "W4406327968",
+      "title": "Efficient State Synchronization in Distributed Electrical Grid Systems Using Conflict-Free Replicated Data Types",
+      "abstract": "Modern electrical grids are evolving towards distributed architectures, necessitating efficient and reliable state synchronization mechanisms to maintain structural and functional consistency. This paper investigates the application of conflict-free replicated data types (CRDTs) for representing and synchronizing the states of distributed electrical grid systems (DEGSs). We present a general structure for DEGSs based on CRDTs, focusing on the Convergent Replicated Data Type (CvRDT) model with delta state propagation to optimize the communication overhead. The Observed Remove Set (ORSet) and Last-Writer-Wins Register (LWW-Register) are utilized to handle concurrent updates and ensure that only the most recent state changes are retained. An actor-based framework, \u201cVigilant Hawk\u201d, leveraging the Akka toolkit, was developed to simulate the asynchronous and concurrent nature of DEGSs. Each electrical grid node is modelled as an independent actor with isolated state management, facilitating scalability and fault tolerance. Through a series of experiments involving 100 nodes under varying latency degradation coefficients (LDK), we examined the impact of network conditions on the state synchronization efficiency. The simulation results demonstrate that CRDTs effectively maintain consistency and deterministic behavior in DEGSs, even with increased network latency and node disturbances. An effective LDK range was identified (LDK effective = 2 or 4), where the network remains stable without significant delays in state propagation. The linear relationship between the full state distribution time (FSDT) and LDK indicates that the system can scale horizontally without introducing complex communication overhead. The findings affirm that using CRDTs for state synchronization enhances the resilience and operational efficiency of distributed electrical grids. The deterministic and conflict-free properties of CRDTs eliminate the need for complex concurrency control mechanisms, making them suitable for real-time monitoring and control applications. Future work will focus on addressing identified limitations, such as optimizing message routing based on the network topology and incorporating security measures to protect state information in critical infrastructure systems."
+    },
+    {
+      "id": "W4409095645",
+      "title": "CRDT-Based Game State Synchronization in Peer-to-Peer VR",
+      "abstract": "Virtual presence demands ultra-low latency, a factor that centralized architectures, by their nature, cannot minimize. Local peer-to-peer architectures offer a compelling alternative, but also pose unique challenges in terms of network infrastructure."
+    },
+    {
+      "id": "W4409095640",
+      "title": "Proceedings of the 12th Workshop on Principles and Practice of Consistency for Distributed Data",
+      "abstract": "The 12th workshop on the Principles and Practice of Consistency (PaPoC) for Distributed Data was held in Rotterdam, the Netherlands on"
+    },
+    {
+      "id": "W4409095543",
+      "title": "Proof-Carrying CRDTs allow Succinct Non-Interactive Byzantine Update Validation",
+      "abstract": "Conflict-free replicated data types (CRDTs) are distributed algorithms that enable concurrent queries and updates without coordination with other processes, but still provide eventual consistency. In crash fault environments, processes adhere to the protocol and only send valid CRDT updates. But in Byzantine environments, processes need to individually ensure the validity of all updates. As the validity of an update may depend on all previous updates, Byzantine-tolerant CRDT processes typically must keep a grow-only set of all applied updates. We apply the concept of proof-carrying data to CRDTs to enable succinct non-interactive validation of updates, i.e., processes neither need knowledge of all previous updates nor coordination. Such proof-carrying CRDTs allow update validation in constant time and space, even in Byzantine environments. In a case study, we implemented and evaluated the performance of two proof-carrying CRDTs: a straightforward increment-only counter, as well as an update history CRDT based on the Matrix group communication system. We conclude that proof-carrying data has achieved practical relevance for applications in Byzantine CRDTs."
+    },
+    {
+      "id": "W4410716058",
+      "title": "Concurrency Contracts for Designing Highly Available Replicated Data Types",
+      "abstract": "ABSTRACT Introduction Distributed system programmers rely on Replicated Data Types (RDTs), which resemble sequential data types but incorporate conflict resolution strategies to guarantee convergence when conflicts occur. The semantics of RDTs depend on the underlying conflict resolution strategy, but these cannot be customized. Moreover, ensuring state convergence alone is not enough because the resulting state may break application\u2010specific invariants. Although some approaches support application\u2010level invariants atop existing RDTs, they do not help build the RDT in the first place. As a result, custom RDTs are implemented using ad hoc approaches, which are known to be error\u2010prone and result in brittle systems. We previously proposed Explicitly Consistent Replicated Objects (ECROs) to address these issues, enabling programmers to build custom RDTs by augmenting sequential data types with a distributed specification. However, the specification requires a complete first\u2010order logic formalization of the data type and its operations, which is hard to develop. Furthermore, subtle errors in the specification may result in runtime anomalies such as state divergence and broken invariants. Methods To tackle these problems, we combine the ECRO programming model with automated program verification. The result is EFx, a minimalist object\u2010oriented programming language whose core consists of a contract system that simplifies the development of RDTs. EFx does not require tedious first\u2010order logic specifications because it analyses the data type's implementation, thereby preventing runtime anomalies due to errors in the specification. Results We reconstruct the original portfolio of ECROs in EFx to validate our approach. We consistently achieve a 2x to 4x reduction of the code size. Additionally, we implement several applications, such as the RUBiS auction system, the SmallBank benchmark, a distributed voting game, and an airline reservation system. Conclusion Our evaluation shows that EFx simplifies the development of RDTs."
+    },
+    {
+      "id": "W4411010462",
+      "title": "To the Best of Knowledge and Belief: On Eventually Consistent Access Control",
+      "abstract": "We are used to the conventional model in which access control is provided by a trusted central entity or by a set of distributed entities that coordinate to mimic a central entity.Authorization decisions are based on a single, append-only total ordering of all actions, including policy updates, which leads to strong consistency guarantees.Recent systems based on conflict-free replicated data types (CRDTs) break with this conceptual model to gain fundamental advantages in latency, availability, resilience, and Byzantine fault tolerance.These systems replace up-front coordination with subsequent reconciliation of decentralized authorization decisions and policy updates.One of these is the Matrix group communication system, whose massive public sector deployments in Europe necessitate timely characterization of the underlying alternative conceptual model.Similarly to eventually consistent replication in CRDTs, we define 'eventually consistent access control' and present its consequences.Our model postulates thinking in two orderings of actions with different consequences for authorization: a partial ordering for storage, where the past of an action is final knowledge, and a total ordering for execution, where the past of an action is a mutable belief."
+    },
+    {
+      "id": "W4411272168",
+      "title": "Semantic-Aware Replicated Data Types for Improved Conflict Resolution in Near-Synchronous Code Collaboration",
+      "abstract": "This dissertation addresses the limitations of convergence in near-synchronous code collaboration. Current techniques predominantly rely on string-based synchronization, which often results in conflict resolution that fails to address the underlying structural, syntactic, or semantic context of the code. This work proposes a semantic-aware approach that explores different levels of granularity in replicated data types (RDT) to overcome these limitations while enabling near-synchronous visualization of code evolution, enhancing interactive programming environments. The main contributions include: (1) a classification of conflict scenarios and intent-preserving code merging behavior, (2) a novel RDT approach exploring different granularity levels, (3) near-synchronous visualization of code semantics, and (4) extended RDT approaches utilizing nested replicated data types for improved conflict resolution in educational programming contexts."
+    },
+    {
+      "id": "W7118186955",
+      "title": "Methods and Tools for Developing Collaborative Applications Based on CRDT Types with User Conflict Resolution",
+      "abstract": "Against the background of the rapid expansion of the segment of collaborative software solutions, fueled by the transition to hybrid employment formats and the general digital transformation, the problem of ensuring data consistency in distributed systems is coming to the fore as a fundamental scientific and engineering task. Classical strict consistency schemes are in conflict with the requirements of high availability and fault tolerance, which directly follows from the limitations of the CAP theorem. Conflict-free replicated data types (CRDTs) represent a constructive response to this challenge by providing strict final consistency (SEC) without centralized coordination. The purpose of the research is to systematize and analyze approaches and tools for building collaborative applications based on CRDT, as well as to formulate a multi-level model for resolving semantic conflicts that arise at the level of user intentions. Methodologically, the work is based on a systematic review of academic publications, a comparative study of the leading CRDT libraries (Yjs, Automerge) and a content analysis of industry reports. A comprehensive analysis of the theoretical foundations of CRDT, their practical incarnations, and existing conflict resolution strategies has shown the insufficiency of automatic mechanisms for handling semantic collisions. In response, a three\u2014level Data\u2014Logic-Representation architecture is proposed, which distinguishes between automatic merging at the data level, logical identification of semantic contradictions and their resolution at the user interface layer through adapted UI/UX patterns. The findings indicate that this principle of organization increases the predictability of the system\u2019s behavior and makes collaboration more intuitive. The research materials are addressed to other researchers, architects of distributed systems and software developers."
+    },
+    {
+      "id": "W7150961545",
+      "title": "Decentralization Model for the Replica State Discovery Protocol",
+      "abstract": null
+    },
+    {
+      "id": "W7153184331",
+      "title": "DeCo: A Core Calculus for Incremental Functional Programming with Generic Data Types",
+      "abstract": "Incrementalization speeds up computations by avoiding unnecessary recomputations and by efficiently reusing previous results. While domain-specific techniques achieve impressive speedups, e.g., in the context of database queries, they are difficult to generalize. Meanwhile, general approaches offer little support for incrementalizing domain-specific operations. In this work, we present DeCo , a novel core calculus for incremental functional programming with support for a wide range of user-defined data types. Despite its generic nature, our approach statically incrementalizes domain-specific operations on user-defined data types. It is, hence, more fine-grained than other generic techniques which resort to treating domain-specific operations as black boxes. We mechanized our work in Lean and proved it sound, meaning incrementalized execution computes the same result as full reevaluation. We also provide an executable implementation with case studies featuring examples from linear algebra, relational algebra, dictionaries, trees, and conflict-free replicated data types, plus a brief performance evaluation on linear and relational algebra and on trees."
+    },
+    {
+      "id": "W7153280165",
+      "title": "Frashokereti: Non-aborting Optimistically Replicated Objects",
+      "abstract": "Optimistic replication of objects avoids coordination and brings higher responsiveness and availability. However, when clients issue concurrent operations, conflicts naturally arise which can lead the replicated states to diverge or lose integrity. When conflicts occur, existing approaches resort to pessimism or abortion. This paper characterizes ORDTs (Optimistically Replicated Data Types), objects that can be optimistically replicated with convergence and integrity, and without aborting calls. It shows that ORDTs subsume CRDTs and transformed relational schema, and presents techniques to convert objects to ORDTs. It further proves that optimistic replication for objects that fall out of ORDTs is aborting and NP-Complete. Further, it presents an optimistic replication protocol for ORDTs called Frashokereti . It uses a statically decided order to efficiently order calls. The paper proves that Frashokereti is sound for every ORDT, i.e., Frashokereti is optimistic and non-aborting, and preserves convergence, integrity, and liveness properties. Experimental results show that Frashokereti significantly outperforms previous optimistic protocols."
+    },
+    {
+      "id": "W7155366777",
+      "title": "ConflictSync: Bandwidth Efficient Synchronization of Divergent State",
+      "abstract": "State-based Conflict-Free Replicated Data Types (CRDTs) are widely used in distributed systems to ensure high availability without coordination. However, their naive synchronization strategy, transmitting the full state, incurs high communication costs. In this paper, we: (1) propose ConflictSync, a digest-driven synchronization algorithm, which reduces total data transfer by up to 18\u00d7 compared to full-state transmissions; (2) formulate state-based CRDT synchronization as set reconciliation over irredundant join decompositions; (3) generalize Rateless Set Reconciliation for variable-sized elements, at the cost of an additional communication step; (4) introduce a new generic set reconciliation solution, integrating Bloom Filters with rateless IBLTs; (5) experimentally evaluate the novel synchronization strategies."
+    },
+    {
+      "id": "W7160768599",
+      "title": "A Secure Lightweight System Based on Device-to-Device Communication for Objects Sharing in Local Communities",
+      "abstract": null
+    },
+    {
+      "id": "W7167279164",
+      "title": "Genome assemblies and annotations are not static and need support for tracking their evolution",
+      "abstract": "For over 25 years, genomic data have been distributed in two key file formats: FASTA and GFF. These formats are used in nearly all genomic analyses and encode both genomic sequence data and the positions of annotated features. Long-read sequencing, chromatin conformation capture, and advanced assembly algorithms now enable chromosome-level assemblies and pangenomes even for the largest eukaryotic genomes. Genome consortia routinely update assemblies and re-annotate gene models as methods and knowledge improve, yet these updates occur without systematic documentation of what has been modified. As genomics enters the next era, the lack of systematic versioning becomes limiting: different annotation versions cannot be computationally compared, algorithmic improvements are invisible to downstream users, and accumulated biological knowledge exists only in human-readable documentation disconnected from the data itself. Conventional flat-file formats lack the structure to reflect this evolving landscape. While software engineering solved analogous challenges with version control decades ago, for genomics, version control is left to researchers to organise with filenames, directories, or README files. This approach cannot scale to the continuous generation and improvement of millions of genomes. We examine the limitations of genome file formats, demonstrate why incremental improvements are insufficient, and argue that genomics must adopt version control with the same gusto that is applied to generating new sequencing data. Drawing on lessons from software engineering, we outline requirements for better scientific collaboration, machine-readable formats that can capture changes, maintain complete provenance, and enable the reproducible, large-scale biology that the next 25 years demands."
+    },
+    {
+      "id": "W7212256259",
+      "title": "Automatic Generation of Local-First, Collaborative Modeling Languages",
+      "abstract": "Modeling languages provide engineers with shared, domain-specific concepts for collaboratively structuring domain knowledge. Although modern language workbenches can generate much of the language-specific tooling from a metamodel, collaborative editing usually relies on external infrastructure that requires additional integration. In particular, existing solutions provide insufficient support for hybrid collaborative modeling, in which modelers alternate seamlessly between online and offline editing and their changes are automatically reconciled upon reconnection. This article presents an approach for automatically generating metamodel-specific replicated model runtimes directly from Ecore metamodels. We define a translation from a practically relevant subset of EMF/Ecore to compositions of Conflict-free Replicated Data Types (CRDTs), each encapsulating a well-defined conflict-resolution policy. The resulting runtimes expose model APIs for creating, updating, and querying replicated model states, while their constituent CRDTs define how concurrent updates are reconciled. The approach is implemented as a configurable code generator and evaluated through three case-study runtimes and all 5,475 Ecore files in ModelSet v0.9.4. The results quantify the generator\u2019s end-to-end coverage and provide complementary formal and empirical evidence for convergence within the stated scope and assumptions."
+    },
+    {
+      "id": "W7213202283",
+      "title": "CRDTs and Databases: A Hands-On Tutorial",
+      "abstract": "Traditional isolation models such as Serializability or Snapshot Isolation, with a total commit order, are not compatible with large-scale, highly-available partition-tolerant services. Even a weaker model such as Parallel Snapshot Isolation, while allowing different commit orders at different sites, when defined for the traditional read-write API, must imply either aborting concurrent transactions on shared objects or losing updates. The only way out is to offer transactions over higher-level shared abstractions beyond a read-write API. Conflict-free Replicated Data Types (CRDTs) are such an abstraction. But CRDTs and relational databases have been developed in two worlds apart. Existing CRDT databases have ad hoc non-relational implementations that are not easily combined with database systems, in particular, regarding query optimization which is the mainstay of SQL systems. This tutorial covers how to bring these two worlds together. First, it provides solid coverage of what CRDTs are, and their main approaches, in a self-contained way. Then it addresses how CRDTs can be combined with the relational model, accessed by standard SQL, and implemented over standard relational databases, by the recent notion of Confilct-free Replicated Data Views."
+    },
+    {
+      "id": "W7215107318",
+      "title": "Escaping the DAG Dogma: Toward Modular Reactive Architectures",
+      "abstract": null
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "W7165245889",
+  "title": "Sync Engine Comparison for Local-First Web Applications : An Empirical Study",
+  "doi": null,
+  "publication_date": "2026-01-01",
+  "publication_year": 2026,
+  "type": "dissertation",
+  "cited_by_count": 0,
+  "authors": [
+    "Ermyas Fekadu Shiferaw"
+  ],
+  "venue": "Tampere University Institutional Repository (Tampere University)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://trepo.tuni.fi/handle/10024/237992",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": false,
+    "pdf": false
+  },
+  "content_urls": null,
+  "abstract": "Web development is increasingly adopting the local-first approach, in which data is stored and processed on the user\u2019s device to enable responsive interactions and reliable offline use. In this architecture, the sync engine is a core component responsible for maintaining consistency between local and remote replicas across devices and servers. Although the theoretical foundations of data replication and conflict resolution are well established, direct comparative research on different families of sync engines, as well as on developers\u2019 experiences of using them, remains limited. This thesis addresses that gap by empirically comparing six modern sync engines: Zero, PowerSync, ElectricSQL, Yjs, Automerge, and ShareDB. The study uses a two-phase mixed-methods design. First, a technical audit evaluates the engines against the Seven Ideals of Local-First Software to identify their architectural trade-offs. Second, an exploratory survey of 13 developers captured real-world perspectives on usability, integration effort, ecosystem fit, and operational complexity. The findings show that no single engine fully satisfies all local-first ideals out of the box. Relational engines show strong support for structured data management and connecting to standard backends, but they struggle with complex simultaneous edits. On the other hand, document-based Conflict Free Replica Data Type (CRDT) engines are well suited for real-time collaboration but come with a steep learning curve, higher memory usage, and difficult debugging. Ultimately, this thesis concludes that choosing a sync engine is a practical engineering decision to match use case, requiring system architects to carefully match the engine family to the specific functional needs of their application.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Mobile and Web Applications",
+    "Cloud Computing and Resource Management"
+  ],
+  "references": [],
+  "cited_by": []
+}

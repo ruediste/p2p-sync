@@ -1,0 +1,142 @@
+{
+  "id": "W2945661666",
+  "title": "Distributed Personal Cloud Storage without Third Parties",
+  "doi": "https://doi.org/10.1109/tpds.2019.2915073",
+  "publication_date": "2019-05-24",
+  "publication_year": 2019,
+  "type": "article",
+  "cited_by_count": 12,
+  "authors": [
+    "Michalis Konstantopoulos",
+    "Panos Diamantopoulos",
+    "Nikos Chondros",
+    "Mema Roussopoulos"
+  ],
+  "venue": "IEEE Transactions on Parallel and Distributed Systems",
+  "open_access": {
+    "is_oa": false,
+    "oa_status": "closed",
+    "oa_url": null,
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "grobid_xml": false,
+    "pdf": false
+  },
+  "content_urls": null,
+  "abstract": "We present the \u201cIt's My Data file system\u201d (IMDfs), a personal, version-tracking, distributed file system that allows users to take custody of their cross-device data management needs, without depending on cloud storage providers. Such a system may be desirable to privacy-conscious users, who worry about the increasing number of cloud storage incidents involving data leakage and corruption, or simply want to synchronize their devices without depending on third parties. IMDfs provides a global, unified view of a user's distributed data collection from any device, user-controlled replication of data across devices, transparent remote access, and support for non-restrictive conflict management. IMDfs achieves all this without sacrificing fault-tolerance or performance and with modest storage overhead. We present the design, implementation, and detailed performance evaluation of IMDfs using benchmarks and traces from real workloads, and we demonstrate that: 1) IMDfs, as a local file system, has reasonable overhead compared with a FUSE loopback file system and Wayback, a local versioning file system, and 2) IMDfs, as a network file system, outperforms NFS and Ori, a state-of-the-art file system for cross-device data management.",
+  "topics": [
+    "Advanced Data Storage Technologies",
+    "Caching and Content Delivery",
+    "Distributed systems and fault tolerance"
+  ],
+  "references": [
+    "https://openalex.org/W161866744",
+    "https://openalex.org/W182346126",
+    "https://openalex.org/W1508811426",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1525865893",
+    "https://openalex.org/W1576397915",
+    "https://openalex.org/W1667592029",
+    "https://openalex.org/W1795183751",
+    "https://openalex.org/W1972058033",
+    "https://openalex.org/W1993596350",
+    "https://openalex.org/W2005373714",
+    "https://openalex.org/W2078152492",
+    "https://openalex.org/W2097829252",
+    "https://openalex.org/W2098242156",
+    "https://openalex.org/W2112485866",
+    "https://openalex.org/W2117260615",
+    "https://openalex.org/W2119587654",
+    "https://openalex.org/W2119636671",
+    "https://openalex.org/W2124074197",
+    "https://openalex.org/W2126116376",
+    "https://openalex.org/W2157737097",
+    "https://openalex.org/W2164215197",
+    "https://openalex.org/W2213329567",
+    "https://openalex.org/W2266338101",
+    "https://openalex.org/W2295616151",
+    "https://openalex.org/W2604964870",
+    "https://openalex.org/W2744576085",
+    "https://openalex.org/W2806634942",
+    "https://openalex.org/W2913639706",
+    "https://openalex.org/W2949769118",
+    "https://openalex.org/W2963258975",
+    "https://openalex.org/W6607407682",
+    "https://openalex.org/W6630071885",
+    "https://openalex.org/W6630318510",
+    "https://openalex.org/W6631563883",
+    "https://openalex.org/W6634463810",
+    "https://openalex.org/W6637156518",
+    "https://openalex.org/W6649189016",
+    "https://openalex.org/W6677834185",
+    "https://openalex.org/W6683386797",
+    "https://openalex.org/W6684316442",
+    "https://openalex.org/W6688524596",
+    "https://openalex.org/W6693480910",
+    "https://openalex.org/W6736132691",
+    "https://openalex.org/W6758730485"
+  ],
+  "cited_by": [
+    {
+      "id": "W3015416388",
+      "title": "Public Key Encryption with Keyword Search in Cloud: A Survey",
+      "abstract": "With the popularization of cloud computing, many business and individuals prefer to outsource their data to cloud in encrypted form to protect data confidentiality. However, how to search over encrypted data becomes a concern for users. To address this issue, searchable encryption is a novel cryptographic primitive that enables user to search queries over encrypted data stored on an untrusted server while guaranteeing the privacy of the data. Public key encryption with keyword search (PEKS) has received a lot of attention as an important branch. In this paper, we focus on the development of PEKS in cloud by providing a comprehensive research survey. From a technological viewpoint, the existing PEKS schemes can be classified into several variants: PEKS based on public key infrastructure, PEKS based on identity-based encryption, PEKS based on attribute-based encryption, PEKS based on predicate encryption, PEKS based on certificateless encryption, and PEKS supporting proxy re-encryption. Moreover, we propose some potential applications and valuable future research directions in PEKS."
+    },
+    {
+      "id": "W4220691452",
+      "title": "A Survey on Public Key Encryption with Keyword Search: Taxonomy and Methods",
+      "abstract": "Given the many benefits that cloud computing brings, organizations tend to outsource most of their data to reduce a large portion of their costs, but concern about the privacy of data is a major obstacle to outsourcing sensitive data. To solve this problem, public key encryption with keyword search (PEKS) is suggested, which is a widely used method. Addressing this issue separately is beneficial because PEKS does not require a secure communication channel and key distribution. Therefore, at first glance, it seems that PEKS schemes should be used more in practical applications. Thus, reviewing and categorizing PEKS schemes are very important and necessary. In this article, we have tried to help reviewing the public key searchable encryption and categorizing these designs."
+    },
+    {
+      "id": "W4360996628",
+      "title": "Attribute-Based Keyword Searchable Encryption Scheme for Multi-authority in Cloud Storage",
+      "abstract": "Based on the problem of the key escrow problem of one single authority in cloud storage and the low search efficiency when users search the required data, a multi-authority attribute-based keyword searchable encryption scheme was proposed. The proposed method adopted distributed key generation technology and was integrated to realize the threshold generation mechanism of the user's private key, and the right of each authority was weakened. In addition, the attribute-based keyword searchable encryption method based on ciphertext structure provided a fine-grained access control function for encrypted data and, at the same time, used aggregation technology to effectively improve the search efficiency of users. The experimental result shows that the proposed scheme can ensure the privacy of users and access policies and has low computational, which is more suitable for resource-constrained devices in cloud storage."
+    },
+    {
+      "id": "W3185746714",
+      "title": "SimpleSync: A parallel delta synchronization method based on Flink",
+      "abstract": "Abstract Cloud storage service has been in full swing in the industry. Delta synchronization technology as a key technology of cloud storage services has not made a key breakthrough. Almost all the existing researches are based on the synchronization process proposed by the Rsync algorithm and mix some optimization appropriately, but the particularity of cloud storage service is not fully considered. This paper proposes a new incremental synchronization method SimpleSync, which makes use of the characteristic that the server does not actively modify the backup files in the cloud storage service, removes the redundant steps in Rsync, and enables the synchronization between the client and the server only through a single communication. Besides, according to the server\u2010side synchronization request processing logic, this paper puts forward the design idea of parallel processing with the Flink framework, to the best of our knowledge, for the first time. After the server receives the synchronization request, SimpleSync first puts it into Kafka for buffering and then uses Flink to process the synchronization request in parallel. In the experimental part, a large number of experiments are designed to compare SimpleSync with other delta synchronization algorithms. Experimental results show that SimpleSync has obvious advantages in synchronization performance. Meanwhile, experiments show that SimpleSync has correctness."
+    },
+    {
+      "id": "W3135555981",
+      "title": "A social link based private storage cloud",
+      "abstract": "In this paper, we present O3, a social link based private storage cloud for decentralized collaboration. O3allows users to share and collaborate on collections of files (shared folders) with others, in a decentralized manner, without the need for intermediaries (such as public cloud storage servers) to intervene. Thus, users can keep their working relationships (who they work with) and what they work on private from third parties. Using benchmarks and traces from real workloads, we experimentally evaluate O3and demonstrate that the system scales linearly when synchronizing increasing numbers of concurrent users, while performing on-par with the ext4 non-version-tracking filesystem."
+    },
+    {
+      "id": "W4210891441",
+      "title": "Optimizing Performance for Managing Large Number of Files in Distributed Systems",
+      "abstract": null
+    },
+    {
+      "id": "W4386140658",
+      "title": "An Efficient Cloud Data Sharing and Accessing Control Based on Public-Key Encryption with Authentication Search",
+      "abstract": "It is becoming increasingly common to outsource data to the cloud.We recommend that the data owner encrypt his or her data ahead of outsourcing it to the cloud to ensure the confidentiality of the data.However, effective search for encrypted information is an essential and complex issue for cloud data sharing.In the past, searchable encryption (SE) has been proposed in many studies as the most promising solution for the efficient retrieval of encrypted data.However, these mechanisms are open to internal attacks that can be restored by assuming keywords from an open trapdoor (TPD) in an autonomous manner.This raises new security concerns, especially data confidentiality and security of cloud-based shared applications.In this paper, we present an efficient mechanism for the public key encryption method with authentication search (PKE-AS) which securely encrypts data using publickey cryptography and validates recipient authentication before retrieval with a shared secret key (SSK) exchange.The shared key is used by the sender to encrypt the keyword and by the receiver to generate a search TPD.The key idea of the proposal is to make sure that the system is safeguard the user data from intrusive keyword guessing attacks.This contribution provides a secure communication model for secure data sharing, searching and accessing by employing the key exchange protocol among the users.The comparison of PKE-AS with existing methods shows low executing time in analysis with different keyword search with encryption, TPD and Verification.It shows an average of 0.52ms less execution time in comparison results.The analysis of the experiment results demonstrates that the proposed method is suitable for practical use in cloud data sharing."
+    },
+    {
+      "id": "W4386163914",
+      "title": "Key Technology of Distributed Memory File System Based on High-Performance Computer",
+      "abstract": "With the rapid development of computer technology, distributed systems have become an indispensable part of the field of information storage and management. In the process of large-scale data processing, it is an important issue to compress or replay files to ensure their integrity. In order to solve the problem of large-scale computing resources and data storage, the distributed file system emerged as a new system structure. The purpose of this paper to is study the key technologies of the distributed memory file system of high-performance computers is to improve the capability and efficiency of the distributed system. This paper mainly uses the experimental method and the comparative method to analyze the key technology of the distributed memory file system of the high-performance computer. Experimental results show that the maximum bandwidth value of DFMS in file memory processing can reach more than 2000, and the value becomes more stable as the file increases."
+    },
+    {
+      "id": "W4379280036",
+      "title": "PUBLIC KEY ENCRYPTION SCHEME BASED ON KEYWORD SEARCH",
+      "abstract": "This study explores the concept of a Public Key Encryption Scheme (PKES) with an emphasis on enabling keyword search functionality. The aim of this research is to develop a cryptographic framework that allows users to securely search over encrypted data without revealing sensitive information. The study investigates various methods and techniques employed in PKES to achieve efficient and privacy-preserving keyword search capabilities. The research highlights the increasing importance of data privacy and the need for secure information retrieval over encrypted data. Traditional encryption methods hinder search functionality, making it challenging to perform keyword searches on encrypted data. To address this limitation, the study focuses on PKES, which facilitates search operations while preserving the confidentiality of the underlying data. Experimental research design was used for this research. To accomplish the objectives, the study employs a combination of cryptographic algorithms and data transformation techniques. Public key encryption algorithms are utilized to secure the data, ensuring that only authorized users can access the information. Additionally, searchable encryption methods, such as Searchable Symmetric Encryption (SSE) and Index-Based Encryption (IBE), are explored to enable efficient and secure keyword searches on encrypted data. The results of the research demonstrate the feasibility and effectiveness of the proposed PKES with keyword search. The developed framework allows users to encrypt their data and store it securely, while still being able to search for specific keywords without decrypting the data. The experiments conducted on different datasets showcase the efficiency of the implemented techniques, providing a practical solution for secure data retrieval. In conclusion, the study presents a robust and privacy-preserving Public Key Encryption Scheme that incorporates keyword search capabilities. The research contributes to the field of cryptography by addressing the limitations of traditional encryption methods and offering an effective solution for secure information retrieval. The findings highlight the significance of PKES in safeguarding sensitive data while allowing users to perform keyword searches conveniently"
+    },
+    {
+      "id": "W3038998876",
+      "title": "An Integrated Private Cloud Storage for Small and Medium Scale Business Industries",
+      "abstract": "Cloud storages are becoming popular due to raising privacy concern regarding the available public cloud services.The main concern was to prevent data loss that occur due to various problems.Although it is challenging to embrace hybrid cloud solutions for personal use.People tend to use Network-Attached Storage (NAS) and hybrid cloud solutions which are available for enterprise usage.Currently, NAS is classified as two types, Storage NAS and Platform NAS.The research of this paper focuses on Storage NAS, which is connected to a network that allows storage and retrieval of data from a central location for authorised user and clients to effectively develop the system architecture for Small and Medium Enterprise (SME) businesses.This solution provides the users with expected privacy for content and features of remote file browsing, shareable link generation, robust synchronization among personal cloud devices, simple user management similar to cloud services and remote file uploading/downloading facilities.The results and evaluation of the paper demonstrate the real world and practical business cases under the NAS server, in which it significantly shows the contribution of the System architecture development and amortization of the affordable business costs, that leads to reasonable and flexible operational security for SME sectors in the commercial cities in developing countries such as India in Asia."
+    },
+    {
+      "id": "W4293087590",
+      "title": "A Novel Authentication Mechanism for SecureData Access based on Encryption Key Sharing for Cloud Web Application",
+      "abstract": "It is becoming increasingly common to outsource data to the Cloud based Web Applications (CWAPP). We recommend that the data owner encrypt his or her data ahead of outsourcing it to the CWAPP to ensure the confidentiality of the data. However, effective access for encrypted information is an essential and complex issue for CWAPP data sharing. In the past many studies are suggesting encryption data access methods as one of the most promising solution for the secure data retrieval through preserving data privacy and access control. However, these mechanisms are exposed to internal attacks and the organization in using CWAPP raises major burden for managing password-authenticated identities for access control of the data shared due to the dynamic and complex nature of operations. This raises major security concerns, especially data confidentiality and security of CWAPP. In this paper, we present a novel authentication mechanism for secure data access based on Encryption Key Sharing for Authorized Access (EKS-AA) for securely data encryption and validate the client authentication before retrieval with a shared data. The EKS is used by the sender to encrypt the keyword and by the receiver to open a data access door. The primary aim of this proposal is to make CWAPP secure from password phishing and intrusive keyword guessing attacks. The experimental evaluation in terms of time complexity measure suggests the effectiveness of the proposal for CWAPP."
+    },
+    {
+      "id": "W4385971434",
+      "title": "Termination detection in cloud",
+      "abstract": null
+    }
+  ]
+}

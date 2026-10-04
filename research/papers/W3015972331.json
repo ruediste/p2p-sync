@@ -1,0 +1,134 @@
+{
+  "id": "W3015972331",
+  "title": "Moving elements in list CRDTs",
+  "doi": "https://doi.org/10.1145/3380787.3393677",
+  "publication_date": "2020-04-27",
+  "publication_year": 2020,
+  "type": "conference-paper",
+  "cited_by_count": 15,
+  "authors": [
+    "Martin Kleppmann"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3380787.3393677",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W3015972331.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W3015972331.grobid-xml"
+  },
+  "abstract": "Conflict-free Replicated Data Types (CRDTs) for lists allow multiple users to concurrently insert and delete elements in a shared list object. However, existing algorithms behave poorly when users concurrently move list elements to a new position (i.e. reorder the elements in the list). We demonstrate the need for such a move operation, and describe an algorithm that extends a list CRDT with an explicit move operation. Our algorithm can be used in conjunction with any existing list CRDT algorithm. In addition to moving a single list element, we also discuss the open problem of moving ranges of elements.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Peer-to-Peer Network Technologies",
+    "Advanced Database Systems and Queries"
+  ],
+  "references": [
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1971443766",
+    "https://openalex.org/W1985225835",
+    "https://openalex.org/W1989814541",
+    "https://openalex.org/W1996958808",
+    "https://openalex.org/W2005436270",
+    "https://openalex.org/W2034514016",
+    "https://openalex.org/W2088721436",
+    "https://openalex.org/W2118242633",
+    "https://openalex.org/W2129388329",
+    "https://openalex.org/W2134308710",
+    "https://openalex.org/W2145220267",
+    "https://openalex.org/W2151541805",
+    "https://openalex.org/W2170849273",
+    "https://openalex.org/W2306796337",
+    "https://openalex.org/W2336063532",
+    "https://openalex.org/W2506181100",
+    "https://openalex.org/W2801204512",
+    "https://openalex.org/W2954660873",
+    "https://openalex.org/W4236824789",
+    "https://openalex.org/W4247233603",
+    "https://openalex.org/W4285719527"
+  ],
+  "cited_by": [
+    {
+      "id": "W3206444683",
+      "title": "A Highly-Available Move Operation for Replicated Trees",
+      "abstract": "Replicated tree data structures are a fundamental building block of distributed filesystems, such as Google Drive and Dropbox, and collaborative applications with a JSON or XML data model. These systems need to support amoveoperation that allows a subtree to be moved to a new location within the tree. However, such a move operation is difficult to implement correctly if different replicas can concurrently perform arbitrary move operations, and we demonstrate bugs in Google Drive and Dropbox that arise with concurrent moves. In this article we present a CRDT algorithm that handles arbitrary concurrent modifications on trees, while ensuring that the tree structure remains valid (in particular, no cycles are introduced), and guaranteeing that all replicas converge towards the same consistent state. Our algorithm requires no synchronous coordination between replicas, making it highly available in the face of network partitions. We formally prove the correctness of our algorithm using the Isabelle/HOL proof assistant, and evaluate the performance of our formally verified implementation in a geo-replicated setting."
+    },
+    {
+      "id": "W4406221809",
+      "title": "Grove: A Bidirectionally Typed Collaborative Structure Editor Calculus",
+      "abstract": "Version control systems typically rely on a patch language , heuristic patch synthesis algorithms like diff , and three-way merge algorithms . Standard patch languages and merge algorithms often fail to identify conflicts correctly when there are multiple edits to one line of code or code is relocated. This paper introduces Grove, a collaborative structure editor calculus that eliminates patch synthesis and three-way merge algorithms entirely. Instead, patches are derived directly from the log of the developer\u2019s edit actions and all edits commute, i.e. the repository state forms a commutative replicated data type (CmRDT). To handle conflicts that can arise due to code relocation, the core datatype in Grove is a labeled directed multi-graph with uniquely identified vertices and edges. All edits amount to edge insertion and deletion, with deletion being permanent. To support tree-based editing, we define a decomposition from graphs into groves , which are a set of syntax trees with conflicts\u2013including local, relocation, and unicyclic relocation conflicts\u2013represented explicitly using holes and references between trees. Finally, we define a type error localization system for groves that enjoys a totality property, i.e. all editor states in Grove are statically meaningful, so developers can use standard editor services while working to resolve these explicitly represented conflicts. The static semantics is defined as a bidirectional marking system in line with recent work, with gradual typing employed to handle situations where errors and conflicts prevent type determination. We then layer on a unification-based type inference system to opportunistically fill type holes and fail gracefully when no solution exists. We mechanize the metatheory of Grove using the Agda theorem prover. We implement these ideas as the Grove Workbench , which generates the necessary data structures and algorithms in OCaml given a syntax tree specification."
+    },
+    {
+      "id": "W4285130431",
+      "title": "DSON",
+      "abstract": "We propose DSON, a space efficient \u03b4-based CRDT approach for distributed JSON document stores, enabling high availability at a global scale, while providing strong eventual consistency guarantees. We define the semantics of our CRDT based approach formally, and prove its correctness and convergence. Previous approaches optimize for collaborative document editing and store metadata proportional to the number of updates to a document, which is not acceptable for long lived document management. The metadata stored with our approach is bounded by O ( k 2 D + n log n ), where n is the number of replicas, D is the number of document elements, and k \u2264 n is the number of concurrent document updates. We also implement our approach[37] and demonstrate its space efficiency empirically. Experimental analysis shows that the metadata stored is typically significantly less than the worst case. This provides the basis for robust highly available distributed document stores with well defined semantics and safety guarantees, relieving application developers from the burden of conflict resolution."
+    },
+    {
+      "id": "W4394865965",
+      "title": "Extending JSON CRDTs with Move Operations",
+      "abstract": "Conflict-Free Replicated Data Types (CRDTs) for JSON allow users to concurrently update a JSON document and automatically merge the updates into a consistent state. Moving a subtree in a map or reordering elements in a list within a JSON CRDT is challenging: naive merge algorithms may introduce unexpected results such as duplicates or cycles. In this paper, we introduce an algorithm for move operations in a JSON CRDT that handles the interaction with concurrent non-move operations, and uses novel optimisations to improve performance. We plan to integrate this algorithm into the Automerge CRDT library."
+    },
+    {
+      "id": "W3166374003",
+      "title": "Thinking in events",
+      "abstract": "In this keynote I give a subjective but systematic overview of the landscape of distributed event-based systems, with an emphasis on two areas I have worked on over the last decade: large-scale stream processing with Apache Kafka and associated tools, and real-time collaboration software in the style of Google Docs. While these may seem at first glance to be very different topics, there are also important points of overlap. This paper lays out a taxonomy of event-based systems that shows where their commonalities and differences lie. It also highlights some of the key trade-offs that arise in the implementation of event-based systems, drawing both from distributed systems theory and from experience of their practical deployment. Finally, the paper outlines a number of open research problems in this field."
+    },
+    {
+      "id": "W4409334257",
+      "title": "Design and Development of a Local-First Collaborative 3D WebGIS Application for Mapping",
+      "abstract": "Real-time collaborative WebGIS represents a significant trend in the evolution of Geographic Information Systems. Current commercial collaborative WebGIS platforms, such as ArcGIS Online and Felt, rely on centralized servers for data storage and spatial analysis. However, this centralized architecture poses notable limitations: the software becomes non-functional in the absence of a network connection or if the service is discontinued. Moreover, data ownership resides with the commercial providers, exposing users to potential data loss in the event of service disruptions. To address these challenges, this paper introduces the concept of local-first software into WebGIS. By leveraging Conflict-free Replicated Data Types (CRDTs) and advanced web technologies, we develop a user-friendly, interactive, and offline-capable local-first WebGIS application that supports real-time collaboration. The application enables multi-user collaborative editing, offline functionality, and efficient browser-based spatial analysis. This paper outlines the design methodology and system prototype for the local-first WebGIS application, utilizing open-source software and libraries throughout the development process. Practical examples are provided to demonstrate the application\u2019s functionality. The proposed solution enhances real-time collaboration and data security in WebGIS, ultimately improving user productivity and collaborative experiences."
+    },
+    {
+      "id": "W4414538340",
+      "title": "The Art of the Fugue: Minimizing Interleaving in Collaborative Text Editing",
+      "abstract": "Most existing algorithms for replicated lists, which are widely used in collaborative text editors, suffer from a problem: when two users concurrently insert text at the same position in the document, the merged outcome may interleave the inserted text passages, resulting in corrupted and potentially unreadable text. The problem has gone unnoticed for decades, and it affects both CRDTs and Operational Transformation. This paper defines maximal non-interleaving, our new correctness property for replicated lists. We introduce two related CRDT algorithms, Fugue and FugueMax, and prove that FugueMax satisfies maximal non-interleaving. We also implement our algorithms and demonstrate that Fugue offers performance comparable to state-of-the-art CRDT libraries for text editing."
+    },
+    {
+      "id": "W7110323366",
+      "title": "ER-\u03c0: Exhaustive Interleaving Replay for Testing Replicated Data Library Integration",
+      "abstract": "Modern replicated data systems often rely on libraries integrated with application code. These replicated data libraries exchange asynchronous messages, whose execution orderings are non-deterministic, allowing any message interleaving to occur during system execution. Testing the integration of application code with library code requires considering all possible interleavings, whose detection and simulation pose significant challenges for application developers. In this paper, we present ER-\u03c0, a middleware system, designed to detect and replay possible interleavings in replicated data systems. ER-\u03c0 identifies potential interleavings for a given code segment and applies four novel pruning techniques to reduce the complexity of the problem space. Subsequently, it replays the remaining interleavings to perform the specified integration testing tasks. To assess the applicability and efficacy of ER-\u03c0, we integrated it with third-party replicated data libraries across various programming languages. Our experiments demonstrate ER-\u03c0 's capability to replicate 12 known bugs and uncover 5 types of common misconceptions associated with replicated data libraries. Given that integration testing is essential for ensuring correctness and robustness, the design of ER-\u03c0 holds promise in extending these testing benefits to the realm of replicated data systems."
+    },
+    {
+      "id": "W4367675071",
+      "title": "AMC: Towards Trustworthy and Explorable CRDT Applications with the Automerge Model Checker",
+      "abstract": "Conflict-free Replicated Data Types (CRDTs) enable local-first operations and asynchronous collaboration without the need for always-on centralised services. CRDTs can have a high overhead, so implementations need to be optimised, but this optimisation can lead to bugs despite the use of test suites and fuzzing. Furthermore, using CRDTs in applications is complex, observing unexpected conflict resolution, issues synchronising documents and difficulties implementing appropriate data models. Automerge is a library, exposing a JSON CRDT, that sees users having difficulties in modelling their problems, understanding their edge cases and implementing applications correctly. We introduce the Automerge Model Checker (AMC), empowering application developers to check properties about their implementations and explore them dynamically. AMC can check a range of applications as well as being able to check properties about the core of Automerge itself, helping to make more trustworthy Automerge applications."
+    },
+    {
+      "id": "W3156482153",
+      "title": "Array CRDTs Using Delta-Mutations",
+      "abstract": "\u03b4-CRDTs can achieve the best of both worlds compared to operation and state based alternatives, enabling small incremental messages disseminated over unreliable communication channels. The main composable causal \u03b4-CRDT defined to date is an Observed-Remove Map which can embed other causal \u03b4-CRDTs. However, maps on their own are not sufficient to handle most real world scenarios."
+    },
+    {
+      "id": "W3180120363",
+      "title": "Thinking in events",
+      "abstract": "In this keynote I give a subjective but systematic overview of the landscape of distributed event-based systems, with an emphasis on two areas I have worked on over the last decade: large-scale stream processing with Apache Kafka and associated tools, and real-time collaboration software in the style of Google Docs. While these may seem at first glance to be very different topics, there are also important points of overlap. This paper lays out a taxonomy of event-based systems that shows where their commonalities and differences lie. It also highlights some of the key trade-offs that arise in the implementation of event-based systems, drawing both from distributed systems theory and from experience of their practical deployment. Finally, the paper outlines a number of open research problems in this field."
+    },
+    {
+      "id": "W4403388773",
+      "title": "Desenvolvimento de Editores Colaborativos em Tempo Real: Revis\u00e3o R\u00e1pida",
+      "abstract": "Currently, users expect to collaborate synchronously with others, including over the Web. Developing a real-time collaborative editor (RCE) that enables geographically dispersed users to simultaneously edit the same document relies on specific algorithms and techniques. To understand how real-time collaborative editors are developed and tested, and which algorithms or techniques are crucial for their development, we conducted a systematic review addressing the following questions: For which types of objects does the literature present real-time collaborative editing systems (RTCE)? What is the most commonly used architecture by researchers to implement RTCE systems, how are they represented, and which works present models or roadmaps for the development of RCEs? Between Operational Transformation (OT) and Conflict-free Replicated Data Types (CRDTs) algorithms, which one appears most frequently in the selected works? What are the main types of tests conducted to evaluate collaborative editors, which articles conducted user tests, and what is the average number of users involved in these tests? Which works discuss undo/redo techniques? Which works discuss the use of comments, chat, or history as tools to support collaborative work? After screening 365 records published between 1993 and 2024, the review analyzed 23 studies published between 2002 and 2022. The results revealed various approaches and techniques employed in the implementation of RTCEs, offering a comprehensive view of research in this area. This, in turn, allowed for the identification of challenges that future research should address."
+    },
+    {
+      "id": "W4411272168",
+      "title": "Semantic-Aware Replicated Data Types for Improved Conflict Resolution in Near-Synchronous Code Collaboration",
+      "abstract": "This dissertation addresses the limitations of convergence in near-synchronous code collaboration. Current techniques predominantly rely on string-based synchronization, which often results in conflict resolution that fails to address the underlying structural, syntactic, or semantic context of the code. This work proposes a semantic-aware approach that explores different levels of granularity in replicated data types (RDT) to overcome these limitations while enabling near-synchronous visualization of code evolution, enhancing interactive programming environments. The main contributions include: (1) a classification of conflict scenarios and intent-preserving code merging behavior, (2) a novel RDT approach exploring different granularity levels, (3) near-synchronous visualization of code semantics, and (4) extended RDT approaches utilizing nested replicated data types for improved conflict resolution in educational programming contexts."
+    },
+    {
+      "id": "W7155394780",
+      "title": "AegisSheet: A Compositional CRDT for Collaborative Spreadsheets",
+      "abstract": "Applications that support online collaboration over shared documents such as text files and spreadsheets are becoming increasingly popular. While collaborative text editing is well studied and multiple specialized data structures exist, there has been surprisingly little innovation in the field of collaborative spreadsheets, which allow multiple users to collaboratively organize data, and perform data-driven computations: Major providers often still resort to \u201clast-writer-wins\u201d semantics for common conflict scenarios, resulting in potential data loss that makes these applications ill-equipped for asynchronous and offline collaboration."
+    },
+    {
+      "id": "W7212256259",
+      "title": "Automatic Generation of Local-First, Collaborative Modeling Languages",
+      "abstract": "Modeling languages provide engineers with shared, domain-specific concepts for collaboratively structuring domain knowledge. Although modern language workbenches can generate much of the language-specific tooling from a metamodel, collaborative editing usually relies on external infrastructure that requires additional integration. In particular, existing solutions provide insufficient support for hybrid collaborative modeling, in which modelers alternate seamlessly between online and offline editing and their changes are automatically reconciled upon reconnection. This article presents an approach for automatically generating metamodel-specific replicated model runtimes directly from Ecore metamodels. We define a translation from a practically relevant subset of EMF/Ecore to compositions of Conflict-free Replicated Data Types (CRDTs), each encapsulating a well-defined conflict-resolution policy. The resulting runtimes expose model APIs for creating, updating, and querying replicated model states, while their constituent CRDTs define how concurrent updates are reconciled. The approach is implemented as a configurable code generator and evaluated through three case-study runtimes and all 5,475 Ecore files in ModelSet v0.9.4. The results quantify the generator\u2019s end-to-end coverage and provide complementary formal and empirical evidence for convergence within the stated scope and assumptions."
+    }
+  ]
+}

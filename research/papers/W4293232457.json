@@ -1,0 +1,72 @@
+{
+  "id": "W4293232457",
+  "title": "Ordering operations for generic replicated data types using version trees",
+  "doi": "https://doi.org/10.1145/3517209.3524038",
+  "publication_date": "2022-03-23",
+  "publication_year": 2022,
+  "type": "conference-paper",
+  "cited_by_count": 4,
+  "authors": [
+    "Nazmus Saquib",
+    "Chandra Krintz",
+    "Rich Wolski"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3517209.3524038",
+    "any_repository_has_fulltext": null
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4293232457.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4293232457.grobid-xml"
+  },
+  "abstract": "Data replication facilitates availability and recovery in a distributed environment. However, concurrent updates to multiple replicas result in divergence of data. Conflict-Free Replicated Data Types (CRDTs) are abstract data types that provide a principled approach to asynchronously reconcile this divergence. We propose a different perspective on the divergence of data, whereby we treat data divergences as versions of the data. That is, instead of treating it only as a problem that needs to be solved, we consider it also to be a feature that provides a way to track versioning and evolution of data. Versioning information is helpful in multiple scenarios, such as provenance tracking and system debugging. Doing so allows us to leverage concepts such as the version tree found in the literature for persistent (versioned) data structures. We show that many techniques used in CRDTs to order elements can be derived from version trees, which predates CRDTs by more than 20 years. Using version trees for maintaining order and append-only logs for storage, we propose a method to ensure convergence of arbitrary data types, while maintaining information related to the evolution of data.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Scientific Computing and Data Management",
+    "Advanced Data Storage Technologies"
+  ],
+  "references": [
+    "https://openalex.org/W1973501242",
+    "https://openalex.org/W1985225835",
+    "https://openalex.org/W2011297770",
+    "https://openalex.org/W2029068974",
+    "https://openalex.org/W2118242633",
+    "https://openalex.org/W2124927340",
+    "https://openalex.org/W2134308710",
+    "https://openalex.org/W2151541805",
+    "https://openalex.org/W2295616151",
+    "https://openalex.org/W2506181100",
+    "https://openalex.org/W2948219221",
+    "https://openalex.org/W4213048098",
+    "https://openalex.org/W4241375534"
+  ],
+  "cited_by": [
+    {
+      "id": "W4310048591",
+      "title": "Replicated Versioned Data Structures for Wide-Area Distributed Systems",
+      "abstract": "In this work, we investigate the integration of replicated versioned data structures and append-only distributed storage systems. Doing so facilitates high availability and scalability while providing developer access to different versions of program data structures across program executions. Modern distributed systems such as the Internet of Things (IoT) often employ multi-tiered (cloud/edge/sensors) architectures consisting of a wide array of heterogeneous devices generating data frequently. Hence system availability is imperative to avoid data loss, while scalability is required for the efficient operation of the system not only within the same tier but across different tiers as well. Our proposed approach replicates, persists, and versionsprogram data structuressuch as binary search trees and linked lists for use in distributed IoT applications. The versioning and persistence of these structures aid failure recovery and facilitate system debugging from its inception instead of making such considerations an afterthought. Moreover, our experiments suggest versioned data structures can perform better in applications performing high volumes of temporal queries versus traditional methods of persisting data (e.g., in a database). We empirically evaluate the overheads associated with versioning and storage persistence of program data structures, present experimental results for multiple end-to-end applications, and demonstrate the scalability of this approach."
+    },
+    {
+      "id": "W4393858892",
+      "title": null,
+      "abstract": "Bulletin of ChSTU is a peer-reviewed collection of scientific works in the field of technical sciences published by Cherkasy State Technological University. Founded in 1991, Bulletin of ChSTU is included in the List of Scientific Professional Journals of Ukraine (category \"\u0411\")"
+    },
+    {
+      "id": "W4393860247",
+      "title": "Review of joint text editing algorithms Conflict-free Replicated Data Types (CRDT)",
+      "abstract": "Analysing and selecting algorithms for collaborative text editing, especially implementing conflict-free replicated data types, is critical to understanding how modern systems can achieve real-time collaboration while ensuring data integrity. The purpose of the study is to review various collaborative editing algorithms and conduct a comparative analysis to understand their advantages, disadvantages, and applications. Statistical methods, methods for analysing algorithms and their use in real-world scenarios are used. The study results showed that the use of collaborative text editing algorithms contributes to solving important tasks and challenges in the modern world of information technology. Collaborative editing algorithms are determined to facilitate realtime communication and information exchange. This is especially important in the context of remote work and communication, which have become the standard for many organisations. Collaborative text editing is widely used in various fields and industries where teamwork, real-time collaboration, and document sharing are essential, such as scientific research, education, software development, book and manuscript editing, legal cooperation, contract draughting, medical reports, etc. In addition, using optimised collaborative editing algorithms helps reduce the time required to process data and create text materials. Collaborative editing algorithms have a wide range of applications in research, business, and education. They allow teams and individual users to solve problems more efficiently and work together on projects. The ability to use the results obtained in practical activities will allow using algorithms for joint text editing for further innovation and development of information technologies, which will allow working together and exchanging information with the whole world in real-time"
+    },
+    {
+      "id": "W7118186955",
+      "title": "Methods and Tools for Developing Collaborative Applications Based on CRDT Types with User Conflict Resolution",
+      "abstract": "Against the background of the rapid expansion of the segment of collaborative software solutions, fueled by the transition to hybrid employment formats and the general digital transformation, the problem of ensuring data consistency in distributed systems is coming to the fore as a fundamental scientific and engineering task. Classical strict consistency schemes are in conflict with the requirements of high availability and fault tolerance, which directly follows from the limitations of the CAP theorem. Conflict-free replicated data types (CRDTs) represent a constructive response to this challenge by providing strict final consistency (SEC) without centralized coordination. The purpose of the research is to systematize and analyze approaches and tools for building collaborative applications based on CRDT, as well as to formulate a multi-level model for resolving semantic conflicts that arise at the level of user intentions. Methodologically, the work is based on a systematic review of academic publications, a comparative study of the leading CRDT libraries (Yjs, Automerge) and a content analysis of industry reports. A comprehensive analysis of the theoretical foundations of CRDT, their practical incarnations, and existing conflict resolution strategies has shown the insufficiency of automatic mechanisms for handling semantic collisions. In response, a three\u2014level Data\u2014Logic-Representation architecture is proposed, which distinguishes between automatic merging at the data level, logical identification of semantic contradictions and their resolution at the user interface layer through adapted UI/UX patterns. The findings indicate that this principle of organization increases the predictability of the system\u2019s behavior and makes collaboration more intuitive. The research materials are addressed to other researchers, architects of distributed systems and software developers."
+    }
+  ]
+}

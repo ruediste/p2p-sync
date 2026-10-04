@@ -1,0 +1,44 @@
+{
+  "id": "W3197329143",
+  "title": "Supporting Undo and Redo for Local-First Software. An Implementation in Automerge",
+  "doi": null,
+  "publication_date": "2021-06-01",
+  "publication_year": 2021,
+  "type": "dissertation",
+  "cited_by_count": 0,
+  "authors": [
+    "Eric Brattli"
+  ],
+  "venue": "NORA - Norwegian Open Research Archives",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://hdl.handle.net/10037/22345",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W3197329143.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W3197329143.grobid-xml"
+  },
+  "abstract": "With the advance of cloud computing and centralization of data, a new effort goes entirely in the other direction and aims for decentralization of data through local-first software. Collaborative applications created this way need strong undo and redo support to handle the inevitable mistakes that take place in a collaborative setting.\\n\\nLocal-first software can be effectively built using Conflict-Free Replicated Data Types (CRDTs), where all the application data is stored locally at the user.\\n\\nThis paper presents the design and implementation of a new approach for undoing and redoing operations in a modern open-source operation-based CRDT. The current approach is severely limited and can only undo local operations. Our approach allows for generic and selective undo and redo for consistently replicated registers.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Cloud Computing and Resource Management",
+    "Distributed and Parallel Computing Systems"
+  ],
+  "references": [
+    "https://openalex.org/W1038420441",
+    "https://openalex.org/W1994838062",
+    "https://openalex.org/W2106942243",
+    "https://openalex.org/W2129388329",
+    "https://openalex.org/W2147720564",
+    "https://openalex.org/W2153704625",
+    "https://openalex.org/W2341655714",
+    "https://openalex.org/W3045893389"
+  ],
+  "cited_by": []
+}

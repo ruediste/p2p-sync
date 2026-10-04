@@ -1,0 +1,5034 @@
+{
+  "query": {
+    "search": "eg-walker",
+    "filter": null,
+    "per-page": 5,
+    "sort": "relevance_score:desc"
+  },
+  "url": "https://api.openalex.org/works?search=eg-walker&per-page=5&sort=relevance_score%3Adesc",
+  "response": {
+    "meta": {
+      "count": 144936,
+      "db_response_time_ms": 76,
+      "page": 1,
+      "per_page": 5,
+      "groups_count": null,
+      "x_query": {
+        "oql": "get works where full text has (eg-walker)",
+        "oqo": {
+          "get_rows": "works",
+          "filter_rows": [
+            {
+              "column_id": "fulltext.search",
+              "value": "eg-walker",
+              "operator": "has"
+            }
+          ]
+        },
+        "url": "/works?filter=fulltext.search:eg-walker&per_page=5"
+      },
+      "cost_usd": 0.001
+    },
+    "results": [
+      {
+        "id": "https://openalex.org/W4403754230",
+        "doi": "https://doi.org/10.1145/3689031.3696076",
+        "title": "Collaborative Text Editing with Eg-walker: Better, Faster, Smaller",
+        "display_name": "Collaborative Text Editing with Eg-walker: Better, Faster, Smaller",
+        "relevance_score": 128.53857,
+        "publication_year": 2025,
+        "publication_date": "2025-03-26",
+        "ids": {
+          "openalex": "https://openalex.org/W4403754230",
+          "doi": "https://doi.org/10.1145/3689031.3696076"
+        },
+        "language": "en",
+        "primary_location": {
+          "id": "doi:10.1145/3689031.3696076",
+          "is_oa": true,
+          "landing_page_url": "https://doi.org/10.1145/3689031.3696076",
+          "pdf_url": "https://dl.acm.org/doi/pdf/10.1145/3689031.3696076?download=true",
+          "source": null,
+          "license": "cc-by",
+          "license_id": "https://openalex.org/licenses/cc-by",
+          "version": "publishedVersion",
+          "is_accepted": true,
+          "is_published": true,
+          "raw_source_name": "Proceedings of the Twentieth European Conference on Computer Systems",
+          "raw_type": "proceedings-article"
+        },
+        "type": "conference-paper",
+        "indexed_in": [
+          "arxiv",
+          "crossref",
+          "datacite"
+        ],
+        "open_access": {
+          "is_oa": true,
+          "oa_status": "gold",
+          "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3689031.3696076?download=true",
+          "any_repository_has_fulltext": true
+        },
+        "authorships": [
+          {
+            "author_position": "first",
+            "author": {
+              "id": "https://openalex.org/A5032163196",
+              "display_name": "Joseph Gentle",
+              "orcid": "https://orcid.org/0009-0005-9322-1973",
+              "observed_orcids": [
+                "https://orcid.org/0009-0005-9322-1973"
+              ]
+            },
+            "institutions": [],
+            "countries": [],
+            "is_corresponding": false,
+            "raw_author_name": "Joseph Gentle",
+            "raw_affiliation_strings": [
+              "Independent, Melbourne, Australia"
+            ],
+            "raw_orcid": "https://orcid.org/0009-0005-9322-1973",
+            "affiliations": [
+              {
+                "raw_affiliation_string": "Independent, Melbourne, Australia",
+                "institution_ids": []
+              }
+            ]
+          },
+          {
+            "author_position": "last",
+            "author": {
+              "id": "https://openalex.org/A5083870363",
+              "display_name": "Martin Kleppmann",
+              "orcid": "https://orcid.org/0000-0001-7252-6958",
+              "observed_orcids": [
+                "https://orcid.org/0000-0001-7252-6958"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I241749",
+                "display_name": "University of Cambridge",
+                "ror": "https://ror.org/013meh722",
+                "country_code": "GB",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I241749"
+                ]
+              }
+            ],
+            "countries": [
+              "GB"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Martin Kleppmann",
+            "raw_affiliation_strings": [
+              "University of Cambridge, Cambridge, United Kingdom"
+            ],
+            "raw_orcid": "https://orcid.org/0000-0001-7252-6958",
+            "affiliations": [
+              {
+                "raw_affiliation_string": "University of Cambridge, Cambridge, United Kingdom",
+                "institution_ids": [
+                  "https://openalex.org/I241749"
+                ]
+              }
+            ]
+          }
+        ],
+        "institutions": [],
+        "countries_distinct_count": 1,
+        "institutions_distinct_count": 1,
+        "corresponding_author_ids": [],
+        "corresponding_institution_ids": [],
+        "apc_list": null,
+        "apc_paid": null,
+        "fwci": 4.0777,
+        "has_fulltext": true,
+        "cited_by_count": 3,
+        "citation_normalized_percentile": {
+          "value": 0.92822789,
+          "is_in_top_1_percent": false,
+          "is_in_top_10_percent": true
+        },
+        "cited_by_percentile_year": {
+          "min": 97,
+          "max": 98
+        },
+        "biblio": {
+          "volume": null,
+          "issue": null,
+          "first_page": "311",
+          "last_page": "328"
+        },
+        "is_retracted": false,
+        "is_paratext": false,
+        "is_xpac": false,
+        "primary_topic": {
+          "id": "https://openalex.org/T10742",
+          "display_name": "Peer-to-Peer Network Technologies",
+          "score": 0.9976000189781189,
+          "subfield": {
+            "id": "https://openalex.org/subfields/1705",
+            "display_name": "Computer Networks and Communications"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/17",
+            "display_name": "Computer Science"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/3",
+            "display_name": "Physical Sciences"
+          }
+        },
+        "topics": [
+          {
+            "id": "https://openalex.org/T10742",
+            "display_name": "Peer-to-Peer Network Technologies",
+            "score": 0.9976000189781189,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T12784",
+            "display_name": "Modular Robots and Swarm Intelligence",
+            "score": 0.9925000071525574,
+            "subfield": {
+              "id": "https://openalex.org/subfields/2210",
+              "display_name": "Mechanical Engineering"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/22",
+              "display_name": "Engineering"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10772",
+            "display_name": "Distributed systems and fault tolerance",
+            "score": 0.991599977016449,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          }
+        ],
+        "keywords": [
+          {
+            "id": "https://openalex.org/keywords/collaborative-text-editing",
+            "display_name": "collaborative text editing",
+            "score": 0.9959999918937683
+          },
+          {
+            "id": "https://openalex.org/keywords/operational-transformation",
+            "display_name": "operational transformation",
+            "score": 0.8009999990463257
+          },
+          {
+            "id": "https://openalex.org/keywords/conflict-free-replicated-data-types",
+            "display_name": "conflict-free replicated data types",
+            "score": 0.8849999904632568
+          },
+          {
+            "id": "https://openalex.org/keywords/memory-efficiency",
+            "display_name": "memory efficiency",
+            "score": 0.8130000233650208
+          },
+          {
+            "id": "https://openalex.org/keywords/peer-collaboration",
+            "display_name": "peer collaboration",
+            "score": 0.9129999876022339
+          },
+          {
+            "id": "https://openalex.org/keywords/distributed-collaboration",
+            "display_name": "distributed collaboration",
+            "score": 0.3499999940395355
+          }
+        ],
+        "concepts": [
+          {
+            "id": "https://openalex.org/C41008148",
+            "wikidata": "https://www.wikidata.org/wiki/Q21198",
+            "display_name": "Computer science",
+            "level": 0,
+            "score": 0.8677071332931519
+          },
+          {
+            "id": "https://openalex.org/C197129107",
+            "wikidata": "https://www.wikidata.org/wiki/Q1921621",
+            "display_name": "Merge (version control)",
+            "level": 2,
+            "score": 0.8650325536727905
+          },
+          {
+            "id": "https://openalex.org/C120314980",
+            "wikidata": "https://www.wikidata.org/wiki/Q180634",
+            "display_name": "Distributed computing",
+            "level": 1,
+            "score": 0.4566795229911804
+          },
+          {
+            "id": "https://openalex.org/C2777904410",
+            "wikidata": "https://www.wikidata.org/wiki/Q7397",
+            "display_name": "Software",
+            "level": 2,
+            "score": 0.4124751687049866
+          },
+          {
+            "id": "https://openalex.org/C173608175",
+            "wikidata": "https://www.wikidata.org/wiki/Q232661",
+            "display_name": "Parallel computing",
+            "level": 1,
+            "score": 0.3497467637062073
+          },
+          {
+            "id": "https://openalex.org/C80444323",
+            "wikidata": "https://www.wikidata.org/wiki/Q2878974",
+            "display_name": "Theoretical computer science",
+            "level": 1,
+            "score": 0.3373695909976959
+          },
+          {
+            "id": "https://openalex.org/C111919701",
+            "wikidata": "https://www.wikidata.org/wiki/Q9135",
+            "display_name": "Operating system",
+            "level": 1,
+            "score": 0.3088671565055847
+          }
+        ],
+        "mesh": [],
+        "locations_count": 3,
+        "locations": [
+          {
+            "id": "doi:10.1145/3689031.3696076",
+            "is_oa": true,
+            "landing_page_url": "https://doi.org/10.1145/3689031.3696076",
+            "pdf_url": "https://dl.acm.org/doi/pdf/10.1145/3689031.3696076?download=true",
+            "source": null,
+            "license": "cc-by",
+            "license_id": "https://openalex.org/licenses/cc-by",
+            "version": "publishedVersion",
+            "is_accepted": true,
+            "is_published": true,
+            "raw_source_name": "Proceedings of the Twentieth European Conference on Computer Systems",
+            "raw_type": "proceedings-article"
+          },
+          {
+            "id": "pmh:oai:arXiv.org:2409.14252",
+            "is_oa": true,
+            "landing_page_url": "http://arxiv.org/abs/2409.14252",
+            "pdf_url": "https://arxiv.org/pdf/2409.14252",
+            "source": {
+              "id": "https://openalex.org/S4306400194",
+              "display_name": "arXiv (Cornell University)",
+              "issn_l": "2331-8422",
+              "issn": [
+                "2331-8422"
+              ],
+              "is_oa": true,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": "https://openalex.org/I205783295",
+              "host_organization_name": "Cornell University",
+              "host_organization_lineage": [
+                "https://openalex.org/I205783295"
+              ],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": "cc-by",
+            "license_id": "https://openalex.org/licenses/cc-by",
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": null,
+            "raw_type": "text"
+          },
+          {
+            "id": "doi:10.48550/arxiv.2409.14252",
+            "is_oa": true,
+            "landing_page_url": "https://doi.org/10.48550/arxiv.2409.14252",
+            "pdf_url": null,
+            "source": {
+              "id": "https://openalex.org/S4306400194",
+              "display_name": "arXiv (Cornell University)",
+              "issn_l": "2331-8422",
+              "issn": [
+                "2331-8422"
+              ],
+              "is_oa": true,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": "https://openalex.org/I205783295",
+              "host_organization_name": "Cornell University",
+              "host_organization_lineage": [
+                "https://openalex.org/I205783295"
+              ],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": "cc-by",
+            "license_id": "https://openalex.org/licenses/cc-by",
+            "version": null,
+            "is_accepted": false,
+            "is_published": null,
+            "raw_source_name": null,
+            "raw_type": "article-journal"
+          }
+        ],
+        "best_oa_location": {
+          "id": "doi:10.1145/3689031.3696076",
+          "is_oa": true,
+          "landing_page_url": "https://doi.org/10.1145/3689031.3696076",
+          "pdf_url": "https://dl.acm.org/doi/pdf/10.1145/3689031.3696076?download=true",
+          "source": null,
+          "license": "cc-by",
+          "license_id": "https://openalex.org/licenses/cc-by",
+          "version": "publishedVersion",
+          "is_accepted": true,
+          "is_published": true,
+          "raw_source_name": "Proceedings of the Twentieth European Conference on Computer Systems",
+          "raw_type": "proceedings-article"
+        },
+        "sustainable_development_goals": [],
+        "sustainable_development_goals_aurora": [
+          {
+            "display_name": "Partnerships for the goals",
+            "id": "https://metadata.un.org/sdg/17",
+            "score": 0.41999998688697815
+          }
+        ],
+        "study_designs": [],
+        "awards": [],
+        "funders": [],
+        "has_content": {
+          "pdf": true,
+          "grobid_xml": true
+        },
+        "content_urls": {
+          "pdf": "https://content.openalex.org/works/W4403754230.pdf",
+          "grobid_xml": "https://content.openalex.org/works/W4403754230.grobid-xml"
+        },
+        "referenced_works_count": 29,
+        "referenced_works": [
+          "https://openalex.org/W98718822",
+          "https://openalex.org/W1516319412",
+          "https://openalex.org/W1794148987",
+          "https://openalex.org/W1971443766",
+          "https://openalex.org/W1985349143",
+          "https://openalex.org/W1989814541",
+          "https://openalex.org/W2071442639",
+          "https://openalex.org/W2088721436",
+          "https://openalex.org/W2098522119",
+          "https://openalex.org/W2106355650",
+          "https://openalex.org/W2117546628",
+          "https://openalex.org/W2118242633",
+          "https://openalex.org/W2129388329",
+          "https://openalex.org/W2134308710",
+          "https://openalex.org/W2143068513",
+          "https://openalex.org/W2151541805",
+          "https://openalex.org/W2151943351",
+          "https://openalex.org/W2295058494",
+          "https://openalex.org/W2506181100",
+          "https://openalex.org/W2510332240",
+          "https://openalex.org/W2548120315",
+          "https://openalex.org/W2942595830",
+          "https://openalex.org/W2979846168",
+          "https://openalex.org/W3103287347",
+          "https://openalex.org/W3137220996",
+          "https://openalex.org/W4236824789",
+          "https://openalex.org/W4281971122",
+          "https://openalex.org/W4300176356",
+          "https://openalex.org/W4372046852"
+        ],
+        "related_works": [
+          "https://openalex.org/W4234886518",
+          "https://openalex.org/W2389591058",
+          "https://openalex.org/W2382112581",
+          "https://openalex.org/W3124036233",
+          "https://openalex.org/W4229787472",
+          "https://openalex.org/W2486541857",
+          "https://openalex.org/W2108840191",
+          "https://openalex.org/W2759366996",
+          "https://openalex.org/W2110679372",
+          "https://openalex.org/W2354081742"
+        ],
+        "abstract_inverted_index": {
+          "Collaborative": [
+            0
+          ],
+          "text": [
+            1,
+            11,
+            63
+          ],
+          "editing": [
+            2
+          ],
+          "algorithms": [
+            3,
+            23,
+            31
+          ],
+          "allow": [
+            4
+          ],
+          "several": [
+            5
+          ],
+          "users": [
+            6
+          ],
+          "to": [
+            7,
+            34,
+            42,
+            48,
+            69,
+            96
+          ],
+          "concurrently": [
+            8
+          ],
+          "modify": [
+            9
+          ],
+          "a": [
+            10,
+            19,
+            52,
+            59,
+            86,
+            133
+          ],
+          "file,": [
+            12
+          ],
+          "and": [
+            13,
+            50,
+            84
+          ],
+          "automatically": [
+            14
+          ],
+          "merge": [
+            15,
+            35
+          ],
+          "concurrent": [
+            16
+          ],
+          "edits": [
+            17
+          ],
+          "into": [
+            18
+          ],
+          "consistent": [
+            20
+          ],
+          "state.": [
+            21
+          ],
+          "Existing": [
+            22
+          ],
+          "fall": [
+            24
+          ],
+          "in": [
+            25,
+            80
+          ],
+          "two": [
+            26
+          ],
+          "categories:": [
+            27
+          ],
+          "Operational": [
+            28
+          ],
+          "Transformation": [
+            29
+          ],
+          "(OT)": [
+            30
+          ],
+          "are": [
+            32,
+            46,
+            127
+          ],
+          "slow": [
+            33,
+            47
+          ],
+          "files": [
+            36
+          ],
+          "that": [
+            37,
+            64,
+            139
+          ],
+          "have": [
+            38
+          ],
+          "diverged": [
+            39
+          ],
+          "substantially": [
+            40
+          ],
+          "due": [
+            41
+          ],
+          "offline": [
+            43
+          ],
+          "editing;": [
+            44
+          ],
+          "CRDTs": [
+            45,
+            126
+          ],
+          "load": [
+            49
+          ],
+          "consume": [
+            51
+          ],
+          "lot": [
+            53
+          ],
+          "of": [
+            54,
+            76,
+            92,
+            103,
+            113,
+            154
+          ],
+          "memory.": [
+            55
+          ],
+          "We": [
+            56
+          ],
+          "introduce": [
+            57
+          ],
+          "Eg-walker,": [
+            58
+          ],
+          "collaboration": [
+            60,
+            156
+          ],
+          "algorithm": [
+            61
+          ],
+          "for": [
+            62
+          ],
+          "avoids": [
+            65
+          ],
+          "these": [
+            66
+          ],
+          "weaknesses.": [
+            67
+          ],
+          "Compared": [
+            68,
+            95
+          ],
+          "existing": [
+            70,
+            118
+          ],
+          "CRDTs,": [
+            71
+          ],
+          "it": [
+            72
+          ],
+          "consumes": [
+            73
+          ],
+          "an": [
+            74
+          ],
+          "order": [
+            75
+          ],
+          "magnitude": [
+            77,
+            93,
+            104
+          ],
+          "less": [
+            78
+          ],
+          "memory": [
+            79
+          ],
+          "the": [
+            81,
+            107,
+            110,
+            148,
+            151
+          ],
+          "steady": [
+            82
+          ],
+          "state,": [
+            83
+          ],
+          "loading": [
+            85
+          ],
+          "document": [
+            87
+          ],
+          "from": [
+            88
+          ],
+          "disk": [
+            89
+          ],
+          "is": [
+            90,
+            101,
+            115,
+            140
+          ],
+          "orders": [
+            91,
+            102
+          ],
+          "faster.": [
+            94,
+            105
+          ],
+          "OT,": [
+            97
+          ],
+          "merging": [
+            98,
+            111
+          ],
+          "long-running": [
+            99
+          ],
+          "branches": [
+            100
+          ],
+          "In": [
+            106
+          ],
+          "worst": [
+            108
+          ],
+          "case,": [
+            109
+          ],
+          "performance": [
+            112,
+            138
+          ],
+          "Eg-walker": [
+            114,
+            121
+          ],
+          "comparable": [
+            116
+          ],
+          "with": [
+            117,
+            142
+          ],
+          "CRDT": [
+            119
+          ],
+          "algorithms.": [
+            120
+          ],
+          "can": [
+            122
+          ],
+          "be": [
+            123
+          ],
+          "used": [
+            124
+          ],
+          "everywhere": [
+            125
+          ],
+          "used,": [
+            128
+          ],
+          "including": [
+            129
+          ],
+          "peer-to-peer": [
+            130,
+            155
+          ],
+          "systems": [
+            131
+          ],
+          "without": [
+            132
+          ],
+          "central": [
+            134
+          ],
+          "server.": [
+            135
+          ],
+          "By": [
+            136
+          ],
+          "offering": [
+            137
+          ],
+          "competitive": [
+            141
+          ],
+          "centralised": [
+            143
+          ],
+          "algorithms,": [
+            144
+          ],
+          "our": [
+            145
+          ],
+          "result": [
+            146
+          ],
+          "paves": [
+            147
+          ],
+          "way": [
+            149
+          ],
+          "towards": [
+            150
+          ],
+          "widespread": [
+            152
+          ],
+          "adoption": [
+            153
+          ],
+          "software.": [
+            157
+          ]
+        },
+        "counts_by_year": [
+          {
+            "year": 2026,
+            "cited_by_count": 3
+          }
+        ],
+        "updated_date": "2026-09-29T14:09:16.559479",
+        "created_date": "2025-10-10T00:00:00"
+      },
+      {
+        "id": "https://openalex.org/W7125579090",
+        "doi": "https://doi.org/10.1109/iccect64621.2025.11339768",
+        "title": "Eg-walker: A Fast, Memory-Efficient Collaborative Editing Algorithm for Distributed Systems",
+        "display_name": "Eg-walker: A Fast, Memory-Efficient Collaborative Editing Algorithm for Distributed Systems",
+        "relevance_score": 116.159386,
+        "publication_year": 2025,
+        "publication_date": "2025-04-25",
+        "ids": {
+          "openalex": "https://openalex.org/W7125579090",
+          "doi": "https://doi.org/10.1109/iccect64621.2025.11339768"
+        },
+        "language": null,
+        "primary_location": {
+          "id": "doi:10.1109/iccect64621.2025.11339768",
+          "is_oa": false,
+          "landing_page_url": "https://doi.org/10.1109/iccect64621.2025.11339768",
+          "pdf_url": null,
+          "source": {
+            "id": "https://openalex.org/S7407088498",
+            "display_name": "IEEE International Conference on Control, Electronics and Computer Technology (ICCECT)",
+            "issn_l": null,
+            "issn": null,
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": false,
+            "listed_in": [],
+            "host_organization": null,
+            "host_organization_name": null,
+            "host_organization_lineage": [],
+            "host_organization_lineage_names": [],
+            "type": "conference"
+          },
+          "license": null,
+          "license_id": null,
+          "version": "publishedVersion",
+          "is_accepted": true,
+          "is_published": true,
+          "raw_source_name": "2025 IEEE 3rd International Conference on Control, Electronics and Computer Technology (ICCECT)",
+          "raw_type": "proceedings-article"
+        },
+        "type": "conference-paper",
+        "indexed_in": [
+          "crossref"
+        ],
+        "open_access": {
+          "is_oa": false,
+          "oa_status": "closed",
+          "oa_url": null,
+          "any_repository_has_fulltext": false
+        },
+        "authorships": [
+          {
+            "author_position": "first",
+            "author": {
+              "id": "https://openalex.org/A5118270692",
+              "display_name": "Praval Panwar",
+              "orcid": null,
+              "observed_orcids": []
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I1290206253",
+                "display_name": "Microsoft (United States)",
+                "ror": "https://ror.org/00d0nc645",
+                "country_code": "US",
+                "type": "company",
+                "lineage": [
+                  "https://openalex.org/I1290206253"
+                ]
+              }
+            ],
+            "countries": [
+              "US"
+            ],
+            "is_corresponding": true,
+            "raw_author_name": "Praval Panwar",
+            "raw_affiliation_strings": [
+              "Working at Microsoft Crop.,Redmond,Washington,98052"
+            ],
+            "raw_orcid": null,
+            "affiliations": [
+              {
+                "raw_affiliation_string": "Working at Microsoft Crop.,Redmond,Washington,98052",
+                "institution_ids": [
+                  "https://openalex.org/I1290206253"
+                ]
+              }
+            ]
+          }
+        ],
+        "institutions": [],
+        "countries_distinct_count": 1,
+        "institutions_distinct_count": 1,
+        "corresponding_author_ids": [
+          "https://openalex.org/A5118270692"
+        ],
+        "corresponding_institution_ids": [
+          "https://openalex.org/I1290206253"
+        ],
+        "apc_list": null,
+        "apc_paid": null,
+        "fwci": 0.0,
+        "has_fulltext": false,
+        "cited_by_count": 0,
+        "citation_normalized_percentile": {
+          "value": 0.53413294,
+          "is_in_top_1_percent": false,
+          "is_in_top_10_percent": false
+        },
+        "cited_by_percentile_year": null,
+        "biblio": {
+          "volume": null,
+          "issue": null,
+          "first_page": "316",
+          "last_page": "324"
+        },
+        "is_retracted": false,
+        "is_paratext": false,
+        "is_xpac": false,
+        "primary_topic": {
+          "id": "https://openalex.org/T10772",
+          "display_name": "Distributed systems and fault tolerance",
+          "score": 0.9897000193595886,
+          "subfield": {
+            "id": "https://openalex.org/subfields/1705",
+            "display_name": "Computer Networks and Communications"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/17",
+            "display_name": "Computer Science"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/3",
+            "display_name": "Physical Sciences"
+          }
+        },
+        "topics": [
+          {
+            "id": "https://openalex.org/T10772",
+            "display_name": "Distributed systems and fault tolerance",
+            "score": 0.9897000193595886,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10317",
+            "display_name": "Advanced Database Systems and Queries",
+            "score": 0.006800000090152025,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10742",
+            "display_name": "Peer-to-Peer Network Technologies",
+            "score": 0.0006000000284984708,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1705",
+              "display_name": "Computer Networks and Communications"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          }
+        ],
+        "keywords": [
+          {
+            "id": "https://openalex.org/keywords/collaborative-editing",
+            "display_name": "collaborative editing",
+            "score": 0.8050000071525574
+          },
+          {
+            "id": "https://openalex.org/keywords/real-time-collaboration",
+            "display_name": "real-time collaboration",
+            "score": 0.6639999747276306
+          },
+          {
+            "id": "https://openalex.org/keywords/conflict-free-replicated-data-types",
+            "display_name": "conflict-free replicated data types",
+            "score": 0.7020000219345093
+          },
+          {
+            "id": "https://openalex.org/keywords/operational-transformation",
+            "display_name": "operational transformation",
+            "score": 0.9810000061988831
+          },
+          {
+            "id": "https://openalex.org/keywords/memory-efficiency",
+            "display_name": "memory efficiency",
+            "score": 0.75
+          },
+          {
+            "id": "https://openalex.org/keywords/document-merging",
+            "display_name": "document merging",
+            "score": 0.6150000095367432
+          },
+          {
+            "id": "https://openalex.org/keywords/peer-to-peer-networks",
+            "display_name": "peer-to-peer networks",
+            "score": 0.8849999904632568
+          },
+          {
+            "id": "https://openalex.org/keywords/distributed-systems",
+            "display_name": "distributed systems",
+            "score": 0.7089999914169312
+          },
+          {
+            "id": "https://openalex.org/keywords/concurrent-editing",
+            "display_name": "concurrent editing",
+            "score": 0.4390000104904175
+          }
+        ],
+        "concepts": [
+          {
+            "id": "https://openalex.org/C41008148",
+            "wikidata": "https://www.wikidata.org/wiki/Q21198",
+            "display_name": "Computer science",
+            "level": 0,
+            "score": 0.8726999759674072
+          },
+          {
+            "id": "https://openalex.org/C197129107",
+            "wikidata": "https://www.wikidata.org/wiki/Q1921621",
+            "display_name": "Merge (version control)",
+            "level": 2,
+            "score": 0.7573999762535095
+          },
+          {
+            "id": "https://openalex.org/C120314980",
+            "wikidata": "https://www.wikidata.org/wiki/Q180634",
+            "display_name": "Distributed computing",
+            "level": 1,
+            "score": 0.5587999820709229
+          },
+          {
+            "id": "https://openalex.org/C2780967703",
+            "wikidata": "https://www.wikidata.org/wiki/Q2571389",
+            "display_name": "Collaborative editing",
+            "level": 2,
+            "score": 0.47690001130104065
+          },
+          {
+            "id": "https://openalex.org/C140086265",
+            "wikidata": "https://www.wikidata.org/wiki/Q11341754",
+            "display_name": "Merge algorithm",
+            "level": 4,
+            "score": 0.41269999742507935
+          },
+          {
+            "id": "https://openalex.org/C84511453",
+            "wikidata": "https://www.wikidata.org/wiki/Q2914952",
+            "display_name": "Concurrency control",
+            "level": 3,
+            "score": 0.4027000069618225
+          },
+          {
+            "id": "https://openalex.org/C91481028",
+            "wikidata": "https://www.wikidata.org/wiki/Q1054686",
+            "display_name": "Distributed memory",
+            "level": 3,
+            "score": 0.3659999966621399
+          },
+          {
+            "id": "https://openalex.org/C70061542",
+            "wikidata": "https://www.wikidata.org/wiki/Q989016",
+            "display_name": "Distributed database",
+            "level": 2,
+            "score": 0.3587000072002411
+          },
+          {
+            "id": "https://openalex.org/C130120984",
+            "wikidata": "https://www.wikidata.org/wiki/Q2835898",
+            "display_name": "Distributed algorithm",
+            "level": 2,
+            "score": 0.3463999927043915
+          },
+          {
+            "id": "https://openalex.org/C204241405",
+            "wikidata": "https://www.wikidata.org/wiki/Q461499",
+            "display_name": "Transformation (genetics)",
+            "level": 3,
+            "score": 0.3456999957561493
+          },
+          {
+            "id": "https://openalex.org/C162319229",
+            "wikidata": "https://www.wikidata.org/wiki/Q175263",
+            "display_name": "Data structure",
+            "level": 2,
+            "score": 0.3278000056743622
+          },
+          {
+            "id": "https://openalex.org/C199360897",
+            "wikidata": "https://www.wikidata.org/wiki/Q9143",
+            "display_name": "Programming language",
+            "level": 1,
+            "score": 0.3158000111579895
+          },
+          {
+            "id": "https://openalex.org/C11413529",
+            "wikidata": "https://www.wikidata.org/wiki/Q8366",
+            "display_name": "Algorithm",
+            "level": 1,
+            "score": 0.31310001015663147
+          },
+          {
+            "id": "https://openalex.org/C3018263672",
+            "wikidata": "https://www.wikidata.org/wiki/Q1296251",
+            "display_name": "Efficient algorithm",
+            "level": 2,
+            "score": 0.29760000109672546
+          },
+          {
+            "id": "https://openalex.org/C80444323",
+            "wikidata": "https://www.wikidata.org/wiki/Q2878974",
+            "display_name": "Theoretical computer science",
+            "level": 1,
+            "score": 0.29089999198913574
+          },
+          {
+            "id": "https://openalex.org/C193702766",
+            "wikidata": "https://www.wikidata.org/wiki/Q1414548",
+            "display_name": "Concurrency",
+            "level": 2,
+            "score": 0.28119999170303345
+          },
+          {
+            "id": "https://openalex.org/C47487241",
+            "wikidata": "https://www.wikidata.org/wiki/Q5227230",
+            "display_name": "Data access",
+            "level": 2,
+            "score": 0.2791999876499176
+          },
+          {
+            "id": "https://openalex.org/C173608175",
+            "wikidata": "https://www.wikidata.org/wiki/Q232661",
+            "display_name": "Parallel computing",
+            "level": 1,
+            "score": 0.27469998598098755
+          },
+          {
+            "id": "https://openalex.org/C24885549",
+            "wikidata": "https://www.wikidata.org/wiki/Q339678",
+            "display_name": "Distributed data store",
+            "level": 2,
+            "score": 0.2734000086784363
+          },
+          {
+            "id": "https://openalex.org/C33762810",
+            "wikidata": "https://www.wikidata.org/wiki/Q461671",
+            "display_name": "Data integrity",
+            "level": 2,
+            "score": 0.2628999948501587
+          },
+          {
+            "id": "https://openalex.org/C77088390",
+            "wikidata": "https://www.wikidata.org/wiki/Q8513",
+            "display_name": "Database",
+            "level": 1,
+            "score": 0.2621999979019165
+          },
+          {
+            "id": "https://openalex.org/C3739613",
+            "wikidata": "https://www.wikidata.org/wiki/Q679003",
+            "display_name": "Distributed Computing Environment",
+            "level": 2,
+            "score": 0.25450000166893005
+          },
+          {
+            "id": "https://openalex.org/C133875982",
+            "wikidata": "https://www.wikidata.org/wiki/Q764810",
+            "display_name": "Shared memory",
+            "level": 2,
+            "score": 0.250900000333786
+          }
+        ],
+        "mesh": [],
+        "locations_count": 1,
+        "locations": [
+          {
+            "id": "doi:10.1109/iccect64621.2025.11339768",
+            "is_oa": false,
+            "landing_page_url": "https://doi.org/10.1109/iccect64621.2025.11339768",
+            "pdf_url": null,
+            "source": {
+              "id": "https://openalex.org/S7407088498",
+              "display_name": "IEEE International Conference on Control, Electronics and Computer Technology (ICCECT)",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": null,
+              "host_organization_name": null,
+              "host_organization_lineage": [],
+              "host_organization_lineage_names": [],
+              "type": "conference"
+            },
+            "license": null,
+            "license_id": null,
+            "version": "publishedVersion",
+            "is_accepted": true,
+            "is_published": true,
+            "raw_source_name": "2025 IEEE 3rd International Conference on Control, Electronics and Computer Technology (ICCECT)",
+            "raw_type": "proceedings-article"
+          }
+        ],
+        "best_oa_location": null,
+        "sustainable_development_goals": [],
+        "sustainable_development_goals_aurora": [
+          {
+            "display_name": "Partnerships for the goals",
+            "id": "https://metadata.un.org/sdg/17",
+            "score": 0.41270098090171814
+          }
+        ],
+        "study_designs": [],
+        "awards": [],
+        "funders": [],
+        "has_content": {
+          "pdf": false,
+          "grobid_xml": false
+        },
+        "content_urls": null,
+        "referenced_works_count": 21,
+        "referenced_works": [
+          "https://openalex.org/W98718822",
+          "https://openalex.org/W1516319412",
+          "https://openalex.org/W1794148987",
+          "https://openalex.org/W1971443766",
+          "https://openalex.org/W1985349143",
+          "https://openalex.org/W1989814541",
+          "https://openalex.org/W2071442639",
+          "https://openalex.org/W2098522119",
+          "https://openalex.org/W2106355650",
+          "https://openalex.org/W2118242633",
+          "https://openalex.org/W2129388329",
+          "https://openalex.org/W2134308710",
+          "https://openalex.org/W2143068513",
+          "https://openalex.org/W2151541805",
+          "https://openalex.org/W2506181100",
+          "https://openalex.org/W2510332240",
+          "https://openalex.org/W2548120315",
+          "https://openalex.org/W2979846168",
+          "https://openalex.org/W3137220996",
+          "https://openalex.org/W4236824789",
+          "https://openalex.org/W4281971122"
+        ],
+        "related_works": [],
+        "abstract_inverted_index": {
+          "Real-time": [
+            0
+          ],
+          "collaboration": [
+            1,
+            97
+          ],
+          "features": [
+            2
+          ],
+          "are": [
+            3
+          ],
+          "vital": [
+            4
+          ],
+          "in": [
+            5,
+            36,
+            74,
+            86
+          ],
+          "modern": [
+            6
+          ],
+          "software,": [
+            7
+          ],
+          "allowing": [
+            8
+          ],
+          "multiple": [
+            9
+          ],
+          "users": [
+            10
+          ],
+          "to": [
+            11
+          ],
+          "edit": [
+            12
+          ],
+          "documents": [
+            13,
+            73
+          ],
+          "simultaneously": [
+            14
+          ],
+          "while": [
+            15
+          ],
+          "maintaining": [
+            16
+          ],
+          "data": [
+            17
+          ],
+          "integrity": [
+            18
+          ],
+          "across": [
+            19
+          ],
+          "devices.": [
+            20
+          ],
+          "Traditional": [
+            21
+          ],
+          "approaches": [
+            22
+          ],
+          "like": [
+            23
+          ],
+          "Operational": [
+            24
+          ],
+          "Transformation": [
+            25
+          ],
+          "(OT)": [
+            26
+          ],
+          "and": [
+            27,
+            41,
+            62,
+            83
+          ],
+          "Conflict-free": [
+            28
+          ],
+          "Replicated": [
+            29
+          ],
+          "Data": [
+            30
+          ],
+          "Types": [
+            31
+          ],
+          "(CRDTs)": [
+            32
+          ],
+          "each": [
+            33
+          ],
+          "have": [
+            34
+          ],
+          "limitations": [
+            35
+          ],
+          "handling": [
+            37
+          ],
+          "large-scale": [
+            38
+          ],
+          "concurrent": [
+            39,
+            57
+          ],
+          "editing": [
+            40
+          ],
+          "ensuring": [
+            42
+          ],
+          "memory": [
+            43,
+            64,
+            79
+          ],
+          "efficiency.": [
+            44
+          ],
+          "In": [
+            45
+          ],
+          "this": [
+            46
+          ],
+          "paper,": [
+            47
+          ],
+          "we": [
+            48
+          ],
+          "introduce": [
+            49
+          ],
+          "Eg-walker,": [
+            50
+          ],
+          "a": [
+            51,
+            101
+          ],
+          "hybrid": [
+            52
+          ],
+          "CRDT/OT": [
+            53
+          ],
+          "algorithm": [
+            54
+          ],
+          "that": [
+            55,
+            69
+          ],
+          "merges": [
+            56
+          ],
+          "edits": [
+            58
+          ],
+          "with": [
+            59
+          ],
+          "optimal": [
+            60
+          ],
+          "efficiency": [
+            61
+          ],
+          "reduced": [
+            63
+          ],
+          "usage.": [
+            65
+          ],
+          "Our": [
+            66
+          ],
+          "evaluations": [
+            67
+          ],
+          "show": [
+            68
+          ],
+          "Eg-walker": [
+            70,
+            91
+          ],
+          "can": [
+            71
+          ],
+          "merge": [
+            72
+          ],
+          "milliseconds,": [
+            75
+          ],
+          "requires": [
+            76
+          ],
+          "significantly": [
+            77
+          ],
+          "less": [
+            78
+          ],
+          "than": [
+            80
+          ],
+          "standard": [
+            81
+          ],
+          "CRDTs,": [
+            82
+          ],
+          "operates": [
+            84
+          ],
+          "effectively": [
+            85
+          ],
+          "peer-to-peer": [
+            87
+          ],
+          "environments.": [
+            88
+          ],
+          "This": [
+            89
+          ],
+          "makes": [
+            90
+          ],
+          "an": [
+            92
+          ],
+          "efficient": [
+            93
+          ],
+          "solution": [
+            94
+          ],
+          "for": [
+            95
+          ],
+          "distributed": [
+            96
+          ],
+          "without": [
+            98
+          ],
+          "reliance": [
+            99
+          ],
+          "on": [
+            100
+          ],
+          "central": [
+            102
+          ],
+          "server.": [
+            103
+          ]
+        },
+        "counts_by_year": [],
+        "updated_date": "2026-10-05T09:50:58.205359",
+        "created_date": "2026-01-25T00:00:00"
+      },
+      {
+        "id": "https://openalex.org/W2088552917",
+        "doi": "https://doi.org/10.1111/j.1835-2561.2000.tb00064.x",
+        "title": "Measurement Challenges and Consequences in the Australian Public Sector",
+        "display_name": "Measurement Challenges and Consequences in the Australian Public Sector",
+        "relevance_score": 19.369007,
+        "publication_year": 2000,
+        "publication_date": "2000-07-01",
+        "ids": {
+          "openalex": "https://openalex.org/W2088552917",
+          "doi": "https://doi.org/10.1111/j.1835-2561.2000.tb00064.x",
+          "mag": "2088552917"
+        },
+        "language": "en",
+        "primary_location": {
+          "id": "doi:10.1111/j.1835-2561.2000.tb00064.x",
+          "is_oa": false,
+          "landing_page_url": "https://doi.org/10.1111/j.1835-2561.2000.tb00064.x",
+          "pdf_url": null,
+          "source": {
+            "id": "https://openalex.org/S144747835",
+            "display_name": "Australian Accounting Review",
+            "issn_l": "1035-6908",
+            "issn": [
+              "1035-6908",
+              "1835-2561"
+            ],
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": true,
+            "listed_in": [
+              "abdc-b",
+              "cwts-core",
+              "jufo-1",
+              "norway-1"
+            ],
+            "host_organization": "https://openalex.org/P4310320595",
+            "host_organization_name": "Wiley",
+            "host_organization_lineage": [
+              "https://openalex.org/P4310320595"
+            ],
+            "host_organization_lineage_names": [
+              "Wiley"
+            ],
+            "type": "journal"
+          },
+          "license": null,
+          "license_id": null,
+          "version": "publishedVersion",
+          "is_accepted": true,
+          "is_published": true,
+          "raw_source_name": "Australian Accounting Review",
+          "raw_type": "journal-article"
+        },
+        "type": "article",
+        "indexed_in": [
+          "crossref"
+        ],
+        "open_access": {
+          "is_oa": false,
+          "oa_status": "closed",
+          "oa_url": null,
+          "any_repository_has_fulltext": false
+        },
+        "authorships": [
+          {
+            "author_position": "first",
+            "author": {
+              "id": "https://openalex.org/A5058904110",
+              "display_name": "Tyrone M. Carlin",
+              "orcid": "https://orcid.org/0000-0002-4912-6347",
+              "observed_orcids": [
+                "https://orcid.org/0000-0002-4912-6347"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I99043593",
+                "display_name": "Macquarie University",
+                "ror": "https://ror.org/01sf06y89",
+                "country_code": "AU",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I99043593"
+                ]
+              }
+            ],
+            "countries": [
+              "AU"
+            ],
+            "is_corresponding": true,
+            "raw_author_name": "TYRONE M. CARLIN",
+            "raw_affiliation_strings": [
+              "Lecturer in Management at Macquarie Graduate School of Management, Sydney"
+            ],
+            "raw_orcid": null,
+            "affiliations": [
+              {
+                "raw_affiliation_string": "Lecturer in Management at Macquarie Graduate School of Management, Sydney",
+                "institution_ids": [
+                  "https://openalex.org/I99043593"
+                ]
+              }
+            ]
+          }
+        ],
+        "institutions": [],
+        "countries_distinct_count": 1,
+        "institutions_distinct_count": 1,
+        "corresponding_author_ids": [
+          "https://openalex.org/A5058904110"
+        ],
+        "corresponding_institution_ids": [
+          "https://openalex.org/I99043593"
+        ],
+        "apc_list": {
+          "value": 2920,
+          "currency": "USD",
+          "value_usd": 2920
+        },
+        "apc_paid": null,
+        "fwci": 3.3416,
+        "has_fulltext": false,
+        "cited_by_count": 26,
+        "citation_normalized_percentile": {
+          "value": 0.92228057,
+          "is_in_top_1_percent": false,
+          "is_in_top_10_percent": true
+        },
+        "cited_by_percentile_year": {
+          "min": 89,
+          "max": 97
+        },
+        "biblio": {
+          "volume": "10",
+          "issue": "21",
+          "first_page": "63",
+          "last_page": "72"
+        },
+        "is_retracted": false,
+        "is_paratext": false,
+        "is_xpac": false,
+        "primary_topic": {
+          "id": "https://openalex.org/T10797",
+          "display_name": "Accounting and Organizational Management",
+          "score": 0.9965999722480774,
+          "subfield": {
+            "id": "https://openalex.org/subfields/1404",
+            "display_name": "Management Information Systems"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/14",
+            "display_name": "Business, Management and Accounting"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/2",
+            "display_name": "Social Sciences"
+          }
+        },
+        "topics": [
+          {
+            "id": "https://openalex.org/T10797",
+            "display_name": "Accounting and Organizational Management",
+            "score": 0.9965999722480774,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1404",
+              "display_name": "Management Information Systems"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/14",
+              "display_name": "Business, Management and Accounting"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/2",
+              "display_name": "Social Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10213",
+            "display_name": "Public Policy and Administration Research",
+            "score": 0.9643999934196472,
+            "subfield": {
+              "id": "https://openalex.org/subfields/3321",
+              "display_name": "Public Administration"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/33",
+              "display_name": "Social Sciences"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/2",
+              "display_name": "Social Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10081",
+            "display_name": "Auditing, Earnings Management, Governance",
+            "score": 0.9340000152587891,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1402",
+              "display_name": "Accounting"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/14",
+              "display_name": "Business, Management and Accounting"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/2",
+              "display_name": "Social Sciences"
+            }
+          }
+        ],
+        "keywords": [
+          {
+            "id": "https://openalex.org/keywords/public-sector-accounting",
+            "display_name": "public sector accounting",
+            "score": 0.7789999842643738
+          },
+          {
+            "id": "https://openalex.org/keywords/current-cost-accounting",
+            "display_name": "current cost accounting",
+            "score": 0.7260000109672546
+          },
+          {
+            "id": "https://openalex.org/keywords/replacement-cost-accounting",
+            "display_name": "replacement cost accounting",
+            "score": 0.9570000171661377
+          },
+          {
+            "id": "https://openalex.org/keywords/historical-cost-accounting",
+            "display_name": "historical cost accounting",
+            "score": 0.718999981880188
+          },
+          {
+            "id": "https://openalex.org/keywords/measurement-choice",
+            "display_name": "measurement choice",
+            "score": 0.6850000023841858
+          },
+          {
+            "id": "https://openalex.org/keywords/public-sector-financial-statements",
+            "display_name": "public sector accounts",
+            "score": 0.7099999785423279
+          },
+          {
+            "id": "https://openalex.org/keywords/contracting",
+            "display_name": "contracting",
+            "score": 0.4180000126361847
+          },
+          {
+            "id": "https://openalex.org/keywords/outsourcing",
+            "display_name": "outsourcing",
+            "score": 0.8709999918937683
+          },
+          {
+            "id": "https://openalex.org/keywords/australian-public-sector",
+            "display_name": "Australian public sector",
+            "score": 0.796999990940094
+          }
+        ],
+        "concepts": [
+          {
+            "id": "https://openalex.org/C147859227",
+            "wikidata": "https://www.wikidata.org/wiki/Q294217",
+            "display_name": "Public sector",
+            "level": 2,
+            "score": 0.840300440788269
+          },
+          {
+            "id": "https://openalex.org/C121955636",
+            "wikidata": "https://www.wikidata.org/wiki/Q4116214",
+            "display_name": "Accounting",
+            "level": 1,
+            "score": 0.7719229459762573
+          },
+          {
+            "id": "https://openalex.org/C46934059",
+            "wikidata": "https://www.wikidata.org/wiki/Q61515",
+            "display_name": "Outsourcing",
+            "level": 2,
+            "score": 0.7706212401390076
+          },
+          {
+            "id": "https://openalex.org/C121426985",
+            "wikidata": "https://www.wikidata.org/wiki/Q591763",
+            "display_name": "Private sector",
+            "level": 2,
+            "score": 0.5668553709983826
+          },
+          {
+            "id": "https://openalex.org/C144133560",
+            "wikidata": "https://www.wikidata.org/wiki/Q4830453",
+            "display_name": "Business",
+            "level": 0,
+            "score": 0.4890826344490051
+          },
+          {
+            "id": "https://openalex.org/C162324750",
+            "wikidata": "https://www.wikidata.org/wiki/Q8134",
+            "display_name": "Economics",
+            "level": 0,
+            "score": 0.47871947288513184
+          },
+          {
+            "id": "https://openalex.org/C26517878",
+            "wikidata": "https://www.wikidata.org/wiki/Q228039",
+            "display_name": "Key (lock)",
+            "level": 2,
+            "score": 0.4736427366733551
+          },
+          {
+            "id": "https://openalex.org/C2993691991",
+            "wikidata": "https://www.wikidata.org/wiki/Q326653",
+            "display_name": "Public accounting",
+            "level": 3,
+            "score": 0.44416189193725586
+          },
+          {
+            "id": "https://openalex.org/C162853370",
+            "wikidata": "https://www.wikidata.org/wiki/Q39809",
+            "display_name": "Marketing",
+            "level": 1,
+            "score": 0.169662743806839
+          },
+          {
+            "id": "https://openalex.org/C136264566",
+            "wikidata": "https://www.wikidata.org/wiki/Q159810",
+            "display_name": "Economy",
+            "level": 1,
+            "score": 0.1207684576511383
+          },
+          {
+            "id": "https://openalex.org/C50522688",
+            "wikidata": "https://www.wikidata.org/wiki/Q189833",
+            "display_name": "Economic growth",
+            "level": 1,
+            "score": 0.09054258465766907
+          },
+          {
+            "id": "https://openalex.org/C18903297",
+            "wikidata": "https://www.wikidata.org/wiki/Q7150",
+            "display_name": "Ecology",
+            "level": 1,
+            "score": 0.0
+          },
+          {
+            "id": "https://openalex.org/C199521495",
+            "wikidata": "https://www.wikidata.org/wiki/Q181487",
+            "display_name": "Audit",
+            "level": 2,
+            "score": 0.0
+          },
+          {
+            "id": "https://openalex.org/C86803240",
+            "wikidata": "https://www.wikidata.org/wiki/Q420",
+            "display_name": "Biology",
+            "level": 0,
+            "score": 0.0
+          }
+        ],
+        "mesh": [],
+        "locations_count": 2,
+        "locations": [
+          {
+            "id": "doi:10.1111/j.1835-2561.2000.tb00064.x",
+            "is_oa": false,
+            "landing_page_url": "https://doi.org/10.1111/j.1835-2561.2000.tb00064.x",
+            "pdf_url": null,
+            "source": {
+              "id": "https://openalex.org/S144747835",
+              "display_name": "Australian Accounting Review",
+              "issn_l": "1035-6908",
+              "issn": [
+                "1035-6908",
+                "1835-2561"
+              ],
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": true,
+              "listed_in": [
+                "abdc-b",
+                "cwts-core",
+                "jufo-1",
+                "norway-1"
+              ],
+              "host_organization": "https://openalex.org/P4310320595",
+              "host_organization_name": "Wiley",
+              "host_organization_lineage": [
+                "https://openalex.org/P4310320595"
+              ],
+              "host_organization_lineage_names": [
+                "Wiley"
+              ],
+              "type": "journal"
+            },
+            "license": null,
+            "license_id": null,
+            "version": "publishedVersion",
+            "is_accepted": true,
+            "is_published": true,
+            "raw_source_name": "Australian Accounting Review",
+            "raw_type": "journal-article"
+          },
+          {
+            "id": "pmh:oai:RePEc:bla:ausact:v:10:y:2000:i:21:p:63-72",
+            "is_oa": false,
+            "landing_page_url": "http://hdl.handle.net/10.1111/j.1835-2561.2000.tb00064.x",
+            "pdf_url": null,
+            "source": {
+              "id": "https://openalex.org/S4306401271",
+              "display_name": "RePEc: Research Papers in Economics",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": "https://openalex.org/I77793887",
+              "host_organization_name": "Federal Reserve Bank of St. Louis",
+              "host_organization_lineage": [
+                "https://openalex.org/I77793887"
+              ],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": null,
+            "raw_type": "article"
+          }
+        ],
+        "best_oa_location": null,
+        "sustainable_development_goals": [],
+        "sustainable_development_goals_aurora": [
+          {
+            "display_name": "Partnerships for the goals",
+            "id": "https://metadata.un.org/sdg/17",
+            "score": 0.5199999809265137
+          }
+        ],
+        "study_designs": [],
+        "awards": [],
+        "funders": [],
+        "has_content": {
+          "pdf": false,
+          "grobid_xml": false
+        },
+        "content_urls": null,
+        "referenced_works_count": 18,
+        "referenced_works": [
+          "https://openalex.org/W21434973",
+          "https://openalex.org/W838202387",
+          "https://openalex.org/W1608891503",
+          "https://openalex.org/W1964713700",
+          "https://openalex.org/W1975034403",
+          "https://openalex.org/W1981642907",
+          "https://openalex.org/W2000112833",
+          "https://openalex.org/W2003645705",
+          "https://openalex.org/W2004767531",
+          "https://openalex.org/W2015299788",
+          "https://openalex.org/W2015974152",
+          "https://openalex.org/W2029433841",
+          "https://openalex.org/W2029866522",
+          "https://openalex.org/W2065684202",
+          "https://openalex.org/W2076019778",
+          "https://openalex.org/W2322236337",
+          "https://openalex.org/W2487733460",
+          "https://openalex.org/W2771634254"
+        ],
+        "related_works": [
+          "https://openalex.org/W4283314095",
+          "https://openalex.org/W2490307366",
+          "https://openalex.org/W2026194140",
+          "https://openalex.org/W2609483649",
+          "https://openalex.org/W2090914603",
+          "https://openalex.org/W2181372654",
+          "https://openalex.org/W25456754",
+          "https://openalex.org/W2109095530",
+          "https://openalex.org/W3122927789",
+          "https://openalex.org/W1971087041"
+        ],
+        "abstract_inverted_index": {
+          "Among": [
+            0
+          ],
+          "the": [
+            1,
+            12,
+            16,
+            19,
+            64,
+            74,
+            81,
+            87,
+            92
+          ],
+          "transformations": [
+            2
+          ],
+          "in": [
+            3,
+            15,
+            63,
+            73,
+            86
+          ],
+          "accounting": [
+            4,
+            30,
+            58
+          ],
+          "and": [
+            5,
+            94,
+            100,
+            107
+          ],
+          "measurement": [
+            6,
+            60,
+            84
+          ],
+          "practice": [
+            7
+          ],
+          "that": [
+            8,
+            80
+          ],
+          "have": [
+            9,
+            102
+          ],
+          "swept": [
+            10
+          ],
+          "through": [
+            11
+          ],
+          "public": [
+            13,
+            67,
+            88
+          ],
+          "sector": [
+            14,
+            68,
+            89
+          ],
+          "past": [
+            17
+          ],
+          "decade,": [
+            18
+          ],
+          "widespread": [
+            20
+          ],
+          "adoption": [
+            21
+          ],
+          "of": [
+            22,
+            25,
+            83,
+            96
+          ],
+          "some": [
+            23
+          ],
+          "variant": [
+            24
+          ],
+          "cuwent": [
+            26,
+            56
+          ],
+          "or": [
+            27
+          ],
+          "replacement": [
+            28
+          ],
+          "cost": [
+            29,
+            57
+          ],
+          "for": [
+            31,
+            105
+          ],
+          "non\u2010cuwent": [
+            32
+          ],
+          "assets": [
+            33
+          ],
+          "has": [
+            34,
+            61
+          ],
+          "attracted": [
+            35
+          ],
+          "keen": [
+            36
+          ],
+          "research": [
+            37
+          ],
+          "attention": [
+            38
+          ],
+          "(eg,": [
+            39
+          ],
+          "Walker": [
+            40,
+            42
+          ],
+          "1993,": [
+            41
+          ],
+          "et": [
+            43
+          ],
+          "a1": [
+            44
+          ],
+          "1997).": [
+            45
+          ],
+          "This": [
+            46
+          ],
+          "paper": [
+            47
+          ],
+          "addresses": [
+            48
+          ],
+          "two": [
+            49
+          ],
+          "key": [
+            50
+          ],
+          "issues.": [
+            51
+          ],
+          "First,": [
+            52
+          ],
+          "it": [
+            53,
+            78
+          ],
+          "explains": [
+            54
+          ],
+          "why": [
+            55
+          ],
+          "style": [
+            59
+          ],
+          "proliferated": [
+            62
+          ],
+          "budget\u2010": [
+            65
+          ],
+          "funded": [
+            66
+          ],
+          "while": [
+            69
+          ],
+          "becoming": [
+            70
+          ],
+          "largely1": [
+            71
+          ],
+          "extinct": [
+            72
+          ],
+          "private": [
+            75
+          ],
+          "sector.": [
+            76
+          ],
+          "Second,": [
+            77
+          ],
+          "argues": [
+            79
+          ],
+          "significance": [
+            82
+          ],
+          "choices": [
+            85
+          ],
+          "extends": [
+            90
+          ],
+          "beyond": [
+            91
+          ],
+          "appearance": [
+            93
+          ],
+          "composition": [
+            95
+          ],
+          "public\u2010sector": [
+            97
+          ],
+          "financial": [
+            98
+          ],
+          "statements,": [
+            99
+          ],
+          "may": [
+            101
+          ],
+          "significant": [
+            103
+          ],
+          "implications": [
+            104
+          ],
+          "contracting": [
+            106
+          ],
+          "outsourcing": [
+            108
+          ],
+          "choices.": [
+            109
+          ]
+        },
+        "counts_by_year": [
+          {
+            "year": 2022,
+            "cited_by_count": 1
+          },
+          {
+            "year": 2018,
+            "cited_by_count": 3
+          },
+          {
+            "year": 2015,
+            "cited_by_count": 2
+          },
+          {
+            "year": 2013,
+            "cited_by_count": 1
+          },
+          {
+            "year": 2012,
+            "cited_by_count": 1
+          }
+        ],
+        "updated_date": "2026-08-21T09:56:20.448147",
+        "created_date": "2025-10-10T00:00:00"
+      },
+      {
+        "id": "https://openalex.org/W1977032923",
+        "doi": "https://doi.org/10.1001/archpedi.1985.02140030013011",
+        "title": "Infant Walkers and Cerebral Palsy-Reply",
+        "display_name": "Infant Walkers and Cerebral Palsy-Reply",
+        "relevance_score": 16.858553,
+        "publication_year": 1985,
+        "publication_date": "1985-01-01",
+        "ids": {
+          "openalex": "https://openalex.org/W1977032923",
+          "doi": "https://doi.org/10.1001/archpedi.1985.02140030013011",
+          "mag": "1977032923"
+        },
+        "language": "en",
+        "primary_location": {
+          "id": "doi:10.1001/archpedi.1985.02140030013011",
+          "is_oa": false,
+          "landing_page_url": "https://doi.org/10.1001/archpedi.1985.02140030013011",
+          "pdf_url": null,
+          "source": {
+            "id": "https://openalex.org/S4210192535",
+            "display_name": "Archives of Pediatrics and Adolescent Medicine",
+            "issn_l": "1072-4710",
+            "issn": [
+              "1072-4710",
+              "1538-3628",
+              "2168-6203",
+              "2168-6211"
+            ],
+            "is_oa": false,
+            "is_in_doaj": false,
+            "is_core": true,
+            "listed_in": [
+              "cwts-core",
+              "doyens",
+              "jufo-3",
+              "ki-jl-3",
+              "medline",
+              "norway-2"
+            ],
+            "host_organization": "https://openalex.org/P4310320259",
+            "host_organization_name": "American Medical Association",
+            "host_organization_lineage": [
+              "https://openalex.org/P4310320259"
+            ],
+            "host_organization_lineage_names": [
+              "American Medical Association"
+            ],
+            "type": "journal"
+          },
+          "license": null,
+          "license_id": null,
+          "version": "publishedVersion",
+          "is_accepted": true,
+          "is_published": true,
+          "raw_source_name": "Archives of Pediatrics &amp; Adolescent Medicine",
+          "raw_type": "journal-article"
+        },
+        "type": "article",
+        "indexed_in": [
+          "crossref"
+        ],
+        "open_access": {
+          "is_oa": false,
+          "oa_status": "closed",
+          "oa_url": null,
+          "any_repository_has_fulltext": false
+        },
+        "authorships": [
+          {
+            "author_position": "first",
+            "author": {
+              "id": "https://openalex.org/A5036288299",
+              "display_name": "Vanja A. Holm",
+              "orcid": null,
+              "observed_orcids": []
+            },
+            "institutions": [],
+            "countries": [],
+            "is_corresponding": true,
+            "raw_author_name": "VANJA A. HOLM",
+            "raw_affiliation_strings": [],
+            "raw_orcid": null,
+            "affiliations": []
+          }
+        ],
+        "institutions": [],
+        "countries_distinct_count": 0,
+        "institutions_distinct_count": 0,
+        "corresponding_author_ids": [
+          "https://openalex.org/A5036288299"
+        ],
+        "corresponding_institution_ids": [],
+        "apc_list": null,
+        "apc_paid": null,
+        "fwci": 0.0,
+        "has_fulltext": false,
+        "cited_by_count": 0,
+        "citation_normalized_percentile": {
+          "value": 0.04245181,
+          "is_in_top_1_percent": false,
+          "is_in_top_10_percent": false
+        },
+        "cited_by_percentile_year": null,
+        "biblio": {
+          "volume": "139",
+          "issue": "1",
+          "first_page": "11",
+          "last_page": "11"
+        },
+        "is_retracted": false,
+        "is_paratext": false,
+        "is_xpac": false,
+        "primary_topic": {
+          "id": "https://openalex.org/T11097",
+          "display_name": "Cerebral Palsy and Movement Disorders",
+          "score": 0.9797000288963318,
+          "subfield": {
+            "id": "https://openalex.org/subfields/2738",
+            "display_name": "Psychiatry and Mental health"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/27",
+            "display_name": "Medicine"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/4",
+            "display_name": "Health Sciences"
+          }
+        },
+        "topics": [
+          {
+            "id": "https://openalex.org/T11097",
+            "display_name": "Cerebral Palsy and Movement Disorders",
+            "score": 0.9797000288963318,
+            "subfield": {
+              "id": "https://openalex.org/subfields/2738",
+              "display_name": "Psychiatry and Mental health"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/27",
+              "display_name": "Medicine"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/4",
+              "display_name": "Health Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T11184",
+            "display_name": "Neonatal and fetal brain pathology",
+            "score": 0.9526000022888184,
+            "subfield": {
+              "id": "https://openalex.org/subfields/2735",
+              "display_name": "Pediatrics, Perinatology and Child Health"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/27",
+              "display_name": "Medicine"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/4",
+              "display_name": "Health Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10301",
+            "display_name": "Mitochondrial Function and Pathology",
+            "score": 0.9171000123023987,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1312",
+              "display_name": "Molecular Biology"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/13",
+              "display_name": "Biochemistry, Genetics and Molecular Biology"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/1",
+              "display_name": "Life Sciences"
+            }
+          }
+        ],
+        "keywords": [
+          {
+            "id": "https://openalex.org/keywords/infant-walkers",
+            "display_name": "infant walkers",
+            "score": 0.996999979019165
+          },
+          {
+            "id": "https://openalex.org/keywords/cerebral-palsy",
+            "display_name": "cerebral palsy",
+            "score": 0.996999979019165
+          },
+          {
+            "id": "https://openalex.org/keywords/gait",
+            "display_name": "gait",
+            "score": 0.5879999995231628
+          },
+          {
+            "id": "https://openalex.org/keywords/research-ethics",
+            "display_name": "research ethics",
+            "score": 0.5199999809265137
+          },
+          {
+            "id": "https://openalex.org/keywords/clinical-experience",
+            "display_name": "clinical experience",
+            "score": 0.31200000643730164
+          }
+        ],
+        "concepts": [
+          {
+            "id": "https://openalex.org/C2779421357",
+            "wikidata": "https://www.wikidata.org/wiki/Q210427",
+            "display_name": "Cerebral palsy",
+            "level": 2,
+            "score": 0.8219112157821655
+          },
+          {
+            "id": "https://openalex.org/C99508421",
+            "wikidata": "https://www.wikidata.org/wiki/Q2678675",
+            "display_name": "Physical medicine and rehabilitation",
+            "level": 1,
+            "score": 0.6677972674369812
+          },
+          {
+            "id": "https://openalex.org/C15744967",
+            "wikidata": "https://www.wikidata.org/wiki/Q9418",
+            "display_name": "Psychology",
+            "level": 0,
+            "score": 0.4350012540817261
+          },
+          {
+            "id": "https://openalex.org/C71924100",
+            "wikidata": "https://www.wikidata.org/wiki/Q11190",
+            "display_name": "Medicine",
+            "level": 0,
+            "score": 0.3778253495693207
+          }
+        ],
+        "mesh": [],
+        "locations_count": 1,
+        "locations": [
+          {
+            "id": "doi:10.1001/archpedi.1985.02140030013011",
+            "is_oa": false,
+            "landing_page_url": "https://doi.org/10.1001/archpedi.1985.02140030013011",
+            "pdf_url": null,
+            "source": {
+              "id": "https://openalex.org/S4210192535",
+              "display_name": "Archives of Pediatrics and Adolescent Medicine",
+              "issn_l": "1072-4710",
+              "issn": [
+                "1072-4710",
+                "1538-3628",
+                "2168-6203",
+                "2168-6211"
+              ],
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": true,
+              "listed_in": [
+                "cwts-core",
+                "doyens",
+                "jufo-3",
+                "ki-jl-3",
+                "medline",
+                "norway-2"
+              ],
+              "host_organization": "https://openalex.org/P4310320259",
+              "host_organization_name": "American Medical Association",
+              "host_organization_lineage": [
+                "https://openalex.org/P4310320259"
+              ],
+              "host_organization_lineage_names": [
+                "American Medical Association"
+              ],
+              "type": "journal"
+            },
+            "license": null,
+            "license_id": null,
+            "version": "publishedVersion",
+            "is_accepted": true,
+            "is_published": true,
+            "raw_source_name": "Archives of Pediatrics &amp; Adolescent Medicine",
+            "raw_type": "journal-article"
+          }
+        ],
+        "best_oa_location": null,
+        "sustainable_development_goals": [
+          {
+            "display_name": "Good health and well-being",
+            "id": "https://metadata.un.org/sdg/3",
+            "score": 0.979200005531311
+          }
+        ],
+        "sustainable_development_goals_aurora": [
+          {
+            "display_name": "Quality education",
+            "id": "https://metadata.un.org/sdg/4",
+            "score": 0.5799999833106995
+          }
+        ],
+        "study_designs": [],
+        "awards": [],
+        "funders": [],
+        "has_content": {
+          "pdf": false,
+          "grobid_xml": false
+        },
+        "content_urls": null,
+        "referenced_works_count": 0,
+        "referenced_works": [],
+        "related_works": [
+          "https://openalex.org/W2748952813",
+          "https://openalex.org/W3031052312",
+          "https://openalex.org/W4389568370",
+          "https://openalex.org/W3032375762",
+          "https://openalex.org/W1995515455",
+          "https://openalex.org/W2080531066",
+          "https://openalex.org/W2586801360",
+          "https://openalex.org/W3108674512",
+          "https://openalex.org/W1506200166",
+          "https://openalex.org/W1489783725"
+        ],
+        "abstract_inverted_index": {
+          "In": [
+            0
+          ],
+          "Reply.\u2014We": [
+            1
+          ],
+          "agree": [
+            2
+          ],
+          "with": [
+            3,
+            14,
+            27,
+            119
+          ],
+          "Dr": [
+            4
+          ],
+          "Bachman": [
+            5
+          ],
+          "that": [
+            6,
+            51,
+            69,
+            138,
+            141
+          ],
+          "the": [
+            7,
+            19,
+            92,
+            98,
+            104,
+            108
+          ],
+          "effect": [
+            8
+          ],
+          "of": [
+            9,
+            21,
+            38,
+            94,
+            100
+          ],
+          "infant": [
+            10,
+            95,
+            142
+          ],
+          "walkers": [
+            11,
+            96,
+            143
+          ],
+          "on": [
+            12,
+            97,
+            123
+          ],
+          "children": [
+            13,
+            118
+          ],
+          "cerebral": [
+            15,
+            41,
+            120
+          ],
+          "palsy": [
+            16
+          ],
+          "might": [
+            17,
+            75
+          ],
+          "be": [
+            18,
+            76
+          ],
+          "object": [
+            20
+          ],
+          "a": [
+            22,
+            43,
+            127
+          ],
+          "legitimate": [
+            23
+          ],
+          "study,": [
+            24
+          ],
+          "and": [
+            25,
+            133
+          ],
+          "disagree": [
+            26
+          ],
+          "those": [
+            28
+          ],
+          "who": [
+            29,
+            83
+          ],
+          "say": [
+            30
+          ],
+          "it": [
+            31
+          ],
+          "should": [
+            32
+          ],
+          "not": [
+            33,
+            114
+          ],
+          "be.1However,": [
+            34
+          ],
+          "priority": [
+            35,
+            129
+          ],
+          "for": [
+            36,
+            107,
+            131
+          ],
+          "study": [
+            37
+          ],
+          "outcome": [
+            39
+          ],
+          "in": [
+            40,
+            117,
+            145
+          ],
+          "palsy,": [
+            42
+          ],
+          "deplorably": [
+            44
+          ],
+          "understudied": [
+            45
+          ],
+          "field,": [
+            46
+          ],
+          "is": [
+            47,
+            106
+          ],
+          "given": [
+            48
+          ],
+          "to": [
+            49,
+            79,
+            86,
+            110,
+            147
+          ],
+          "procedures": [
+            50,
+            68
+          ],
+          "clinical": [
+            52,
+            124
+          ],
+          "experience": [
+            53,
+            125
+          ],
+          "has": [
+            54
+          ],
+          "indicated": [
+            55
+          ],
+          "are": [
+            56,
+            84
+          ],
+          "beneficial,": [
+            57
+          ],
+          "eg,": [
+            58
+          ],
+          "inhibitive": [
+            59
+          ],
+          "casting.": [
+            60
+          ],
+          "Ethics": [
+            61
+          ],
+          "prevent": [
+            62
+          ],
+          "most": [
+            63
+          ],
+          "medical": [
+            64
+          ],
+          "professionals": [
+            65
+          ],
+          "from": [
+            66
+          ],
+          "researching": [
+            67
+          ],
+          "they": [
+            70
+          ],
+          "consider": [
+            71
+          ],
+          "potentially": [
+            72
+          ],
+          "harmful.": [
+            73
+          ],
+          "One": [
+            74
+          ],
+          "hard": [
+            77
+          ],
+          "pressed": [
+            78
+          ],
+          "find": [
+            80
+          ],
+          "experienced": [
+            81
+          ],
+          "clinicians": [
+            82
+          ],
+          "willing": [
+            85
+          ],
+          "undertake": [
+            87
+          ],
+          "even": [
+            88
+          ],
+          "one-subject-study-design": [
+            89
+          ],
+          "research": [
+            90
+          ],
+          "into": [
+            91
+          ],
+          "effects": [
+            93
+          ],
+          "quality": [
+            99
+          ],
+          "gait": [
+            101
+          ],
+          "(after": [
+            102
+          ],
+          "all,": [
+            103
+          ],
+          "goal": [
+            105
+          ],
+          "child": [
+            109
+          ],
+          "ultimately": [
+            111
+          ],
+          "walk": [
+            112
+          ],
+          "better,": [
+            113
+          ],
+          "necessarily": [
+            115
+          ],
+          "sooner)": [
+            116
+          ],
+          "palsy.": [
+            121
+          ],
+          "Articles": [
+            122
+          ],
+          "have": [
+            126
+          ],
+          "low": [
+            128
+          ],
+          "both": [
+            130
+          ],
+          "writers": [
+            132
+          ],
+          "editors.": [
+            134
+          ],
+          "However,": [
+            135
+          ],
+          "we": [
+            136
+          ],
+          "felt": [
+            137
+          ],
+          "our": [
+            139
+          ],
+          "\"knowledge\"": [
+            140
+          ],
+          "work": [
+            144
+          ],
+          "contradiction": [
+            146
+          ],
+          "therapy": [
+            148
+          ]
+        },
+        "counts_by_year": [],
+        "updated_date": "2026-08-21T09:56:20.448147",
+        "created_date": "2025-10-10T00:00:00"
+      },
+      {
+        "id": "https://openalex.org/W4401634084",
+        "doi": "https://doi.org/10.1109/tnsre.2024.3444461",
+        "title": "The Effects of a VR Training Program for Walker Avoidance Skill Improvement: A Randomized Controlled Trial",
+        "display_name": "The Effects of a VR Training Program for Walker Avoidance Skill Improvement: A Randomized Controlled Trial",
+        "relevance_score": 16.564514,
+        "publication_year": 2024,
+        "publication_date": "2024-01-01",
+        "ids": {
+          "openalex": "https://openalex.org/W4401634084",
+          "doi": "https://doi.org/10.1109/tnsre.2024.3444461",
+          "pmid": "https://pubmed.ncbi.nlm.nih.gov/39150816"
+        },
+        "language": "en",
+        "primary_location": {
+          "id": "doi:10.1109/tnsre.2024.3444461",
+          "is_oa": true,
+          "landing_page_url": "https://doi.org/10.1109/tnsre.2024.3444461",
+          "pdf_url": null,
+          "source": {
+            "id": "https://openalex.org/S98183460",
+            "display_name": "IEEE Transactions on Neural Systems and Rehabilitation Engineering",
+            "issn_l": "1534-4320",
+            "issn": [
+              "1534-4320",
+              "1558-0210"
+            ],
+            "is_oa": true,
+            "is_in_doaj": true,
+            "is_core": true,
+            "listed_in": [
+              "cwts-core",
+              "doaj",
+              "doyens",
+              "jufo-2",
+              "ki-jl-1",
+              "medline",
+              "norway-2"
+            ],
+            "host_organization": "https://openalex.org/P4310319808",
+            "host_organization_name": "Institute of Electrical and Electronics Engineers",
+            "host_organization_lineage": [
+              "https://openalex.org/P4310319808"
+            ],
+            "host_organization_lineage_names": [
+              "Institute of Electrical and Electronics Engineers"
+            ],
+            "type": "journal"
+          },
+          "license": "cc-by",
+          "license_id": "https://openalex.org/licenses/cc-by",
+          "version": "publishedVersion",
+          "is_accepted": true,
+          "is_published": true,
+          "raw_source_name": "IEEE Transactions on Neural Systems and Rehabilitation Engineering",
+          "raw_type": "journal-article"
+        },
+        "type": "article",
+        "indexed_in": [
+          "crossref",
+          "doaj",
+          "pubmed"
+        ],
+        "open_access": {
+          "is_oa": true,
+          "oa_status": "gold",
+          "oa_url": "https://doi.org/10.1109/tnsre.2024.3444461",
+          "any_repository_has_fulltext": true
+        },
+        "authorships": [
+          {
+            "author_position": "first",
+            "author": {
+              "id": "https://openalex.org/A5004926365",
+              "display_name": "Lingchao Xie",
+              "orcid": "https://orcid.org/0000-0003-3690-2463",
+              "observed_orcids": [
+                "https://orcid.org/0000-0003-3690-2463"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I193775966",
+                "display_name": "Yonsei University",
+                "ror": "https://ror.org/01wjejq96",
+                "country_code": "KR",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I193775966"
+                ]
+              },
+              {
+                "id": "https://openalex.org/I4405258769",
+                "display_name": "Yonsei University Mirae Campus",
+                "ror": "https://ror.org/0160gc229",
+                "country_code": "KR",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I193775966",
+                  "https://openalex.org/I4405258769"
+                ]
+              }
+            ],
+            "countries": [
+              "KR"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Lingchao Xie",
+            "raw_affiliation_strings": [
+              "Department of Physical Therapy, Yonsei University, Wonju-si, South Korea"
+            ],
+            "raw_orcid": "https://orcid.org/0000-0003-3690-2463",
+            "affiliations": [
+              {
+                "raw_affiliation_string": "Department of Physical Therapy, Yonsei University, Wonju-si, South Korea",
+                "institution_ids": [
+                  "https://openalex.org/I193775966",
+                  "https://openalex.org/I4405258769"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "middle",
+            "author": {
+              "id": "https://openalex.org/A5074740473",
+              "display_name": "Chung\u2010Hwi Yi",
+              "orcid": "https://orcid.org/0000-0003-2554-8083",
+              "observed_orcids": [
+                "https://orcid.org/0000-0003-2554-8083"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I193775966",
+                "display_name": "Yonsei University",
+                "ror": "https://ror.org/01wjejq96",
+                "country_code": "KR",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I193775966"
+                ]
+              },
+              {
+                "id": "https://openalex.org/I4405258769",
+                "display_name": "Yonsei University Mirae Campus",
+                "ror": "https://ror.org/0160gc229",
+                "country_code": "KR",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I193775966",
+                  "https://openalex.org/I4405258769"
+                ]
+              }
+            ],
+            "countries": [
+              "KR"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Chung-Hwi Yi",
+            "raw_affiliation_strings": [
+              "Department of Physical Therapy, Yonsei University, Wonju-si, South Korea"
+            ],
+            "raw_orcid": "https://orcid.org/0000-0003-2554-8083",
+            "affiliations": [
+              {
+                "raw_affiliation_string": "Department of Physical Therapy, Yonsei University, Wonju-si, South Korea",
+                "institution_ids": [
+                  "https://openalex.org/I193775966",
+                  "https://openalex.org/I4405258769"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "middle",
+            "author": {
+              "id": null,
+              "display_name": "Oh-Yun Kwon",
+              "orcid": "https://orcid.org/0000-0002-9699-768X",
+              "observed_orcids": [
+                "https://orcid.org/0000-0002-9699-768X"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I193775966",
+                "display_name": "Yonsei University",
+                "ror": "https://ror.org/01wjejq96",
+                "country_code": "KR",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I193775966"
+                ]
+              },
+              {
+                "id": "https://openalex.org/I4405258769",
+                "display_name": "Yonsei University Mirae Campus",
+                "ror": "https://ror.org/0160gc229",
+                "country_code": "KR",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I193775966",
+                  "https://openalex.org/I4405258769"
+                ]
+              }
+            ],
+            "countries": [
+              "KR"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Oh-Yun Kwon",
+            "raw_affiliation_strings": [
+              "Department of Physical Therapy, Yonsei University, Wonju-si, South Korea"
+            ],
+            "raw_orcid": "https://orcid.org/0000-0002-9699-768X",
+            "affiliations": [
+              {
+                "raw_affiliation_string": "Department of Physical Therapy, Yonsei University, Wonju-si, South Korea",
+                "institution_ids": [
+                  "https://openalex.org/I193775966",
+                  "https://openalex.org/I4405258769"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "middle",
+            "author": {
+              "id": "https://openalex.org/A5017748077",
+              "display_name": "Woochol Joseph Choi",
+              "orcid": "https://orcid.org/0000-0002-6623-3806",
+              "observed_orcids": [
+                "https://orcid.org/0000-0002-6623-3806"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I193775966",
+                "display_name": "Yonsei University",
+                "ror": "https://ror.org/01wjejq96",
+                "country_code": "KR",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I193775966"
+                ]
+              },
+              {
+                "id": "https://openalex.org/I4405258769",
+                "display_name": "Yonsei University Mirae Campus",
+                "ror": "https://ror.org/0160gc229",
+                "country_code": "KR",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I193775966",
+                  "https://openalex.org/I4405258769"
+                ]
+              }
+            ],
+            "countries": [
+              "KR"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Woochol Joseph Choi",
+            "raw_affiliation_strings": [
+              "Department of Physical Therapy, Yonsei University, Wonju-si, South Korea"
+            ],
+            "raw_orcid": "https://orcid.org/0000-0002-6623-3806",
+            "affiliations": [
+              {
+                "raw_affiliation_string": "Department of Physical Therapy, Yonsei University, Wonju-si, South Korea",
+                "institution_ids": [
+                  "https://openalex.org/I193775966",
+                  "https://openalex.org/I4405258769"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "middle",
+            "author": {
+              "id": "https://openalex.org/A5101453699",
+              "display_name": "Ji\u2010Hyuk Park",
+              "orcid": "https://orcid.org/0000-0002-1041-2266",
+              "observed_orcids": [
+                "https://orcid.org/0000-0002-1041-2266"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I193775966",
+                "display_name": "Yonsei University",
+                "ror": "https://ror.org/01wjejq96",
+                "country_code": "KR",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I193775966"
+                ]
+              }
+            ],
+            "countries": [
+              "KR"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Ji-Hyuk Park",
+            "raw_affiliation_strings": [
+              "Department of Occupational Therapy, Yonsei University, Wonju-si, South Korea"
+            ],
+            "raw_orcid": null,
+            "affiliations": [
+              {
+                "raw_affiliation_string": "Department of Occupational Therapy, Yonsei University, Wonju-si, South Korea",
+                "institution_ids": [
+                  "https://openalex.org/I193775966"
+                ]
+              }
+            ]
+          },
+          {
+            "author_position": "last",
+            "author": {
+              "id": null,
+              "display_name": "Sanghyun Cho",
+              "orcid": "https://orcid.org/0000-0003-2643-474X",
+              "observed_orcids": [
+                "https://orcid.org/0000-0003-2643-474X"
+              ]
+            },
+            "institutions": [
+              {
+                "id": "https://openalex.org/I193775966",
+                "display_name": "Yonsei University",
+                "ror": "https://ror.org/01wjejq96",
+                "country_code": "KR",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I193775966"
+                ]
+              },
+              {
+                "id": "https://openalex.org/I4405258769",
+                "display_name": "Yonsei University Mirae Campus",
+                "ror": "https://ror.org/0160gc229",
+                "country_code": "KR",
+                "type": "education",
+                "lineage": [
+                  "https://openalex.org/I193775966",
+                  "https://openalex.org/I4405258769"
+                ]
+              }
+            ],
+            "countries": [
+              "KR"
+            ],
+            "is_corresponding": false,
+            "raw_author_name": "Sanghyun Cho",
+            "raw_affiliation_strings": [
+              "Department of Physical Therapy, Yonsei University, Wonju-si, South Korea"
+            ],
+            "raw_orcid": "https://orcid.org/0000-0003-2643-474X",
+            "affiliations": [
+              {
+                "raw_affiliation_string": "Department of Physical Therapy, Yonsei University, Wonju-si, South Korea",
+                "institution_ids": [
+                  "https://openalex.org/I193775966",
+                  "https://openalex.org/I4405258769"
+                ]
+              }
+            ]
+          }
+        ],
+        "institutions": [],
+        "countries_distinct_count": 1,
+        "institutions_distinct_count": 2,
+        "corresponding_author_ids": [],
+        "corresponding_institution_ids": [],
+        "apc_list": {
+          "value": 1995,
+          "currency": "USD",
+          "value_usd": 1995
+        },
+        "apc_paid": {
+          "value": 1995,
+          "currency": "USD",
+          "value_usd": 1995
+        },
+        "fwci": 1.2516,
+        "has_fulltext": false,
+        "cited_by_count": 4,
+        "citation_normalized_percentile": {
+          "value": 0.801428,
+          "is_in_top_1_percent": false,
+          "is_in_top_10_percent": false
+        },
+        "cited_by_percentile_year": {
+          "min": 89,
+          "max": 97
+        },
+        "biblio": {
+          "volume": "32",
+          "issue": null,
+          "first_page": "3018",
+          "last_page": "3025"
+        },
+        "is_retracted": false,
+        "is_paratext": false,
+        "is_xpac": false,
+        "primary_topic": {
+          "id": "https://openalex.org/T10648",
+          "display_name": "Virtual Reality Applications and Impacts",
+          "score": 0.8730000257492065,
+          "subfield": {
+            "id": "https://openalex.org/subfields/1709",
+            "display_name": "Human-Computer Interaction"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/17",
+            "display_name": "Computer Science"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/3",
+            "display_name": "Physical Sciences"
+          }
+        },
+        "topics": [
+          {
+            "id": "https://openalex.org/T10648",
+            "display_name": "Virtual Reality Applications and Impacts",
+            "score": 0.8730000257492065,
+            "subfield": {
+              "id": "https://openalex.org/subfields/1709",
+              "display_name": "Human-Computer Interaction"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/17",
+              "display_name": "Computer Science"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/3",
+              "display_name": "Physical Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10510",
+            "display_name": "Stroke Rehabilitation and Recovery",
+            "score": 0.06469999998807907,
+            "subfield": {
+              "id": "https://openalex.org/subfields/2742",
+              "display_name": "Rehabilitation"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/27",
+              "display_name": "Medicine"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/4",
+              "display_name": "Health Sciences"
+            }
+          },
+          {
+            "id": "https://openalex.org/T10114",
+            "display_name": "Balance, Gait, and Falls Prevention",
+            "score": 0.024399999529123306,
+            "subfield": {
+              "id": "https://openalex.org/subfields/3612",
+              "display_name": "Physical Therapy, Sports Therapy and Rehabilitation"
+            },
+            "field": {
+              "id": "https://openalex.org/fields/36",
+              "display_name": "Health Professions"
+            },
+            "domain": {
+              "id": "https://openalex.org/domains/4",
+              "display_name": "Health Sciences"
+            }
+          }
+        ],
+        "keywords": [
+          {
+            "id": "https://openalex.org/keywords/virtual-reality-training",
+            "display_name": "virtual reality training",
+            "score": 0.9430000185966492
+          },
+          {
+            "id": "https://openalex.org/keywords/collision-avoidance",
+            "display_name": "collision avoidance",
+            "score": 0.8519999980926514
+          },
+          {
+            "id": "https://openalex.org/keywords/agility",
+            "display_name": "agility",
+            "score": 0.9490000009536743
+          },
+          {
+            "id": "https://openalex.org/keywords/gait",
+            "display_name": "gait",
+            "score": 0.32899999618530273
+          },
+          {
+            "id": "https://openalex.org/keywords/electromyography",
+            "display_name": "electromyography",
+            "score": 0.7979999780654907
+          },
+          {
+            "id": "https://openalex.org/keywords/ground-reaction-force",
+            "display_name": "ground reaction force",
+            "score": 0.9520000219345093
+          },
+          {
+            "id": "https://openalex.org/keywords/toe-off",
+            "display_name": "toe-off",
+            "score": 0.5649999976158142
+          },
+          {
+            "id": "https://openalex.org/keywords/digital-therapy",
+            "display_name": "digital therapy",
+            "score": 0.6269999742507935
+          },
+          {
+            "id": "https://openalex.org/keywords/rehabilitation",
+            "display_name": "rehabilitation",
+            "score": 0.5910000205039978
+          },
+          {
+            "id": "https://openalex.org/keywords/motor-function",
+            "display_name": "motor function",
+            "score": 0.41999998688697815
+          }
+        ],
+        "concepts": [
+          {
+            "id": "https://openalex.org/C168563851",
+            "wikidata": "https://www.wikidata.org/wiki/Q1436668",
+            "display_name": "Randomized controlled trial",
+            "level": 2,
+            "score": 0.7020065784454346
+          },
+          {
+            "id": "https://openalex.org/C99508421",
+            "wikidata": "https://www.wikidata.org/wiki/Q2678675",
+            "display_name": "Physical medicine and rehabilitation",
+            "level": 1,
+            "score": 0.490816205739975
+          },
+          {
+            "id": "https://openalex.org/C2777211547",
+            "wikidata": "https://www.wikidata.org/wiki/Q17141490",
+            "display_name": "Training (meteorology)",
+            "level": 2,
+            "score": 0.48265892267227173
+          },
+          {
+            "id": "https://openalex.org/C1862650",
+            "wikidata": "https://www.wikidata.org/wiki/Q186005",
+            "display_name": "Physical therapy",
+            "level": 1,
+            "score": 0.4128912091255188
+          },
+          {
+            "id": "https://openalex.org/C15744967",
+            "wikidata": "https://www.wikidata.org/wiki/Q9418",
+            "display_name": "Psychology",
+            "level": 0,
+            "score": 0.33944135904312134
+          },
+          {
+            "id": "https://openalex.org/C71924100",
+            "wikidata": "https://www.wikidata.org/wiki/Q11190",
+            "display_name": "Medicine",
+            "level": 0,
+            "score": 0.2071102261543274
+          },
+          {
+            "id": "https://openalex.org/C141071460",
+            "wikidata": "https://www.wikidata.org/wiki/Q40821",
+            "display_name": "Surgery",
+            "level": 1,
+            "score": 0.05589038133621216
+          },
+          {
+            "id": "https://openalex.org/C121332964",
+            "wikidata": "https://www.wikidata.org/wiki/Q413",
+            "display_name": "Physics",
+            "level": 0,
+            "score": 0.0
+          },
+          {
+            "id": "https://openalex.org/C153294291",
+            "wikidata": "https://www.wikidata.org/wiki/Q25261",
+            "display_name": "Meteorology",
+            "level": 1,
+            "score": 0.0
+          }
+        ],
+        "mesh": [
+          {
+            "descriptor_ui": "D000076142",
+            "descriptor_name": "Virtual Reality",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D000076142",
+            "descriptor_name": "Virtual Reality",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D000076142",
+            "descriptor_name": "Virtual Reality",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D000076142",
+            "descriptor_name": "Virtual Reality",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D000076142",
+            "descriptor_name": "Virtual Reality",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D000076142",
+            "descriptor_name": "Virtual Reality",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D000328",
+            "descriptor_name": "Adult",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D000328",
+            "descriptor_name": "Adult",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D000328",
+            "descriptor_name": "Adult",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D000328",
+            "descriptor_name": "Adult",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D000328",
+            "descriptor_name": "Adult",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D000328",
+            "descriptor_name": "Adult",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D001362",
+            "descriptor_name": "Avoidance Learning",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D001362",
+            "descriptor_name": "Avoidance Learning",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D001362",
+            "descriptor_name": "Avoidance Learning",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D001362",
+            "descriptor_name": "Avoidance Learning",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D001362",
+            "descriptor_name": "Avoidance Learning",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D001362",
+            "descriptor_name": "Avoidance Learning",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D001696",
+            "descriptor_name": "Biomechanical Phenomena",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D001696",
+            "descriptor_name": "Biomechanical Phenomena",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D001696",
+            "descriptor_name": "Biomechanical Phenomena",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D001696",
+            "descriptor_name": "Biomechanical Phenomena",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D001696",
+            "descriptor_name": "Biomechanical Phenomena",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D001696",
+            "descriptor_name": "Biomechanical Phenomena",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D004576",
+            "descriptor_name": "Electromyography",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D004576",
+            "descriptor_name": "Electromyography",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D004576",
+            "descriptor_name": "Electromyography",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D004576",
+            "descriptor_name": "Electromyography",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D004576",
+            "descriptor_name": "Electromyography",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D004576",
+            "descriptor_name": "Electromyography",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D005260",
+            "descriptor_name": "Female",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D005260",
+            "descriptor_name": "Female",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D005260",
+            "descriptor_name": "Female",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D005260",
+            "descriptor_name": "Female",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D005260",
+            "descriptor_name": "Female",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D005260",
+            "descriptor_name": "Female",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D006801",
+            "descriptor_name": "Humans",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D006801",
+            "descriptor_name": "Humans",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D006801",
+            "descriptor_name": "Humans",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D006801",
+            "descriptor_name": "Humans",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D006801",
+            "descriptor_name": "Humans",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D006801",
+            "descriptor_name": "Humans",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D008297",
+            "descriptor_name": "Male",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D008297",
+            "descriptor_name": "Male",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D008297",
+            "descriptor_name": "Male",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D008297",
+            "descriptor_name": "Male",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D008297",
+            "descriptor_name": "Male",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D008297",
+            "descriptor_name": "Male",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D009048",
+            "descriptor_name": "Motor Skills",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D009048",
+            "descriptor_name": "Motor Skills",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D009048",
+            "descriptor_name": "Motor Skills",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D011930",
+            "descriptor_name": "Reaction Time",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D011930",
+            "descriptor_name": "Reaction Time",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D011930",
+            "descriptor_name": "Reaction Time",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D011930",
+            "descriptor_name": "Reaction Time",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D011930",
+            "descriptor_name": "Reaction Time",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D011930",
+            "descriptor_name": "Reaction Time",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D016138",
+            "descriptor_name": "Walking",
+            "qualifier_ui": "Q000502",
+            "qualifier_name": "physiology",
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D016138",
+            "descriptor_name": "Walking",
+            "qualifier_ui": "Q000502",
+            "qualifier_name": "physiology",
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D016138",
+            "descriptor_name": "Walking",
+            "qualifier_ui": "Q000502",
+            "qualifier_name": "physiology",
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D016138",
+            "descriptor_name": "Walking",
+            "qualifier_ui": "Q000502",
+            "qualifier_name": "physiology",
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D016138",
+            "descriptor_name": "Walking",
+            "qualifier_ui": "Q000502",
+            "qualifier_name": "physiology",
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D016138",
+            "descriptor_name": "Walking",
+            "qualifier_ui": "Q000502",
+            "qualifier_name": "physiology",
+            "is_major_topic": true
+          },
+          {
+            "descriptor_ui": "D018910",
+            "descriptor_name": "Video Games",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D018910",
+            "descriptor_name": "Video Games",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D018910",
+            "descriptor_name": "Video Games",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D018910",
+            "descriptor_name": "Video Games",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D018910",
+            "descriptor_name": "Video Games",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D018910",
+            "descriptor_name": "Video Games",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D055815",
+            "descriptor_name": "Young Adult",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D055815",
+            "descriptor_name": "Young Adult",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D055815",
+            "descriptor_name": "Young Adult",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D055815",
+            "descriptor_name": "Young Adult",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D055815",
+            "descriptor_name": "Young Adult",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          },
+          {
+            "descriptor_ui": "D055815",
+            "descriptor_name": "Young Adult",
+            "qualifier_ui": null,
+            "qualifier_name": null,
+            "is_major_topic": false
+          }
+        ],
+        "locations_count": 4,
+        "locations": [
+          {
+            "id": "doi:10.1109/tnsre.2024.3444461",
+            "is_oa": true,
+            "landing_page_url": "https://doi.org/10.1109/tnsre.2024.3444461",
+            "pdf_url": null,
+            "source": {
+              "id": "https://openalex.org/S98183460",
+              "display_name": "IEEE Transactions on Neural Systems and Rehabilitation Engineering",
+              "issn_l": "1534-4320",
+              "issn": [
+                "1534-4320",
+                "1558-0210"
+              ],
+              "is_oa": true,
+              "is_in_doaj": true,
+              "is_core": true,
+              "listed_in": [
+                "cwts-core",
+                "doaj",
+                "doyens",
+                "jufo-2",
+                "ki-jl-1",
+                "medline",
+                "norway-2"
+              ],
+              "host_organization": "https://openalex.org/P4310319808",
+              "host_organization_name": "Institute of Electrical and Electronics Engineers",
+              "host_organization_lineage": [
+                "https://openalex.org/P4310319808"
+              ],
+              "host_organization_lineage_names": [
+                "Institute of Electrical and Electronics Engineers"
+              ],
+              "type": "journal"
+            },
+            "license": "cc-by",
+            "license_id": "https://openalex.org/licenses/cc-by",
+            "version": "publishedVersion",
+            "is_accepted": true,
+            "is_published": true,
+            "raw_source_name": "IEEE Transactions on Neural Systems and Rehabilitation Engineering",
+            "raw_type": "journal-article"
+          },
+          {
+            "id": "pmid:39150816",
+            "is_oa": false,
+            "landing_page_url": "https://pubmed.ncbi.nlm.nih.gov/39150816",
+            "pdf_url": null,
+            "source": {
+              "id": "https://openalex.org/S4306525036",
+              "display_name": "PubMed",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": "https://openalex.org/I1299303238",
+              "host_organization_name": "National Institutes of Health",
+              "host_organization_lineage": [
+                "https://openalex.org/I1299303238"
+              ],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": null,
+            "license_id": null,
+            "version": "publishedVersion",
+            "is_accepted": true,
+            "is_published": true,
+            "raw_source_name": "IEEE transactions on neural systems and rehabilitation engineering : a publication of the IEEE Engineering in Medicine and Biology Society",
+            "raw_type": "Journal Article"
+          },
+          {
+            "id": "pmh:oai:doaj.org/article:bfe0bdbd54e445cabf702bccee240254",
+            "is_oa": true,
+            "landing_page_url": "https://doaj.org/article/bfe0bdbd54e445cabf702bccee240254",
+            "pdf_url": null,
+            "source": {
+              "id": "https://openalex.org/S4306401280",
+              "display_name": "DOAJ (DOAJ: Directory of Open Access Journals)",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": null,
+              "host_organization_name": null,
+              "host_organization_lineage": [],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": "cc-by-sa",
+            "license_id": "https://openalex.org/licenses/cc-by-sa",
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": "IEEE Transactions on Neural Systems and Rehabilitation Engineering, Vol 32, Pp 3018-3025 (2024)",
+            "raw_type": "article"
+          },
+          {
+            "id": "pmh:oai:share.osf.io:15fea156-ad5e-41ae-8bdd-3a64c4de163c",
+            "is_oa": false,
+            "landing_page_url": "https://osf.io/g4cd2",
+            "pdf_url": null,
+            "source": {
+              "id": "https://openalex.org/S4306401127",
+              "display_name": "OSF Preprints (OSF Preprints)",
+              "issn_l": null,
+              "issn": null,
+              "is_oa": false,
+              "is_in_doaj": false,
+              "is_core": false,
+              "listed_in": [],
+              "host_organization": "https://openalex.org/I2799848540",
+              "host_organization_name": "Center for Open Science",
+              "host_organization_lineage": [
+                "https://openalex.org/I2799848540"
+              ],
+              "host_organization_lineage_names": [],
+              "type": "repository"
+            },
+            "license": null,
+            "license_id": null,
+            "version": "submittedVersion",
+            "is_accepted": false,
+            "is_published": false,
+            "raw_source_name": null,
+            "raw_type": "Project"
+          }
+        ],
+        "best_oa_location": {
+          "id": "doi:10.1109/tnsre.2024.3444461",
+          "is_oa": true,
+          "landing_page_url": "https://doi.org/10.1109/tnsre.2024.3444461",
+          "pdf_url": null,
+          "source": {
+            "id": "https://openalex.org/S98183460",
+            "display_name": "IEEE Transactions on Neural Systems and Rehabilitation Engineering",
+            "issn_l": "1534-4320",
+            "issn": [
+              "1534-4320",
+              "1558-0210"
+            ],
+            "is_oa": true,
+            "is_in_doaj": true,
+            "is_core": true,
+            "listed_in": [
+              "cwts-core",
+              "doaj",
+              "doyens",
+              "jufo-2",
+              "ki-jl-1",
+              "medline",
+              "norway-2"
+            ],
+            "host_organization": "https://openalex.org/P4310319808",
+            "host_organization_name": "Institute of Electrical and Electronics Engineers",
+            "host_organization_lineage": [
+              "https://openalex.org/P4310319808"
+            ],
+            "host_organization_lineage_names": [
+              "Institute of Electrical and Electronics Engineers"
+            ],
+            "type": "journal"
+          },
+          "license": "cc-by",
+          "license_id": "https://openalex.org/licenses/cc-by",
+          "version": "publishedVersion",
+          "is_accepted": true,
+          "is_published": true,
+          "raw_source_name": "IEEE Transactions on Neural Systems and Rehabilitation Engineering",
+          "raw_type": "journal-article"
+        },
+        "sustainable_development_goals": [
+          {
+            "display_name": "Good health and well-being",
+            "id": "https://metadata.un.org/sdg/3",
+            "score": 0.9537000060081482
+          }
+        ],
+        "sustainable_development_goals_aurora": [],
+        "study_designs": [
+          {
+            "display_name": "Randomized Controlled Trial",
+            "id": "https://openalex.org/study-designs/randomized-controlled-trial"
+          },
+          {
+            "display_name": "Clinical Trial",
+            "id": "https://openalex.org/study-designs/clinical-trial"
+          }
+        ],
+        "awards": [],
+        "funders": [],
+        "has_content": {
+          "pdf": false,
+          "grobid_xml": false
+        },
+        "content_urls": null,
+        "referenced_works_count": 23,
+        "referenced_works": [
+          "https://openalex.org/W1538596214",
+          "https://openalex.org/W1585724372",
+          "https://openalex.org/W1595581172",
+          "https://openalex.org/W1976892183",
+          "https://openalex.org/W2021742495",
+          "https://openalex.org/W2058543238",
+          "https://openalex.org/W2071977170",
+          "https://openalex.org/W2089563340",
+          "https://openalex.org/W2118588785",
+          "https://openalex.org/W2133140997",
+          "https://openalex.org/W2137081453",
+          "https://openalex.org/W2146621761",
+          "https://openalex.org/W2159236209",
+          "https://openalex.org/W2162925582",
+          "https://openalex.org/W2770934685",
+          "https://openalex.org/W2796578616",
+          "https://openalex.org/W2922011710",
+          "https://openalex.org/W3040684872",
+          "https://openalex.org/W3120900951",
+          "https://openalex.org/W3136909532",
+          "https://openalex.org/W4220770312",
+          "https://openalex.org/W4323347574",
+          "https://openalex.org/W4385741713"
+        ],
+        "related_works": [
+          "https://openalex.org/W4391375266",
+          "https://openalex.org/W2748952813",
+          "https://openalex.org/W2355769538",
+          "https://openalex.org/W230091440",
+          "https://openalex.org/W2081816252",
+          "https://openalex.org/W2015216653",
+          "https://openalex.org/W2233261550",
+          "https://openalex.org/W2810751659",
+          "https://openalex.org/W258997015",
+          "https://openalex.org/W2997094352"
+        ],
+        "abstract_inverted_index": {
+          "This": [
+            0,
+            202
+          ],
+          "study": [
+            1,
+            203
+          ],
+          "aimed": [
+            2
+          ],
+          "to": [
+            3,
+            193,
+            222
+          ],
+          "evaluate": [
+            4
+          ],
+          "the": [
+            5,
+            40,
+            50,
+            55,
+            62,
+            82,
+            84,
+            92,
+            104,
+            132,
+            141,
+            147,
+            153,
+            156,
+            164,
+            181,
+            200,
+            205,
+            244
+          ],
+          "effectiveness": [
+            6,
+            206
+          ],
+          "of": [
+            7,
+            131,
+            170,
+            207
+          ],
+          "our": [
+            8,
+            171
+          ],
+          "newly": [
+            9,
+            172
+          ],
+          "developed": [
+            10,
+            173
+          ],
+          "virtual": [
+            11,
+            187
+          ],
+          "reality": [
+            12
+          ],
+          "head-mounted": [
+            13
+          ],
+          "display": [
+            14
+          ],
+          "(VR-HMD)": [
+            15
+          ],
+          "\"walker": [
+            16,
+            41,
+            174
+          ],
+          "avoidance\"": [
+            17,
+            42,
+            175
+          ],
+          "game": [
+            18
+          ],
+          "in": [
+            19,
+            28,
+            34,
+            39,
+            49,
+            70,
+            90,
+            110,
+            129,
+            146,
+            213
+          ],
+          "reducing": [
+            20
+          ],
+          "step-aside": [
+            21,
+            142
+          ],
+          "reaction": [
+            22,
+            137,
+            191
+          ],
+          "time": [
+            23
+          ],
+          "(SART)": [
+            24
+          ],
+          "and": [
+            25,
+            73,
+            97,
+            134,
+            189,
+            232
+          ],
+          "enhancing": [
+            26
+          ],
+          "agility": [
+            27
+          ],
+          "collision": [
+            29
+          ],
+          "avoidance.": [
+            30
+          ],
+          "Fifteen": [
+            31
+          ],
+          "young": [
+            32,
+            47
+          ],
+          "adults": [
+            33,
+            48
+          ],
+          "experimental": [
+            35
+          ],
+          "group": [
+            36,
+            52
+          ],
+          "(EG)": [
+            37
+          ],
+          "engaged": [
+            38
+          ],
+          "game,": [
+            43,
+            176
+          ],
+          "while": [
+            44,
+            238
+          ],
+          "another": [
+            45
+          ],
+          "15": [
+            46
+          ],
+          "control": [
+            51
+          ],
+          "(CG)": [
+            53
+          ],
+          "played": [
+            54
+          ],
+          "\"first": [
+            56
+          ],
+          "touch\"": [
+            57
+          ],
+          "tutorial.": [
+            58
+          ],
+          "The": [
+            59
+          ],
+          "results": [
+            60,
+            139
+          ],
+          "showed": [
+            61
+          ],
+          "EG": [
+            63,
+            85,
+            105,
+            148,
+            157,
+            182
+          ],
+          "had": [
+            64
+          ],
+          "significant": [
+            65,
+            88,
+            108,
+            127
+          ],
+          "decreases": [
+            66,
+            89,
+            109
+          ],
+          "(p": [
+            67,
+            94,
+            99,
+            112
+          ],
+          "<": [
+            68,
+            100,
+            113
+          ],
+          "0.01)": [
+            69
+          ],
+          "both": [
+            71,
+            91
+          ],
+          "SART-standing": [
+            72,
+            86
+          ],
+          "SART-walking": [
+            74,
+            106
+          ],
+          "when": [
+            75
+          ],
+          "compared": [
+            76,
+            198
+          ],
+          "with": [
+            77,
+            81,
+            186,
+            199
+          ],
+          "pre-intervention": [
+            78,
+            118
+          ],
+          "measurements.": [
+            79
+          ],
+          "Compared": [
+            80
+          ],
+          "CG,": [
+            83
+          ],
+          "exhibited": [
+            87,
+            183
+          ],
+          "first": [
+            93
+          ],
+          "=": [
+            95
+          ],
+          "0.001)": [
+            96,
+            101
+          ],
+          "second": [
+            98
+          ],
+          "measurements": [
+            102,
+            197
+          ],
+          "post-intervention;": [
+            103
+          ],
+          "demonstrated": [
+            107,
+            126,
+            204
+          ],
+          "all": [
+            111
+          ],
+          "0.05)": [
+            114
+          ],
+          "measurements,": [
+            115
+          ],
+          "except": [
+            116
+          ],
+          "for": [
+            117,
+            235,
+            243
+          ],
+          "measurement.": [
+            119
+          ],
+          "One-dimensional": [
+            120
+          ],
+          "statistical": [
+            121
+          ],
+          "parametric": [
+            122
+          ],
+          "mapping": [
+            123
+          ],
+          "(spm1d)": [
+            124
+          ],
+          "also": [
+            125,
+            239
+          ],
+          "differences": [
+            128
+          ],
+          "most": [
+            130
+          ],
+          "electromyography": [
+            133
+          ],
+          "forefoot/hindfoot": [
+            135
+          ],
+          "ground": [
+            136
+          ],
+          "force": [
+            138
+          ],
+          "because": [
+            140
+          ],
+          "movement": [
+            143
+          ],
+          "became": [
+            144
+          ],
+          "quicker": [
+            145
+          ],
+          "following": [
+            149
+          ],
+          "training.": [
+            150
+          ],
+          "After": [
+            151
+          ],
+          "pushing": [
+            152
+          ],
+          "leg-heel": [
+            154
+          ],
+          "contact,": [
+            155
+          ],
+          "participants": [
+            158
+          ],
+          "made": [
+            159
+          ],
+          "a": [
+            160,
+            219,
+            225
+          ],
+          "toe-off": [
+            161
+          ],
+          "sooner": [
+            162
+          ],
+          "than": [
+            163
+          ],
+          "CG": [
+            165
+          ],
+          "participants.": [
+            166
+          ],
+          "Following": [
+            167
+          ],
+          "two": [
+            168
+          ],
+          "sessions": [
+            169
+          ],
+          "conducted": [
+            177
+          ],
+          "1": [
+            178
+          ],
+          "week": [
+            179
+          ],
+          "apart,": [
+            180
+          ],
+          "less": [
+            184
+          ],
+          "collisions": [
+            185
+          ],
+          "pedestrians": [
+            188
+          ],
+          "reduced": [
+            190
+          ],
+          "times": [
+            192
+          ],
+          "unpredictable": [
+            194
+          ],
+          "directional": [
+            195
+          ],
+          "change": [
+            196
+          ],
+          "CG.": [
+            201
+          ],
+          "this": [
+            208
+          ],
+          "targeted": [
+            209
+          ],
+          "VR": [
+            210,
+            245
+          ],
+          "training": [
+            211
+          ],
+          "program": [
+            212
+          ],
+          "improving": [
+            214
+          ],
+          "motor": [
+            215
+          ],
+          "function,": [
+            216
+          ],
+          "which": [
+            217
+          ],
+          "introduced": [
+            218
+          ],
+          "novel": [
+            220
+          ],
+          "approach": [
+            221,
+            234
+          ],
+          "rehabilitation": [
+            223
+          ],
+          "as": [
+            224
+          ],
+          "digital": [
+            226
+          ],
+          "therapy.": [
+            227
+          ],
+          "It": [
+            228
+          ],
+          "offers": [
+            229
+          ],
+          "innovative": [
+            230
+          ],
+          "perspectives": [
+            231
+          ],
+          "an": [
+            233
+          ],
+          "clinical": [
+            236
+          ],
+          "rehabilitation,": [
+            237
+          ],
+          "providing": [
+            240
+          ],
+          "new": [
+            241
+          ],
+          "ideas": [
+            242
+          ],
+          "content": [
+            246
+          ],
+          "development": [
+            247
+          ],
+          "industry.": [
+            248
+          ]
+        },
+        "counts_by_year": [
+          {
+            "year": 2026,
+            "cited_by_count": 2
+          },
+          {
+            "year": 2025,
+            "cited_by_count": 1
+          },
+          {
+            "year": 2024,
+            "cited_by_count": 1
+          }
+        ],
+        "updated_date": "2026-10-05T09:50:58.205359",
+        "created_date": "2025-10-10T00:00:00"
+      }
+    ],
+    "group_by": []
+  }
+}

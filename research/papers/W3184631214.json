@@ -1,0 +1,62 @@
+{
+  "id": "W3184631214",
+  "title": "CRDTs for truly concurrent file systems",
+  "doi": "https://doi.org/10.1145/3465332.3470872",
+  "publication_date": "2021-07-20",
+  "publication_year": 2021,
+  "type": "conference-paper",
+  "cited_by_count": 2,
+  "authors": [
+    "Romain Vaillant",
+    "Dimitrios Vasilas",
+    "Marc Shapiro",
+    "Th\u00f9y Linh Nguy\u1ec5n"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3465332.3470872",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W3184631214.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W3184631214.grobid-xml"
+  },
+  "abstract": "Building scalable and highly available geo-replicated file systems is hard. These systems need to resolve conflicts that emerge in concurrent operations in a way that maintains file system invariants, is meaningful to the user, and does not depart from the traditional file system interface. Conflict resolution in existing systems often leads to unexpected or inconsistent results. This paper introduces ElmerFS, a geo-replicated, truly concurrent file system designed with the aim of addressing these challenges. ElmerFS is based on two key ideas: (1) the use of Conflict-Free Replicated Data Types (CRDTs) for representing file system structures, which ensures that replicas converge to a correct state, and (2) conflict resolution rules, which are determined by the choice of CRDT types and their composition, are designed with the principle of being intuitive to the user. We argue that if the state of the file system after resolving a conflict conveys to the user the resolved conflict in an intuitive way, the user can complement or reverse it using traditional file system operations. We discuss the challenges in the design of geo-replicated weakly consistent file systems, and present the design of ElmerFS.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Data Storage Technologies",
+    "Distributed and Parallel Computing Systems"
+  ],
+  "references": [
+    "https://openalex.org/W57563956",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1550959033",
+    "https://openalex.org/W2005373714",
+    "https://openalex.org/W2015055913",
+    "https://openalex.org/W2476146301",
+    "https://openalex.org/W2889886912",
+    "https://openalex.org/W2891069116",
+    "https://openalex.org/W3132251169",
+    "https://openalex.org/W3156764758",
+    "https://openalex.org/W4246716876",
+    "https://openalex.org/W4392269970"
+  ],
+  "cited_by": [
+    {
+      "id": "W4372258399",
+      "title": "CFS: Scaling Metadata Service for Distributed File System via Pruned Scope of Critical Sections",
+      "abstract": "There is a fundamental tension between metadata scalability and POSIX semantics within distributed file systems. The bottleneck lies in the coordination, mainly locking, used for ensuring strong metadata consistency, namely, atomicity and isolation. CFS is a scalable, fully POSIX-compliant distributed file system that eliminates the metadata management bottleneck via pruning the scope of critical sections for reduced locking overhead. First, CFS adopts a tiered metadata organization to scale file attributes and the remaining namespace hierarchies independently with appropriate partitioning and indexing methods, eliminating cross-shard distributed coordination. Second, it further scales up the single metadata shard performance by single-shard atomic primitives, shortening the metadata requests' lifespan and removing spurious conflicts. Third, CFS drops the metadata proxy layer but employs the light-weight, scalable client-side metadata resolving. CFS has been running in the production environment of Baidu AI Cloud for three years. Our evaluation with a 50-node cluster and microbenchmarks shows that CFS simultaneously improves the throughput of baselines like HopsFS and InfiniFS by 1.76--75.82\u00d7 and 1.22--4.10\u00d7, and reduces their average latency by up to 91.71% and 54.54%, respectively. Under cases with higher contention and larger directories, CFS' throughput benefits expand by one order of magnitude. For three real-world workloads with data accesses, CFS introduces 1.62--2.55\u00d7 end-to-end throughput speedups and 35.06--62.47% tail latency reductions over InfiniFS."
+    },
+    {
+      "id": "W4367675071",
+      "title": "AMC: Towards Trustworthy and Explorable CRDT Applications with the Automerge Model Checker",
+      "abstract": "Conflict-free Replicated Data Types (CRDTs) enable local-first operations and asynchronous collaboration without the need for always-on centralised services. CRDTs can have a high overhead, so implementations need to be optimised, but this optimisation can lead to bugs despite the use of test suites and fuzzing. Furthermore, using CRDTs in applications is complex, observing unexpected conflict resolution, issues synchronising documents and difficulties implementing appropriate data models. Automerge is a library, exposing a JSON CRDT, that sees users having difficulties in modelling their problems, understanding their edge cases and implementing applications correctly. We introduce the Automerge Model Checker (AMC), empowering application developers to check properties about their implementations and explore them dynamically. AMC can check a range of applications as well as being able to check properties about the core of Automerge itself, helping to make more trustworthy Automerge applications."
+    }
+  ]
+}

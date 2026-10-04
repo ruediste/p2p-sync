@@ -1,0 +1,73 @@
+{
+  "id": "W4416783609",
+  "title": "Geometry-Aware CRDTs for Efficient Collaborative Geospatial Editing",
+  "doi": "https://doi.org/10.3390/ijgi14120468",
+  "publication_date": "2025-11-28",
+  "publication_year": 2025,
+  "type": "article",
+  "cited_by_count": 1,
+  "authors": [
+    "Pengcheng Zhang",
+    "Chao Zhang"
+  ],
+  "venue": "ISPRS International Journal of Geo-Information",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "https://www.mdpi.com/2220-9964/14/12/468/pdf",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4416783609.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4416783609.grobid-xml"
+  },
+  "abstract": "Maintaining consistency in real-time multi-user editing of planar geospatial features remains challenging for traditional collaborative editing techniques, which are primarily designed for text documents. When applied to spatial data, these methods often yield inaccurate results and cause information loss, while also overlooking the geospatial and topological properties of such features. Moreover, they fail to differentiate processing priorities due to limited spatial awareness, hindering targeted performance optimization. To address these limitations, we propose a geometry-aware collaborative editing algorithm based on Conflict-Free Replicated Data Types (CRDTs), integrating a spatial\u2013semantic data model with spatio-temporal operation merging strategies. As an extension of CRDTs tailored for spatial data, it leverages geometric vector clocks (GVCs) and minimum bounding rectangles (MBRs) to capture temporal and spatial dependencies among editing operations, detects topological anomalies through geometric constraints, resolves conflicts via spatio-temporal metadata encoded in GVCs, and optimizes performance through MBR-based operation classification. Experimental results show that this approach improves editing accuracy, contributes to preserving topological integrity, and maintains strong performance under collaborative editing workloads, with notable efficiency gains for large-scale datasets and visible features. This work provides a novel geometry-aware framework for scalable, accurate multi-user editing of planar geospatial features that helps preserve topological integrity.",
+  "topics": [
+    "Geographic Information Systems Studies",
+    "Data Visualization and Analytics",
+    "Topological and Geometric Data Analysis"
+  ],
+  "references": [
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1933625282",
+    "https://openalex.org/W1996958808",
+    "https://openalex.org/W2021771212",
+    "https://openalex.org/W2023448752",
+    "https://openalex.org/W2053963897",
+    "https://openalex.org/W2082073570",
+    "https://openalex.org/W2122982975",
+    "https://openalex.org/W2129388329",
+    "https://openalex.org/W2134308710",
+    "https://openalex.org/W2295404461",
+    "https://openalex.org/W2519790116",
+    "https://openalex.org/W2548072145",
+    "https://openalex.org/W2548120315",
+    "https://openalex.org/W2792047890",
+    "https://openalex.org/W2969003752",
+    "https://openalex.org/W3113896391",
+    "https://openalex.org/W3137220996",
+    "https://openalex.org/W3197243248",
+    "https://openalex.org/W4241866301",
+    "https://openalex.org/W4242599275",
+    "https://openalex.org/W4391664530",
+    "https://openalex.org/W4399550620",
+    "https://openalex.org/W4401974198",
+    "https://openalex.org/W4404239275",
+    "https://openalex.org/W4404914024",
+    "https://openalex.org/W4405185864",
+    "https://openalex.org/W4410812303",
+    "https://openalex.org/W4412186791",
+    "https://openalex.org/W4414117405"
+  ],
+  "cited_by": [
+    {
+      "id": "W7204206231",
+      "title": "Collaborative Support for Software Product Line Modeling and Project Management: A Generative AI-Enhanced Approach with Real-Time Synchronization",
+      "abstract": "Background: Software Product Line (SPL) engineering relies on coordinated work over variability-intensive artifacts, yet existing SPL tools provide limited support for synchronized multi-user modeling and project-level collaboration. Objective: This paper presents a collaborative extension of VariaMos that combines synchronization based on Conflict-free Replicated Data Types (CRDTs), awareness and governance mechanisms, and integrated artificial intelligence (AI)-assisted model authoring. Method: Following Wieringa\u2019s Design Science methodology, the treatment was designed, implemented, and evaluated through unit and functional tests, collaborative proof-of-concept scenarios, controlled load experiments, an exploratory expert survey with 20 specialists, and a bounded preliminary evaluation of the AI-assisted component. Results: The environment supports project- and model-level synchronization, presence awareness, role-sensitive collaboration, comments, revision history, rollback, and vote-assisted conflict resolution. Load tests characterized the operational limits of the Yjs-based architecture and showed that partitioning users across model-specific collaborative spaces improves stability. The survey identified conflict handling, traceability, versioning, authorship, and review workflows as priorities; because it used a purposive non-probability sample, it does not support population-level or productivity claims. In a 100-case evaluation comprising 50 base prompts and 50 metamorphic follow-up prompts, a context-enhanced chatbot configuration reduced structural hallucination from 84% to 18% and increased reproducibility from 22% to 72%. These results are preliminary and limited to one LLM accessed through OpenRouter, one controlled prompt bank, and single-pass executions. Conclusions: The study demonstrates the controlled feasibility of combining multi-artifact SPL collaboration with integrated AI-assisted authoring, while identifying trade-offs among convergence, semantic control, recoverability, and latency."
+    }
+  ]
+}

@@ -1,0 +1,196 @@
+{
+  "id": "W4309617332",
+  "title": "Peritext: A CRDT for Collaborative Rich Text Editing",
+  "doi": "https://doi.org/10.1145/3555644",
+  "publication_date": "2022-11-07",
+  "publication_year": 2022,
+  "type": "article",
+  "cited_by_count": 25,
+  "authors": [
+    "Geoffrey Litt",
+    "Sarah Lim",
+    "Martin Kleppmann",
+    "Peter van Hardenberg"
+  ],
+  "venue": "Proceedings of the ACM on Human-Computer Interaction",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "hybrid",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3555644",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4309617332.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4309617332.grobid-xml"
+  },
+  "abstract": "Conflict-Free Replicated Data Types (CRDTs) support decentralized collaborative editing of shared data, enabling peer-to-peer sharing and flexible branching and merging workflows. While there is extensive work on CRDTs for plain text, much less is known about CRDTs for rich text with formatting. No algorithms have been published, and existing open-source implementations do not always preserve user intent. In this paper, we describe a model of intent preservation in rich text editing, developed through a series of concurrent editing scenarios. We then describe Peritext, a CRDT algorithm for rich text that satisfies the criteria of our model. The key idea is to store formatting spans alongside the plaintext character sequence, linked to a stable identifier for the first and last character of each span, and then to derive the final formatted text from these spans in a deterministic way that ensures concurrent operations commute. We have prototyped our algorithm in TypeScript, validated it using randomized property-based testing, and integrated it with an editor UI. We also prove that our algorithm ensures convergence, and demonstrate its causality preservation and intention preservation properties.",
+  "topics": [
+    "Web Data Mining and Analysis",
+    "Peer-to-Peer Network Technologies",
+    "Modular Robots and Swarm Intelligence"
+  ],
+  "references": [
+    "https://openalex.org/W1489177980",
+    "https://openalex.org/W1794148987",
+    "https://openalex.org/W1971443766",
+    "https://openalex.org/W1980369938",
+    "https://openalex.org/W1985225835",
+    "https://openalex.org/W1985349143",
+    "https://openalex.org/W1989814541",
+    "https://openalex.org/W2006451205",
+    "https://openalex.org/W2007046992",
+    "https://openalex.org/W2020516462",
+    "https://openalex.org/W2042533665",
+    "https://openalex.org/W2059432328",
+    "https://openalex.org/W2059574400",
+    "https://openalex.org/W2076866478",
+    "https://openalex.org/W2096967357",
+    "https://openalex.org/W2107138518",
+    "https://openalex.org/W2110765100",
+    "https://openalex.org/W2118242633",
+    "https://openalex.org/W2124927340",
+    "https://openalex.org/W2134308710",
+    "https://openalex.org/W2143068513",
+    "https://openalex.org/W2151541805",
+    "https://openalex.org/W2151943351",
+    "https://openalex.org/W2170849273",
+    "https://openalex.org/W2510332240",
+    "https://openalex.org/W2548072145",
+    "https://openalex.org/W2548120315",
+    "https://openalex.org/W2588515328",
+    "https://openalex.org/W2597798581",
+    "https://openalex.org/W2979846168",
+    "https://openalex.org/W3103287347",
+    "https://openalex.org/W3123835709",
+    "https://openalex.org/W3137220996",
+    "https://openalex.org/W4236824789",
+    "https://openalex.org/W4245829644",
+    "https://openalex.org/W6887874201"
+  ],
+  "cited_by": [
+    {
+      "id": "W4390874089",
+      "title": "Expressive Text-to-Image Generation with Rich Text",
+      "abstract": "Plain text has become a prevalent interface for text-to-image synthesis. However, its limited customization options hinder users from accurately describing desired outputs. For example, plain text makes it hard to specify continuous quantities, such as the precise RGB color value or importance of each word. Furthermore, creating detailed text prompts for complex scenes is tedious for humans to write and challenging for text encoders to interpret. To address these challenges, we propose using a rich-text editor supporting formats such as font style, size, color, and footnote. We extract each word\u2019s attributes from rich text to enable local style control, explicit token reweighting, precise color rendering, and detailed region synthesis. We achieve these capabilities through a region-based diffusion process. We first obtain each word\u2019s region based on attention maps of a diffusion process using plain text. For each region, we enforce its text attributes by creating region-specific detailed prompts and applying region-specific guidance, and maintain its fidelity against plain-text generation through region-based injections. We present various examples of image generation from rich text and demonstrate that our method outperforms strong baselines with quantitative evaluations."
+    },
+    {
+      "id": "W4394653689",
+      "title": "Don't Step on My Toes: Resolving Editing Conflicts in Real-Time Collaboration in Computational Notebooks",
+      "abstract": "Real-time collaborative editing in computational notebooks can improve the efficiency of teamwork for data scientists. However, working together through synchronous editing of notebooks introduces new challenges. Data scientists may inadvertently interfere with each others' work by altering the shared codebase and runtime state if they do not set up a social protocol for working together and monitoring their collaborators' progress. In this paper, we propose a real-time collaborative editing model for resolving conflict edits in computational notebooks that introduces three levels of edit protection to help collaborators avoid introducing errors to both the program source code and changes to the runtime state."
+    },
+    {
+      "id": "W4406221809",
+      "title": "Grove: A Bidirectionally Typed Collaborative Structure Editor Calculus",
+      "abstract": "Version control systems typically rely on a patch language , heuristic patch synthesis algorithms like diff , and three-way merge algorithms . Standard patch languages and merge algorithms often fail to identify conflicts correctly when there are multiple edits to one line of code or code is relocated. This paper introduces Grove, a collaborative structure editor calculus that eliminates patch synthesis and three-way merge algorithms entirely. Instead, patches are derived directly from the log of the developer\u2019s edit actions and all edits commute, i.e. the repository state forms a commutative replicated data type (CmRDT). To handle conflicts that can arise due to code relocation, the core datatype in Grove is a labeled directed multi-graph with uniquely identified vertices and edges. All edits amount to edge insertion and deletion, with deletion being permanent. To support tree-based editing, we define a decomposition from graphs into groves , which are a set of syntax trees with conflicts\u2013including local, relocation, and unicyclic relocation conflicts\u2013represented explicitly using holes and references between trees. Finally, we define a type error localization system for groves that enjoys a totality property, i.e. all editor states in Grove are statically meaningful, so developers can use standard editor services while working to resolve these explicitly represented conflicts. The static semantics is defined as a bidirectional marking system in line with recent work, with gradual typing employed to handle situations where errors and conflicts prevent type determination. We then layer on a unification-based type inference system to opportunistically fill type holes and fail gracefully when no solution exists. We mechanize the metatheory of Grove using the Agda theorem prover. We implement these ideas as the Grove Workbench , which generates the necessary data structures and algorithms in OCaml given a syntax tree specification."
+    },
+    {
+      "id": "W4367675111",
+      "title": "A Study of Semantics for CRDT-based Collaborative Spreadsheets",
+      "abstract": "Online collaboration is becoming prevalent in our day-today work. As commercial applications show, next to texts, spreadsheets are an essential tool for storing and organizing shared data. However, concurrent modifications of a collaborative spreadsheet can lead to unexpected results when they reflect implementation decisions rather than user intention."
+    },
+    {
+      "id": "W7125926740",
+      "title": "From Characters to Structure: Rethinking Real-Time Collaborative Programming Models",
+      "abstract": "Multiple programming tasks require synchronous collaboration between developers, giving rise to real-time collaborative programming tools that enable simultaneous editing of shared source code. However, most existing tools operate at the text level, propagating every keystroke\u2013including syntactically invalid ones\u2013without considering program structure. This results in excessive communication overhead, frequent propagation of build-breaking states, and poor synchronization. A major consequence is noticeable lag, especially under unstable network conditions, as collaborators are overwhelmed with unnecessary updates that disrupt their workflow and degrade the shared coding experience. In this paper, we introduce a novel structure-aware propagation model that transmits only syntactically valid code changes. For evaluation we implemented our tool as an IntelliJ plugin and evaluate it against three industry-standard tools\u2013VS Code Live Share, Code With Me, and Replit\u2013across eight representative programming scenarios. Our results show that it significantly lowers the number and size of propagated messages while maintaining consistent, buildable program states. Our findings demonstrate the potential of structure-aware propagation as a foundation for the next generation of real-time collaborative programming environments."
+    },
+    {
+      "id": "W4320058175",
+      "title": "Efficient CRDT Synchronization at Scale using a Causal Multicast over a Virtual Hypercube Overlay",
+      "abstract": "This paper presents a work in progress that intends to evaluate the use of a virtual hypercube topology as a partial replication protocol for a data store based on Conflict-free Replicated Data Types (CRDT). CRDTs can ensure consistency in a deterministic and conflict-free manner. This project presents a review of recent solutions for the replication of CRDTs, and proposes the input data and the test environment for evaluation. Currently, we are focused on building a prototype based on the VCube-PS pub-sub protocol. Various load and network distributions will be later evaluated using the Grid5000 testbed. The results will be compared with other replication protocols proposed in recent research to determine the feasibility of the proposed specification in terms of latency, scalability, and fault tolerance."
+    },
+    {
+      "id": "W4387700582",
+      "title": "Efficient Synchronization of CRDTs using VCube-PS",
+      "abstract": "This work presents VCube-Sync, a distributed datastore that uses the VCube virtual topology to maintain Conflict-free Replicated Data Types (CRDT). CRDT can ensure consistency in a deterministic and conflict-free manner. The VCube has been previously used to implement multiple distributed systems abstractions, due to its properties, in particular fault tolerance and logarithmic latency. The VCube-Sync protocol presented in the present work is based on VCube-PS, a publish-subscribe system based on VCube. VCube-Sync exploits the synergy between VCube-PS and replication systems. Evaluation experiments with VCube-Sync in the context of operations-based CRDTs were performed on the Grid5000 testbed under various loads and network distributions. The experiments include comparisons with EcoSyncTree, another replication protocol recently proposed. The results show that VCube-Sync offers superior performance in terms of latency, scalability, and bandwidth."
+    },
+    {
+      "id": "W4399550620",
+      "title": "Performance optimisation techniques for Conflict-free Replicated Data Types (CRDT)",
+      "abstract": "The research relevance is determined by the need for distributed data handling optimisation that does not cause conflicts during replication, since the introduction of such types of data leads to an increase in the need for their optimisation and performance. The study aims to develop techniques to improve the efficiency of various types of data with conflict-free replication. To achieve this goal, the methods of analysis and experimentation were used. The study results demonstrate that the use of certain optimised methods of conflict-free data types in replication leads to a significant improvement in efficiency and reduction of resource costs. The results show that caching and precomputation, asynchronous synchronisation, and local processing are the most effective methods for improving the efficiency of Conflict-free Replicated Data Types. It is established that the choice of a specific method for improving the performance of Conflict-free Replicated Data Types should be justified and based on a careful analysis of the requirements and characteristics of a particular distributed system. This takes into account user needs, data criticality, edit frequency, etc. The research includes the development and optimisation of synchronisation algorithms that significantly improve the performance of these types of data in distributed systems. The work includes simple software implementations for detailed analysis and study of methods for optimising the performance of data types in conflict-free replications. The introduction of distributed computing has made it possible to optimise the processes of data replication and synchronisation, which helps to reduce overheads and improve system performance. It is concluded that the study is of practical importance since the use of optimised conflict-free data types with replication in real distributed systems can improve their efficiency and reliability. The practical significance of the study lies in the possibility of applying optimised methods of data types with conflict-free replication in real distributed systems, which will increase their performance and ensure efficient operation under conditions of high load and limited resource potential"
+    },
+    {
+      "id": "W4408464570",
+      "title": "Expressive Image Generation and Editing with Rich Text",
+      "abstract": null
+    },
+    {
+      "id": "W4414647796",
+      "title": "Local-First Software for Green IT",
+      "abstract": "The growing energy footprint of Information and Communication Technology (ICT) services has become a critical environmental concern. While current approaches mainly focus on optimizing existing architectures, this position paper advocates for investigating a more fundamental shift: moving from Cloud-centric to Local-First Software architectures, where data and computation primarily reside on end-user devices. Through a preliminary study, we examine the energy consumption implications of such an architectural shift. We first develop a framework identifying the main potential impacts across the service stack (server, network, and client devices). We then discuss these impacts through three real-world examples, demonstrating how Local-First Software approaches could reduce energy consumption. Our analysis reveals both opportunities and challenges in this architectural transformation. While most impacts could contribute to energy reduction, particularly through decreased server and network usage, some negative impacts emerge, mainly around synchronization and client-side computation. These initial findings suggest that Local-First Software architectures, when appropriately implemented, could significantly reduce the energy footprint of digital services. This position paper aims to stimulate discussion and research in energy-efficient software architectures, laying the groundwork for future empirical studies on Local-First Software approaches in sustainable computing."
+    },
+    {
+      "id": "W4367674980",
+      "title": "For-Each Operations in Collaborative Apps",
+      "abstract": "Conflict-free Replicated Data Types (CRDTs) allow collaborative access to an app's data. We describe a novel CRDT operation, for-each on the list of CRDTs, and demonstrate its use in collaborative apps. Our for-each operation applies a given mutation to each element of a list, including elements inserted concurrently. This often preserves user intention in a way that would otherwise require custom CRDT algorithms. We give example applications of our for-each operation to collaborative rich-text, recipe, and slideshow editors."
+    },
+    {
+      "id": "W4399550585",
+      "title": null,
+      "abstract": "Bulletin of ChSTU is a peer-reviewed collection of scientific works in the field of technical sciences published by Cherkasy State Technological University. Founded in 1991, Bulletin of ChSTU is included in the List of Scientific Professional Journals of Ukraine (category \"\u0411\")"
+    },
+    {
+      "id": "W4386402576",
+      "title": "\u0421\u0423\u041c\u0406\u0421\u041d\u0415 \u0420\u0415\u0414\u0410\u0413\u0423\u0412\u0410\u041d\u041d\u042f \u0422\u0415\u041a\u0421\u0422\u0406\u0412 \u0412 \u0420\u041e\u0417\u041f\u041e\u0414\u0406\u041b\u0415\u041d\u0418\u0425 \u0421\u0418\u0421\u0422\u0415\u041c\u0410\u0425",
+      "abstract": "\u041e\u0434\u043d\u0456\u0454\u044e \u0437 \u043f\u043e\u0448\u0438\u0440\u0435\u043d\u0438\u0445 \u043c\u0456\u0436\u0433\u0430\u043b\u0443\u0437\u0435\u0432\u0438\u0445 \u0437\u0430\u0434\u0430\u0447 \u0454 \u0441\u0442\u0432\u043e\u0440\u0435\u043d\u043d\u044f \u0442\u0430 \u0440\u0435\u0434\u0430\u0433\u0443\u0432\u0430\u043d\u043d\u044f \u0442\u0435\u043a\u0441\u0442\u043e\u0432\u0438\u0445 \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u0456\u0432, \u0449\u043e \u0442\u0430\u043a\u043e\u0436 \u043f\u043e\u0442\u0440\u0435\u0431\u0443\u0454 \u0440\u043e\u0437\u0432\u2019\u044f\u0437\u0430\u043d\u043d\u044f \u0432 \u043a\u043e\u043d\u0442\u0435\u043a\u0441\u0442\u0456 \u0440\u043e\u0437\u043f\u043e\u0434\u0456\u043b\u0435\u043d\u0438\u0445 \u0441\u0438\u0441\u0442\u0435\u043c. \u0410\u043d\u0430\u043b\u0456\u0437 \u0456\u0441\u043d\u0443\u044e\u0447\u0438\u0445 \u0440\u0456\u0448\u0435\u043d\u044c \u0434\u043b\u044f \u0441\u0443\u043c\u0456\u0441\u043d\u043e\u0433\u043e \u0440\u0435\u0434\u0430\u0433\u0443\u0432\u0430\u043d\u043d\u044f \u0442\u0435\u043a\u0441\u0442\u0443 (Google Docs, Notion, Etherpad) \u0441\u0432\u0456\u0434\u0447\u0438\u0442\u044c \u043f\u0440\u043e \u043e\u0431\u043c\u0435\u0436\u0435\u043d\u0443 \u0437\u0434\u0430\u0442\u043d\u0456\u0441\u0442\u044c \u0446\u0438\u0445 \u0441\u0438\u0441\u0442\u0435\u043c \u0434\u043e \u0440\u043e\u0437\u0432\u2019\u044f\u0437\u0430\u043d\u043d\u044f \u043f\u0440\u043e\u0431\u043b\u0435\u043c \u043a\u043e\u043d\u0444\u043b\u0456\u043a\u0442\u0456\u0432 \u043f\u0456\u0434 \u0447\u0430\u0441 \u043e\u0434\u043d\u043e\u0447\u0430\u0441\u043d\u0438\u0445 \u043e\u043f\u0435\u0440\u0430\u0446\u0456\u0439 \u0440\u0435\u0434\u0430\u0433\u0443\u0432\u0430\u043d\u043d\u044f \u0434\u0430\u043d\u0438\u0445, \u043a\u043e\u043d\u0442\u0440\u043e\u043b\u044e \u0432\u0435\u0440\u0441\u0456\u0439 \u0442\u0430 \u043d\u0435\u0441\u0442\u0430\u0431\u0456\u043b\u044c\u043d\u043e\u0433\u043e \u043c\u0435\u0440\u0435\u0436\u0435\u0432\u043e\u0433\u043e \u0437\u2019\u0454\u0434\u043d\u0430\u043d\u043d\u044f. \u0420\u0435\u043f\u043b\u0456\u043a\u0430\u0446\u0456\u044f \u0434\u043e\u0437\u0432\u043e\u043b\u044f\u0454 \u0437\u0430\u0431\u0435\u0437\u043f\u0435\u0447\u0438\u0442\u0438 \u043c\u0438\u0442\u0442\u0454\u0432\u0456\u0441\u0442\u044c \u0440\u0435\u0434\u0430\u0433\u0443\u0432\u0430\u043d\u043d\u044f \u0442\u0435\u043a\u0441\u0442\u0443 \u0442\u0430 \u0432\u0438\u0441\u043e\u043a\u0438\u0439 \u0440\u0456\u0432\u0435\u043d\u044c \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u043e\u0441\u0442\u0456 \u0441\u0438\u0441\u0442\u0435\u043c\u0438 \u0448\u043b\u044f\u0445\u043e\u043c \u0437\u0430\u0431\u0435\u0437\u043f\u0435\u0447\u0435\u043d\u043d\u044f \u043d\u0430\u0434\u043b\u0438\u0448\u043a\u043e\u0432\u043e\u0441\u0442\u0456 [1]. \u0420\u0435\u043f\u043b\u0456\u043a\u0430\u0446\u0456\u044f \u0437 \u043e\u0434\u043d\u0438\u043c \u043b\u0456\u0434\u0435\u0440\u043e\u043c \u2013 \u0443 \u0441\u0438\u0441\u0442\u0435\u043c\u0456 \u0432\u0438\u0434\u0456\u043b\u0435\u043d\u043e \u043e\u0434\u0438\u043d \u0441\u043f\u0435\u0446\u0456\u0430\u043b\u044c\u043d\u0438\u0439 \u0432\u0443\u0437\u043e\u043b \u2013 \u043b\u0456\u0434\u0435\u0440, \u0449\u043e \u043e\u043f\u0440\u0430\u0446\u044c\u043e\u0432\u0443\u0454 \u0443\u0441\u0456 \u0437\u0430\u043f\u0438\u0442\u0438 \u043d\u0430 \u0437\u043c\u0456\u043d\u0443 \u0434\u0430\u043d\u0438\u0445. \u0420\u0435\u043f\u043b\u0456\u043a\u0430\u0446\u0456\u044f \u0437 \u0431\u0430\u0433\u0430\u0442\u044c\u043c\u0430 \u043b\u0456\u0434\u0435\u0440\u0430\u043c\u0438 \u2013 \u043d\u0430 \u0432\u0456\u0434\u043c\u0456\u043d\u0443 \u0432\u0456\u0434 \u043f\u043e\u043f\u0435\u0440\u0435\u0434\u043d\u044c\u043e\u0457 \u043c\u043e\u0434\u0435\u043b\u0456, \u0441\u0438\u0441\u0442\u0435\u043c\u0430 \u0434\u043e\u0437\u0432\u043e\u043b\u044f\u0454 \u0431\u0430\u0433\u0430\u0442\u044c\u043e\u043c \u0432\u0443\u0437\u043b\u0430\u043c \u043d\u0435\u0437\u0430\u043b\u0435\u0436\u043d\u043e \u043e\u043f\u0440\u0430\u0446\u044c\u043e\u0432\u0443\u0432\u0430\u0442\u0438 \u0437\u0430\u043f\u0438\u0442\u0438 \u043d\u0430 \u0437\u0430\u043f\u0438\u0441 \u0442\u0430 \u0437\u043c\u0456\u043d\u0443 \u0434\u0430\u043d\u0438\u0445. \u041a\u043e\u0436\u0435\u043d \u0432\u0443\u0437\u043e\u043b \u0441\u0438\u0441\u0442\u0435\u043c\u0438, \u0449\u043e \u0440\u0435\u0430\u043b\u0456\u0437\u0443\u0454 \u0442\u0430\u043a\u0438\u0439 \u0442\u0438\u043f \u0430\u043b\u0433\u043e\u0440\u0438\u0442\u043c\u0443, \u0432\u0438\u0441\u0442\u0443\u043f\u0430\u0454 \u043e\u0434\u043d\u043e\u0447\u0430\u0441\u043d\u043e \u044f\u043a \u043b\u0456\u0434\u0435\u0440 \u0456 \u043f\u0456\u0434\u043f\u0438\u0441\u043d\u0438\u043a, \u0437\u0434\u0430\u0442\u043d\u0438\u0439 \u0437\u0430\u0441\u0442\u043e\u0441\u043e\u0432\u0443\u0432\u0430\u0442\u0438 \u0437\u043c\u0456\u043d\u0438 \u0442\u0430 \u0440\u0435\u043f\u043b\u0456\u043a\u0443\u0432\u0430\u0442\u0438 \u0457\u0445 \u043d\u0430 \u0456\u043d\u0448\u0456 \u0432\u0443\u0437\u043b\u0438. \u0426\u044f \u043c\u043e\u0434\u0435\u043b\u044c \u0437\u0430\u0431\u0435\u0437\u043f\u0435\u0447\u0443\u0454 \u043a\u0440\u0430\u0449\u0443 \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0456\u0441\u0442\u044c \u0442\u0430 \u043f\u0440\u0438\u0448\u0432\u0438\u0434\u0448\u0438\u0442\u0438 \u043f\u0440\u043e\u0434\u0443\u043a\u0442\u0438\u0432\u043d\u0456\u0441\u0442\u044c \u0432\u0438\u043a\u043e\u043d\u0430\u043d\u043d\u044f \u0437\u0430\u043f\u0438\u0442\u0456\u0432 \u043d\u0430 \u0437\u0430\u043f\u0438\u0441. \u0412\u0456\u0434\u0441\u0443\u0442\u043d\u0456\u0441\u0442\u044c \u0454\u0434\u0438\u043d\u043e\u0457 \u0442\u043e\u0447\u043a\u0438 \u0432\u0456\u0434\u043c\u043e\u0432\u0438 \u0432 \u0442\u0430\u043a\u0456\u0439 \u043c\u043e\u0434\u0435\u043b\u0456 \u0442\u0430\u043a\u043e\u0436 \u043f\u0456\u0434\u0432\u0438\u0449\u0443\u0454 \u043d\u0430\u0434\u0456\u0439\u043d\u0456\u0441\u0442\u044c. \u041d\u0435\u0434\u043e\u043b\u0456\u043a\u043e\u043c \u0440\u0435\u043f\u043b\u0456\u043a\u0430\u0446\u0456\u0457 \u0437 \u0431\u0430\u0433\u0430\u0442\u044c\u043c\u0430 \u043b\u0456\u0434\u0435\u0440\u0430\u043c\u0438 \u0454 \u043d\u0435\u043e\u0431\u0445\u0456\u0434\u043d\u0456\u0441\u0442\u044c \u0440\u043e\u0437\u0432\u2019\u044f\u0437\u0443\u0432\u0430\u0442\u0438 \u043a\u043e\u043d\u0444\u043b\u0456\u043a\u0442\u0438 \u2013 \u0440\u043e\u0437\u0431\u0456\u0436\u043d\u043e\u0441\u0442\u0456 \u043c\u0456\u0436 \u0440\u0435\u043f\u043b\u0456\u043a\u0430\u043c\u0438, \u0449\u043e \u0432\u0438\u043d\u0438\u043a\u0430\u044e\u0442\u044c \u0443\u043d\u0430\u0441\u043b\u0456\u0434\u043e\u043a \u0432\u0456\u0434\u043c\u043e\u0432 \u0447\u0438 \u0437\u0430\u0442\u0440\u0438\u043c\u043e\u043a \u0432 \u043c\u0435\u0440\u0435\u0436\u0456. \u0414\u043b\u044f \u0432\u0438\u0440\u0456\u0448\u0435\u043d\u043d\u044f \u043f\u0440\u043e\u0431\u043b\u0435\u043c\u0438 \u0432\u0438\u043d\u0438\u043a\u043d\u0435\u043d\u043d\u044f \u043a\u043e\u043d\u0444\u043b\u0456\u043a\u0442\u0456\u0432, \u0441\u043f\u0440\u0438\u0447\u0438\u043d\u0435\u043d\u0438\u0445 \u043e\u0434\u043d\u043e\u0447\u0430\u0441\u043d\u0438\u043c\u0438 \u0437\u043c\u0456\u043d\u0430\u043c\u0438 \u0434\u0430\u043d\u0438\u0445 \u0443 \u0440\u043e\u0437\u043f\u043e\u0434\u0456\u043b\u0435\u043d\u0438\u0445 \u0441\u0438\u0441\u0442\u0435\u043c\u0430\u0445 \u0456\u0441\u043d\u0443\u044e\u0442\u044c \u0434\u0432\u0430 \u043e\u0441\u043d\u043e\u0432\u043d\u0438\u0445 \u043f\u0456\u0434\u0445\u043e\u0434\u0438: Operational transformation \u0442\u0430 Conflict-free replicated data types."
+    },
+    {
+      "id": "W4402457642",
+      "title": "Decentralized Near-Synchronous Local-First Programming Collaboration",
+      "abstract": "This dissertation investigates near-synchronous collaboration in programming environments by means of Conflict-free Replicated Data Types (CRDTs). While screen sharing and video conferencing offer basic features for collaborative programming, IDE-embedded collaboration tools provide precise tracking of source code changes and developer control. CRDTs enable decentralized collaboration, eliminating central server dependencies. However, existing CRDTs fail to preserve user intent and handle complex formats, leading to inefficiencies. Using a Design Science Research approach, this dissertation addresses four key research areas: (1) Identifying the limitations of existing CRDT algorithms in preserving user intent for programming files, (2) Optimizing CRDT implementations for programming collaboration requirements, (3) Determining the appropriate granularity for replicated data types in programming environments, (4) Exploring supervised imitation learning to enhance system capabilities in merging conflicts. This work aims to improve collaborative programming tools, ensuring higher consistency, efficiency, and user satisfaction."
+    },
+    {
+      "id": "W4403388773",
+      "title": "Desenvolvimento de Editores Colaborativos em Tempo Real: Revis\u00e3o R\u00e1pida",
+      "abstract": "Currently, users expect to collaborate synchronously with others, including over the Web. Developing a real-time collaborative editor (RCE) that enables geographically dispersed users to simultaneously edit the same document relies on specific algorithms and techniques. To understand how real-time collaborative editors are developed and tested, and which algorithms or techniques are crucial for their development, we conducted a systematic review addressing the following questions: For which types of objects does the literature present real-time collaborative editing systems (RTCE)? What is the most commonly used architecture by researchers to implement RTCE systems, how are they represented, and which works present models or roadmaps for the development of RCEs? Between Operational Transformation (OT) and Conflict-free Replicated Data Types (CRDTs) algorithms, which one appears most frequently in the selected works? What are the main types of tests conducted to evaluate collaborative editors, which articles conducted user tests, and what is the average number of users involved in these tests? Which works discuss undo/redo techniques? Which works discuss the use of comments, chat, or history as tools to support collaborative work? After screening 365 records published between 1993 and 2024, the review analyzed 23 studies published between 2002 and 2022. The results revealed various approaches and techniques employed in the implementation of RTCEs, offering a comprehensive view of research in this area. This, in turn, allowed for the identification of challenges that future research should address."
+    },
+    {
+      "id": "W4411272168",
+      "title": "Semantic-Aware Replicated Data Types for Improved Conflict Resolution in Near-Synchronous Code Collaboration",
+      "abstract": "This dissertation addresses the limitations of convergence in near-synchronous code collaboration. Current techniques predominantly rely on string-based synchronization, which often results in conflict resolution that fails to address the underlying structural, syntactic, or semantic context of the code. This work proposes a semantic-aware approach that explores different levels of granularity in replicated data types (RDT) to overcome these limitations while enabling near-synchronous visualization of code evolution, enhancing interactive programming environments. The main contributions include: (1) a classification of conflict scenarios and intent-preserving code merging behavior, (2) a novel RDT approach exploring different granularity levels, (3) near-synchronous visualization of code semantics, and (4) extended RDT approaches utilizing nested replicated data types for improved conflict resolution in educational programming contexts."
+    },
+    {
+      "id": "W4413178419",
+      "title": "Integrating LLM Text-to-Speech for an Accessible Bible Study Application",
+      "abstract": "Bible study is central to many people\u2019s spiritual lives, yet existing digital tools often suffer from outdated design, unnecessary complexity, mandatory internet connectivity, or inadequate note-taking features. This project addresses these challenges with an AI-driven, lightweight, open-source application that seamlessly integrates Bible study with advanced note-taking and an LLM-powered text-to-speech engine for natural-sounding audio. The application is designed for accessibility and ease of use, and it functions fully offline. The LLM-based text-to-speech engine delivers high-quality, natural audio to enhance the study experience. To evaluate its effectiveness, we conducted an expert user study, gathering insights to refine usability and functionality. By combining these features into an intuitive platform, this application offers a modern, user-centered solution for Bible study."
+    },
+    {
+      "id": "W4414564581",
+      "title": "Denicek: Computational Substrate for Document-Oriented End-User Programming",
+      "abstract": null
+    },
+    {
+      "id": "W7133308086",
+      "title": "DevSync: Cloud-Based Real-Time Code Collaboration Platform",
+      "abstract": "The trend of distributed development shows the weakness of traditional local IDEs in collaboration, homing setup, and secure expandability. DevSync provides a solution to these problems-a web-based collaborative integrated development environment (IDE) with the feel of VS Code and real-time collaboration. It uses the CRDTs for conflict-free synchronization, and Socket. IO for real-time communication and AWS Cognito coupled with S3 for secure authentication and storage. The system integrates a Next. js frontend, Monaco Editor, and a backend w/ Node. js/Express backend and a sandboxed execution engine. Optimized for low-latency, scalable real-time collaboration, DevSync composes an effective real-time collaborative text editor over heterogeneous networks and also sketches a road path: AI powered code assistance and offline synchronization."
+    },
+    {
+      "id": "W7151518754",
+      "title": "R\u00e9-identification sans coordination dans les types de donn\u00e9es r\u00e9pliqu\u00e9es sans conflits (CRDTs)",
+      "abstract": "Un syst\u00e8me collaboratif permet \u00e0 plusieurs utilisateur-rices de cr\u00e9er ensemble un contenu. Afin de supporter des collaborations impliquant des millions d'utilisateurs, ces syst\u00e8mes adoptent une architecture d\u00e9centralis\u00e9e pour garantir leur haute disponibilit\u00e9, tol\u00e9rance aux pannes et capacit\u00e9 de passage \u00e0 l'\u00e9chelle. Cependant, ces syst\u00e8mes \u00e9chouent \u00e0 garantir la confidentialit\u00e9 des donn\u00e9es, souverainet\u00e9 des donn\u00e9es, p\u00e9rennit\u00e9 et r\u00e9sistance \u00e0 la censure. Pour r\u00e9pondre \u00e0 ce probl\u00e8me, la litt\u00e9rature propose la conception d'applications Local-First Software (LFS) : des applications collaboratives pair-\u00e0-pair (P2P). Une pierre angulaire des applications LFS sont les Conflict-free Replicated Data Types (CRDTs). Il s'agit de nouvelles sp\u00e9cifications des types de donn\u00e9es, tels que l'Ensemble ou la S\u00e9quence, permettant \u00e0 un ensemble de n\u0153uds de r\u00e9pliquer une donn\u00e9e. Les CRDTs permettent aux n\u0153uds de consulter et de modifier la donn\u00e9e sans coordination pr\u00e9alable, et incorporent un m\u00e9canisme de r\u00e9solution de conflits pour int\u00e9grer les modifications concurrentes. Cependant, les CRDTs pour le type S\u00e9quence souffrent d'une croissance monotone du surco\u00fbt de leur m\u00e9canisme de r\u00e9solution de conflits. Pouvons-nous proposer un m\u00e9canisme de r\u00e9duction du surco\u00fbt des CRDTs pour le type S\u00e9quence qui soit compatible avec les applications LFS ? Dans cette th\u00e8se, nous proposons un nouveau CRDT pour le type S\u00e9quence, RenamableLogootSplit. Ce CRDT int\u00e8gre un m\u00e9canisme de renommage qui minimise p\u00e9riodiquement le surco\u00fbt de son m\u00e9canisme de r\u00e9solution de conflits ainsi qu'un m\u00e9canisme de r\u00e9solution de conflits pour int\u00e9grer les modifications concurrentes \u00e0 un renommage. Finalement, nous proposons un m\u00e9canisme de Garbage Collection (GC) qui supprime \u00e0 terme le propre surco\u00fbt du m\u00e9canisme de renommage."
+    },
+    {
+      "id": "W7151920222",
+      "title": "Cheops reloaded, further steps in decoupling geo-distribution from application business logic : a focus on externalised sharding collaboration, consistency and dependency",
+      "abstract": "Cheops reloaded, nouvelles avanc\u00e9es dans le d\u00e9couplage de la g\u00e9o-distribution de la logique m\u00e9tier des applications La transition du cloud computing centralis\u00e9 vers des applications g\u00e9o-distribu\u00e9es est essentielle pour r\u00e9pondre aux exigences modernes de services \u00e0 faible latence, haute disponibilit\u00e9 et r\u00e9silience. Cependant, les solutions existantes de g\u00e9o-distribution n\u00e9cessitent souvent des modifications intrusives du code de l\u2019application. Ma th\u00e8se \u00e9tend Cheops, un middleware qui d\u00e9couple la g\u00e9o-distribution de la logique applicative, offrant une solution non intrusive et g\u00e9n\u00e9rique pour d\u00e9ployer une application sur des instances g\u00e9ographiquement distribu\u00e9es. S\u2019appuyant sur les principes de Cheops, \"local-first\" et \"collaborative-then\", mes recherches introduisent Cross, un m\u00e9canisme de collaboration par fragmentation pour partitionner les ressources entre diff\u00e9rents sites, ainsi qu\u2019une nouvelle approche pour d\u00e9couplerla gestion de la coh\u00e9rence de la logique applicative, garantissant la synchronisation entre les instances. De plus, la gestion des d\u00e9pendances assure que les op\u00e9rations effectu\u00e9es sur une instance sont reproductibles \u00e0 travers les instances g\u00e9o-distribu\u00e9es, maintenant l\u2019illusion d\u2019une application unifi\u00e9e et localis\u00e9e sur un seul site. Cheops utilise Scope-lang, un langage sp\u00e9cifique au domaine (DSL), pour faciliter cela sans modifier la logique de l\u2019application. Cette extension de Cheops renforce davantage la s\u00e9paration entre la g\u00e9o-distribution et la logique m\u00e9tier de l\u2019application."
+    },
+    {
+      "id": "W7155394780",
+      "title": "AegisSheet: A Compositional CRDT for Collaborative Spreadsheets",
+      "abstract": "Applications that support online collaboration over shared documents such as text files and spreadsheets are becoming increasingly popular. While collaborative text editing is well studied and multiple specialized data structures exist, there has been surprisingly little innovation in the field of collaborative spreadsheets, which allow multiple users to collaboratively organize data, and perform data-driven computations: Major providers often still resort to \u201clast-writer-wins\u201d semantics for common conflict scenarios, resulting in potential data loss that makes these applications ill-equipped for asynchronous and offline collaboration."
+    },
+    {
+      "id": "W7166805704",
+      "title": "An AI-Powered Collaborative Development Environment with Automated Workflow Management",
+      "abstract": null
+    },
+    {
+      "id": "W7214078259",
+      "title": "\u201cBooks are social spaces\u201d: Challenges in Collaborating Across File Formats in Independent Publishing",
+      "abstract": "This paper investigates the challenges faced by independent publishing professionals as they collaborate on multiformat books. We ran four structured participatory design sessions with 16 professionals to collect detailed examples of how they appropriate their specialised but isolated authoring tools, and negotiate the tensions between their personal needs, objectives, expertise and even values. We found that collaboration breakdowns arise primarily from interoperability problems across file formats rather than a lack of coordination across applications. We introduce the novel concept of ecologies of formats to characterise these findings and show that the interplay of formats and people is essential for reducing friction in publishing. We then introduce information synchronisation graphs , a notation tool that reveals recurring patterns in ecologies of artifacts and use it to analyse four publishing workflows. We conclude with recommendations for the design of collaborative publishing systems and suggestions for improving the organisation of their work practices."
+    }
+  ]
+}

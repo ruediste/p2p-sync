@@ -1,0 +1,60 @@
+{
+  "id": "W2189432905",
+  "title": "Inter-server communication in the Mammoth file system",
+  "doi": "https://doi.org/10.14288/1.0051495",
+  "publication_date": "2009-01-01",
+  "publication_year": 2009,
+  "type": "dissertation",
+  "cited_by_count": 1,
+  "authors": [
+    "Jody Pomkoski"
+  ],
+  "venue": "cIRcle (University of British Columbia)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "http://hdl.handle.net/2429/13380",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2189432905.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2189432905.grobid-xml"
+  },
+  "abstract": "The Mammoth file system uses a collection of loosely coupled file servers to provide a highly available, widely distributed, scalable file system. Mammoth servers act as peers to cooperatively provide replicated back-up free storage. Mammoth approaches the management of file data at the granularity of whole files. Files in Mammoth are versioned upon any operation that would modify the data. Versions are immutable and retained by the system. Versioning simplifies conflict management and permits relaxing the consistency model to tolerate the latency inherent in propagating replicas. Each file or directory within the system expresses its replication and distribution requirements explicitly in the meta-data by naming cooperating nodes by IP address. The resulting system is thus inherently more scalable because all nodes do not need to monitor the entire Mammoth system. This thesis describes the design and prototype implementation of a Distribution Manager. This module accesses file and directory meta-data and replication policies to direct its inter-server communication. The distribution manager is composed of two threads which run within a modified userlevel NFS server. These threads provide network communication via the TCP/IP protocol. A socket cache is implemented in order to amortise the relatively expensive set-up of stream sockets. Shared message queues allow asynchronous message processing across threads and nodes. Failures are actively detected and automatically trigger fault recovery.",
+  "topics": [
+    "Peer-to-Peer Network Technologies",
+    "Caching and Content Delivery",
+    "Advanced Data Storage Technologies"
+  ],
+  "references": [
+    "https://openalex.org/W182346126",
+    "https://openalex.org/W1663493649",
+    "https://openalex.org/W1988027225",
+    "https://openalex.org/W2001438822",
+    "https://openalex.org/W2001803004",
+    "https://openalex.org/W2078775767",
+    "https://openalex.org/W2079045792",
+    "https://openalex.org/W2088221489",
+    "https://openalex.org/W2097829252",
+    "https://openalex.org/W2104210894",
+    "https://openalex.org/W2109087938",
+    "https://openalex.org/W2115457697",
+    "https://openalex.org/W2116142433",
+    "https://openalex.org/W2123820820",
+    "https://openalex.org/W2124288146",
+    "https://openalex.org/W2137026697",
+    "https://openalex.org/W2146198619",
+    "https://openalex.org/W2150676586",
+    "https://openalex.org/W2167898414"
+  ],
+  "cited_by": [
+    {
+      "id": "W2285319269",
+      "title": "Copy-on-write in Mammoth"
+    }
+  ]
+}

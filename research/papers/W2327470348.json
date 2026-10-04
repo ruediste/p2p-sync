@@ -1,0 +1,107 @@
+{
+  "id": "W2327470348",
+  "title": "Replication Management and Optimistic Replication Challenges in Mobile Environment",
+  "doi": "https://doi.org/10.5121/ijdms.2011.3407",
+  "publication_date": "2011-11-30",
+  "publication_year": 2011,
+  "type": "article",
+  "cited_by_count": 5,
+  "authors": [
+    "Archana Sharma",
+    "Vineet Kansal"
+  ],
+  "venue": "International Journal of Database Management Systems",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "bronze",
+    "oa_url": "https://doi.org/10.5121/ijdms.2011.3407",
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2327470348.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2327470348.grobid-xml"
+  },
+  "abstract": "Wireless and mobile communication is an important technology that improves user's daily life and facilitates the development of some new technology such as electronic commerce and mobile commerce.Replication is a fundamental technique for supporting concurrent work practices in mobile environments.Optimistic replication algorithms allow replica contents to become stale but in a controlled way.In return, they become far more efficient and available than traditional replication algorithms that keep all the replicas consistent, especially when the network and computers are unreliable.The use of optimistic replication has grown explosively due to the proliferation of the use of the Internet and mobile computing devices, but its systematic study has begun only recently.This paper explores the various replication strategies, replication in mobile environment, benefits and challenges of optimistic replication in mobile applications.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Distributed and Parallel Computing Systems",
+    "Caching and Content Delivery"
+  ],
+  "references": [
+    "https://openalex.org/W196539227",
+    "https://openalex.org/W1505945517",
+    "https://openalex.org/W1533813939",
+    "https://openalex.org/W1535015034",
+    "https://openalex.org/W1540873593",
+    "https://openalex.org/W1545155892",
+    "https://openalex.org/W1602193077",
+    "https://openalex.org/W1608539452",
+    "https://openalex.org/W1762472983",
+    "https://openalex.org/W1779735989",
+    "https://openalex.org/W1872975934",
+    "https://openalex.org/W1987108387",
+    "https://openalex.org/W1998061371",
+    "https://openalex.org/W2001615590",
+    "https://openalex.org/W2001803004",
+    "https://openalex.org/W2036027002",
+    "https://openalex.org/W2038562061",
+    "https://openalex.org/W2059432328",
+    "https://openalex.org/W2111427271",
+    "https://openalex.org/W2111586962",
+    "https://openalex.org/W2113822247",
+    "https://openalex.org/W2117260615",
+    "https://openalex.org/W2117530150",
+    "https://openalex.org/W2122269925",
+    "https://openalex.org/W2124074197",
+    "https://openalex.org/W2125930899",
+    "https://openalex.org/W2127768834",
+    "https://openalex.org/W2135044397",
+    "https://openalex.org/W2145388050",
+    "https://openalex.org/W2154909541",
+    "https://openalex.org/W2167740772",
+    "https://openalex.org/W2323396229",
+    "https://openalex.org/W2404722014",
+    "https://openalex.org/W2751084063",
+    "https://openalex.org/W2751199251",
+    "https://openalex.org/W2753710282",
+    "https://openalex.org/W2998685964",
+    "https://openalex.org/W4205398141",
+    "https://openalex.org/W4230147987",
+    "https://openalex.org/W4233899517",
+    "https://openalex.org/W4248336682",
+    "https://openalex.org/W4255087951",
+    "https://openalex.org/W6630380315",
+    "https://openalex.org/W6632032960",
+    "https://openalex.org/W6632518445",
+    "https://openalex.org/W6649889925",
+    "https://openalex.org/W6680056244",
+    "https://openalex.org/W6681700924",
+    "https://openalex.org/W6921918249"
+  ],
+  "cited_by": [
+    {
+      "id": "W2002686937",
+      "title": "MRDMS-mobile replicated database management synchronization"
+    },
+    {
+      "id": "W4367680582",
+      "title": "Review on data replication strategies in single vs. interconnected cloud systems: Focus on data correlation\u2010aware strategies"
+    },
+    {
+      "id": "W2894397908",
+      "title": "Image synchronization gateway for NoSQL document database and server-side SQL database in mobile environment"
+    },
+    {
+      "id": "W2601602752",
+      "title": "File Tracking For Mobile Devices"
+    },
+    {
+      "id": "W2604399453",
+      "title": "A Framework for Image Synchronization from Mobile NoSQL Database to Server-Side SQL Database"
+    }
+  ]
+}

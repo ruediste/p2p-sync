@@ -1,0 +1,54 @@
+{
+  "id": "W7125579090",
+  "title": "Eg-walker: A Fast, Memory-Efficient Collaborative Editing Algorithm for Distributed Systems",
+  "doi": "https://doi.org/10.1109/iccect64621.2025.11339768",
+  "publication_date": "2025-04-25",
+  "publication_year": 2025,
+  "type": "conference-paper",
+  "cited_by_count": 0,
+  "authors": [
+    "Praval Panwar"
+  ],
+  "venue": "IEEE International Conference on Control, Electronics and Computer Technology (ICCECT)",
+  "open_access": {
+    "is_oa": false,
+    "oa_status": "closed",
+    "oa_url": null,
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "grobid_xml": false,
+    "pdf": false
+  },
+  "content_urls": null,
+  "abstract": "Real-time collaboration features are vital in modern software, allowing multiple users to edit documents simultaneously while maintaining data integrity across devices. Traditional approaches like Operational Transformation (OT) and Conflict-free Replicated Data Types (CRDTs) each have limitations in handling large-scale concurrent editing and ensuring memory efficiency. In this paper, we introduce Eg-walker, a hybrid CRDT/OT algorithm that merges concurrent edits with optimal efficiency and reduced memory usage. Our evaluations show that Eg-walker can merge documents in milliseconds, requires significantly less memory than standard CRDTs, and operates effectively in peer-to-peer environments. This makes Eg-walker an efficient solution for distributed collaboration without reliance on a central server.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Database Systems and Queries",
+    "Peer-to-Peer Network Technologies"
+  ],
+  "references": [
+    "https://openalex.org/W98718822",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1794148987",
+    "https://openalex.org/W1971443766",
+    "https://openalex.org/W1985349143",
+    "https://openalex.org/W1989814541",
+    "https://openalex.org/W2071442639",
+    "https://openalex.org/W2098522119",
+    "https://openalex.org/W2106355650",
+    "https://openalex.org/W2118242633",
+    "https://openalex.org/W2129388329",
+    "https://openalex.org/W2134308710",
+    "https://openalex.org/W2143068513",
+    "https://openalex.org/W2151541805",
+    "https://openalex.org/W2506181100",
+    "https://openalex.org/W2510332240",
+    "https://openalex.org/W2548120315",
+    "https://openalex.org/W2979846168",
+    "https://openalex.org/W3137220996",
+    "https://openalex.org/W4236824789",
+    "https://openalex.org/W4281971122"
+  ],
+  "cited_by": []
+}

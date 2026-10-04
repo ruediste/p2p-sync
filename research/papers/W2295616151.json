@@ -1,0 +1,479 @@
+{
+  "id": "W2295616151",
+  "title": "Delta state replicated data types",
+  "doi": "https://doi.org/10.1016/j.jpdc.2017.08.003",
+  "publication_date": "2017-08-18",
+  "publication_year": 2017,
+  "type": "article",
+  "cited_by_count": 80,
+  "authors": [
+    "Paulo S\u00e9rgio Almeida",
+    "Ali Shoker",
+    "Carlos Baquero"
+  ],
+  "venue": "Journal of Parallel and Distributed Computing",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "bronze",
+    "oa_url": "https://www.sciencedirect.com/science/article/pii/S0743731517302332",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2295616151.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2295616151.grobid-xml"
+  },
+  "abstract": null,
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Data Storage Technologies",
+    "Parallel Computing and Optimization Techniques"
+  ],
+  "references": [
+    "https://openalex.org/W47798387",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1548772126",
+    "https://openalex.org/W1689093460",
+    "https://openalex.org/W1742849858",
+    "https://openalex.org/W1771264736",
+    "https://openalex.org/W1970603441",
+    "https://openalex.org/W2022238631",
+    "https://openalex.org/W2087668037",
+    "https://openalex.org/W2090828855",
+    "https://openalex.org/W2093397547",
+    "https://openalex.org/W2095115602",
+    "https://openalex.org/W2110768875",
+    "https://openalex.org/W2117260615",
+    "https://openalex.org/W2119112746",
+    "https://openalex.org/W2119636671",
+    "https://openalex.org/W2125011947",
+    "https://openalex.org/W2141297235",
+    "https://openalex.org/W2141819835",
+    "https://openalex.org/W2143725230",
+    "https://openalex.org/W2153704625",
+    "https://openalex.org/W2156302731",
+    "https://openalex.org/W2159123115",
+    "https://openalex.org/W2167845698",
+    "https://openalex.org/W2182414627",
+    "https://openalex.org/W2186526077",
+    "https://openalex.org/W2306796337",
+    "https://openalex.org/W2475556466",
+    "https://openalex.org/W2904215295",
+    "https://openalex.org/W3083181722",
+    "https://openalex.org/W3215028506",
+    "https://openalex.org/W4206549161",
+    "https://openalex.org/W4230896551",
+    "https://openalex.org/W4242092331",
+    "https://openalex.org/W4249585878",
+    "https://openalex.org/W6601974473",
+    "https://openalex.org/W6631069680",
+    "https://openalex.org/W6636010280",
+    "https://openalex.org/W6637846254",
+    "https://openalex.org/W6665984022",
+    "https://openalex.org/W6676652972",
+    "https://openalex.org/W6680868179",
+    "https://openalex.org/W6682847326",
+    "https://openalex.org/W6684566454",
+    "https://openalex.org/W7073611400"
+  ],
+  "cited_by": [
+    {
+      "id": "W2510332240",
+      "title": "A Conflict-Free Replicated JSON Datatype",
+      "abstract": "Many applications model their data in a general-purpose storage format such as JSON. This data structure is modified by the application as a result of user input. Such modifications are well understood if performed sequentially on a single copy of the data, but if the data is replicated and modified concurrently on multiple devices, it is unclear what the semantics should be. In this paper we present an algorithm and formal semantics for a JSON data structure that automatically resolves concurrent modifications such that no updates are lost, and such that all replicas converge towards the same state (a conflict-free replicated datatype or CRDT). It supports arbitrarily nested list and map types, which can be modified by insertion, deletion and assignment. The algorithm performs all merging client-side and does not depend on ordering guarantees from the network, making it suitable for deployment on mobile devices with poor network connectivity, in peer-to-peer networks, and in messaging systems with end-to-end encryption."
+    },
+    {
+      "id": "W3095060634",
+      "title": "$$DSR_d$$: A Proposal for a Low-Latency, Distributed Working Memory for CORTEX",
+      "abstract": null
+    },
+    {
+      "id": "W4402369907",
+      "title": "Approaches to Conflict-free Replicated Data Types",
+      "abstract": "Conflict-free Replicated Data Types (CRDTs) allow optimistic replication in a principled way. Different replicas can proceed independently, being available even under network partitions and always converging deterministically: Replicas that have received the same updates will have equivalent state, even if received in different orders. After a historical tour of the evolution from sequential data types to CRDTs, we present in detail the two main approaches to CRDTs, operation-based and state-based, including two important variations, the pure operation-based and the delta-state based. Intended for prospective CRDT researchers and designers, this article provides solid coverage of the essential concepts, clarifying some misconceptions that frequently occur, but also presents some novel insights gained from considerable experience in designing both specific CRDTs and approaches to CRDTs."
+    },
+    {
+      "id": "W4379534068",
+      "title": "Type-Checking CRDT Convergence",
+      "abstract": "Conflict-Free Replicated Data Types (CRDTs) are a recent approach for keeping replicated data consistent while guaranteeing the absence of conflicts among replicas. For correct operation, CRDTs rely on a merge function that is commutative, associative and idempotent. Ensuring that such algebraic properties are satisfied by implementations, however, is left to the programmer, resulting in a process that is complex and error-prone. While techniques based on testing, automatic verification of a model, and mechanized or handwritten proofs are available, we lack an approach that is able to verify such properties on concrete CRDT implementations. In this paper, we present Propel, a programming language with a type system that captures the algebraic properties required by a correct CRDT implementation. The Propel type system deduces such properties by case analysis and induction: sum types guide the case analysis and algebraic properties in function types enable induction for free. Propel\u2019s key feature is its capacity to reason about algebraic properties (a) in terms of rewrite rules and (b) to derive the equality or inequality of expressions from the properties. We provide an implementation of Propel as a Scala embedding, we implement several CRDTs, verify them with Propel and compare the verification process with four state-of-the-art verification tools. Our evaluation shows that Propel is able to automatically deduce the properties that are relevant for common CRDT implementations found in open-source libraries even in cases in which competitors timeout."
+    },
+    {
+      "id": "W4281971122",
+      "title": "Certified mergeable replicated data types",
+      "abstract": "Replicated data types (RDTs) are data structures that permit concurrent modification of multiple, potentially geo-distributed, replicas without coordination between them. RDTs are designed in such a way that conflicting operations are eventually deterministically reconciled ensuring convergence. Constructing correct RDTs remains a difficult endeavour due to the complexity of reasoning about independently evolving states of the replicas. With the focus on the correctness of RDTs (and rightly so), existing approaches to RDTs are less efficient compared to their sequential counterparts in terms of the time and space complexity of local operations. This is unfortunate since RDTs are often used in a local-first setting where the local operations far outweigh remote communication."
+    },
+    {
+      "id": "W2997905744",
+      "title": "Proving the Safety of Highly-Available Distributed Objects",
+      "abstract": "Abstract To provide high availability in distributed systems, object replicas allow concurrent updates. Although replicas eventually converge, they may diverge temporarily, for instance when the network fails. This makes it difficult for the developer to reason about the object\u2019s properties, and in particular, to prove invariants over its state. For the subclass of state-based distributed systems, we propose a proof methodology for establishing that a given object maintains a given invariant, taking into account any concurrency control. Our approach allows reasoning about individual operations separately. We demonstrate that our rules are sound, and we illustrate their use with some representative examples. We automate the rule using Boogie, an SMT-based tool."
+    },
+    {
+      "id": "W3116823887",
+      "title": "Conflict-Free Replicated Relations for Multi-Synchronous Database Management at Edge",
+      "abstract": "In a cloud-edge environment, edge devices may not always be connected to the network. Still, applications may need to access the data on edge devices even when they are not connected. With support for multi-synchronous access, data on an edge device are kept synchronous with the data in the cloud as long as the device is online. When the device is offline, the application can still access the data on the device, asynchronously with concurrent data updates either in the cloud or on other edge devices. Conflict-free Replicated Data Types (CRDTs) emerged as a technology for multi-synchronous data access. CRDTs guarantee that when all sites have applied the same set of updates, the replicated data converge. However, CRDTs have not been successfully applied to relational databases (RDBs) for multi-synchronous access. In this paper, we present Conflict-free Replicated Relations (CRRs) that apply CRDTs to RDBs for support of multi-synchronous data access. With CRR, existing RDB applications, with very little modification, can be enhanced with multi-synchronous access. We also present a prototype implementation of CRR with some preliminary performance results."
+    },
+    {
+      "id": "W4293232534",
+      "title": "Making CRDTs Byzantine fault tolerant",
+      "abstract": "It is often claimed that Conflict-free Replicated Data Types (CRDTs) ensure consistency of replicated data in peer-to-peer systems. However, peer-to-peer systems usually consist of untrusted nodes that may deviate from the specified protocol (i.e. exhibit Byzantine faults), and most existing CRDT algorithms cannot guarantee consistency in the presence of such faults. This paper shows how to adapt existing non-Byzantine CRDT algorithms and make them Byzantine fault-tolerant. The proposed scheme can tolerate any number of Byzantine nodes (making it immune to Sybil attacks), guarantees Strong Eventual Consistency, and requires only modest changes to existing CRDT algorithms."
+    },
+    {
+      "id": "W2979761551",
+      "title": "A fault-tolerant programming model for distributed interactive applications",
+      "abstract": "Ubiquitous connectivity of web, mobile, and IoT computing platforms has fostered a variety of distributed applications with decentralized state. These applications execute across multiple devices with varying reliability and connectivity. Unfortunately, there is no declarative fault-tolerant programming model for distributed interactive applications with an inherently decentralized system model. We present a novel approach to automating fault tolerance using high-level programming abstractions tailored to the needs of distributed interactive applications. Specifically, we propose a calculus that enables formal reasoning about applications' dataflow within and across individual devices. Our calculus reinterprets the functional reactive programming model to seamlessly integrate its automated state change propagation with automated crash recovery of device-local dataflow and disconnection-tolerant distribution with guaranteed automated eventual consistency semantics based on conflict-free replicated datatypes. As a result, programmers are relieved of handling intricate details of distributing change propagation and coping with distribution failures in the presence of interactivity. We also provides proofs of our claims, an implementation of our calculus, and an empirical evaluation using a common interactive application."
+    },
+    {
+      "id": "W3108570993",
+      "title": "Rethinking safe consistency in distributed object-oriented programming",
+      "abstract": "Large scale distributed systems require to embrace the trade off between consistency and availability, accepting lower levels of consistency to guarantee higher availability. Existing programming languages are, however, agnostic to this compromise, resulting in consistency guarantees that are the same for the whole application and are implicitly adopted from the middleware or hardcoded in configuration files. In this paper, we propose to integrate availability in the design of an object-oriented language, allowing developers to specify different consistency and isolation constraints in the same application at the granularity of single objects. We investigate how availability levels interact with object structure and define a type system that preserves correct program behavior. Our evaluation shows that our solution performs efficiently and improves the design of distributed applications."
+    },
+    {
+      "id": "W4380433157",
+      "title": "GeoGauss: Strongly Consistent and Light-Coordinated OLTP for Geo-Replicated SQL Database",
+      "abstract": "Multinational enterprises conduct global business that has a demand for geo-distributed transactional databases. Existing state-of-the-art databases adopt a sharded master-follower replication architecture. However, the single-master serving mode incurs massive cross-region writes from clients, and the sharded architecture requires multiple round-trip acknowledgments (e.g., 2PC) to ensure atomicity for cross-shard transactions. These limitations drive us to seek yet another design choice. In this paper, we propose a strongly consistent OLTP database GeoGauss with full replica multi-master architecture. To efficiently merge the updates from different master nodes, we propose a multi-master OCC that unifies data replication and concurrent transaction processing. By leveraging an epoch-based delta state merge rule and the optimistic asynchronous execution, GeoGauss ensures strong consistency with light-coordinated protocol and allows more concurrency with weak isolation, which are sufficient to meet our needs. Our geo-distributed experimental results show that GeoGauss achieves 7.06X higher throughput and 17.41X lower latency than the state-of-the-art geo-distributed database CockroachDB on the TPC-C benchmark."
+    },
+    {
+      "id": "W3198469324",
+      "title": "Connected Self-Organized Citizens in Crises: An Interdisciplinary Resilience Concept for Neighborhoods",
+      "abstract": "When facing major crisis events, such as earthquakes, flooding, or attacks on infrastructure, people start to organize within their neighborhoods. While this has historically been an analog process, people now use collaboration or messenger apps to support their self-organization. Unfortunately, these apps are not designed to be resilient and fail with communication infrastructure outages when servers are no longer available. We provide a resilience concept with requirements derived from an interdisciplinary view enabling citizens to communicate and collaborate in everyday life and during crisis events. Our human-centered prototype integrates concepts of nudging for crisis preparedness, decentralized and secure communication, participation, smart resource management, historical knowledge, and legal issues to help guide further research."
+    },
+    {
+      "id": "W4406327968",
+      "title": "Efficient State Synchronization in Distributed Electrical Grid Systems Using Conflict-Free Replicated Data Types",
+      "abstract": "Modern electrical grids are evolving towards distributed architectures, necessitating efficient and reliable state synchronization mechanisms to maintain structural and functional consistency. This paper investigates the application of conflict-free replicated data types (CRDTs) for representing and synchronizing the states of distributed electrical grid systems (DEGSs). We present a general structure for DEGSs based on CRDTs, focusing on the Convergent Replicated Data Type (CvRDT) model with delta state propagation to optimize the communication overhead. The Observed Remove Set (ORSet) and Last-Writer-Wins Register (LWW-Register) are utilized to handle concurrent updates and ensure that only the most recent state changes are retained. An actor-based framework, \u201cVigilant Hawk\u201d, leveraging the Akka toolkit, was developed to simulate the asynchronous and concurrent nature of DEGSs. Each electrical grid node is modelled as an independent actor with isolated state management, facilitating scalability and fault tolerance. Through a series of experiments involving 100 nodes under varying latency degradation coefficients (LDK), we examined the impact of network conditions on the state synchronization efficiency. The simulation results demonstrate that CRDTs effectively maintain consistency and deterministic behavior in DEGSs, even with increased network latency and node disturbances. An effective LDK range was identified (LDK effective = 2 or 4), where the network remains stable without significant delays in state propagation. The linear relationship between the full state distribution time (FSDT) and LDK indicates that the system can scale horizontally without introducing complex communication overhead. The findings affirm that using CRDTs for state synchronization enhances the resilience and operational efficiency of distributed electrical grids. The deterministic and conflict-free properties of CRDTs eliminate the need for complex concurrency control mechanisms, making them suitable for real-time monitoring and control applications. Future work will focus on addressing identified limitations, such as optimizing message routing based on the network topology and incorporating security measures to protect state information in critical infrastructure systems."
+    },
+    {
+      "id": "W4409095645",
+      "title": "CRDT-Based Game State Synchronization in Peer-to-Peer VR",
+      "abstract": "Virtual presence demands ultra-low latency, a factor that centralized architectures, by their nature, cannot minimize. Local peer-to-peer architectures offer a compelling alternative, but also pose unique challenges in terms of network infrastructure."
+    },
+    {
+      "id": "W4411674227",
+      "title": "CRDT-based knowledge synchronisation in an Internet of Robotics Things ecosystem for Ambient Assisted Living",
+      "abstract": "Integrating IoT and assistive robots in the design of Ambient Assisted Living (AAL) frameworks has proven to be a useful solution for monitoring and assisting elderly people at home. As a way to manage the information captured and assess the person\u2019s condition, respond to emergencies, promote physical or cognitive exercises, etc., these systems can also integrate a Virtual Caregiver (VC). Given the diversity of technologies deployed in such an AAL framework, deciding how to manage knowledge appropriately can be complex. This paper proposes to organise the AAL framework as a distributed system, i.e., as a collection of autonomous software agents that provide users with a single coherent response. In this distributed system, agents are deployed locally and handle replicas of the knowledge model. The problem of merging these replicas into a consistent representation, therefore arises.The \u03b4 -CRDT (Conflict-free Replicated Data Type) synchronisation mechanism is employed to ensure the eventual consistency with low communication overhead. To manage the dynamics of the AAL ecosystem, the \u03b4 -CRDT is combined with the publish/subscribe interaction protocol. In this way, the performance of the IoT, the robot and the VC, through the functionalities that depend on them, is efficiently adapted to changes in the context. To demonstrate the validity of the proposal, two use cases have been designed in which a collaborative response from the system is required. The first one deals with a possible fall of the user at home, while the second one deals with the problem of helping the person move small objects around the flat. The measured values of latency or consistency in the data show that the proposal works satisfactorily. \u2022 States an IoRT framework for AAL as a distributed system. \u2022 Guarantees the consistency of a distributed knowledge model using \u03b4 -CRDT. \u2022 Integrates \u03b4 -CRDT with the publish/subscribe interaction model. \u2022 Evaluation in real-world experiments shows that the approach is a practical solution."
+    },
+    {
+      "id": "W2945661666",
+      "title": "Distributed Personal Cloud Storage without Third Parties",
+      "abstract": "We present the \u201cIt's My Data file system\u201d (IMDfs), a personal, version-tracking, distributed file system that allows users to take custody of their cross-device data management needs, without depending on cloud storage providers. Such a system may be desirable to privacy-conscious users, who worry about the increasing number of cloud storage incidents involving data leakage and corruption, or simply want to synchronize their devices without depending on third parties. IMDfs provides a global, unified view of a user's distributed data collection from any device, user-controlled replication of data across devices, transparent remote access, and support for non-restrictive conflict management. IMDfs achieves all this without sacrificing fault-tolerance or performance and with modest storage overhead. We present the design, implementation, and detailed performance evaluation of IMDfs using benchmarks and traces from real workloads, and we demonstrate that: 1) IMDfs, as a local file system, has reasonable overhead compared with a FUSE loopback file system and Wayback, a local versioning file system, and 2) IMDfs, as a network file system, outperforms NFS and Ori, a state-of-the-art file system for cross-device data management."
+    },
+    {
+      "id": "W3156825195",
+      "title": "OWebSync: Seamless Synchronization of Distributed Web Clients",
+      "abstract": "Many enterprise software services are adopting a fully web-based architecture for both internal line-of-business applications and for online customer-facing applications. Although wireless connections are becoming more ubiquitous and faster, mobile employees and customers are often offline due to expected or unexpected network disruptions. Nevertheless, continuous operation of the software is expected. This article presents OWebSync: a web-based middleware for data synchronization in interactive groupware with fast resynchronization of offline clients and continuous, interactive synchronization of online clients. To automatically resolve conflicts, OWebSync implements a fine-grained data synchronization model and leverages state-based Conflict-free Replicated Data Types. This middleware uses Merkle-trees embedded in the tree-structured data and virtual Merkle-tree levels to achieve the required interactive performance. Our comparative evaluation with available operation-based and delta-state-based middleware solutions shows that OWebSync is especially better in operating in and recovering from offline settings and network disruptions. In addition, OWebSync scales more efficiently over time, as it does not store version vectors or other meta-data for all past clients."
+    },
+    {
+      "id": "W3017550203",
+      "title": "A low-cost set CRDT based on causal lengths",
+      "abstract": "CRDTs, or Conflict-free Replicated Data Types, are data abstractions that guarantee convergence for replicated data. Set is one of the most fundamental and widely used data types. Existing general-purpose set CRDTs associate every element in the set with causal contexts as meta data. Manipulation of causal contexts can be complicated and costly. We present a new set CRDT, CLSet (causal-length set), where the meta data associated with an element is simply a natural number (called causal length). We compare CLSet with existing general purpose CRDTs in terms of semantics and performance."
+    },
+    {
+      "id": "W2765911055",
+      "title": "Composition in State-based Replicated Data Types",
+      "abstract": "Keeping replicated data strongly consistent is convenient when communication is fast and available. In internet-scale distributed systems the reality of high communication latencies and likelihood of partitions, leads developers to adopt more relaxed consistency models, such as eventual consistency. Conflict-free Replicated Data Types, bring structure to the design of eventually consistent data management solutions, by precisely describing the behaviour under concurrent updates and guarantying a path to reconciliation. This paper offers a survey of the mathematical structures that support state based multi-master replication with reconciliation, and shows how state structures and state transformations can be composed to provide data types that are now used in practice in many geo-replicated systems."
+    },
+    {
+      "id": "W4281628326",
+      "title": "Towards the design of efficient and versatile cognitive robotic architecture based on distributed, low-latency working memory",
+      "abstract": "Autonomous robots will be present in our daily lives in the coming years. One of the most critical elements facilitating this expansion of robots is the concept of Cognitive Robotic Architectures (CRAs). Thanks to these CRAs, robots are aware of their state and surroundings and then build all the behaviors best suited to the scenario on this information. In recent years our team has proposed an CRA called CORTEX designed for use with autonomous robots working in human environments. CORTEX is based on a distributed graph-like working memory where software agents can read or update information. In this paper, we describe the design process of the new CORTEX architecture up to its current implementation. Among the most salient design requirements is data synchronization between the different agents in the architecture, low latency, and performance of the new architecture. To validate the effectiveness of the architecture and its versatility, we have used our CRA in different use cases, including social robot navigation and autonomous driving of connected vehicles."
+    },
+    {
+      "id": "W2625806096",
+      "title": "The Single-Writer Principle in CRDT Composition",
+      "abstract": "Multi-master replication in a distributed system setting allows each node holding a replica to update and query the local replica, and disseminate updates to other nodes. Obtaining high availability typically entails allowing replicas to diverge and requires a background mechanism for re-establishing consistency. Conflict-free Replicated Data Types (CRDTs) extend standard sequential data-types with appropriate merge functions, and often can be composed together to create more complex ones. In this work we add a generic CRDT composition approach that explores the single-writer principle. By carefully controlling which part of the composition can be updated by each replica, we can derive efficient designs that cover new use-cases. After introducing the new construction we exemplify some uses, including how to emulate a simple Doodle functionality for selecting a common meeting schedule among different participants."
+    },
+    {
+      "id": "W3197243248",
+      "title": "Delta-State-Based Synchronization of CRDTs in Opportunistic Networks",
+      "abstract": "Conflict-Free Replicated Data Types (CRDTs) are distributed data types that support optimistic replication: replicas can be updated locally, and updates propagate asynchronously among replicas, so consistency is eventually obtained. This ability to tolerate asynchronous communication makes them ideal candidates to serve as software building blocks in opportunistic networks (OppNets), that is, mobile networks in which the dissemination of information can only depend on unpredicted transient radio contacts between pairs of nodes. In this paper we investigate the problem of implementing CRDTs in an Opp-Net, and we propose a delta-state-based algorithm to solve this problem. Experimental results confirm that this algorithm ensures the synchronization of CRDT replicas in an OppNet, and that it outperforms a pure state-based synchronization algorithm when dealing with container CRDTs."
+    },
+    {
+      "id": "W4285412043",
+      "title": "Resilient Conflict-free Replicated Data Types without Atomic Broadcast",
+      "abstract": "In a distributed system, applications can perform both reads and updates without costly synchronous network round-trips by using Conflict-free Replicated Data Types (CRDTs). Most CRDTs are based on some variant of atomic broadcast, as that enables them to support causal dependencies between updates of multiple objects. However, the overhead of this atomic broadcast is unnecessary in systems handling only independent CRDT objects. We identified a set of use cases for tracking resource usage where there is a need for a replication mechanism with less complexity and network usage as compared to using atomic broadcast. In this paper, we present the design of such a replication protocol that efficiently leverages the commutativity of CRDTs. The proposed protocol CReDiT (CRDT enhanced with intelligence) uses up to four communication steps per update, but these steps can be batched as needed. It uses network resources only when updates need to be communicated. Furthermore, it is less sensit ive to server failures than current state-of-the-art solutions as other nodes can use new values already after the first communication step, instead of after two or more."
+    },
+    {
+      "id": "W4409095581",
+      "title": "Directed Acyclic Graph CRDTs",
+      "abstract": "Directed Acyclic Graphs (DAGs) are essential for applications like modeling task dependencies. Maintaining DAG integrity in distributed and collaborative systems is challenging, especially in environments prioritizing high availability over strong consistency. These challenges are amplified by unreliable connectivity or offline operations, where clients replicate and independently modify the graph. Ensuring invariants such as cycle freedom and valid edge connections under concurrent updates is crucial."
+    },
+    {
+      "id": "W2963237786",
+      "title": "Achlys: Towards a Framework for Distributed Storage and Generic Computing Applications for Wireless IoT Edge Networks with Lasp on GRiSP",
+      "abstract": "Internet of Things (IoT) continues to grow exponentially, in number of devices and the amount of data they generate. Processing this data requires an exponential increase in computing power. For example, aggregation can be done directly at the edge. However, aggregation is very limited; ideally we would like to do more general computations at the edge. In this paper we propose a framework for doing general-purpose edge computing directly on sensor networks themselves, without requiring external connections to gateways or cloud. This is challenging because sensor networks have unreliable communication, unreliable nodes, and limited (if any) computing power and storage. How can we implement production-quality components directly on these networks? We need to bridge the gap between the unreliable, limited infrastructure and the stringent requirements of the components. To solve this problem we present Achlys, an edge computing framework that provides reliable storage, computation, and communication capabilities directly on wireless networks of IoT sensor nodes. Using Achlys, the sensor network is able to configure and manage itself directly, without external connectivity. Achlys combines the Lasp key/value store and the Partisan communication library. Lasp provides efficient decentralized storage based on the properties of CRDTs (Conftict-Free Replicated Data Types). Partisan provides efficient connectivity and broadcast based on hybrid gossip. Both Lasp and Partisan are specifically designed to be extremely resilient. They are able to continue working despite high node churn, frequent network partitions, and unreliable communication. Our first implementation of Achlys is on a network of GRiSP embedded system boards. We choose GRiSP as our first implementation platform because it implements high-level functionality, namely Erlang, directly on the bare hardware and because it directly supports Pmod sensors and wireless connectivity. We give some first results on using Achlys for building edge systems and we explain how we plan to evolve Achlys in the future. Achlys is a work in progress that is being done in the context of the LightKone European H2020 research project, and we are in the process of implementing and evaluating a proof-of-concept application in the area of precision agriculture."
+    },
+    {
+      "id": "W2954192490",
+      "title": "Higher-Order Patterns in Replicated Data Types",
+      "abstract": "The design of Conflict-free Replicated Data Types traditionally requires implementing new designs from scratch to meet a desired behavior. Although there are composition rules that can guide the process, there has not been a lot of work explaining how existing data types relate to each other, nor work that factors out common patterns. To bring clarity to the field we explain underlying patterns that are common to flags, sets, and registers. The identified patterns are succinct and composable, which gives them the power to explain both current designs and open up the space for new ones."
+    },
+    {
+      "id": "W4285130431",
+      "title": "DSON",
+      "abstract": "We propose DSON, a space efficient \u03b4-based CRDT approach for distributed JSON document stores, enabling high availability at a global scale, while providing strong eventual consistency guarantees. We define the semantics of our CRDT based approach formally, and prove its correctness and convergence. Previous approaches optimize for collaborative document editing and store metadata proportional to the number of updates to a document, which is not acceptable for long lived document management. The metadata stored with our approach is bounded by O ( k 2 D + n log n ), where n is the number of replicas, D is the number of document elements, and k \u2264 n is the number of concurrent document updates. We also implement our approach[37] and demonstrate its space efficiency empirically. Experimental analysis shows that the metadata stored is typically significantly less than the worst case. This provides the basis for robust highly available distributed document stores with well defined semantics and safety guarantees, relieving application developers from the burden of conflict resolution."
+    },
+    {
+      "id": "W4312994493",
+      "title": "Log-Based CRDT for Edge Applications",
+      "abstract": "In this paper, we investigate extensions for Conflict-Free Replicated Data Types (CRDTs) that permit their use in failure-prone, heterogeneous, resource-constrained, distributed, multi-tier (cloud/edge/device) cloud deployments such as the Internet-of-Things (IoT), while addressing multiple CRDT limitations. Specifically, we employ distributed logging to implement robust, strong eventual consistency of replicas. Our approach also enables uniform reversal of operations and precludes the requirement of exactly-once delivery and idempotence imposed by operation-based CRDTs. Moreover, it exposes CRDT versions for use in debugging and history-based programming. We evaluate our approach for commonly used CRDTs and show that it enables higher operation throughput (up to 1.8x) versus conventional CRDTs for the workloads we consider."
+    },
+    {
+      "id": "W4386211294",
+      "title": "General-Purpose Secure Conflict-free Replicated Data Types",
+      "abstract": "Conflict-free Replicated Data Types (CRDTs) are a very popular class of distributed data structures that strike a compromise between strong and eventual consistency. Ensuring the protection of data stored within a CRDT, however, cannot be done trivially using standard encryption techniques, as secure CRDT protocols would require replica-side computation. This paper proposes an approach to lift general-purpose implementations of CRDTs to secure variants using secure multiparty computation (MPC). Each replica within the system is realized by a group of MPC parties that compute its functionality. Our results include: i) an extension of current formal models used for reasoning over the security of CRDT solutions to the MPC setting; ii) a MPC language and type system to enable the construction of secure versions of CRDTs and; iii) a proof of security that relates the security of CRDT constructions designed under said semantics to the underlying MPC library. We provide an open-source system implementation with an extensive evaluation, which compares different designs with their baseline throughput and latency."
+    },
+    {
+      "id": "W3215594300",
+      "title": "Sliding Window CRDT Sketches",
+      "abstract": "Sketches maintain compact approximate statistics about streams of data, thereby enabling quickly answering queries regarding the data stream without having to reprocess it. Often, recent data is considered more important than older one, which is captured by the sliding window model. In distributed settings, where parts of the stream are seen by different, potentially geographically distributed components of the system, it makes sense to collect global statistics about the stream, but in a decentralized manner. Further, in order to ensure availability, scalability, and good performance, it is appealing to treat sketches as a CRDT data-type. In this work we introduce the notion of sliding window CRDT sketches. We then present the CRDT All Timestamps (aka CRDT-AT) and CRDT Last Timestamp (aka CRDT-LT) algorithms for implementing such sketches and analyze them. We also study the performance of CRDT-AT and CRDT-LT using real workloads, to establish their viability."
+    },
+    {
+      "id": "W4293232396",
+      "title": "Melda",
+      "abstract": "In this paper we present a delta state conflict-free replicated data type for arbitrary JSON documents called Melda, which aims at enabling the implementation of offline-first asynchronous collaboration into applications. The proposed framework does not rely on a coordination service, and supports different types of decentralized storage solutions to tackle the problem of ensuring security, privacy and data portability in the context of collaborative document editing applications. We present our solution both through a formal description of the replicated data type and through some implementation details; moreover we provide an evaluation of the algorithmic complexity, and by means of a synthetic benchmark we analyze the metadata overhead, the actual performance, and the scalability of our approach."
+    },
+    {
+      "id": "W4367675041",
+      "title": "Probabilistic Causal Contexts for Scalable CRDTs",
+      "abstract": "Conflict-free Replicated Data Types (CRDTs) are useful to allow a distributed system to operate on data even when partitions occur, and thus preserve operational availability. Most CRDTs need to track whether data evolved concurrently at different nodes and needs to be reconciled; this requires storing causality metadata that is proportional to the number of nodes. In this paper, we try to overcome this limitation by introducing a stochastic mechanism that is no longer linear on the number of nodes, but whose accuracy is now tied to how much divergence occurs between synchronizations. This provides a new tool that can be useful in deployments with many anonymous nodes and frequent synchronizations. However, there is an underlying trade-off with classic deterministic solutions, since the approach is now probabilistic and the accuracy depends on the configurable metadata space size."
+    },
+    {
+      "id": "W4403295750",
+      "title": "Consistent Local-First Software: Enforcing Safety and Invariants for Local-First Applications",
+      "abstract": "Local-first software embraces data replication as a means to achieve scalability and offline availability. A crucial ingredient of local-first software are mergeable data types, like conflict-free replicated data types (CRDTs), which feature eventual consistency by enabling processes to access data locally and later merge it with other replicas in an asynchronous manner. Notably, the merging process needs to adhere to application constraints for correctness. Ensuring such application-level invariants poses a challenge, as developers must reason about the replicated program state and resort to manual synchronization of specific application components to enforce the invariant. This paper introducesConLoc(Consistent Local-First Software), a novel system designed to automatically enforce safety and maintain invariants in local-first applications.ConLoceffectively addresses the issue of preserving invariants in the execution of programs with replicated data types, including CRDTs. Our approach is able to verify the correctness of many CRDTs examined in the literature and in implementations, such the ones used in the Riak database.ConLocensures that applications are automatically synchronized correctly, resulting in substantial latency and throughput improvements when compared to sequential execution, while upholding the same set of invariants."
+    },
+    {
+      "id": "W4413887128",
+      "title": "Hashgraph Over the Edge: Achieving Byzantine Fault Tolerance in Decentralized P2P Frameworks",
+      "abstract": "This paper explores the integration of the Hashgraph consensus protocol into two widely used peer-to-peer (P2P) communication frameworks: Secure Scuttlebutt (SSB) and libp2p. SSB operates within a local-first architecture, prioritizing offline-first data synchronization through append-only logs and gossip-based replication, while libp2p employs a modular, pub-sub-driven approach to facilitate real-time message dissemination across decentralized networks. We propose a dual integration approach, embedding an asynchronous Byzantine fault-tolerant (aBFT) layer into both frameworks to evaluate their complementary strengths in diverse networking scenarios. This dual-path strategy allows us to investigate how Hashgraph\u2019s aBFT properties interact with fundamentally different P2P architectures\u2014append-only, local-first versus modular, pub-sub\u2014thus offering a broader understanding of its applicability. Our goal is to enhance their ability to achieve a globally consistent statedespite the challenges of intermittent connectivity and network partitions. To assess the feasibility and performance implications of this integration, we conduct a series of controlled experiments using Docker-based network simulations. Our evaluation focuses on key trade-offs involving consistency, latency, and bandwidth utilization. The results show that SSB+Hashgraph achieves strong eventual consistency, ensuring robust data integrity even under adversarial conditions. However, this comes at the cost of increased message propagation latency, due to the bulk gossip overhead inherent in SSB\u2019s replication model. In contrast, libp2p+Hashgraph enables significantly faster message propagation through its pub-sub mechanism, but incurs higher bandwidth consumption as more frequent state updates are required to maintain consensus. Notably, our experiments confirm that the proposed approach successfully maintains consensus even in the presence of up to 25% malicious nodes, highlighting its resilience and strong Byzantine fault tolerance. These findings demonstrate the practical viability of combining gossip-based data replication with aBFT consensus to improve the reliability and scalability of decentralized applications. Moreover, our study offers valuable insights into the trade-offs involved in designing resilient P2P communication systems capable of operating efficiently across heterogeneous network environments."
+    },
+    {
+      "id": "W3135555981",
+      "title": "A social link based private storage cloud",
+      "abstract": "In this paper, we present O3, a social link based private storage cloud for decentralized collaboration. O3allows users to share and collaborate on collections of files (shared folders) with others, in a decentralized manner, without the need for intermediaries (such as public cloud storage servers) to intervene. Thus, users can keep their working relationships (who they work with) and what they work on private from third parties. Using benchmarks and traces from real workloads, we experimentally evaluate O3and demonstrate that the system scales linearly when synchronizing increasing numbers of concurrent users, while performing on-par with the ext4 non-version-tracking filesystem."
+    },
+    {
+      "id": "W2496696806",
+      "title": "Join Decompositions for Efficient Synchronization of CRDTs after a Network Partition: Work in progress report",
+      "abstract": "State-based CRDTs allow updates on local replicas without remote synchronization. Once these updates are propagated, possible conflicts are resolved deterministically across all replicas. d-CRDTs bring significant advantages in terms of the size of messages exchanged between replicas during normal operation. However, when a replica joins the system after a network partition, it needs to receive the updates it missed and propagate the ones performed locally. Current systems solve this by exchanging the full state bidirectionally or by storing additional metadata along the CRDT. We introduce the concept of join-decomposition for state-based CRDTs, a technique orthogonal and complementary to delta-mutation, and propose two synchronization methods that reduce the amount of information exchanged, with no need to modify current CRDT definitions. \u00a9 2016 Copyright held by the owner/author(s)."
+    },
+    {
+      "id": "W4293232457",
+      "title": "Ordering operations for generic replicated data types using version trees",
+      "abstract": "Data replication facilitates availability and recovery in a distributed environment. However, concurrent updates to multiple replicas result in divergence of data. Conflict-Free Replicated Data Types (CRDTs) are abstract data types that provide a principled approach to asynchronously reconcile this divergence. We propose a different perspective on the divergence of data, whereby we treat data divergences as versions of the data. That is, instead of treating it only as a problem that needs to be solved, we consider it also to be a feature that provides a way to track versioning and evolution of data. Versioning information is helpful in multiple scenarios, such as provenance tracking and system debugging. Doing so allows us to leverage concepts such as the version tree found in the literature for persistent (versioned) data structures. We show that many techniques used in CRDTs to order elements can be derived from version trees, which predates CRDTs by more than 20 years. Using version trees for maintaining order and append-only logs for storage, we propose a method to ensure convergence of arbitrary data types, while maintaining information related to the evolution of data."
+    },
+    {
+      "id": "W4311179508",
+      "title": "Supporting conflict-free replicated data types in opportunistic networks",
+      "abstract": null
+    },
+    {
+      "id": "W4320058175",
+      "title": "Efficient CRDT Synchronization at Scale using a Causal Multicast over a Virtual Hypercube Overlay",
+      "abstract": "This paper presents a work in progress that intends to evaluate the use of a virtual hypercube topology as a partial replication protocol for a data store based on Conflict-free Replicated Data Types (CRDT). CRDTs can ensure consistency in a deterministic and conflict-free manner. This project presents a review of recent solutions for the replication of CRDTs, and proposes the input data and the test environment for evaluation. Currently, we are focused on building a prototype based on the VCube-PS pub-sub protocol. Various load and network distributions will be later evaluated using the Grid5000 testbed. The results will be compared with other replication protocols proposed in recent research to determine the feasibility of the proposed specification in terms of latency, scalability, and fault tolerance."
+    },
+    {
+      "id": "W4387700582",
+      "title": "Efficient Synchronization of CRDTs using VCube-PS",
+      "abstract": "This work presents VCube-Sync, a distributed datastore that uses the VCube virtual topology to maintain Conflict-free Replicated Data Types (CRDT). CRDT can ensure consistency in a deterministic and conflict-free manner. The VCube has been previously used to implement multiple distributed systems abstractions, due to its properties, in particular fault tolerance and logarithmic latency. The VCube-Sync protocol presented in the present work is based on VCube-PS, a publish-subscribe system based on VCube. VCube-Sync exploits the synergy between VCube-PS and replication systems. Evaluation experiments with VCube-Sync in the context of operations-based CRDTs were performed on the Grid5000 testbed under various loads and network distributions. The experiments include comparisons with EcoSyncTree, another replication protocol recently proposed. The results show that VCube-Sync offers superior performance in terms of latency, scalability, and bandwidth."
+    },
+    {
+      "id": "W4394865968",
+      "title": "Logical Clocks and Monotonicity for Byzantine-Tolerant Replicated Data Types",
+      "abstract": "Replicated event logbooks are ubiquitous in decentralized systems designed to cope with Byzantine-faulty replicas. Recently, there is a growing subclass that only partially orders its logbooks by hash-linking inscribed events to their causal past. Thereby, these approaches forgo coordination and consensus to gain scalability and availability under partition. We investigate these approaches to explicate their underlying construction by connecting their design to the concept of logical monotonicity and by providing an abstraction as a delta-state conflict-free replicated data type. In particular, we analyze what makes a clock Byzantine-tolerant, and show that these hash-linked causal logbooks represent Byzantine-tolerant clocks. Based on these insight, we model real-world group communication systems as Byzantine monotonic compositions, and analyze their monotonicity properties to understand the guarantees they provide to the application layer."
+    },
+    {
+      "id": "W2606145427",
+      "title": "Borrowing an Identity for a Distributed Counter",
+      "abstract": "Conflict-free Replicated Data Types (CRDTs) are data abstractions (registers, counters, sets, maps, among others) that provide a relaxed consistency model called Eventual Consistency. Current designs for CRDT counters do not scale, having a size linear with the number of both active and retired nodes (i.e., nodes that leave the system permanently after previously manipulating the value of the counter). In this paper we present a new counter design called Borrow-Counter, that provides a mechanism for the retirement of transient nodes, keeping the size of the counter linear with the number of active nodes."
+    },
+    {
+      "id": "W4293232492",
+      "title": "An oblivious observed-reset embeddable replicated counter",
+      "abstract": "Embedding CRDT counters has shown to be a challenging topic, since their introduction in Riak Maps. The desire for obliviousness, where all information about a counter is fully removed upon key removal, faces problems due to the possibility of concurrency between increments and key removals. Previous state-based proposals exhibit undesirable reset-wins semantics, which lead to losing increments, unsatisfactorily solved through manual generation management in the API. Previous operation-based approaches depend on causal stability, being prone to unbounded counter growth under network partitions. We introduce a novel embeddable operation-based CRDT counter which achieves both desirable observed-reset semantics and obliviousness upon resets. Moreover, it achieves this while merely requiring FIFO delivery, allowing a tradeoff between causal consistency and faster information propagation, being more robust under network partitions."
+    },
+    {
+      "id": "W4309357418",
+      "title": "Secure and resilient data replication for the client-centric decentralized web",
+      "abstract": "Part of the web is shifting to a client-centric, decentralized model where web clients become the leading execution environment for application logic and data storage. However, the basic paradigm of the web and the browser is still server-centric. The key data is stored, served, processed and analyzed on central servers owned by the service provider. This means that a good internet connection is required, otherwise the application will be slow, or even unreachable when there is no internet. Furthermore, user data can be stolen, modified, deleted or sold by the service provider itself, or by an external attacker targeting the service provider."
+    },
+    {
+      "id": "W4402118922",
+      "title": "Coordination-Free Replicated Datalog Streams with Application-Specific Availability",
+      "abstract": null
+    },
+    {
+      "id": "W4404331970",
+      "title": "Next-Generation Collaborative Electronic Medical Record: Resolving Concurrent Conflicts with a Tree CRDT",
+      "abstract": "Modern medical issues can cover multiple fields and disciplines, requiring inter-organizational collaboration among healthcare professionals from different specialized background. Shareable medical systems support the distribution of patients' electronic medical record (EMRs) to a variety of specialists, but most of them have no effective resolution mechanisms for concurrent update conflicts on the same EMR, hindering their collaborative abilities."
+    },
+    {
+      "id": "W3156482153",
+      "title": "Array CRDTs Using Delta-Mutations",
+      "abstract": "\u03b4-CRDTs can achieve the best of both worlds compared to operation and state based alternatives, enabling small incremental messages disseminated over unreliable communication channels. The main composable causal \u03b4-CRDT defined to date is an Observed-Remove Map which can embed other causal \u03b4-CRDTs. However, maps on their own are not sufficient to handle most real world scenarios."
+    },
+    {
+      "id": "W3173386289",
+      "title": "Utilizing Delta Trees for Efficient, Iterative Exploration and Transformation of Semi-Structured Contents",
+      "abstract": "The keywords data exploration or data wrangling summarize various different query workload scenarios in which users aim to explore or tailor data to their needs. For semi-structured data, next to commonly used SQL-style select-from-where and aggregation queries, also the structure of the possibly-nested schema-free data can be altered, schema attributes renamed, and so on. This typically involves various rounds of refining or discarding queries-imposing that intermediate results as well as the original sources cannot be eliminated. In this work, we extend our prior work on JODA, a vertically scalable, versatile JSON data processor, to make use of so-called delta trees for the succinct representation of incrementally created query results."
+    },
+    {
+      "id": "W3190680263",
+      "title": "Augmenting SQLite for Local-First Software",
+      "abstract": null
+    },
+    {
+      "id": "W3211376789",
+      "title": "Delta-State JSON CRDT: Putting Collaboration on Solid Ground",
+      "abstract": null
+    },
+    {
+      "id": "W2962936862",
+      "title": "Efficient Synchronization of State-Based CRDTs",
+      "abstract": "Data consistency often needs to be sacrificed in order to ensure high-availability in large scale distributed systems. Conflict-free Replicated Data Types relax consistency by always allowing query and update operations at the local replica without remote synchronization. Consistency is then re-established by a background mechanism that synchronizes the replicas in the system. In state-based CRDTs replicas synchronize by periodically sending their local state to other replicas and by merging the received remote states with the local state. This synchronization can become very costly and unacceptable as the local state grows. Delta-state-based CRDTs solve this problem by producing smaller messages to be propagated. However, it requires each replica to store additional metadata with the messages not seen by its direct neighbors in the system. This metadata may not be available after a network partition, since a replica can be forced to garbage-collect it (due to storage/memory limitations), or when the set of direct neighbors of a replica changes (due to dynamic memberships). In this dissertation we further improve the synchronization of state-based CRDTs, by introducing the concept of Join Decomposition of a state-based CRDT and explaining how it can be used to reduce the synchronization cost of this variant of CRDTs. We validate our proposal experimentally on Google Cloud Platform by comparing the state-based synchronization algorithm against the classic and improved versions of the delta-state-based algorithm. The results of this comparison show that our proposed techniques can greatly reduce state transmission, even under normal operation when the network is stable."
+    },
+    {
+      "id": "W2810578094",
+      "title": "Conflict-free Replicated Data Types: An Overview",
+      "abstract": "Internet-scale distributed systems often replicate data at multiple geographic locations to provide low latency and high availability, despite node and network failures. Geo-replicated systems that adopt a weak consistency model allow replicas to temporarily diverge, requiring a mechanism for merging concurrent updates into a common state. Conflict-free Replicated Data Types (CRDT) provide a principled approach to address this problem. This document presents an overview of Conflict-free Replicated Data Types research and practice, organizing the presentation in the aspects relevant for the application developer, the system developer and the CRDT developer."
+    },
+    {
+      "id": "W4241375534",
+      "title": "Conflict-Free Replicated Data Types CRDTs",
+      "abstract": null
+    },
+    {
+      "id": "W2762676471",
+      "title": "Pure Operation-Based Replicated Data Types",
+      "abstract": "Distributed systems designed to serve clients across the world often make use of geo-replication to attain low latency and high availability. Conflict-free Replicated Data Types (CRDTs) allow the design of predictable multi-master replication and support eventual consistency of replicas that are allowed to transiently diverge. CRDTs come in two flavors: state-based, where a state is changed locally and shipped and merged into other replicas; operation-based, where operations are issued locally and reliably causal broadcast to all other replicas. However, the standard definition of op-based CRDTs is very encompassing, allowing even sending the full-state, and thus imposing storage and dissemination overheads as well as blurring the distinction from state-based CRDTs. We introduce pure op-based CRDTs, that can only send operations to other replicas, drawing a clear distinction from state-based ones. Data types with commutative operations can be trivially implemented as pure op-based CRDTs using standard reliable causal delivery; whereas data types having non-commutative operations are implemented using a PO-Log, a partially ordered log of operations, and making use of an extended API, i.e., a Tagged Causal Stable Broadcast (TCSB), that provides extra causality information upon delivery and later informs when delivered messages become causally stable, allowing further PO-Log compaction. The framework is illustrated by a catalog of pure op-based specifications for classic CRDTs, including counters, multi-value registers, add-wins and remove-wins sets."
+    },
+    {
+      "id": "W2804216752",
+      "title": "Conflict-Free Replicated Data Types CRDTs",
+      "abstract": null
+    },
+    {
+      "id": "W2939419531",
+      "title": "Got: Git, but for Objects",
+      "abstract": "We look at one important category of distributed applications characterized by the existence of multiple collaborating, and competing, components sharing mutable, long-lived, replicated objects. The problem addressed by our work is that of object state synchronization among the components. As an organizing principle for replicated objects, we formally specify the Global Object Tracker (GoT) model, an object-oriented programming model based on causal consistency with application-level conflict resolution strategies, whose elements and interfaces mirror those found in decentralized version control systems: a version graph, working data, diffs, commit, checkout, fetch, push, and merge. We have implemented GoT in a framework called Spacetime, written in Python. In its purest form, GoT is impractical for real systems, because of the unbounded growth of the version graph and because passing diff'ed histories over the network makes remote communication too slow. We present our solution to these problems that adds some constraints to GoT applications, but that makes the model feasible in practice. We present a performance analysis of Spacetime for representative workloads, which shows that the additional constraints added to GoT make it not just feasible, but viable for real applications."
+    },
+    {
+      "id": "W4318332759",
+      "title": "Conflict-Free Replicated Data Types (CRDTs)",
+      "abstract": null
+    },
+    {
+      "id": "W4409095640",
+      "title": "Proceedings of the 12th Workshop on Principles and Practice of Consistency for Distributed Data",
+      "abstract": "The 12th workshop on the Principles and Practice of Consistency (PaPoC) for Distributed Data was held in Rotterdam, the Netherlands on"
+    },
+    {
+      "id": "W2492630597",
+      "title": "Snapple : A distributed, fault-tolerant, in-memory key-value store using Conflict-Free Replicated Data Types",
+      "abstract": "As services grow and receive more traffic, data resilience through replication becomes increasingly important. Modern large-scale Internet services such as Facebook, Google and Twitter serve millions of users concurrently. Replication is a vital component of distributed systems. Eventual consistency and Conflict-Free Replicated Data Types (CRDTs) are suggested as an alternative to strong consistency systems. This thesis implements and evaluates Snapple, a distributed, fault-tolerant, in-memory key-value database based on CRDTs running on the Java Virtual Machine. Snapple supports two kinds of CRDTs, an optimized implementation of the OR-Set and version vectors. Performance measurements show that the Snapple system is significantly faster than Riak, a persistent database based on CRDTs, but has a factor 5x - 2.5x lower throughput than Redis, a popular in-memory key-value database written in C. Snapple is a prototype-implementation but might be a viable alternative to Redis if the user wants the consistency guarantees CRDTs provide."
+    },
+    {
+      "id": "W2551948844",
+      "title": "Life Beyond Distributed Transactions on the Edge",
+      "abstract": "Edge/Fog Computing is an extension to the Cloud Computing model, primarily proposed to pull some of the load on cloud data center towards the edge of the network, i.e., closer to the clients. Despite being a promising model, the foundations to adopt and fully exploit the edge model are yet to be clear, and thus new ideas are continuously advocated. In his paper on \"Life beyond Distributed Transactions: an Apostate's Opinion\", Pat Helland proposed his vision to build \"almost infinite\" scale future applications, demonstrating why Distributed Transactions are not very practical under scale. His approach models the applications data state as independent \"entities\" with separate serialization scopes, thus allowing efficient local transactions within an entity, but precluding transactions involving different entities. Accessing remote data (which is assumed rare) can be done through separate channels in a more message-oriented manner. In this paper, we recall Helland's vision in the aforementioned paper, explaining how his model fits the Edge Computing Model either regarding scalability, applications, or assumptions, and discussing the potential challenges leveraged"
+    },
+    {
+      "id": "W2792676284",
+      "title": "Efficient Synchronization of State-Based CRDTs",
+      "abstract": "To ensure high availability in large scale distributed systems, Conflict-free Replicated Data Types (CRDTs) relax consistency by allowing immediate query and update operations at the local replica, with no need for remote synchronization. State-based CRDTs synchronize replicas by periodically sending their full state to other replicas, which can become extremely costly as the CRDT state grows. Delta-based CRDTs address this problem by producing small incremental states (deltas) to be used in synchronization instead of the full state. However, current synchronization algorithms for delta-based CRDTs induce redundant wasteful delta propagation, performing worse than expected, and surprisingly, no better than state-based. In this paper we: 1) identify two sources of inefficiency in current synchronization algorithms for delta-based CRDTs; 2) bring the concept of join decomposition to state-based CRDTs; 3) exploit join decompositions to obtain optimal deltas and 4) improve the efficiency of synchronization algorithms; and finally, 5) experimentally evaluate the improved algorithms."
+    },
+    {
+      "id": "W2952591237",
+      "title": "Leaderless Replication and Balance Management of Unordered SMS Messages",
+      "abstract": "Mobile text messages (SMS) are often used for sending authentication codes, meeting reminders and other messages which need to be forwarded from applications to various mobile network operators, to eventually be delivered to the users' mobile phones. To avoid message loss in the case of server failures, each message needs to be stored on one or more of the other servers until it has been successfully delivered. When this replication is implemented using a traditional clustered database (e.g., FairCom CTree, MongoDB, and MySQL), we achieve an unacceptably low throughput of at most a few hundred messages per second (MPS) getting stored, marked as being processed by a single server, and then finally deleted."
+    },
+    {
+      "id": "W3036092159",
+      "title": "Verifying Strong Eventual Consistency in $\u03b4$-CRDTs",
+      "abstract": "Conflict-free replicated data types (CRDTs) are a natural structure with which to communicate information about a shared computation in a distributed setting where coordination overhead may not be tolerated, and individual participants are allowed to temporarily diverge from the overall computation. Within this setting, there are two classical approaches: state- and operation-based CRDTs. The former define a commutative, associative, and idempotent join operation, and their states a monotone join semi-lattice. State-based CRDTs may be further distinguished into classical- and $\u03b4$-state CRDTs. The former communicate their full state after each update, whereas the latter communicate only the changed state. Op-based CRDTs communicate operations (not state), thus making their updates non-idempotent. Whereas op-based CRDTs require little information to be exchanged, they demand relatively strong network guarantees (exactly-once message delivery), and state-based CRDTs suffer the opposite problem. Both satisfy strong eventual consistency (SEC). We posit that $\u03b4$-state CRDTs both (1) require less communication overhead from payload size, and (2) tolerate relatively weak network environments, making them an ideal candidate for real-world use of CRDTs. Our central intuition is a pair of reductions between state-, $\u03b4$-state, and op-based CRDTs. We formalize this intuition in the Isabelle interactive theorem prover and show that state-based CRDTs achieve SEC. We present a relaxed network model in Isabelle and show that state-based CRDTs still maintain SEC. Finally, we extend our work to show that $\u03b4$-state CRDTs maintain SEC when only communicating $\u03b4$-state fragments, even under relatively weak network conditions."
+    },
+    {
+      "id": "W3153652022",
+      "title": "SCEW",
+      "abstract": "Collaborative web applications are becoming increasingly client-centric, with technologies such as WebRTC, WebWorkers and IndexedDB enabling a shift towards a decentralized peer-to-peer (P2P) model. Contemporary systems such as Automerge, Legion, OWebSync and Yjs provide fault tolerance and consistency by using Conflict-free Replicated Data Types for synchronization. These systems tolerate crash-faults, but lack resilience against arbitrary faults and malicious users, also known as Byzantine faults. Providing Byzantine fault tolerance (BFT) in web apps is non-trivial. Web apps are executed in web browsers on end user devices. The scarce compute resources and the interactive nature of collaborative web apps do require both a lightweight and low-latency solution, while still providing the Byzantine fault tolerance required by P2P systems to protect shared assets."
+    },
+    {
+      "id": "W3197907704",
+      "title": "Toward Fast and Reliable Active-Active Geo-Replication for a Distributed Data Caching Service in the Mobile Cloud",
+      "abstract": "In this paper, we describe our experiences extending a distributed data caching service in the mobile cloud to support active-active geo-replication. We show how our enhancements guarantee data consistency between regions after a network partition recovery. An approach is presented for keeping geo-distributed replicas synchronized despite the cache data operations replication not ensuring causal delivery in the presence of long network partitions. We use Redis, one of the most popular in-memory databases for the distributed data caching service in the mobile cloud, as a proof of concept to apply our approach in a plug-in way (minimizing the impact on both the server and client side of the cache service). Redis exposes a powerful extension API that allows new abstract data types to be associated with keys but does not provide direct support for adding and managing global dictionary metadata, which we added in our solution. That extension API is used to add the CRDT (Conflict-free Replicated Data Type) to resolve the writing conflicts from multiple regions."
+    },
+    {
+      "id": "W4386298188",
+      "title": "Eventually-Consistent Replicated Relations and Updatable Views",
+      "abstract": null
+    },
+    {
+      "id": "W4392929153",
+      "title": "Models for Storage in Database Backends",
+      "abstract": "This paper describes ongoing work on developing a formal specification of a database backend. We present the formalisation of the expected behaviour of a basic transactional system that calls into a simple store API, and instantiate in two semantic models. The first is a map-based, classical versioned key-value store; the second, journal-based, appends individual transaction effects to a journal. We formalise a significant part of the specification in the Coq proof assistant. This work will be the basis for formalising a full-fledged backend store with features such as caching or write-ahead logging as variations on maps and journals."
+    },
+    {
+      "id": "W4398155006",
+      "title": "Synql: A CRDT-Based Approach for Replicated Relational Databases with Integrity Constraints",
+      "abstract": null
+    },
+    {
+      "id": "W4411272168",
+      "title": "Semantic-Aware Replicated Data Types for Improved Conflict Resolution in Near-Synchronous Code Collaboration",
+      "abstract": "This dissertation addresses the limitations of convergence in near-synchronous code collaboration. Current techniques predominantly rely on string-based synchronization, which often results in conflict resolution that fails to address the underlying structural, syntactic, or semantic context of the code. This work proposes a semantic-aware approach that explores different levels of granularity in replicated data types (RDT) to overcome these limitations while enabling near-synchronous visualization of code evolution, enhancing interactive programming environments. The main contributions include: (1) a classification of conflict scenarios and intent-preserving code merging behavior, (2) a novel RDT approach exploring different granularity levels, (3) near-synchronous visualization of code semantics, and (4) extended RDT approaches utilizing nested replicated data types for improved conflict resolution in educational programming contexts."
+    },
+    {
+      "id": "W7149319187",
+      "title": "Designing safe and highly available distributed applications",
+      "abstract": "Conception d'applications distribu\u00e9es correctes et hautement disponibles La conception d'applications distribu\u00e9es implique fondamentalement un compromis entre la s\u00fbret\u00e9 et les performances. Nous nous concentrons sur les cas o\u00f9 la s\u00fbret\u00e9 est la principale exigence. Dans le cadre des syst\u00e8mes distribu\u00e9s bas\u00e9s sur l'\u00e9tat, nous proposons une m\u00e9thodologie de preuve pour \u00e9tablir qu'une application donn\u00e9e maintient un invariant donn\u00e9. Notre approche permet de raisonner sur les op\u00e9rations individuelles s\u00e9par\u00e9ment. Nous d\u00e9montrons que nos r\u00e8gles sont correctes et, \u00e0 l'aide d'un moteur de preuve, nous illustrons leur utilisation par quelques exemples repr\u00e9sentatifs. Pour les op\u00e9rations conflictuelles, le d\u00e9veloppeur peut choisir entre la r\u00e9solution de conflit ou la coordination. Nous pr\u00e9sentons une nouvelle structure de donn\u00e9es en forme d'arbre r\u00e9pliqu\u00e9 qui prend en charge les d\u00e9placements atomiques concurrents sans coordination et qui maintient l'invariant de l'arbre. Notre analyse identifie les cas o\u00f9 les d\u00e9placements concurrents sont intrins\u00e8quement s\u00fbrs. Pour les autres cas, nous concevons un algorithme de r\u00e9solution des conflits. La contrepartie est que dans certains cas, une op\u00e9ration de d\u00e9placement est \"perdante\". \u00c9tant donn\u00e9 la coordination requise par certaines applications pour la s\u00fbret\u00e9, elle peut \u00eatre impl\u00e9ment\u00e9e de nombreuses fa\u00e7ons diff\u00e9rentes. M\u00eame en se limitant aux verrous, ceux-ci peuvent utiliser diverses configurations qui diff\u00e8rent par: la granularit\u00e9, le type et le placement. La performance de chaque configuration d\u00e9pend de la charge de travail. Nous \u00e9tudions le \"treillis de coordination\", l'espace de conception des configurations de verrouillage, et d\u00e9finissons un ensemble de mesures pour y naviguer syst\u00e9matiquement."
+    },
+    {
+      "id": "W7151086378",
+      "title": "R\u00e9plication s\u00e9curis\u00e9e dans les infrastructures pair-\u00e0-pair de collaboration",
+      "abstract": "Une application de collaboration permet \u00e0 plusieurs individus de co\u00e9diter un contenu. Les infrastructures pair-\u00e0-pair de collaboration visent \u00e0 la conception d'applications hautement disponibles, aux latences faibles, qui tol\u00e8rent les partitions r\u00e9seaux, et qui passent \u00e0 l'\u00e9chelle. Chaque pair (individu) modifie sa propre copie du contenu. La modification concurrente des copies conduit \u00e0 leur divergence. Les protocoles de r\u00e9plication sont responsables de la convergence des copies. Ces protocoles supposent l'absence de pairs malintentionn\u00e9s qui compromettent la convergence des copies. Pouvons-nous prot\u00e9ger la convergence des copies et pr\u00e9server les propri\u00e9t\u00e9s des infrastructures pair-\u00e0-pair ? Nous proposons deux protocoles qui prot\u00e8gent la convergence des copies. Le premier protocole maintient un journal r\u00e9pliqu\u00e9 et infalsifiable qui enregistre les modifications du contenu. Les pairs conservent l'int\u00e9gralit\u00e9 du journal pour d\u00e9jouer les attaques des pairs malintentionn\u00e9s et pour le transmettre \u00e0 ceux qui rejoignent la collaboration. Le second protocole permet aux pairs de tronquer leur journal. La troncature du journal repose sur le concept de Stabilit\u00e9. Une modification devient stable lorsque toute modification int\u00e9gr\u00e9e dans le journal d\u00e9pend d'elle. Pour rejoindre la collaboration, un pair r\u00e9cup\u00e8re une copie et un journal tronqu\u00e9. Il v\u00e9rifie l'authenticit\u00e9 de la copie \u00e0 partir du journal tronqu\u00e9. Un type de donn\u00e9es r\u00e9pliqu\u00e9es (CRDT) encapsule un protocole de r\u00e9plication. Les CRDTs s\u00e9quences supposent g\u00e9n\u00e9ralement un ordre d'int\u00e9gration causal des modifications du contenu. Le retard d'une modification propage des ralentissements dans l'ensemble du syst\u00e8me. La connexion d'un pair peut engendrer l'int\u00e9gration de nombreuses modifications. Pouvons-nous \u00e9liminer ces ralentissements et ces int\u00e9grations co\u00fbteuses ? Nous formalisons une famille de CRDTs s\u00e9quences et nous proposons une approche qui permet leur synchronisation par diff\u00e9rences d'\u00e9tats. Les diff\u00e9rences d'\u00e9tats peuvent \u00eatre int\u00e9gr\u00e9es dans un ordre arbitraire et r\u00e9sumer plusieurs modifications. Nous proposons un CRDT s\u00e9quence qui tire avantage de notre approche."
+    },
+    {
+      "id": "W7151518754",
+      "title": "R\u00e9-identification sans coordination dans les types de donn\u00e9es r\u00e9pliqu\u00e9es sans conflits (CRDTs)",
+      "abstract": "Un syst\u00e8me collaboratif permet \u00e0 plusieurs utilisateur-rices de cr\u00e9er ensemble un contenu. Afin de supporter des collaborations impliquant des millions d'utilisateurs, ces syst\u00e8mes adoptent une architecture d\u00e9centralis\u00e9e pour garantir leur haute disponibilit\u00e9, tol\u00e9rance aux pannes et capacit\u00e9 de passage \u00e0 l'\u00e9chelle. Cependant, ces syst\u00e8mes \u00e9chouent \u00e0 garantir la confidentialit\u00e9 des donn\u00e9es, souverainet\u00e9 des donn\u00e9es, p\u00e9rennit\u00e9 et r\u00e9sistance \u00e0 la censure. Pour r\u00e9pondre \u00e0 ce probl\u00e8me, la litt\u00e9rature propose la conception d'applications Local-First Software (LFS) : des applications collaboratives pair-\u00e0-pair (P2P). Une pierre angulaire des applications LFS sont les Conflict-free Replicated Data Types (CRDTs). Il s'agit de nouvelles sp\u00e9cifications des types de donn\u00e9es, tels que l'Ensemble ou la S\u00e9quence, permettant \u00e0 un ensemble de n\u0153uds de r\u00e9pliquer une donn\u00e9e. Les CRDTs permettent aux n\u0153uds de consulter et de modifier la donn\u00e9e sans coordination pr\u00e9alable, et incorporent un m\u00e9canisme de r\u00e9solution de conflits pour int\u00e9grer les modifications concurrentes. Cependant, les CRDTs pour le type S\u00e9quence souffrent d'une croissance monotone du surco\u00fbt de leur m\u00e9canisme de r\u00e9solution de conflits. Pouvons-nous proposer un m\u00e9canisme de r\u00e9duction du surco\u00fbt des CRDTs pour le type S\u00e9quence qui soit compatible avec les applications LFS ? Dans cette th\u00e8se, nous proposons un nouveau CRDT pour le type S\u00e9quence, RenamableLogootSplit. Ce CRDT int\u00e8gre un m\u00e9canisme de renommage qui minimise p\u00e9riodiquement le surco\u00fbt de son m\u00e9canisme de r\u00e9solution de conflits ainsi qu'un m\u00e9canisme de r\u00e9solution de conflits pour int\u00e9grer les modifications concurrentes \u00e0 un renommage. Finalement, nous proposons un m\u00e9canisme de Garbage Collection (GC) qui supprime \u00e0 terme le propre surco\u00fbt du m\u00e9canisme de renommage."
+    },
+    {
+      "id": "W7153184331",
+      "title": "DeCo: A Core Calculus for Incremental Functional Programming with Generic Data Types",
+      "abstract": "Incrementalization speeds up computations by avoiding unnecessary recomputations and by efficiently reusing previous results. While domain-specific techniques achieve impressive speedups, e.g., in the context of database queries, they are difficult to generalize. Meanwhile, general approaches offer little support for incrementalizing domain-specific operations. In this work, we present DeCo , a novel core calculus for incremental functional programming with support for a wide range of user-defined data types. Despite its generic nature, our approach statically incrementalizes domain-specific operations on user-defined data types. It is, hence, more fine-grained than other generic techniques which resort to treating domain-specific operations as black boxes. We mechanized our work in Lean and proved it sound, meaning incrementalized execution computes the same result as full reevaluation. We also provide an executable implementation with case studies featuring examples from linear algebra, relational algebra, dictionaries, trees, and conflict-free replicated data types, plus a brief performance evaluation on linear and relational algebra and on trees."
+    },
+    {
+      "id": "W7153275265",
+      "title": "Lenses for Partially-Specified States",
+      "abstract": null
+    },
+    {
+      "id": "W7203612205",
+      "title": "DMRP: A Decentralized Mobile Reconciliation Protocol for Eventually Consistent Replication in FANETs",
+      "abstract": "Flying Ad Hoc Networks let unmanned aerial vehicles communicate directly, without relying on fixed ground infrastructure, in time-critical settings such as disaster response, search and rescue, border surveillance, precision agriculture, and military reconnaissance. UAV mobility, however, causes frequent topology changes and intermittent connectivity, so nodes typically store data locally and replicate it across the network to keep it available. The resulting challenge is consistency: independently evolving copies must be reconciled without a central coordinator, and strong consistency is not realistic in a network this prone to partitioning. We address this with the Decentralized Mobile Reconciliation Protocol (DMRP), which provides eventual consistency among UAV nodes with no external coordination, with convergence formally guaranteed whenever the swarm\u2019s synchronisation graph is eventually connected. DMRP combines immediate local validation and convergence guarantees grounded in conflict-free replicated data type properties; hysteresis-based memory management with dual thresholds to cap journal storage overhead; adaptive delta or full-state synchronisation based on receiver lag; and epidemic propagation for transitive update dissemination. Energy efficiency guided the design throughout, through wireless broadcast and the avoidance of redundant transmissions. DMRP was implemented and evaluated through extensive OMNeT++/INET simulations of three-dimensional FANET scenarios. Results demonstrate that the protocol maintains a strictly bounded reconciliation journal, whereas the reference \u03b4-CRDT log grows without bound, reducing reconciliation-journal storage by up to 75% at the largest workload evaluated, while achieving near-complete consistency after node isolation and network partitioning."
+    },
+    {
+      "id": "W7207551260",
+      "title": "Syncordian: managing adversarial behavior and interleaving anomalies in CRDTs",
+      "abstract": null
+    },
+    {
+      "id": "W7211873370",
+      "title": "MobiCloud: Reliability-Aware Coordination and Adaptive Erasure Coding for Minimal Infrastructure Smartphone Storage Clusters",
+      "abstract": null
+    },
+    {
+      "id": "W7213202283",
+      "title": "CRDTs and Databases: A Hands-On Tutorial",
+      "abstract": "Traditional isolation models such as Serializability or Snapshot Isolation, with a total commit order, are not compatible with large-scale, highly-available partition-tolerant services. Even a weaker model such as Parallel Snapshot Isolation, while allowing different commit orders at different sites, when defined for the traditional read-write API, must imply either aborting concurrent transactions on shared objects or losing updates. The only way out is to offer transactions over higher-level shared abstractions beyond a read-write API. Conflict-free Replicated Data Types (CRDTs) are such an abstraction. But CRDTs and relational databases have been developed in two worlds apart. Existing CRDT databases have ad hoc non-relational implementations that are not easily combined with database systems, in particular, regarding query optimization which is the mainstay of SQL systems. This tutorial covers how to bring these two worlds together. First, it provides solid coverage of what CRDTs are, and their main approaches, in a self-contained way. Then it addresses how CRDTs can be combined with the relational model, accessed by standard SQL, and implemented over standard relational databases, by the recent notion of Confilct-free Replicated Data Views."
+    },
+    {
+      "id": "W7215028644",
+      "title": "Composing CRDTs Convergent by Construction",
+      "abstract": "Conflict-Free Replicated Data Types (CRDTs) are abstract data types that ensure eventual convergence among data replicas in distributed systems. As they provide convergence out-of-the-box, CRDTs have become key building blocks for highly available, collaborative, and offline-capable systems, powering applications from real-time editors to distributed databases. Adopting an individual CRDT is straightforward, but real-world software routinely requires composing them. For example, an application might store a set of counters, combining a set CRDT with a counter CRDT. Unfortunately, classical CRDT theory does not guarantee that a composition of convergent CRDTs converges, forcing developers to reason about convergence again - the very burden CRDTs were introduced to remove. In this paper, we introduce a compositional framework for a broad class of operation-based CRDTs. It assembles CRDTs from five principal combinators -- Product, MapState, Associate, Traverse, and MapInterpretation -- each with built-in convergence guarantees. Any CRDT assembled from these combinators is itself a CRDT, preserving convergence by construction. This set is free of redundancy and subsumes previously proposed combinators. We develop the framework, its underlying theory, and its proofs entirely in Lean 4, producing a single artifact that serves as both the formal model and an executable, verified implementation. Our reusable library, Crdtlib, provides implementations and proofs for every combinator and CRDT in this paper. Our case studies (i) implement common CRDTs from Shapiro et al., (ii) apply the combinators in a complete application, and (iii) encode a JSON-structured tree CRDT as expressive as Automerge, with competitive runtime and memory use. These case studies show that developers can compose CRDTs without re-proving convergence for each composite."
+    }
+  ]
+}

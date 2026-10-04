@@ -1,0 +1,46 @@
+{
+  "id": "W103166085",
+  "title": "Evaluation of Replication Techniques for P2P Systems",
+  "doi": null,
+  "publication_date": "2011-06-21",
+  "publication_year": 2011,
+  "type": "dissertation",
+  "cited_by_count": 0,
+  "authors": [
+    "Alina\u2010Diana Potlog"
+  ],
+  "venue": "RECERCAT (Consorci de Serveis Universitaris de Catalunya)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "http://hdl.handle.net/2099.1/12406",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W103166085.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W103166085.grobid-xml"
+  },
+  "abstract": "English: Replication techniques are commonplace in P2P computing systems. Initially, the objective of such techniques has been to ensure availability of information (typically files) in P2P systems under highly dynamic nature of large P2P systems. For instance, in P2P systems for music file sharing, the replication allows to find the desired file at several peers as well as to enable a faster download. It should be noted however that in the above, the files or documents are considered static, that is, they don t change over time (or, if the change, new versions are uploaded at different peers). In a broader sense, however, the documents could change over time and thus the issues of availability, consistency and scalability arise. Replication can be seen as a family of techniques. Fundamental to any of them is the degree of replication (full vs. partial), as well as the source of the updates and the way updates are propagated in the system. Its is therefore interesting to study different replication techniques to see their performance in the context of a peer-group. We analyze the existing replication techniques and propose a replication system for asynchronous collaboration, with real-time delivery of updates, having a super-peer network and using optimistic replication techniques. Our proposed replication system is suited for both full and partial replication.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Peer-to-Peer Network Technologies",
+    "Distributed and Parallel Computing Systems"
+  ],
+  "references": [
+    "https://openalex.org/W196155450",
+    "https://openalex.org/W1545155892",
+    "https://openalex.org/W1595234309",
+    "https://openalex.org/W1988311692",
+    "https://openalex.org/W1999955156",
+    "https://openalex.org/W2098534118",
+    "https://openalex.org/W2104023883",
+    "https://openalex.org/W2125776579",
+    "https://openalex.org/W2153752068",
+    "https://openalex.org/W2295541535"
+  ],
+  "cited_by": []
+}

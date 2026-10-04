@@ -1,0 +1,64 @@
+{
+  "id": "W4404331970",
+  "title": "Next-Generation Collaborative Electronic Medical Record: Resolving Concurrent Conflicts with a Tree CRDT",
+  "doi": "https://doi.org/10.1145/3678884.3681898",
+  "publication_date": "2024-11-11",
+  "publication_year": 2024,
+  "type": "conference-paper",
+  "cited_by_count": 1,
+  "authors": [
+    "Chaoyue Chen",
+    "Wanqiu Kong",
+    "Jingtong Bin",
+    "Tao Shang",
+    "Zhibin He",
+    "Jianhong Feng"
+  ],
+  "venue": "ACM Conference on Computer-Supported Cooperative Work and Social Computing (CSCW)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "bronze",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3678884.3681898",
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4404331970.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4404331970.grobid-xml"
+  },
+  "abstract": "Modern medical issues can cover multiple fields and disciplines, requiring inter-organizational collaboration among healthcare professionals from different specialized background. Shareable medical systems support the distribution of patients' electronic medical record (EMRs) to a variety of specialists, but most of them have no effective resolution mechanisms for concurrent update conflicts on the same EMR, hindering their collaborative abilities.",
+  "topics": [
+    "Electronic Health Records Systems",
+    "Distributed systems and fault tolerance",
+    "Nursing Diagnosis and Documentation"
+  ],
+  "references": [
+    "https://openalex.org/W2015055913",
+    "https://openalex.org/W2103267969",
+    "https://openalex.org/W2118242633",
+    "https://openalex.org/W2129181369",
+    "https://openalex.org/W2129390157",
+    "https://openalex.org/W2134308710",
+    "https://openalex.org/W2170849273",
+    "https://openalex.org/W2295616151",
+    "https://openalex.org/W2485032262",
+    "https://openalex.org/W2510332240",
+    "https://openalex.org/W2548120315",
+    "https://openalex.org/W2775924136",
+    "https://openalex.org/W2912342509",
+    "https://openalex.org/W2962931968",
+    "https://openalex.org/W2963350351",
+    "https://openalex.org/W3103287347",
+    "https://openalex.org/W3200781175"
+  ],
+  "cited_by": [
+    {
+      "id": "W4409884378",
+      "title": "MedAI-SciTS: Enhancing Interdisciplinary Collaboration between AI Researchers and Medical Experts",
+      "abstract": null
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "W7113235356",
+  "title": "Key-CRDT stores",
+  "doi": null,
+  "publication_date": "2012-01-01",
+  "publication_year": 2012,
+  "type": "dissertation",
+  "cited_by_count": 0,
+  "authors": [
+    "Sousa, Valter Balegas de"
+  ],
+  "venue": "New University of Lisbon's Repository (New University of Lisbon)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "http://hdl.handle.net/10362/7802",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W7113235356.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W7113235356.grobid-xml"
+  },
+  "abstract": "Disserta\u00e7\u00e3o para obten\u00e7\u00e3o do Grau de Mestre em Engenharia Inform\u00e1tica",
+  "topics": [
+    "Advanced Statistical Process Monitoring",
+    "Technology and Education Systems",
+    "Software Engineering and Design Patterns"
+  ],
+  "references": [],
+  "cited_by": []
+}

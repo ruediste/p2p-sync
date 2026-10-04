@@ -1,0 +1,72 @@
+{
+  "id": "W2948127449",
+  "title": "Syncpal: A Simple and Iterative Reconciliation Algorithm for File Synchronizers",
+  "doi": "https://doi.org/10.1007/978-3-030-22496-7_1",
+  "publication_date": "2019-01-01",
+  "publication_year": 2019,
+  "type": "conference-paper",
+  "cited_by_count": 3,
+  "authors": [
+    "Marius Shekow"
+  ],
+  "venue": "Lecture notes in computer science",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://publications.rwth-aachen.de/record/773759",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2948127449.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2948127449.grobid-xml"
+  },
+  "abstract": null,
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Data Storage Technologies",
+    "Parallel Computing and Optimization Techniques"
+  ],
+  "references": [
+    "https://openalex.org/W1500241917",
+    "https://openalex.org/W1569388719",
+    "https://openalex.org/W1607516221",
+    "https://openalex.org/W1976394828",
+    "https://openalex.org/W1989669565",
+    "https://openalex.org/W1993994360",
+    "https://openalex.org/W1994733475",
+    "https://openalex.org/W2015055913",
+    "https://openalex.org/W2042076877",
+    "https://openalex.org/W2059403886",
+    "https://openalex.org/W2063121796",
+    "https://openalex.org/W2085631457",
+    "https://openalex.org/W2113288486",
+    "https://openalex.org/W2116335447",
+    "https://openalex.org/W2132471143",
+    "https://openalex.org/W2145388050",
+    "https://openalex.org/W2282477915",
+    "https://openalex.org/W2295541535",
+    "https://openalex.org/W2547881857",
+    "https://openalex.org/W7147545955"
+  ],
+  "cited_by": [
+    {
+      "id": "W4309542899",
+      "title": "Data Synchronization: A Complete Theoretical Solution for Filesystems",
+      "abstract": "Data reconciliation in general, and filesystem synchronization in particular, lacks rigorous theoretical foundation. This paper presents, for the first time, a complete analysis of synchronization for two replicas of a theoretical filesystem. Synchronization has two main stages: identifying the conflicts, and resolving them. All existing (both theoretical and practical) synchronizers are operation-based: they define, using some rationale or heuristics, how conflicts are to be resolved without considering the effect of the resolution on subsequent conflicts. Instead, our approach is declaration-based: we define what constitutes the resolution of all conflicts, and for each possible scenario we prove the existence of sequences of operations/commands which convert the replicas into a common synchronized state. These sequences consist of operations rolling back some local changes, followed by operations performed on the other replica. The set of rolled-back operations provides the user with clear and intuitive information on the proposed changes, so she can easily decide whether to accept them or ask for other alternatives. All possible synchronized states are described by specifying a set of conflicts, a partial order on the conflicts describing the order in which they need to be resolved, as well as the effect of each decision on subsequent conflicts. Using this classification, the outcomes of different conflict resolution policies can be investigated easily."
+    },
+    {
+      "id": "W4213040072",
+      "title": "Distributed Applications and Interoperable Systems",
+      "abstract": null
+    },
+    {
+      "id": "W4378906522",
+      "title": "Synchronizing Many Filesystems in Near Linear Time",
+      "abstract": "Finding a provably correct subquadratic synchronization algorithm for many filesystem replicas is one of the main theoretical problems in operational transformation (OT) and conflict-free replicated data types (CRDT) frameworks. Based on the algebraic theory of filesystems, which incorporates non-commutative filesystem commands natively, we developed and built a proof-of-concept implementation of an algorithm suite which synchronizes an arbitrary number of replicas. The result is provably correct, and the synchronized system is created in linear space and time after an initial sorting phase. It works by identifying conflicting command pairs and requesting one of the commands to be removed. The method can be guided to reach any of the theoretically possible synchronized states. The algorithm also allows asynchronous usage. After the client sends a synchronization request, the local replica remains available for further modifications. When the synchronization instructions arrive, they can be merged with the changes made since the synchronization request. The suite also works on filesystems with a directed acyclic graph-based path structure in place of the traditional tree-like arrangement. Consequently, our algorithms apply to filesystems with hard or soft links as long as the links create no loops."
+    }
+  ]
+}

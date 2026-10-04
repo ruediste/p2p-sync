@@ -1,0 +1,36 @@
+{
+  "id": "W4321473509",
+  "title": "Synchronizing Many Filesystems in Near Linear Time",
+  "doi": "https://doi.org/10.48550/arxiv.2302.09666",
+  "publication_date": "2023-02-19",
+  "publication_year": 2023,
+  "type": "article",
+  "cited_by_count": 0,
+  "authors": [
+    "Elod P. Csirmaz",
+    "L\u00e1szl\u00f3 Csirmaz"
+  ],
+  "venue": "Repository of the Academy's Library (Library of the Hungarian Academy of Sciences)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "http://real.mtak.hu/182986/1/futureinternet-15-00198-1.pdf",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4321473509.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4321473509.grobid-xml"
+  },
+  "abstract": "Finding a provably correct subquadratic synchronization algorithm for many filesystem replicas is one of the main theoretical problems in Operational Transformation (OT) and Conflict-free Replicated Data Types (CRDT) frameworks. Based on the Algebraic Theory of Filesystems, which incorporates non-commutative filesystem commands natively, we developed and built a proof-of-concept implementation of an algorithm suite which synchronizes an arbitrary number of replicas. The result is provably correct, and the synchronized system is created in linear space and time after an initial sorting phase. It works by identifying conflicting command pairs and requesting one of the commands to be removed. The method can be guided to reach any of the theoretically possible synchronized states. The algorithm also allows asynchronous usage. After the client sends a synchronization request, the local replica remains available for further modifications. When the synchronization instructions arrive, they can be merged with the changes made since the synchronization request. The suite also works on filesystems with directed acyclic graph-based path structure in place of the traditional tree-like arrangement. Consequently, our algorithms apply to filesystems with hard or soft links as long as the links create no loops.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Database Systems and Queries",
+    "Parallel Computing and Optimization Techniques"
+  ],
+  "references": [],
+  "cited_by": []
+}

@@ -1,0 +1,52 @@
+{
+  "id": "W4415400088",
+  "title": "Towards a New Distributed Overlay File System: An Overview and Proposal",
+  "doi": "https://doi.org/10.1109/sisy67000.2025.11205418",
+  "publication_date": "2025-09-25",
+  "publication_year": 2025,
+  "type": "conference-paper",
+  "cited_by_count": 0,
+  "authors": [
+    "Milena Jeli\u0107",
+    "Milo\u0161 Simi\u0107"
+  ],
+  "venue": "IEEE International Symposium on Intelligent Systems and Informatics (SISY)",
+  "open_access": {
+    "is_oa": false,
+    "oa_status": "closed",
+    "oa_url": null,
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "pdf": false,
+    "grobid_xml": false
+  },
+  "content_urls": null,
+  "abstract": "This paper provides an overview of existing distributed file systems, discussing their advantages and limitations in the context of modern environments such as distributed computing systems. The main focus is on cloud distributed file systems such as Google File System, HDFS, JuiceFS and OctopusFS. In addition, it presents a brief proposal for a new distributed overlay file system. This work outlines the initial design principles, key objectives, and potential research directions for the proposed system.",
+  "topics": [
+    "Advanced Data Storage Technologies",
+    "Cloud Computing and Resource Management",
+    "Distributed systems and fault tolerance"
+  ],
+  "references": [
+    "https://openalex.org/W1981420413",
+    "https://openalex.org/W1988549102",
+    "https://openalex.org/W2119738171",
+    "https://openalex.org/W2144232511",
+    "https://openalex.org/W2340733866",
+    "https://openalex.org/W2536417579",
+    "https://openalex.org/W2578143603",
+    "https://openalex.org/W2727092525",
+    "https://openalex.org/W2917040602",
+    "https://openalex.org/W3086809868",
+    "https://openalex.org/W3194824906",
+    "https://openalex.org/W3206444683",
+    "https://openalex.org/W4237212714",
+    "https://openalex.org/W4238584892",
+    "https://openalex.org/W4252279099",
+    "https://openalex.org/W4318470735",
+    "https://openalex.org/W4392081953",
+    "https://openalex.org/W4406137991"
+  ],
+  "cited_by": []
+}

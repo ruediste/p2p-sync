@@ -1,0 +1,482 @@
+{
+  "id": "W2099184519",
+  "title": "Designing and implementing asynchronous collaborative applications with Bayou",
+  "doi": "https://doi.org/10.1145/263407.263530",
+  "publication_date": "1997-01-01",
+  "publication_year": 1997,
+  "type": "conference-paper",
+  "cited_by_count": 104,
+  "authors": [
+    "W. Keith Edwards",
+    "Elizabeth D. Mynatt",
+    "Karin Petersen",
+    "Mike J. Spreitzer",
+    "Douglas B. Terry",
+    "Marvin M. Theimer"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/263407.263530",
+    "any_repository_has_fulltext": null
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2099184519.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2099184519.grobid-xml"
+  },
+  "abstract": "Asynchronous collaboration is characterized by the degree of independence collaborators have from one another.In particular, collaborators working asynchronously typically have little need for frequent and finegrained coordination with one another, and typically do not need to be notified immediately of changes made by others to any shared artifacts they are working with.We present an infrastructure, called Bayou, designed to support the construction of asynchronous collaborative applications.Bayou provides a replicated, weakly-consistent, data storage engine to application writers.The system supports a number of mechanisms for leveraging application semantics; using these mechanisms, applications can implement complex conflict detection and resolution policies, and choose the level of consistency and stability they will see in their databases.We present a number of applications we have built or are building using the Bayou system, and examine how these take advantage of the Bayou architecture.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Database Systems and Queries",
+    "Service-Oriented Architecture and Web Services"
+  ],
+  "references": [
+    "https://openalex.org/W55502983",
+    "https://openalex.org/W1602193077",
+    "https://openalex.org/W1603723431",
+    "https://openalex.org/W1964641564",
+    "https://openalex.org/W1966755847",
+    "https://openalex.org/W1970566030",
+    "https://openalex.org/W1976069032",
+    "https://openalex.org/W1985162288",
+    "https://openalex.org/W1993326906",
+    "https://openalex.org/W2001803004",
+    "https://openalex.org/W2020073674",
+    "https://openalex.org/W2036027002",
+    "https://openalex.org/W2038562061",
+    "https://openalex.org/W2043985002",
+    "https://openalex.org/W2059432328",
+    "https://openalex.org/W2082954984",
+    "https://openalex.org/W2116142433",
+    "https://openalex.org/W2117260615",
+    "https://openalex.org/W2124074197",
+    "https://openalex.org/W2125930899",
+    "https://openalex.org/W2127841983",
+    "https://openalex.org/W2137026697",
+    "https://openalex.org/W2137606889",
+    "https://openalex.org/W2141682228",
+    "https://openalex.org/W2151847079",
+    "https://openalex.org/W2639421075",
+    "https://openalex.org/W4255087951",
+    "https://openalex.org/W6940874056"
+  ],
+  "cited_by": [
+    {
+      "id": "W2104210894",
+      "title": "OceanStore"
+    },
+    {
+      "id": "W4236944670",
+      "title": "OceanStore"
+    },
+    {
+      "id": "W2142822878",
+      "title": "Peer-to-Peer Computing"
+    },
+    {
+      "id": "W2030877481",
+      "title": "CAP twelve years later: How the \"rules\" have changed"
+    },
+    {
+      "id": "W2115806861",
+      "title": "Design and evaluation of a conit-based continuous consistency model for replicated services"
+    },
+    {
+      "id": "W2020299987",
+      "title": "Design and evaluation of a continuous consistency model for replicated services"
+    },
+    {
+      "id": "W2154193287",
+      "title": "The IceCube approach to the reconciliation of divergent replicas"
+    },
+    {
+      "id": "W2104248230",
+      "title": "Reconciling while tolerating disagreement in collaborative data sharing"
+    },
+    {
+      "id": "W4238132026",
+      "title": "OceanStore"
+    },
+    {
+      "id": "W2020345667",
+      "title": "Beyond Expertise Seeking: A Field Study of the Informal Knowledge Practices of Healthcare IT Teams"
+    },
+    {
+      "id": "W2072040293",
+      "title": "Flexible notification for collaborative systems"
+    },
+    {
+      "id": "W2111144331",
+      "title": "ORCHESTRA : Rapid, collaborative sharing of dynamic data"
+    },
+    {
+      "id": "W4253724857",
+      "title": "OceanStore"
+    },
+    {
+      "id": "W2113288486",
+      "title": "Exploiting schemas in data synchronization"
+    },
+    {
+      "id": "W1581707651",
+      "title": "A middleware service for mobile ad hoc data sharing, enhancing data availability"
+    },
+    {
+      "id": "W2164157692",
+      "title": "An adaptive quality of service aware middleware for replicated services"
+    },
+    {
+      "id": "W2096689343",
+      "title": "Replicated Data Management for Mobile Computing"
+    },
+    {
+      "id": "W4243779006",
+      "title": "Middleware Service for Mobile Ad Hoc Data Sharing, Enhancing Data Availability"
+    },
+    {
+      "id": "W2059170673",
+      "title": "Using metalevel techniques in a flexible toolkit for CSCW applications"
+    },
+    {
+      "id": "W114083770",
+      "title": "The Case for Non-transparent Replication: Examples from Bayou."
+    },
+    {
+      "id": "W2005517553",
+      "title": "A programming model for active documents"
+    },
+    {
+      "id": "W1525734649",
+      "title": "Integrating Synchronous and Asynchronous Interactions in Groupware Applications"
+    },
+    {
+      "id": "W1573535660",
+      "title": "Aligning Work Practices and Mobile Technologies: Groupware Design for Loosely Coupled Mobile Groups"
+    },
+    {
+      "id": "W2127500986",
+      "title": "Middleware for multimedia mobile collaborative system"
+    },
+    {
+      "id": "W2325451640",
+      "title": "Handheld projector interaction"
+    },
+    {
+      "id": "W4383369900",
+      "title": "Moderating role of collaborative technologies on the relationship between virtual knowledge sharing and team effectiveness: lessons from COVID-19"
+    },
+    {
+      "id": "W2035329291",
+      "title": "Storing and accessing live mashup content in the cloud"
+    },
+    {
+      "id": "W2008068306",
+      "title": "Next century challenges"
+    },
+    {
+      "id": "W1576337687",
+      "title": "Next Century Challenges: Data-Centric Networking for Invisible Computing."
+    },
+    {
+      "id": "W2117465524",
+      "title": "Data management support for asynchronous groupware"
+    },
+    {
+      "id": "W2165868391",
+      "title": "Building replicated Internet services using TACT: a toolkit for tunable availability and consistency tradeoffs"
+    },
+    {
+      "id": "W2154451841",
+      "title": "A log compression algorithm for operation-based version control systems"
+    },
+    {
+      "id": "W2108169023",
+      "title": "A complete textual merging algorithm for software con .guration management systems"
+    },
+    {
+      "id": "W4211009496",
+      "title": "Replicated Data Management for Mobile Computing"
+    },
+    {
+      "id": "W2099357255",
+      "title": "Improving Learning of Programming Through E-Learning by Using Asynchronous Virtual Pair Programming"
+    },
+    {
+      "id": "W2021771212",
+      "title": "Graph-based synchronous collaborative mapping"
+    },
+    {
+      "id": "W2095873648",
+      "title": "Design and Implement of File Linked Distributed File System"
+    },
+    {
+      "id": "W824363988",
+      "title": "Developing Intelligent Engineering Collaboration Tools Through the use of Design Rationale"
+    },
+    {
+      "id": "W2113255455",
+      "title": "Syntax-based Reconciliation for Asynchronous Collaborative Writing"
+    },
+    {
+      "id": "W3109100251",
+      "title": "FlightTracker: Consistency across Read-Optimized Online Stores at Facebook"
+    },
+    {
+      "id": "W127650062",
+      "title": "Identifying the Awareness Mechanisms for Mobile Collaborative Applications"
+    },
+    {
+      "id": "W2144617999",
+      "title": "Flexible Merging for Asynchronous Collaborative Systems"
+    },
+    {
+      "id": "W2103277088",
+      "title": "Dragonfly"
+    },
+    {
+      "id": "W2105882944",
+      "title": "Fostering Asynchronous Collaborative Visualization"
+    },
+    {
+      "id": "W1483547670",
+      "title": "Exploiting Schemas in Data Synchronization"
+    },
+    {
+      "id": "W1583022978",
+      "title": "Clique: A transparent, Peer-to-Peer collaborative file sharing system"
+    },
+    {
+      "id": "W118426524",
+      "title": "Schema-Directed Data Synchronization"
+    },
+    {
+      "id": "W2625995067",
+      "title": "Implementing virtual pair programming in e-learning environment"
+    },
+    {
+      "id": "W1786916528",
+      "title": "Handling Client Mobility and Intermittent Connectivity in Mobile Web Accesses"
+    },
+    {
+      "id": "W2018627356",
+      "title": "Supporting Adaptable Consistency Control in Structured Collaborative Workspaces"
+    },
+    {
+      "id": "W2625136592",
+      "title": "An asynchronous collaborative reconciliation model based on data provenance"
+    },
+    {
+      "id": "W2294618929",
+      "title": "What if Multiusers Wish to Reconcile Their Data?"
+    },
+    {
+      "id": "W2221708675",
+      "title": "Configurable consistency for wide-area caching"
+    },
+    {
+      "id": "W2129398063",
+      "title": "A graphical user interface toolkit approach to thin-client computing"
+    },
+    {
+      "id": "W2042330517",
+      "title": "A design pattern for mobile-distributed knowledge spaces"
+    },
+    {
+      "id": "W1493854359",
+      "title": "A distributed storage and query subsystem for collaborative data sharing"
+    },
+    {
+      "id": "W2116335447",
+      "title": "What's in Unison? A Formal Specification and Reference Implementation of a File Synchronizer"
+    },
+    {
+      "id": "W1504359554",
+      "title": "Flexibly Mapping Synchronous Groupware Architectures to Distributed Implementations"
+    },
+    {
+      "id": "W1511030401",
+      "title": "Improving groupware design for loosely coupled groups"
+    },
+    {
+      "id": "W1785367687",
+      "title": "A methodology and software platform for building wearable communities"
+    },
+    {
+      "id": "W2026467201",
+      "title": "Using interpreted CompositeCalls to improve operating system services"
+    },
+    {
+      "id": "W194567790",
+      "title": "LaCOLLA: A Middleware to Support Self-sufficient Collaborative Groups"
+    },
+    {
+      "id": "W1880537716",
+      "title": "Bringing Harmony to Optimism: An Experiment in Synchronizing Heterogeneous Tree-Structured Data"
+    },
+    {
+      "id": "W1966630367",
+      "title": "Convergence des copies dans les environnements collaboratifs r\u00e9partis"
+    },
+    {
+      "id": "W2807363787",
+      "title": "Making Sense of Asynchrony in Interactive Data Visualizations."
+    },
+    {
+      "id": "W1490720341",
+      "title": "Agreeing to Agree: Conflict Resolution for Optimistically Replicated Data"
+    },
+    {
+      "id": "W1747965305",
+      "title": "Synchronous Collaboration in Ubiquitous Computing Environments"
+    },
+    {
+      "id": "W1517533727",
+      "title": "Smartphones: A Platform For Disaster Management"
+    },
+    {
+      "id": "W175636490",
+      "title": "Internet-Based Collaborative Programming Techniques and Environments"
+    },
+    {
+      "id": "W1776215948",
+      "title": "An Application Framework for Nomadic, Collaborative Applications"
+    },
+    {
+      "id": "W2130812260",
+      "title": "The Workspace Model: Dynamic Distribution of Interactive Systems"
+    },
+    {
+      "id": "W2012024704",
+      "title": "Two approaches for an adaptive multimedia transfer service for mobile environments"
+    },
+    {
+      "id": "W2120513565",
+      "title": "A decision-theoretic approach to file consistency in constrained peer-to-peer device networks"
+    },
+    {
+      "id": "W2185382095",
+      "title": "Twin-transaction model to support mobile data access"
+    },
+    {
+      "id": "W1551639773",
+      "title": "Adaptive Distribution Support for Co-authored Documents on the Web"
+    },
+    {
+      "id": "W1570023952",
+      "title": "Supporting Groupware in Mobile Environments"
+    },
+    {
+      "id": "W1841340994",
+      "title": "BarQL: Collaborating Through Change"
+    },
+    {
+      "id": "W2159216655",
+      "title": "STATE OF THE ART IN ENABLERS FOR APPLICATIONS IN FUTURE MOBILE WIRELESS INTERNET"
+    },
+    {
+      "id": "W2184936574",
+      "title": "THIN, DISCONNECTED CLIENTS ON A HOSPITAL IT NETWORK"
+    },
+    {
+      "id": "W2467175919",
+      "title": "A component-based collaboration infrastructure"
+    },
+    {
+      "id": "W2513591039",
+      "title": "Accord: Middleware Support for Contextual, Ubiquitous Data Management on User Devices"
+    },
+    {
+      "id": "W2784740499",
+      "title": "Integration and communication of engineering information in collaborative design"
+    },
+    {
+      "id": "W2920698756",
+      "title": "Updates and Transactions in Peer-to-Peer Systems"
+    },
+    {
+      "id": "W416197605",
+      "title": "Unterst\u00fctzungsmechanismen f\u00fcr Mobile-Computing-Systeme"
+    },
+    {
+      "id": "W4256342498",
+      "title": "Dragonfly: linking conceptual and implementation architectures of multiuser interactive systems"
+    },
+    {
+      "id": "W596610380",
+      "title": "Mise au point d'algorithmes r\u00e9partis dans un environnement fortement variable, et exp\u00e9rimentation dans le contexte des pico-r\u00e9seaux"
+    },
+    {
+      "id": "W651649680",
+      "title": "Partition Aware Database Replication : A state-update transfer strategy based on PRiDe"
+    },
+    {
+      "id": "W7144111639",
+      "title": "Coalla : Un mod\u00e8le pour l'\u00e9dition collaborative d'un contenu g\u00e9ographique et la gestion de sa coh\u00e9rence"
+    },
+    {
+      "id": "W1487295753",
+      "title": "Updates and Transactions in Peer-to-Peer Systems"
+    },
+    {
+      "id": "W1543545539",
+      "title": "An application Framework for Collaborative, Nomadic Applications"
+    },
+    {
+      "id": "W2063483646",
+      "title": "Conflict Resolution for User-Selected Names in Collaborative Systems"
+    },
+    {
+      "id": "W2123651863",
+      "title": "OCEAN: Object Communication Environment for Arbitrary Network"
+    },
+    {
+      "id": "W2142362926",
+      "title": "A Flexible Distribution Service for a Co-authoring Environment on the Web"
+    },
+    {
+      "id": "W2150680735",
+      "title": "Timed buffers: A technique for update propagation in nomadic environments"
+    },
+    {
+      "id": "W2154395011",
+      "title": "Flexible, wide-area storage for distributed systems using semantic cues"
+    },
+    {
+      "id": "W2175943091",
+      "title": "mFrame: An Application Framework for Mobile Resource-constrained Computing Environments"
+    },
+    {
+      "id": "W2395535483",
+      "title": "Ein komponentenbasiertes Meta-Modell kontextabh\u00e4ngiger Adaptionsgraphen f\u00fcr mobile und ubiquit\u00e4re Anwendungen"
+    },
+    {
+      "id": "W2405471064",
+      "title": "A Simultaneous Execution Scheme for Database Caching"
+    },
+    {
+      "id": "W2967161948",
+      "title": "Hybrid Distributed Computing System Based on Canvas and Dynamo"
+    },
+    {
+      "id": "W4213331327",
+      "title": "RMIRep: suporte para replica\u00e7\u00e3o de objetos em redes de alta lat\u00eancia"
+    },
+    {
+      "id": "W4299580398",
+      "title": "My home is my post-office"
+    },
+    {
+      "id": "W4409721557",
+      "title": "Context4Change: A Participatory Framework for Context-Driven Behavioral Interventions in Office Well-being"
+    },
+    {
+      "id": "W793031552",
+      "title": "Using policy to control data synchronisation in middleware for an ad-hoc mobile network"
+    }
+  ]
+}

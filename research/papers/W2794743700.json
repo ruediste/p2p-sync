@@ -1,0 +1,37 @@
+{
+  "id": "W2794743700",
+  "title": "Designing a Planetary-Scale IMAP Service with Conflict-free Replicated Data Types",
+  "doi": "https://doi.org/10.4230/lipics.opodis.2017.23",
+  "publication_date": "2018-01-01",
+  "publication_year": 2018,
+  "type": "article",
+  "cited_by_count": 0,
+  "authors": [
+    "Tim Jungnickel",
+    "Lennart Oldenburg",
+    "Matthias Loibl"
+  ],
+  "venue": "DROPS (Schloss Dagstuhl \u2013 Leibniz Center for Informatics)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://drops.dagstuhl.de/storage/00lipics/lipics-vol095-opodis2017/LIPIcs.OPODIS.2017.23/LIPIcs.OPODIS.2017.23.pdf",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2794743700.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2794743700.grobid-xml"
+  },
+  "abstract": "Modern geo-replicated software serving millions of users across the globe faces the consequences of the CAP dilemma, i.e., the inevitable conflicts that arise when multiple nodes accept writes on shared state. The underlying problem is commonly known as fault-tolerant multi-leader replica- tion; actively researched in the distributed systems and database communities. As a more recent theoretical framework, Conflict-free Replicated Data Types (CRDTs) propose a solution to this problem by offering a set of always converging primitives. However, modeling non-trivial system state with CRDT primitives is a challenging and error-prone task. In this work, we propose a solution for a geo-replicated online service with fault-tolerant multi-leader replication based on CRDTs. We chose IMAP as use case due to its prevalence and simplicity. Therefore, we modeled an IMAP-CRDT and verified its correctness with the interactive theorem prover Isabelle/HOL. In order to bridge the gap between theory and practice, we implemented an open-source proto- type pluto and an IMAP benchmark for write-intensive workloads. We evaluated our prototype against the standard IMAP server Dovecot on a multi-continent public cloud. The results ex- pose the limitations of Dovecot with respect to response time performance and replication lag. Our prototype was able to leverage its conceptual advantages and outperformed Dovecot. We find that our approach is promising when facing the multitude of potential concurrency bugs in development of systems at planetary scale.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Service-Oriented Architecture and Web Services",
+    "Distributed and Parallel Computing Systems"
+  ],
+  "references": [],
+  "cited_by": []
+}

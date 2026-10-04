@@ -1,20 +1,25 @@
 package com.github.ruediste.p2psync.node;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
 
+import com.github.ruediste.p2psync.clock.ClockRelation;
 import com.github.ruediste.p2psync.clock.VectorClock;
 
 public class FileSystemDataStructureTest {
@@ -29,7 +34,7 @@ public class FileSystemDataStructureTest {
         }
 
         public void merge(FileSystem other) {
-            root.merge(other.root);
+            root.merge(other.root, new FsPath());
         }
     }
 
@@ -47,7 +52,7 @@ public class FileSystemDataStructureTest {
         // invariant: either a directory or a file have to be present
         Optional<FsDirectory> directory = Optional.empty();
         List<FsFile> files = new ArrayList<>();
-        VectorClock dirClock;
+        FsClock dirClock;
 
         public static DirEntry empty(FsDirectory dir) {
             var result = new DirEntry();
@@ -62,6 +67,22 @@ public class FileSystemDataStructureTest {
             result.dirClock = dirClock.clone();
             return result;
         }
+
+        public DirEntry resetTag(FileSystem fs) {
+            dirClock.resetTag(fs.nodeNr);
+            directory.ifPresent(d -> d.resetTag());
+            files.forEach(f -> f.resetTag());
+            return this;
+        }
+
+        @Override
+        public final String toString() {
+            return "DirEntry{" +
+                    "directory=" + (directory.isPresent() ? "<dir>" : "<empty>") +
+                    ", files=" + files +
+                    ", dirClock=" + dirClock +
+                    '}';
+        }
     }
 
     static record FsPathPart(String name, Optional<Integer> nodeNr) {
@@ -71,6 +92,11 @@ public class FileSystemDataStructureTest {
                 return new FsPathPart(name.substring(0, idx), Optional.of(Integer.parseInt(name.substring(idx + 1))));
             } else
                 return new FsPathPart(name, Optional.empty());
+        }
+
+        @Override
+        public final String toString() {
+            return nodeNr.map(n -> name + ":" + n).orElse(name);
         }
     }
 
@@ -99,12 +125,40 @@ public class FileSystemDataStructureTest {
             }
             return fsPath;
         }
+
+        public FsPath clone() {
+            var result = new FsPath();
+            result.parts.addAll(parts);
+            return result;
+        }
+
+        public void add(String name) {
+            parts.add(new FsPathPart(name, Optional.empty()));
+        }
+
+        @Override
+        public final String toString() {
+            return "/" + parts.stream().map(FsPathPart::toString).collect(Collectors.joining("/"));
+        }
+
+        public FsPath resolve(String name) {
+            var result = this.clone();
+            result.add(name);
+            return result;
+        }
+    }
+
+    static <R> R errorMessage(String message, Supplier<R> supplier) {
+        try {
+            return supplier.get();
+        } catch (Throwable t) {
+            throw new RuntimeException(message, t);
+        }
     }
 
     static class FsDirectory extends FsElementBase<FsDirectory> {
 
-        private EventSet events;
-        private VectorClock clock;
+        private FsClock clock;
         private FileSystem fs;
         Map<String, DirEntry> entries = new HashMap<>();
 
@@ -113,84 +167,87 @@ public class FileSystemDataStructureTest {
             this.fs = fs;
         }
 
-        private void addEvent(String event) {
-            clock.increment(fs.nodeNr);
-            events.add(event);
-        }
-
         public static FsDirectory empty(FileSystem fs) {
             var result = new FsDirectory(fs.nodeNr, fs);
-            result.clock = VectorClock.empty();
-            result.clock.increment(fs.nodeNr);
-            result.events = new EventSet();
-            result.events.add("created");
+            result.clock = FsClock.create(fs.nodeNr);
             return result;
         }
 
         // Merge the other directory into this directory
-        public void merge(FsDirectory other) {
-            var modified = false;
-            // remove own entries, which have been deleted in other
-            {
-                var entriesToRemove = entries.entrySet().stream()
-                        .filter(e -> !other.entries.containsKey(e.getKey())
-                                && e.getValue().dirClock.isBeforeOrEqual(other.clock))
-                        .map(Map.Entry::getKey)
-                        .collect(Collectors.toList());
-                for (var key : entriesToRemove) {
-                    modified = true;
-                    entries.remove(key);
-                }
-            }
-
-            // add data from the other directory into this one
-            for (var otherEntry : other.entries.entrySet()) {
-
-                var ownEntry = entries.get(otherEntry.getKey());
-                if (ownEntry == null) {
-                    entries.put(otherEntry.getKey(), otherEntry.getValue().clone(fs));
-                    modified = true;
-                    continue;
-                }
-
-                // remove files that are before any FileEntry in otherVersions
+        public void merge(FsDirectory other, FsPath path) {
+            try {
+                // remove own entries, which have been deleted in other
                 {
-                    var oldSize = ownEntry.files.size();
-                    ownEntry.files.removeIf(f -> otherEntry.getValue().files.stream()
-                            .anyMatch(of -> f.tag == of.tag && f.isBefore(of)));
-                    modified |= oldSize != ownEntry.files.size();
-                }
-
-                // only add the other files if it is not obsolete
-                for (var otherFile : otherEntry.getValue().files) {
-                    if (!ownEntry.files.stream()
-                            .anyMatch(f -> otherFile.tag == f.tag && otherFile.isBefore(f))) {
-                        ownEntry.files.add(otherFile.clone(fs));
-                        modified = true;
+                    var entriesToRemove = entries.entrySet().stream()
+                            .filter(e -> !other.entries.containsKey(e.getKey())
+                                    && errorMessage(
+                                            "Compare dirClock of " + e.getKey() + " with clock of other directory",
+                                            () -> e.getValue().dirClock.isBeforeOrEqual(other.clock)))
+                            .map(Map.Entry::getKey)
+                            .collect(Collectors.toList());
+                    for (var key : entriesToRemove) {
+                        entries.remove(key);
                     }
                 }
 
-                // merge the subdirectories recursively
-                if (otherEntry.getValue().directory.isPresent()) {
-                    var otherDir = otherEntry.getValue().directory.get();
-                    if (ownEntry.directory.isPresent()) {
-                        ownEntry.directory.get().merge(otherDir);
-                    } else {
-                        // We have no local entry. If if the entry is before the own clock,
-                        // we must have deleted it locally
-                        if (!otherEntry.getValue().dirClock.isBefore(clock))
-                            ownEntry.directory = Optional.of(otherDir.clone(fs));
+                // add data from the other directory into this one
+                for (var otherEntry : other.entries.entrySet()) {
+                    try {
+
+                        var ownEntry = entries.get(otherEntry.getKey());
+                        if (ownEntry == null) {
+                            entries.put(otherEntry.getKey(), otherEntry.getValue().clone(fs).resetTag(fs));
+                            continue;
+                        }
+
+                        // remove files that are before any FileEntry in otherVersions
+                        {
+                            ownEntry.files.removeIf(f -> otherEntry.getValue().files.stream()
+                                    .anyMatch(of -> f.isBeforeOrEqual(of)));
+                        }
+
+                        // only add the other files if it is not obsolete
+                        for (var otherFile : otherEntry.getValue().files) {
+                            if (!ownEntry.files.stream()
+                                    .anyMatch(f -> otherFile.isBeforeOrEqual(f))) {
+                                ownEntry.files.add(otherFile.clone(fs).resetTag());
+                            }
+                        }
+
+                        // merge the subdirectories recursively
+                        if (otherEntry.getValue().directory.isPresent()) {
+                            var otherDir = otherEntry.getValue().directory.get();
+                            if (ownEntry.directory.isPresent()) {
+                                var subPath = path.resolve(otherEntry.getKey());
+                                ownEntry.directory.get().merge(otherDir, subPath);
+                            } else {
+                                // We have no local entry. If if the entry is before the own clock,
+                                // we must have deleted it locally
+                                if (!otherEntry.getValue().dirClock.isBefore(clock))
+                                    ownEntry.directory = Optional.of(otherDir.clone(fs).resetTag());
+                            }
+                        }
+                    } catch (Throwable e) {
+                        throw new RuntimeException("Error merging entry: " + otherEntry.getKey(), e);
                     }
                 }
+
+                clock.merge(other.clock);
+            } catch (Throwable e) {
+                throw new RuntimeException("Error merging directories at path: " + path + " thisDirectory:\n" + this
+                        + "\notherDirectory:\n" + other, e);
             }
-            if (modified)
-                addEvent("merged");
+        }
+
+        private FsDirectory resetTag() {
+            this.clock.resetTag(sourceNodeNr);
+            entries.values().forEach(e -> e.resetTag(fs));
+            return this;
         }
 
         public FsDirectory clone(FileSystem fs) {
             var result = new FsDirectory(sourceNodeNr, fs);
             result.clock = clock.clone();
-            result.events = events.clone();
             for (var e : entries.entrySet()) {
                 result.entries.put(e.getKey(), e.getValue().clone(fs));
             }
@@ -308,12 +365,47 @@ public class FileSystemDataStructureTest {
 
         public void remove(String entryName) {
             this.entries.remove(entryName);
+            clock.increment(fs.nodeNr, "removed " + entryName);
+        }
+
+        void traverseDirs(BiConsumer<FsPath, FsDirectory> consumer) {
+            traverseDirs(consumer, new FsPath());
+        }
+
+        private void traverseDirs(BiConsumer<FsPath, FsDirectory> consumer, FsPath path) {
+            consumer.accept(path, this);
+            for (var entry : entries.entrySet()) {
+                if (entry.getValue().directory.isEmpty()) {
+                    continue;
+                }
+                var entryPath = path.clone();
+                entryPath.add(entry.getKey());
+                entry.getValue().directory.get().traverseDirs(consumer, entryPath);
+            }
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("FsDirectory{");
+            sb.append("clock=").append(clock).append(", ");
+            sb.append("entries=").append(entries.entrySet().stream()
+                    .map(e -> "\n  " + e.getKey() + "=" + e.getValue())
+                    .collect(Collectors.joining(", ")));
+            sb.append("}\n");
+            return sb.toString();
         }
     }
 
     static class EventSet {
+        private static AtomicInteger eventCounter = new AtomicInteger();
+
         private class Event {
-            public String name;
+            public final String name;
+
+            public Event(String name) {
+                this.name = name + "(" + eventCounter.getAndIncrement() + ")";
+            }
 
             @Override
             public String toString() {
@@ -321,11 +413,10 @@ public class FileSystemDataStructureTest {
             }
         }
 
-        private Set<Event> events = new HashSet<>();
+        private Set<Event> events = new LinkedHashSet<>();
 
         public void add(String name) {
-            var event = new Event();
-            event.name = name;
+            var event = new Event(name);
             events.add(event);
         }
 
@@ -336,7 +427,11 @@ public class FileSystemDataStructureTest {
         }
 
         public boolean isSubsetOf(EventSet other) {
-            return events.stream().allMatch(x -> other.events.contains(x));
+            return events.stream().allMatch(x -> other.events.contains(x)) && events.size() < other.events.size();
+        }
+
+        public boolean isSubsetOfOrEqual(EventSet other) {
+            return events.equals(other.events) || isSubsetOf(other);
         }
 
         public void assertIsSubsetOf(EventSet other) {
@@ -345,21 +440,116 @@ public class FileSystemDataStructureTest {
                 throw new AssertionError("Events " + missingEvents + " are not in the other set");
             }
         }
+
+        @Override
+        public String toString() {
+            return "EventSet{" +
+                    "events="
+                    + events.stream()
+                            .map(e -> e.name)
+                            .collect(Collectors.joining(", "))
+                    +
+                    '}';
+        }
+
+        public ClockRelation compare(EventSet other) {
+            if (this.events.equals(other.events))
+                return ClockRelation.EQUAL;
+            if (this.isSubsetOf(other))
+                return ClockRelation.BEFORE;
+            if (other.isSubsetOf(this))
+                return ClockRelation.AFTER;
+            return ClockRelation.CONCURRENT;
+        }
+    }
+
+    static class FsClock {
+        private VectorClock vectorClock;
+        private EventSet eventSet;
+
+        private FsClock() {
+        }
+
+        public void resetTag(int nodeNr) {
+            vectorClock.resetTag(nodeNr);
+        }
+
+        public void merge(FsClock clock) {
+            this.vectorClock.merge(clock.vectorClock);
+            this.eventSet.events.addAll(clock.eventSet.events);
+        }
+
+        public static FsClock create(int nodeNr) {
+            var result = new FsClock();
+            result.eventSet = new EventSet();
+            result.vectorClock = new VectorClock();
+            result.increment(nodeNr, "created");
+            return result;
+        }
+
+        public FsClock clone() {
+            var result = new FsClock();
+            result.vectorClock = vectorClock.clone();
+            result.eventSet = eventSet.clone();
+            return result;
+        }
+
+        public ClockRelation compare(FsClock other) {
+            var result = this.vectorClock.compare(other.vectorClock);
+            if (result != eventSet.compare(other.eventSet))
+                throw new AssertionError(
+                        "Inconsistent state: vectorClock.compare and eventSet.compare disagree\nownClock= "
+                                + this.vectorClock
+                                + "\notherClock= " + other.vectorClock + "\nownEventSet= " + this.eventSet
+                                + "\notherEventSet= "
+                                + other.eventSet + "\nvectorClockRelation=" + result + " eventSetRelation="
+                                + eventSet.compare(other.eventSet));
+            return result;
+        }
+
+        public boolean isBefore(FsClock other) {
+            return compare(other) == ClockRelation.BEFORE;
+        }
+
+        public boolean isBeforeOrEqual(FsClock other) {
+            var relation = compare(other);
+            return relation == ClockRelation.BEFORE || relation == ClockRelation.EQUAL;
+        }
+
+        public boolean isConcurrent(FsClock other) {
+            return !this.isBefore(other) && !other.isBefore(this);
+        }
+
+        public void increment(int nodeNr, String name) {
+            vectorClock.increment(nodeNr);
+            eventSet.add(name + "#" + nodeNr);
+        }
+
+        @Override
+        public String toString() {
+            return "FsClock{" +
+                    ", vectorClock=" + vectorClock +
+                    ", eventSet=" + eventSet +
+                    '}';
+        }
     }
 
     static class FsFile extends FsElementBase<FsFile> {
         private FileSystem fs;
         private String content = "";
-        public Object tag;
-        public VectorClock clock;
-        // ghost field to track events related to this file entry
-        public EventSet eventSet = new EventSet();
+        public FsClock clock;
 
         public boolean isBefore(FsFile other) {
-            var result = this.clock.isBefore(other.clock);
-            if (result)
-                eventSet.assertIsSubsetOf(other.eventSet);
-            return result;
+            return this.clock.isBefore(other.clock);
+        }
+
+        public FsFile resetTag() {
+            this.clock.resetTag(fs.nodeNr);
+            return this;
+        }
+
+        public boolean isBeforeOrEqual(FsFile other) {
+            return this.clock.isBeforeOrEqual(other.clock);
         }
 
         private FsFile(int sourceNodeNr, FileSystem fs) {
@@ -369,9 +559,7 @@ public class FileSystemDataStructureTest {
 
         public static FsFile createNewFile(int sourceNodeNr, FileSystem fs) {
             var result = new FsFile(sourceNodeNr, fs);
-            result.clock = VectorClock.empty();
-            result.clock.increment(fs.nodeNr);
-            result.eventSet.add("created");
+            result.clock = FsClock.create(fs.nodeNr);
             return result;
         }
 
@@ -380,7 +568,6 @@ public class FileSystemDataStructureTest {
             var result = new FsFile(sourceNodeNr, fs);
             result.content = content;
             result.clock = clock.clone();
-            result.eventSet = eventSet.clone();
             return result;
         }
 
@@ -390,8 +577,15 @@ public class FileSystemDataStructureTest {
 
         public void setContent(String value) {
             this.content = value;
-            this.clock.increment(fs.nodeNr);
-            this.eventSet.add("setContent " + value);
+            this.clock.increment(fs.nodeNr, "setContent " + value);
+        }
+
+        @Override
+        public String toString() {
+            return "FsFile{" +
+                    "content='" + content + '\'' +
+                    ", clock=" + clock +
+                    '}';
         }
     }
 
@@ -502,20 +696,62 @@ public class FileSystemDataStructureTest {
         }
     }
 
-    static record Action(String name, double weight, Runnable action) {
+    static class Var<T> {
+        public T value;
+
+        private Var(T value) {
+            this.value = value;
+        }
+
+        public static <T> Var<T> of(T value) {
+            return new Var<>(value);
+        }
+
+        public T get() {
+            return value;
+        }
+
+        public void set(T value) {
+            this.value = value;
+        }
+    }
+
+    enum ActionCategory {
+        ENTRY_CHANGE(5),
+        FS_MERGE(1.0);
+
+        private ActionCategory(double weight) {
+            this.weight = weight;
+        }
+
+        public final double weight;
+    }
+
+    static class Action {
+        public String name;
+        public double weight;
+        public ActionCategory category;
+        public Runnable action;
+
+        public Action(String name, double weight, ActionCategory category, Runnable action) {
+            this.name = name;
+            this.weight = weight;
+            this.category = category;
+            this.action = action;
+        }
     }
 
     @Test
     public void modelBasedTest() {
         int fileSystemsCount = 3;
-        int testCount = 10;
-        int iterationCount = 10;
+        int testCount = 20;
+        int iterationCount = 200;
 
         for (int testNr = 0; testNr < testCount; testNr++) {
             // build file systems
             var fileSystems = new ArrayList<FileSystem>();
             var fs0 = new FileSystem(0);
-            for (int i = 1; i < fileSystemsCount; i++) {
+            for (int i = 0; i < fileSystemsCount; i++) {
                 var fs = new FileSystem(i);
                 fs.root = fs0.root.clone(fs);
                 fileSystems.add(fs);
@@ -525,82 +761,120 @@ public class FileSystemDataStructureTest {
             // merging them
             var random = new java.util.Random(testNr);
             var history = new StringBuilder();
-            for (int iterationNr = 0; iterationNr < iterationCount; iterationNr++) {
-                // collect possible actions
-                var actions = new ArrayList<Action>();
+            try {
+                for (int iterationNr = 0; iterationNr < iterationCount; iterationNr++) {
+                    // collect possible actions
+                    var actions = new ArrayList<Action>();
 
-                for (int i = 0; i < fileSystems.size(); i++) {
-                    var fs = fileSystems.get(i);
+                    for (int i = 0; i < fileSystems.size(); i++) {
+                        var fs = fileSystems.get(i);
+                        var iFinal = i;
 
-                    // merge with another random file system
-                    {
-                        var otherFs = fileSystems.get(random.nextInt(fileSystems.size()));
-                        if (otherFs != fs) {
-                            actions.add(
-                                    new Action("merge fs" + i + " from fs" + otherFs.nodeNr, 1.0,
-                                            () -> fs.merge(otherFs)));
+                        // merge with another random file system
+                        {
+                            var otherFs = fileSystems.get(random.nextInt(fileSystems.size()));
+                            if (otherFs != fs) {
+                                assertFalse(iFinal == otherFs.nodeNr);
+                                actions.add(
+                                        new Action("merge fs" + iFinal + " from fs" + otherFs.nodeNr, 1.0,
+                                                ActionCategory.FS_MERGE,
+                                                () -> fs.merge(otherFs)));
+                            }
                         }
+
+                        // iterate over all directories and files and add actions for modifying them
+                        {
+                            var growFsActions = new ArrayList<Action>();
+                            var shrinkFsActions = new ArrayList<Action>();
+                            var currentFsSize = Var.of(0);
+
+                            fs.root.traverseDirs((path, dir) -> {
+                                currentFsSize.value += dir.entries.size();
+
+                                // add file to the directory
+                                var newFileName = dir.chooseNewName("file");
+                                growFsActions.add(new Action(
+                                        "add file " + newFileName + " to dir " + path + " in fs" + iFinal, 1.0,
+                                        ActionCategory.ENTRY_CHANGE, () -> {
+                                            dir.addFile(newFileName, "content");
+                                        }));
+                                // add subdirectory to the directory
+                                var newDirName = dir.chooseNewName("dir");
+                                growFsActions.add(new Action(
+                                        "add subdir " + newDirName + " to dir " + path + " in fs" + iFinal, 1.0,
+                                        ActionCategory.ENTRY_CHANGE, () -> {
+                                            dir.addSubDirectory(newDirName);
+                                        }));
+                                // remove entry from the directory
+                                dir.entries.forEach((name, entry) -> {
+                                    shrinkFsActions.add(new Action(
+                                            "remove entry " + name + " from dir " + path + " in fs" + iFinal, 1.0,
+                                            ActionCategory.ENTRY_CHANGE, () -> {
+                                                dir.remove(name);
+                                            }));
+                                });
+                            });
+
+                            int targetFsSize = 20;
+
+                            // adjust the weights
+                            {
+                                double growWeight = (currentFsSize.value < targetFsSize ? 1.0 : 0.5)
+                                        / (growFsActions.size() + 1);
+                                double shrinkWeight = (currentFsSize.value > targetFsSize ? 1.0 : 0.5)
+                                        / (shrinkFsActions.size() + 1);
+
+                                // weight by fs size as well, so that larger file systems have proportionally
+                                // smaller action weights
+                                growFsActions.forEach(a -> a.weight = growWeight / currentFsSize.value);
+                                shrinkFsActions.forEach(a -> a.weight = shrinkWeight / currentFsSize.value);
+                                actions.addAll(growFsActions);
+                                actions.addAll(shrinkFsActions);
+                            }
+                        }
+
                     }
 
-                    // iterate over all directories and files and add actions for modifying them
-                    {
-                        var dirsToProcess = new ArrayList<FsDirectory>();
-                        dirsToProcess.add(fs.root);
-                        while (!dirsToProcess.isEmpty()) {
-                            var dir = dirsToProcess.remove(dirsToProcess.size() - 1);
-
-                            // iterate over all entries in the directory
-                            for (var entry : dir.entries.entrySet()) {
-                                var name = entry.getKey();
-                                entry.getValue().directory.ifPresent(dirsToProcess::add);
-                                for (var file : entry.getValue().files) {
-                                    actions.add(new Action("modify file " + name + " in fs" + i, 1.0, () -> {
-                                        file.setContent(file.getContent() + "x");
-                                    }));
+                    // choose random category (weighted)
+                    var currentCategoryWeight = 0.0;
+                    var categoryRandom = random.nextDouble()
+                            * Stream.of(ActionCategory.values()).mapToDouble(x -> x.weight).sum();
+                    for (var category : ActionCategory.values()) {
+                        currentCategoryWeight += category.weight;
+                        if (currentCategoryWeight >= categoryRandom) {
+                            // choose random action (weighted) and execute it
+                            var totalWeight = actions.stream().filter(x -> x.category == category)
+                                    .mapToDouble(x -> x.weight).sum();
+                            var r = random.nextDouble() * totalWeight;
+                            double currentWeight = 0;
+                            for (var a : actions.stream().filter(x -> x.category == category).toList()) {
+                                currentWeight += a.weight;
+                                if (currentWeight >= r) {
+                                    history.append("Executing action: " + a.name + "\n");
+                                    a.action.run();
+                                    break;
                                 }
                             }
-
-                            // add file to directory
-                            actions.add(new Action("add file to dir in fs" + i, 1.0, () -> {
-                                var newFileName = dir.chooseNewName("file");
-                                dir.addFile(newFileName, "content");
-                            }));
-
-                            // add subdirectory to directory
-                            actions.add(new Action("add subdir to dir in fs" + i, 1.0, () -> {
-                                var newDirName = dir.chooseNewName("dir");
-                                dir.addSubDirectory(newDirName);
-                            }));
+                            break;
                         }
                     }
 
-                }
-
-                // choose random action (weighted) and execute it
-                var totalWeight = actions.stream().mapToDouble(x -> x.weight).sum();
-                var r = random.nextDouble() * totalWeight;
-                double currentWeight = 0;
-                for (var a : actions) {
-                    currentWeight += a.weight;
-                    if (currentWeight >= r) {
-                        history.append("Executing action: " + a.name + "\n");
-                        a.action.run();
-                        break;
+                    // verify that all file systems are valid
+                    for (int i = 0; i < fileSystems.size(); i++) {
+                        var fs = fileSystems.get(i);
+                        try {
+                            verifyFileSystem(fs);
+                        } catch (Exception e) {
+                            throw new RuntimeException(
+                                    "File system " + i + " is invalid after iteration " + iterationNr + " History:\n"
+                                            + history,
+                                    e);
+                        }
                     }
                 }
-
-                // verify that all file systems are valid
-                for (int i = 0; i < fileSystems.size(); i++) {
-                    var fs = fileSystems.get(i);
-                    try {
-                        verifyFileSystem(fs);
-                    } catch (Exception e) {
-                        throw new RuntimeException(
-                                "File system " + i + " is invalid after iteration " + iterationNr + " History:\n"
-                                        + history,
-                                e);
-                    }
-                }
+            } catch (Throwable e) {
+                throw new RuntimeException(
+                        "Unexpected exception during test " + testNr + " History:\n" + history, e);
             }
         }
     }
@@ -624,8 +898,7 @@ public class FileSystemDataStructureTest {
                 var a = allFiles.get(i);
                 for (int j = i + 1; j < allFiles.size(); j++) {
                     var b = allFiles.get(j);
-                    if (b.eventSet.isSubsetOf(a.eventSet)
-                            || a.eventSet.isSubsetOf(b.eventSet)) {
+                    if (b.clock.compare(a.clock) != ClockRelation.CONCURRENT) {
                         throw new RuntimeException("unmerged file found: " + path + "/" + entry.getKey());
                     }
                 }

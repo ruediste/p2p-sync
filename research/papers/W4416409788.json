@@ -1,0 +1,64 @@
+{
+  "id": "W4416409788",
+  "title": "CrossFS: Improving Cross-Domain File System Performance with CRDT-Based Metadata Synchronization",
+  "doi": "https://doi.org/10.1145/3777470",
+  "publication_date": "2025-11-20",
+  "publication_year": 2025,
+  "type": "article",
+  "cited_by_count": 0,
+  "authors": [
+    "Qiwen Ke",
+    "Yina Lv",
+    "Zhihao Zhang",
+    "Zhirong Shen",
+    "Yue Yu",
+    "Hailiang Chen",
+    "Zhenlong Song",
+    "Xinbiao Gan",
+    "Jiaxin Li",
+    "Dongsheng Li",
+    "Xin Yao",
+    "Meiling Wang",
+    "Yiming Zhang"
+  ],
+  "venue": "ACM Transactions on Storage",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "hybrid",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/3777470",
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4416409788.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4416409788.grobid-xml"
+  },
+  "abstract": "Modern data-intensive applications increasingly demand efficient and scalable file systems that can operate across distributed and cross-domain environments. However, existing file systems are inefficient in metadata management, synchronization efficiency, and system scalability under high-concurrency and metadata-intensive workloads in cross-domain environments. To address these challenges, this article introduces CrossFS (CFS), a cross-domain distributed file system that enhances consistency guarantees and metadata indexing. Specifically, CFS leverages conflict-free replicated data types (CRDTs) to synchronize metadata, achieving strong eventual consistency with minimal synchronization overhead, even across network partitions. Furthermore, CFS employs a Hybrid Tree indexing structure, tailored for distributed environments, which optimizes metadata operations by reducing query latency by up to 33.4% and write amplification by 30.7%. Additionally, CFS achieves adaptive caching strategies and a hybrid synchronization model that effectively balances consistency latency with data availability. Extensive evaluations show that CFS outperforms CephFS and GlusterFS, achieving up to 33.9% higher metadata throughput, 36% lower latency, and 42% better data operation efficiency.",
+  "topics": [
+    "Advanced Data Storage Technologies",
+    "Cloud Computing and Resource Management",
+    "Distributed and Parallel Computing Systems"
+  ],
+  "references": [
+    "https://openalex.org/W1964802076",
+    "https://openalex.org/W1973747955",
+    "https://openalex.org/W1985229168",
+    "https://openalex.org/W2075854425",
+    "https://openalex.org/W2119565742",
+    "https://openalex.org/W2165852049",
+    "https://openalex.org/W2883543619",
+    "https://openalex.org/W2932966482",
+    "https://openalex.org/W3013987090",
+    "https://openalex.org/W3100217861",
+    "https://openalex.org/W3176532032",
+    "https://openalex.org/W3207452942",
+    "https://openalex.org/W4214919759",
+    "https://openalex.org/W4238584892",
+    "https://openalex.org/W4285137472",
+    "https://openalex.org/W4392740989"
+  ],
+  "cited_by": []
+}

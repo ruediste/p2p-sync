@@ -1,0 +1,1050 @@
+{
+  "id": "W4236518547",
+  "title": "Safety in numbers: more walkers and bicyclists, safer walking and bicycling",
+  "doi": "https://doi.org/10.1136/ip.9.3.205",
+  "publication_date": "2003-09-01",
+  "publication_year": 2003,
+  "type": "article",
+  "cited_by_count": 704,
+  "authors": [
+    "Peter L. Jacobsen"
+  ],
+  "venue": "Injury Prevention",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "bronze",
+    "oa_url": "https://injuryprevention.bmj.com/content/injuryprev/9/3/205.full.pdf",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4236518547.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4236518547.grobid-xml"
+  },
+  "abstract": "OBJECTIVE: To examine the relationship between the numbers of people walking or bicycling and the frequency of collisions between motorists and walkers or bicyclists. The common wisdom holds that the number of collisions varies directly with the amount of walking and bicycling. However, three published analyses of collision rates at specific intersections found a non-linear relationship, such that collisions rates declined with increases in the numbers of people walking or bicycling. DATA: This paper uses five additional data sets (three population level and two time series) to compare the amount of walking or bicycling and the injuries incurring in collisions with motor vehicles. RESULTS: The likelihood that a given person walking or bicycling will be struck by a motorist varies inversely with the amount of walking or bicycling. This pattern is consistent across communities of varying size, from specific intersections to cities and countries, and across time periods. DISCUSSION: This result is unexpected. Since it is unlikely that the people walking and bicycling become more cautious if their numbers are larger, it indicates that the behavior of motorists controls the likelihood of collisions with people walking and bicycling. It appears that motorists adjust their behavior in the presence of people walking and bicycling. There is an urgent need for further exploration of the human factors controlling motorist behavior in the presence of people walking and bicycling. CONCLUSION: A motorist is less likely to collide with a person walking and bicycling if more people walk or bicycle. Policies that increase the numbers of people walking and bicycling appear to be an effective route to improving the safety of people walking and bicycling.",
+  "topics": [
+    "Traffic and Road Safety",
+    "Urban Transport and Accessibility",
+    "Injury Epidemiology and Prevention"
+  ],
+  "references": [
+    "https://openalex.org/W184153022",
+    "https://openalex.org/W1978303076",
+    "https://openalex.org/W1978353383",
+    "https://openalex.org/W2006568224",
+    "https://openalex.org/W2015922351",
+    "https://openalex.org/W2019823288",
+    "https://openalex.org/W2023009352",
+    "https://openalex.org/W2030253444",
+    "https://openalex.org/W2040568574",
+    "https://openalex.org/W2108361166",
+    "https://openalex.org/W2111656644",
+    "https://openalex.org/W2125141601",
+    "https://openalex.org/W2138735150"
+  ],
+  "cited_by": [
+    {
+      "id": "W2164133872",
+      "title": "Making Cycling Irresistible: Lessons from The Netherlands, Denmark and Germany",
+      "abstract": "This article shows how the Netherlands, Denmark and Germany have made bicycling a safe, convenient and practical way to get around their cities. The analysis relies on national aggregate data as well as case studies of large and small cities in each country. The key to achieving high levels of cycling appears to be the provision of separate cycling facilities along heavily travelled roads and at intersections, combined with traffic calming of most residential neighbourhoods. Extensive cycling rights of way in the Netherlands, Denmark and Germany are complemented by ample bike parking, full integration with public transport, comprehensive traffic education and training of both cyclists and motorists, and a wide range of promotional events intended to generate enthusiasm and wide public support for cycling. In addition to their many pro\u2010bike policies and programmes, the Netherlands, Denmark and Germany make driving expensive as well as inconvenient in central cities through a host of taxes and restrictions on car ownership, use and parking. Moreover, strict land\u2010use policies foster compact, mixed\u2010use developments that generate shorter and thus more bikeable trips. It is the coordinated implementation of this multi\u2010faceted, mutually reinforcing set of policies that best explains the success of these three countries in promoting cycling. For comparison, the article portrays the marginal status of cycling in the UK and the USA, where only about 1% of trips are by bike."
+    },
+    {
+      "id": "W2101386393",
+      "title": "Infrastructure, programs, and policies to increase bicycling: An international review",
+      "abstract": null
+    },
+    {
+      "id": "W2150478821",
+      "title": "Public health benefits of strategies to reduce greenhouse-gas emissions: urban land transport",
+      "abstract": null
+    },
+    {
+      "id": "W2145590366",
+      "title": "Do the Health Benefits of Cycling Outweigh the Risks?",
+      "abstract": "BACKGROUND: Although from a societal point of view a modal shift from car to bicycle may have beneficial health effects due to decreased air pollution emissions, decreased greenhouse gas emissions, and increased levels of physical activity, shifts in individual adverse health effects such as higher exposure to air pollution and risk of a traffic accident may prevail. OBJECTIVE: We describe whether the health benefits from the increased physical activity of a modal shift for urban commutes outweigh the health risks. DATA SOURCES AND EXTRACTION: We have summarized the literature for air pollution, traffic accidents, and physical activity using systematic reviews supplemented with recent key studies. DATA SYNTHESIS: We quantified the impact on all-cause mortality when 500,000 people would make a transition from car to bicycle for short trips on a daily basis in the Netherlands. We have expressed mortality impacts in life-years gained or lost, using life table calculations. For individuals who shift from car to bicycle, we estimated that beneficial effects of increased physical activity are substantially larger (3-14 months gained) than the potential mortality effect of increased inhaled air pollution doses (0.8-40 days lost) and the increase in traffic accidents (5-9 days lost). Societal benefits are even larger because of a modest reduction in air pollution and greenhouse gas emissions and traffic accidents. CONCLUSIONS: On average, the estimated health benefits of cycling were substantially larger than the risks relative to car driving for individuals shifting their mode of transport."
+    },
+    {
+      "id": "W1998771430",
+      "title": "Health impact assessment of active transportation: A systematic review",
+      "abstract": null
+    },
+    {
+      "id": "W1532912978",
+      "title": "Sustainable Urban Transport in the Developing World: Beyond Megacities",
+      "abstract": "Megacities have frequently received a disproportionate amount of attention over other sizes of cities in recent discourse on urban sustainability. In this article, the authors argue that a focus on smaller and medium-sized cities is crucial to achieving substantial progress towards more sustainable urban development, not only because they are home to at least a quarter of the world\u2019s population but because they also offer great potential for sustainable transformations. In principle, their size allows for flexibility in terms of urban expansion, adoption of \u201cgreen\u201d travel modes, and environmental protection. At the same time, smaller and medium-sized cities often have fewer resources to implement new transport measures and can be more vulnerable to fluctuations in the world economy. This article critically reviews the potential role and impact of nine commonly considered options for sustainable urban transport in cities in developing countries: (1) road infrastructure; (2) rail-based public transport; (3) road-based public transport; (4) support for non-motorized travel modes; (5) technological solutions; (6) awareness-raising campaigns; (7) pricing mechanisms; (8) vehicle access restrictions; and (9) control of land-uses. Drawing on international research and examples of policies to reduce the environmental impacts of transport in urban areas, this article identifies some key lessons for sustainable urban transport in smaller and medium-sized cities in developing countries. These lessons are certainly not always identical to those for megacities in the global south."
+    },
+    {
+      "id": "W1982167337",
+      "title": "Improving health through policies that promote active travel: A review of evidence to support integrated health impact assessment",
+      "abstract": null
+    },
+    {
+      "id": "W1965016635",
+      "title": "Bicycling renaissance in North America? An update and re-appraisal of cycling trends and policies",
+      "abstract": null
+    },
+    {
+      "id": "W2522445019",
+      "title": "Land use, transport, and population health: estimating the health benefits of compact cities",
+      "abstract": null
+    },
+    {
+      "id": "W2159172367",
+      "title": "The impact of transportation infrastructure on bicycling injuries and crashes: a review of the literature",
+      "abstract": "BACKGROUND: Bicycling has the potential to improve fitness, diminish obesity, and reduce noise, air pollution, and greenhouse gases associated with travel. However, bicyclists incur a higher risk of injuries requiring hospitalization than motor vehicle occupants. Therefore, understanding ways of making bicycling safer and increasing rates of bicycling are important to improving population health. There is a growing body of research examining transportation infrastructure and the risk of injury to bicyclists. METHODS: We reviewed studies of the impact of transportation infrastructure on bicyclist safety. The results were tabulated within two categories of infrastructure, namely that at intersections (e.g. roundabouts, traffic lights) or between intersections on \"straightaways\" (e.g. bike lanes or paths). To assess safety, studies examining the following outcomes were included: injuries; injury severity; and crashes (collisions and/or falls). RESULTS: The literature to date on transportation infrastructure and cyclist safety is limited by the incomplete range of facilities studied and difficulties in controlling for exposure to risk. However, evidence from the 23 papers reviewed (eight that examined intersections and 15 that examined straightaways) suggests that infrastructure influences injury and crash risk. Intersection studies focused mainly on roundabouts. They found that multi-lane roundabouts can significantly increase risk to bicyclists unless a separated cycle track is included in the design. Studies of straightaways grouped facilities into few categories, such that facilities with potentially different risks may have been classified within a single category. Results to date suggest that sidewalks and multi-use trails pose the highest risk, major roads are more hazardous than minor roads, and the presence of bicycle facilities (e.g. on-road bike routes, on-road marked bike lanes, and off-road bike paths) was associated with the lowest risk. CONCLUSION: Evidence is beginning to accumulate that purpose-built bicycle-specific facilities reduce crashes and injuries among cyclists, providing the basis for initial transportation engineering guidelines for cyclist safety. Street lighting, paved surfaces, and low-angled grades are additional factors that appear to improve cyclist safety. Future research examining a greater variety of infrastructure would allow development of more detailed guidelines."
+    },
+    {
+      "id": "W1970113749",
+      "title": "The Built Environment and Traffic Safety",
+      "abstract": "The article reaches two conclusions counter to accepted transportation engineering theory. First, the traffic environments of dense urban areas appear to be safer than the lower-volume environments of the suburbs. The reason is that many fewer miles are driven on a per capita basis, and the driving that is done is at lower speeds that are less likely to produce fatal crashes. Second, at least in dense urban areas, less-\u201cforgiving\u201d design treatments\u2014such as narrow lanes, traffic-calming measures, and street trees close to the roadway\u2014appear to enhance a roadway's safety performance when compared to more conventional roadway designs. The reason for this apparent anomaly may be that less-forgiving designs provide drivers with clear information on safe and appropriate operating speeds."
+    },
+    {
+      "id": "W2125129204",
+      "title": "Cycling to work in 90 large American cities: new evidence on the role of bike paths and lanes",
+      "abstract": null
+    },
+    {
+      "id": "W2416178186",
+      "title": "Car free cities: Pathway to healthy urban living",
+      "abstract": null
+    },
+    {
+      "id": "W2015171947",
+      "title": "Promoting walking and cycling as an alternative to using cars: systematic review",
+      "abstract": "OBJECTIVES: To assess what interventions are effective in promoting a population shift from using cars towards walking and cycling and to assess the health effects of such interventions. DATA SOURCES: Published and unpublished reports in any language identified from electronic databases, bibliographies, websites, and reference lists. REVIEW METHODS: Systematic search and appraisal to identify experimental or observational studies with a prospective or controlled retrospective design that evaluated any intervention applied to an urban population or area by measuring outcomes in members of the local population. RESULTS: 22 studies met the inclusion criteria. We found some evidence that targeted behaviour change programmes can change the behaviour of motivated subgroups, resulting (in the largest study) in a shift of around 5% of all trips at a population level. Single studies of commuter subsidies and a new railway station also showed positive effects. The balance of best available evidence about publicity campaigns, engineering measures, and other interventions suggests that they have not been effective. Participants in trials of active commuting experienced short term improvements in certain measures of health and fitness, but we found no good evidence on effects on health of any effective intervention at population level. CONCLUSIONS: The best available evidence of effectiveness in promoting a modal shift is for targeted behaviour change programmes, but the social distribution of their effects is unclear and some other types of intervention have yet to be rigorously evaluated."
+    },
+    {
+      "id": "W2054931103",
+      "title": "How theories of practice can inform transition to a decarbonised transport system",
+      "abstract": null
+    },
+    {
+      "id": "W2065532029",
+      "title": "Part II: Policy instruments for sustainable road transport",
+      "abstract": null
+    },
+    {
+      "id": "W2043864789",
+      "title": "An area-level model of vehicle-pedestrian injury collisions with implications for land use and transportation planning",
+      "abstract": null
+    },
+    {
+      "id": "W2036174240",
+      "title": "Energy and transport",
+      "abstract": null
+    },
+    {
+      "id": "W1529764152",
+      "title": "Cycling as a Part of Daily Life: A Review of Health Perspectives",
+      "abstract": "Health aspects of day-to-day cycling have gained attention from the health sector aiming to increase levels of physical activity, and from the transport and planning sector, to justify investments in cycling. We review and discuss the main pathways between cycling and health under two perspectives \u2014 generalizable epidemiological evidence for health effects and specific impact modeling to quantify health impacts in concrete settings. Substantial benefits from physical activity dominate the public health impacts of cycling. Epidemiological evidence is strong and impact modeling is well advanced. Injuries amount to a smaller impact on the population level, but affect crash victims disproportionately and perceived risks deter potential cyclists. Basic data on crash risks are available, but evidence on determinants of risks is limited and impact models are highly dependent on local factors. Risks from air pollution can be assumed to be small, with limited evidence for cycling-specific mechanisms. Based on a large body of evidence, planners, health professionals, and decision-makers can rest assured that benefits from cycling-related physical activity are worth pursuing. Safety improvements should be part of the efforts to promote cycling, both to minimize negative impacts and to lower barriers to cycling for potential riders."
+    },
+    {
+      "id": "W2155398937",
+      "title": "Why Canadians cycle more than Americans: A comparative analysis of bicycling trends and policies",
+      "abstract": null
+    },
+    {
+      "id": "W2114372989",
+      "title": "Route Infrastructure and the Risk of Injuries to Bicyclists: A Case-Crossover Study",
+      "abstract": "OBJECTIVES: We compared cycling injury risks of 14 route types and other route infrastructure features. METHODS: We recruited 690 city residents injured while cycling in Toronto or Vancouver, Canada. A case-crossover design compared route infrastructure at each injury site to that of a randomly selected control site from the same trip. RESULTS: Of 14 route types, cycle tracks had the lowest risk (adjusted odds ratio [OR] = 0.11; 95% confidence interval [CI] = 0.02, 0.54), about one ninth the risk of the reference: major streets with parked cars and no bike infrastructure. Risks on major streets were lower without parked cars (adjusted OR = 0.63; 95% CI = 0.41, 0.96) and with bike lanes (adjusted OR = 0.54; 95% CI = 0.29, 1.01). Local streets also had lower risks (adjusted OR = 0.51; 95% CI = 0.31, 0.84). Other infrastructure characteristics were associated with increased risks: streetcar or train tracks (adjusted OR = 3.0; 95% CI = 1.8, 5.1), downhill grades (adjusted OR = 2.3; 95% CI = 1.7, 3.1), and construction (adjusted OR = 1.9; 95% CI = 1.3, 2.9). CONCLUSIONS: The lower risks on quiet streets and with bike-specific infrastructure along busy streets support the route-design approach used in many northern European countries. Transportation infrastructure with lower bicycling injury risks merits public health support to reduce injuries and promote cycling."
+    },
+    {
+      "id": "W2036714794",
+      "title": "The non-linearity of risk and the promotion of environmentally sustainable transport",
+      "abstract": null
+    },
+    {
+      "id": "W2809899558",
+      "title": "Visualization and analysis of mapping knowledge domain of road safety studies",
+      "abstract": null
+    },
+    {
+      "id": "W2053776921",
+      "title": "The link between built environment, pedestrian activity and pedestrian\u2013vehicle collision occurrence at signalized intersections",
+      "abstract": null
+    },
+    {
+      "id": "W2606385607",
+      "title": "Pedestrian-driver communication and decision strategies at marked crossings",
+      "abstract": null
+    },
+    {
+      "id": "W1964512993",
+      "title": "The role of built environment on pedestrian crash frequency",
+      "abstract": null
+    },
+    {
+      "id": "W2288203422",
+      "title": "Health Impacts of Active Transportation in Europe",
+      "abstract": "Policies that stimulate active transportation (walking and bicycling) have been related to heath benefits. This study aims to assess the potential health risks and benefits of promoting active transportation for commuting populations (age groups 16-64) in six European cities. We conducted a health impact assessment using two scenarios: increased cycling and increased walking. The primary outcome measure was all-cause mortality related to changes in physical activity level, exposure to fine particulate matter air pollution with a diameter <2.5 \u03bcm, as well as traffic fatalities in the cities of Barcelona, Basel, Copenhagen, Paris, Prague, and Warsaw. All scenarios produced health benefits in the six cities. An increase in bicycle trips to 35% of all trips (as in Copenhagen) produced the highest benefits among the different scenarios analysed in Warsaw 113 (76-163) annual deaths avoided, Prague 61 (29-104), Barcelona 37 (24-56), Paris 37 (18-64) and Basel 5 (3-9). An increase in walking trips to 50% of all trips (as in Paris) resulted in 19 (3-42) deaths avoided annually in Warsaw, 11(3-21) in Prague, 6 (4-9) in Basel, 3 (2-6) in Copenhagen and 3 (2-4) in Barcelona. The scenarios would also reduce carbon dioxide emissions in the six cities by 1,139 to 26,423 (metric tonnes per year). Policies to promote active transportation may produce health benefits, but these depend of the existing characteristics of the cities. Increased collaboration between health practitioners, transport specialists and urban planners will help to introduce the health perspective in transport policies and promote active transportation."
+    },
+    {
+      "id": "W2980125770",
+      "title": "Pedestrians and E-Scooters: An Initial Look at E-Scooter Parking and Perceptions by Riders and Non-Riders",
+      "abstract": "Since 2018, pedestrians in many U.S. cities have been sharing sidewalk space with dockless shared e-scooters. The introduction of e-scooters has received pushback from pedestrians. Complaints reported in the media include e-scooters blocking walkways and sidewalks when parked illegally as well as safety concerns from pedestrians who do not feel safe around moving e-scooters. However, little is known beyond a few initial studies on e-scooter parking and anecdotes about pedestrian perceptions of e-scooter safety. Our case study from Rosslyn, Virginia, helps shed light on these two issues. First, we conducted a survey of 181 e-scooter riders and non-riders asking about their perceived safety around riders of e-scooters and experiences of sidewalks blocked by e-scooters. We found highly divergent responses about safety and sidewalk blocking perceptions from riders and non-riders. Second, we conducted an observational study of 606 parked e-scooters along three mixed-use corridors in Rosslyn to investigate the relationship between the built environment and e-scooter parking. We found that 16% of 606 observed e-scooters were not parked properly and 6% (36 e-scooters) were blocking pedestrian right-of-way. Moreover, our survey showed that e-scooter trips in Rosslyn replaced trips otherwise taken by Uber, Lyft, or a taxi (39%), foot (33%), bicycle (12%), bus (7%), or car (7%)."
+    },
+    {
+      "id": "W2072509189",
+      "title": "The WHO Commission on Social Determinants of Health",
+      "abstract": "The World Health Organization's (WHO) Commission on the Social Determinants of Health (CSDH) published its final report on health equity in 2008, with the titled aspiration of \u2018closing the gap in a..."
+    },
+    {
+      "id": "W2024822345",
+      "title": "Walkability: what is it?",
+      "abstract": "In order to understand walkability, it is important to consider how pedestrians are defined and the discourses that shape the development of pedestrian space. This paper examines both these issues and identifies points of agreement and disagreement between metrics for walkability. Convergence points include the notion of sidewalk access, street connectivity, and land\u2010use density and diversity. On the other hand, contradictions are identified between prominent pedestrian level of service (LOS) measures which emphasize personal space and those which advocate safety \u2013 and comfort \u2013 in numbers. Recommendations are made to encourage more multidisciplinary and research\u2010based development of metrics for walkability."
+    },
+    {
+      "id": "W2069725591",
+      "title": "How to make more cycling good for road safety?",
+      "abstract": null
+    },
+    {
+      "id": "W2256006025",
+      "title": "Bikeshare trip generation in New York City",
+      "abstract": null
+    },
+    {
+      "id": "W1986857588",
+      "title": "Health Cobenefits and Transportation-Related Reductions in Greenhouse Gas Emissions in the San Francisco Bay Area",
+      "abstract": "OBJECTIVES: We quantified health benefits of transportation strategies to reduce greenhouse gas emissions (GHGE). METHODS: Statistics on travel patterns and injuries, physical activity, fine particulate matter, and GHGE in the San Francisco Bay Area, California, were input to a model that calculated the health impacts of walking and bicycling short distances usually traveled by car or driving low-emission automobiles. We measured the change in disease burden in disability-adjusted life years (DALYs) based on dose-response relationships and the distributions of physical activity, particulate matter, and traffic injuries. RESULTS: Increasing median daily walking and bicycling from 4 to 22 minutes reduced the burden of cardiovascular disease and diabetes by 14% (32,466 DALYs), increased the traffic injury burden by 39% (5907 DALYS), and decreased GHGE by 14%. Low-carbon driving reduced GHGE by 33.5% and cardiorespiratory disease burden by less than 1%. CONCLUSIONS: Increased physical activity associated with active transport could generate a large net improvement in population health. Measures would be needed to minimize pedestrian and bicyclist injuries. Together, active transport and low-carbon driving could achieve GHGE reductions sufficient for California to meet legislative mandates."
+    },
+    {
+      "id": "W1979410871",
+      "title": "Moving urban trips from cars to bicycles: impact on health and emissions",
+      "abstract": null
+    },
+    {
+      "id": "W2096304082",
+      "title": "On the electrification of road transportation \u2013 A review of the environmental, economic, and social performance of electric two-wheelers",
+      "abstract": "Electrification is widely considered as a viable strategy for reducing the oil dependency and environmental impacts of road transportation. In pursuit of this strategy, most attention has been paid to electric cars. However, substantial, yet untapped, potentials could be realized in urban areas through the large-scale introduction of electric two-wheelers. Here, we review the environmental, economic, and social performance of electric two-wheelers, demonstrating that these are generally more energy efficient and less polluting than conventionally-powered motor vehicles. Electric two-wheelers tend to decrease exposure to pollution as their environmental impacts largely result from vehicle production and electricity generation outside of urban areas. Our analysis suggests that the price of e-bikes has been decreasing at a learning rate of 8%. Despite price differentials of 5000 \u00b1 1800 EUR2012 kW h\u22121 in Europe, e-bikes are penetrating the market because they appear to offer an apparent additional use value relative to bicycles. Mid-size and large electric two-wheelers do not offer such an additional use value compared to their conventional counterparts and constitute niche products at price differentials of 700 \u00b1 360 EUR2012 kW\u22121 and 160 \u00b1 90 EUR2012 kW\u22121, respectively. The large-scale adoption of electric two-wheelers can reduce traffic noise and road congestion but may necessitate adaptations of urban infrastructure and safety regulations. A case-specific assessment as part of an integrated urban mobility planning that accounts, e.g., for the local electricity mix, infrastructure characteristics, and mode-shift behavior, should be conducted before drawing conclusions about the sustainability impacts of electric two-wheelers."
+    },
+    {
+      "id": "W2248917425",
+      "title": "Pedestrian Safety and the Built Environment",
+      "abstract": "Urban and regional planning has a contribution to make toward improving pedestrian safety, particularly in view of the fact that about 273,000 pedestrians were killed in road traffic crashes in 2010. The road is a built environments that should enhance safety and security for pedestrians, but this ideal is not always the case. This article presents an overview of the evidence on the risks that pedestrians face in the built environment. This article shows that design of the roadway and development of different land uses can either increase or reduce pedestrian road traffic injury. Planners need to design or modify the built environment to minimize risk for pedestrians."
+    },
+    {
+      "id": "W2053415760",
+      "title": "Safety perceptions and reported behavior related to cycling in mixed traffic: A comparison between Brisbane and Copenhagen",
+      "abstract": null
+    },
+    {
+      "id": "W2289773934",
+      "title": "Safety-in-numbers: A systematic review and meta-analysis of evidence",
+      "abstract": null
+    },
+    {
+      "id": "W2020263619",
+      "title": "Urban transport transitions: Copenhagen, City of Cyclists",
+      "abstract": null
+    },
+    {
+      "id": "W2034592524",
+      "title": "The Societal Costs and Benefits of Commuter Bicycling: Simulating the Effects of Specific Policies Using System Dynamics Modeling",
+      "abstract": "BACKGROUND: Shifting to active modes of transport in the trip to work can achieve substantial co-benefits for health, social equity, and climate change mitigation. Previous integrated modeling of transport scenarios has assumed active transport mode share and has been unable to incorporate acknowledged system feedbacks. OBJECTIVES: We compared the effects of policies to increase bicycle commuting in a car-dominated city and explored the role of participatory modeling to support transport planning in the face of complexity. METHODS: We used system dynamics modeling (SDM) to compare realistic policies, incorporating feedback effects, nonlinear relationships, and time delays between variables. We developed a system dynamics model of commuter bicycling through interviews and workshops with policy, community, and academic stakeholders. We incorporated best available evidence to simulate five policy scenarios over the next 40 years in Auckland, New Zealand. Injury, physical activity, fuel costs, air pollution, and carbon emissions outcomes were simulated. RESULTS: Using the simulation model, we demonstrated the kinds of policies that would likely be needed to change a historical pattern of decline in cycling into a pattern of growth that would meet policy goals. Our model projections suggest that transforming urban roads over the next 40 years, using best practice physical separation on main roads and bicycle-friendly speed reduction on local streets, would yield benefits 10-25 times greater than costs. CONCLUSIONS: To our knowledge, this is the first integrated simulation model of future specific bicycling policies. Our projections provide practical evidence that may be used by health and transport policy makers to optimize the benefits of transport bicycling while minimizing negative consequences in a cost-effective manner. The modeling process enhanced understanding by a range of stakeholders of cycling as a complex system. Participatory SDM can be a helpful method for integrating health and environmental outcomes in transport and urban planning."
+    },
+    {
+      "id": "W2090428066",
+      "title": "Neighborhood Social Inequalities in Road Traffic Injuries: The Influence of Traffic Volume and Road Design",
+      "abstract": "OBJECTIVES: We examined the extent to which differential traffic volume and road geometry can explain social inequalities in pedestrian, cyclist, and motor vehicle occupant injuries across wealthy and poor urban areas. METHODS: We performed a multilevel observational study of all road users injured over 5 years (n=19,568) at intersections (n=17,498) in a large urban area (Island of Montreal, Canada). We considered intersection-level (traffic estimates, major roads, number of legs) and area-level (population density, commuting travel modes, household income) characteristics in multilevel Poisson regressions that nested intersections in 506 census tracts. RESULTS: There were significantly more injured pedestrians, cyclists, and motor vehicle occupants at intersections in the poorest than in the richest areas. Controlling for traffic volume, intersection geometry, and pedestrian and cyclist volumes greatly attenuated the event rate ratios between intersections in the poorest and richest areas for injured pedestrians (-70%), cyclists (-44%), and motor vehicle occupants (-44%). CONCLUSIONS: Roadway environment can explain a substantial portion of the excess rate of road traffic injuries in the poorest urban areas."
+    },
+    {
+      "id": "W2051098712",
+      "title": "Models of perceived cycling risk and route acceptability",
+      "abstract": null
+    },
+    {
+      "id": "W2023343584",
+      "title": "Shifting from car to active transport: A systematic review of the effectiveness of interventions",
+      "abstract": null
+    },
+    {
+      "id": "W2008589805",
+      "title": "Cycling down under: a comparative analysis of bicycling trends and policies in Sydney and Melbourne",
+      "abstract": null
+    },
+    {
+      "id": "W2035848390",
+      "title": "The Role of Bicycle-sharing in the City: Analysis of the Irish Experience",
+      "abstract": "Bicycle-sharing schemes have become an important piece of infrastructure in many cities across the world over the last decade. However, existing research investigating the role and impact of these schemes in cities is sparse. This research analyses the impact of a recently implemented scheme in Dublin, Ireland. Using evidence from 360 questionnaires, the paper examines four elements of the scheme: (1) the socioeconomic characteristics of the users; (2) its impact on modal choice; (3) its peak and off-peak functionality; and (4) its impact on driver awareness of cyclists. Results show the scheme is used predominantly by higher-income individuals, it has a different functionality during the peak and off-peak and has been indirectly successful at improving driver awareness towards cyclists."
+    },
+    {
+      "id": "W2125988282",
+      "title": "The role of the built environment in explaining relationships between perceived and actual pedestrian and bicyclist safety",
+      "abstract": null
+    },
+    {
+      "id": "W1997374889",
+      "title": "Traffic-related air pollution and health co-benefits of alternative transport in Adelaide, South Australia",
+      "abstract": null
+    },
+    {
+      "id": "W2483261816",
+      "title": "The health impacts of traffic-related exposures in urban areas: Understanding real effects, underlying driving forces and co-producing future directions",
+      "abstract": null
+    },
+    {
+      "id": "W2119408329",
+      "title": "Who owns the roads? How motorised traffic discourages walking and bicycling",
+      "abstract": "OBJECTIVE: To examine the impact of traffic on levels of walking and bicycling. METHOD: Review of the literature of medical, public health, city planning, public administration and traffic engineering. RESULTS: The real and perceived danger and discomfort imposed by traffic discourage walking and bicycling. Accurately or not, pedestrians and bicyclists judge injury risk and respond accordingly. Although it can be difficult to measure these effects, observed behaviour provides good evidence for these effects, with the strongest association being an inverse correlation between volumes and speeds of traffic and levels of walking and cycling. CONCLUSION: Interventions to reduce traffic speed and volume are likely to promote walking and bicycling and thus result in public health gains."
+    },
+    {
+      "id": "W2130266995",
+      "title": "Cycling for Everyone",
+      "abstract": "This paper investigates how bicycling can be promoted as a safe and feasible means of transport for everyone and for all trip purposes. The policies and programs needed to encourage a broad spectrum of social groups to cycle are the same policies and programs that encourage high overall levels of cycling: extensive systems of separate cycling facilities, intersection modifications and priority bicycle traffic signals, traffic calming of neighborhoods, safe and convenient bike parking, coordination and integration of cycling with public transport, traffic education and training for both cyclists and motorists, and traffic laws that favor cyclists and pedestrians. To show how this multifaceted, coordinated approach actually works, the paper focuses on cycling trends and policies in the Netherlands, Denmark, and Germany. The national-level comparative analysis is supplemented with case studies of large and small cities in each country."
+    },
+    {
+      "id": "W2734808967",
+      "title": "Policies to Promote Active Travel: Evidence from Reviews of the Literature",
+      "abstract": null
+    },
+    {
+      "id": "W2032343347",
+      "title": "Perspectives and images of cycling as a barrier or facilitator of cycling",
+      "abstract": null
+    },
+    {
+      "id": "W1990642747",
+      "title": "Cycle commuting in Belgium: Spatial determinants and \u2018re-cycling\u2019 strategies",
+      "abstract": null
+    },
+    {
+      "id": "W2748034146",
+      "title": "Meta-analysis of the relationships between space syntax measures and pedestrian movement",
+      "abstract": "Ample research has been conducted investigating the built environment impacts on pedestrian movement (PM). A clear division is also evident in the literature on this topic: one group tends to use geographic measures (metric distance) of the environment to explain pedestrian behaviour; the other group uses syntactic measures (visual distance). Many review articles have been published on the former. However, relatively little is known about the effect size (ES), directions, and consistency of syntactic measures in explaining PM. This paper fills this gap through a meta-analysis of published and unpublished studies on this topic spanning over 1975\u20132016, and answers the following five research questions: (a) What are the different measures used in the space syntax literature to explain PM?; (b) What are the magnitudes and directions of associations between space syntax measures and PM?; (c) Which space syntax measure has a more consistent relationship with PM?; (d) To what extent do the explanatory powers of different measures vary between their derivation methods?; and (e) What are the likely causes of variations of the reported results in prior studies? This research examined four syntactic measures (integration, connectivity, choice, and control) in a random effect model with 95% confidence interval (CI). The choice and integration measures were further investigated based on their operational approaches (topological, angular and metric). Results show that integration (ES = 0.206, 95% CI = 0.173\u20130.238, p < 0.001), choice (ES = 0.481, 95% CI = 0.391\u20130.561, p < 0.001), and connectivity (ES = 0.305, 95% CI = \u22120.225\u20130.696, p = 0.257) measures positively influence PM with choice being the strongest predictor. Both connectivity and control (ES = \u22120.001, 95% CI = \u22120.117\u20130.115, p = 0.990) were found to have a statistically insignificant impact. The choice and integration measures show stronger effects when derived using the angular approach (ES = 0.493 for choice, and ES = 0.502 for integration) compared to topological approach (ES = 0.374 for choice, and ES = 0.124 for integration). However, the reported results of all measures are highly heterogeneous, perhaps due to the differences in research design. The significance, magnitude, and consistency of integration and choice measures justify their relevance in built environment interventions to promote PM."
+    },
+    {
+      "id": "W386264993",
+      "title": "The safety of urban cycle tracks: A review of the literature",
+      "abstract": null
+    },
+    {
+      "id": "W2512302015",
+      "title": "The economic contribution of public bike-share to the sustainability and efficient functioning of cities",
+      "abstract": null
+    },
+    {
+      "id": "W2049108822",
+      "title": "Transportation and Public Health",
+      "abstract": "This article investigates various ways that transportation policy and planning decisions affect public health and better ways to incorporate public health objectives into transport planning. Conventional planning tends to consider some public health impacts, such as crash risk and pollution emissions measured per vehicle-kilometer, but generally ignores health problems resulting from less active transport (reduced walking and cycling activity) and the additional crashes and pollution caused by increased vehicle mileage. As a result, transport agencies tend to undervalue strategies that increase transport system diversity and reduce vehicle travel. This article identifies various win-win strategies that can help improve public health and other planning objectives."
+    },
+    {
+      "id": "W2015854633",
+      "title": "Electric Bicycles as a New Active Transportation Modality to Promote Health",
+      "abstract": "UNLABELLED: Electrically assisted bicycles (EAB) are an emerging transportation modality favored for environmental reasons. Some physical effort is required to activate the supporting engine, making it a potential active commuting option. PURPOSE: We hypothesized that using an EAB in a hilly city allows sedentary subjects to commute comfortably, while providing a sufficient effort for health-enhancing purposes. METHODS: Sedentary subjects performed four different trips at a self-selected pace: walking 1.7 km uphill from the train station to the hospital (WALK), biking 5.1 km from the lower part of town to the hospital with a regular bike (BIKE), or EAB at two different power assistance settings (EAB high, EAB std). HR, oxygen consumption, and need to shower were recorded. RESULTS: Eighteen sedentary subjects (12 female, 6 male) age 36 \u00b1 10 yr were included, with V\u00b7O 2max of 39.4 \u00b1 5.4 mL\u00b7min(-1)\u00b7kg(-1). Time to complete the course was 22 (WALK), 19 (EAB high), 21 (EAB std), and 30 (BIKE) min. Mean %V\u00b7O 2max was 59.0%, 54.9%, 65.7%, and 72.8%. Mean %HRmax was 71.5%, 74.5%, 80.3%, and 84.0%. There was no significant difference between WALK and EAB high, but all other comparisons were different (P < 0.05). Two subjects needed to shower after EAB high, 3 needed to shower after WALK, 8 needed to shower after EAB std, and all 18 needed to shower after BIKE. WALK and EAB high elicited 6.5 and 6.1 METs (no difference), whereas it was 7.3 and 8.2 for EAB std and BIKE. CONCLUSIONS: EAB is a comfortable and ecological transportation modality, helping sedentary people commute to work and meet physical activity guidelines. Subjects appreciated ease of use and mild effort needed to activate the engine support climbing hills, without the need to shower at work. EAB can be promoted in a challenging urban environment to promote physical activity and mitigate pollution issues."
+    },
+    {
+      "id": "W2286727482",
+      "title": "Urban Space Distribution and Sustainable Transport",
+      "abstract": "In many cities of the world, road space is increasingly contested. Growing vehicle numbers, traffic calming and the development of new infrastructure for more sustainable transport modes such as bicycles have all contributed to pressure on available space and conflicts over the allocation of space. This paper provides the first assessment of urban transport infrastructure space distribution, distinguishing motorized individual transport, public transport, cycling and walking. To calculate area allocation, an assessment methodology was developed using high-resolution digital satellite images in combination with a geographical information system to derive area measurements. This methodology was applied to four distinctly different city quarters in Freiburg, Germany. Results indicate that space is unevenly distributed, with motorized individual transport being the favoured transport mode. Findings also show that if trip number to space allocation ratios are calculated, one of the most sustainable transport modes, the bicycle, is the most disadvantaged. This suggests that area allocation deserves greater attention in the planning and implementation of more sustainable urban transport designs."
+    },
+    {
+      "id": "W2584352156",
+      "title": "Safety impacts of bicycle infrastructure: A critical review",
+      "abstract": null
+    },
+    {
+      "id": "W2150660518",
+      "title": "Predicting cycling accident risk in Brussels: A spatial case\u2013control approach",
+      "abstract": null
+    },
+    {
+      "id": "W2121483234",
+      "title": "An empirical tool to evaluate the safety of cyclists: Community based, macro-level collision prediction models using negative binomial regression",
+      "abstract": null
+    },
+    {
+      "id": "W2185710331",
+      "title": "How infrastructure can promote cycling in cities: Lessons from Seville",
+      "abstract": null
+    },
+    {
+      "id": "W2171815477",
+      "title": "Are cars the new tobacco?",
+      "abstract": "BACKGROUND: Public health must continually respond to new threats reflecting wider societal changes. Ecological public health recognizes the links between human health and global sustainability. We argue that these links are typified by the harms caused by dependence on private cars. METHODS: We present routine data and literature on the health impacts of private car use; the activities of the 'car lobby' and factors underpinning car dependence. We compare these with experience of tobacco. RESULTS: Private cars cause significant health harm. The impacts include physical inactivity, obesity, death and injury from crashes, cardio-respiratory disease from air pollution, noise, community severance and climate change. The car lobby resists measures that would restrict car use, using tactics similar to the tobacco industry. Decisions about location and design of neighbourhoods have created environments that reinforce and reflect car dependence. Car ownership and use has greatly increased in recent decades and there is little public support for measures that would reduce this. CONCLUSIONS: Car dependence is a potent example of an issue that ecological public health should address. The public health community should advocate strongly for effective policies that reduce car use and increase active travel."
+    },
+    {
+      "id": "W2170139840",
+      "title": "What\u2019s your type: a multidimensional cyclist typology",
+      "abstract": null
+    },
+    {
+      "id": "W2122204636",
+      "title": "Comparing the effects of infrastructure on bicycling injury at intersections and non-intersections using a case\u2013crossover design",
+      "abstract": "BACKGROUND: This study examined the impact of transportation infrastructure at intersection and non-intersection locations on bicycling injury risk. METHODS: In Vancouver and Toronto, we studied adult cyclists who were injured and treated at a hospital emergency department. A case-crossover design compared the infrastructure of injury and control sites within each injured bicyclist's route. Intersection injury sites (N=210) were compared to randomly selected intersection control sites (N=272). Non-intersection injury sites (N=478) were compared to randomly selected non-intersection control sites (N=801). RESULTS: At intersections, the types of routes meeting and the intersection design influenced safety. Intersections of two local streets (no demarcated traffic lanes) had approximately one-fifth the risk (adjusted OR 0.19, 95% CI 0.05 to 0.66) of intersections of two major streets (more than two traffic lanes). Motor vehicle speeds less than 30 km/h also reduced risk (adjusted OR 0.52, 95% CI 0.29 to 0.92). Traffic circles (small roundabouts) on local streets increased the risk of these otherwise safe intersections (adjusted OR 7.98, 95% CI 1.79 to 35.6). At non-intersection locations, very low risks were found for cycle tracks (bike lanes physically separated from motor vehicle traffic; adjusted OR 0.05, 95% CI 0.01 to 0.59) and local streets with diverters that reduce motor vehicle traffic (adjusted OR 0.04, 95% CI 0.003 to 0.60). Downhill grades increased risks at both intersections and non-intersections. CONCLUSIONS: These results provide guidance for transportation planners and engineers: at local street intersections, traditional stops are safer than traffic circles, and at non-intersections, cycle tracks alongside major streets and traffic diversion from local streets are safer than no bicycle infrastructure."
+    },
+    {
+      "id": "W1971249872",
+      "title": "Health impact assessment of increasing public transport and cycling use in Barcelona: A morbidity and burden of disease approach",
+      "abstract": null
+    },
+    {
+      "id": "W2055725677",
+      "title": "The marginalisation of bicycling in Modernist urban transport planning",
+      "abstract": null
+    },
+    {
+      "id": "W2067027731",
+      "title": "Child Pedestrian Injury",
+      "abstract": "Pedestrian injury is among the leading causes of pediatric death in the United States and much of the world. This paper is divided into two sections. First, we review the literature on behavioral risk factors for child injury. Cognitive and perceptual development risks are discussed. The roles of distraction, temperament and personality, and social influences from parents and peers are presented. We conclude the first section with brief reviews of environmental risks, pedestrian safety among special populations, and the role of sleep and fatigue on pediatric pedestrian safety. The second section of the review considers child pedestrian injury prevention strategies. Categorized by mode of presentation, we discuss parent instruction strategies, school-based instruction strategies (including crossing guards), and streetside training techniques. Technology-based training strategies using video, internet, and virtual reality are reviewed. We conclude the section on prevention with discussion of community-based interventions."
+    },
+    {
+      "id": "W629326365",
+      "title": "Cycle commuting intention: A model based on theory of planned behaviour and social identity",
+      "abstract": null
+    },
+    {
+      "id": "W1977795414",
+      "title": "Explaining variation in safety performance of roundabouts",
+      "abstract": null
+    },
+    {
+      "id": "W2297150101",
+      "title": "Transportation planning and quality of life: Where do they intersect?",
+      "abstract": null
+    },
+    {
+      "id": "W2078463912",
+      "title": "A prospective cohort study on minor accidents involving commuter cyclists in Belgium",
+      "abstract": null
+    },
+    {
+      "id": "W2947003987",
+      "title": "Why cities with high bicycling rates are safer for all road users",
+      "abstract": null
+    },
+    {
+      "id": "W3094734929",
+      "title": "Empirical evidence on the impacts of bikesharing: a literature review",
+      "abstract": "In recent years, bikesharing has become one of the most popular policies promoting cycling across the world. As the number of bikesharing systems (BSS) continues to rise, it is increasingly important to quantify their expected benefits. This paper synthetises the available evidence on the current impacts of implementing a BSS, with a special focus on the induced modal shift dynamics and impacts in car reduction, indicating how increasing the attractiveness of BSS to car users could improve its benefits. Several benefits have been associated to bikesharing, but they are not equally distributed and are dependent on several nuances, particularly on modal shifts. Among the biggest contributions are the increases in physical activity (PA) levels (triggering health gains) as well as travel time savings to the BSS users. Bikesharing is mostly replacing sustainable modes of transport, with modest car replacing rates. However, bikesharing can also indirectly decrease car travel by fostering synergies with Public Transport (by expanding catchment areas, reducing overcrowding and overall travel times) and by promoting cycling use through increasing the number and diversity of cyclists. Furthermore, different types of modal shift lead to different benefits. Reductions in car travel induce decreases in greenhouse gases (GHG) and other air pollutants, increases in PA, time savings as well as congestion reductions. Conversely, new trips generated by BSS also lead to increases in PA, while modal shift from walking to BSS has been associated with travel time savings. Shifting PT users to BSS can also reduce overcrowding in saturated PT networks. The most social disadvantaged groups were found to be systematically under-represented among BSS users, yet equity measures combined with awareness-raising campaigns could increase usage rates. Exploring potential advantages of BSS against car use and increasing its car replacing rates, coupled with better impact assessments, should constitute research priorities."
+    },
+    {
+      "id": "W2124680560",
+      "title": "Costs and Benefits of Bicycling Investments in Portland, Oregon",
+      "abstract": "BACKGROUND: Promoting bicycling has great potential to increase overall physical activity; however, significant uncertainty exists with regard to the amount and effectiveness of investment needed for infrastructure. The objective of this study is to assess how costs of Portland's past and planned investments in bicycling relate to health and other benefits. METHODS: Costs of investment plans are compared with 2 types of monetized health benefits, health care cost savings and value of statistical life savings. Levels of bicycling are estimated using past trends, future mode share goals, and a traffic demand model. RESULTS: By 2040, investments in the range of $138 to $605 million will result in health care cost savings of $388 to $594 million, fuel savings of $143 to $218 million, and savings in value of statistical lives of $7 to $12 billion. The benefit-cost ratios for health care and fuel savings are between 3.8 and 1.2 to 1, and an order of magnitude larger when value of statistical lives is used. CONCLUSIONS: This first of its kind cost-benefit analysis of investments in bicycling in a US city shows that such efforts are cost-effective, even when only a limited selection of benefits is considered."
+    },
+    {
+      "id": "W1996431823",
+      "title": "Aggravating and mitigating factors associated with cyclist injury severity in Denmark",
+      "abstract": null
+    },
+    {
+      "id": "W603393287",
+      "title": "Investigating the rates and impacts of near misses and related incidents among UK cyclists",
+      "abstract": "The paper investigates the occurrence of non-injury incidents among cyclists in the UK, seeking to (i) generate a rate that can be compared with injury rates, (ii) analyse factors affecting incident rates, and (iii) analyse factors affecting the impact of incidents on cyclists. We collected data on non-injury cycling \u2018incidents\u2019 (near misses and other frightening and/or annoying incidents) from 1692 online diaries of cycle trip stages1 and incidents, participants having signed up in advance for a specific day. Following data cleaning and coding, a dataset was created covering 1532 diary days and 3994 records of incidents occurring within the UK. Incident rates were calculated and compared to injury risks for cyclists. Cross-tabulation and regression were used to identify factors affecting incident rates and the effect an incident has on the cyclist. Frightening or annoying non-injury incidents, unlike slight injuries, are an everyday experience for most people cycling in the UK. For regular cyclists \u2018very scary\u2019 incidents (rated as 3 on a 0\u20133 scale) are on average a weekly experience, with deliberate aggression experienced monthly. Per mile, non-injury incidents were more frequent for people making shorter and slower trips. People aged over 55 were at lower risk, as were those cycling at the weekend and outside the morning peak. Incidents that involved motor vehicles, especially those involving larger vehicles, were more frightening than those that did not. Near miss and other non-injury incidents are widespread in the UK and may have a substantial impact on cycling experience and uptake. Policy and research should initially target the most frightening types of incident, such as very close passes and incidents involving large vehicles. Further attention needs to be paid to the experiences of groups under-represented among cyclists, such as women making shorter trips."
+    },
+    {
+      "id": "W2407513725",
+      "title": "Macroscopic modeling of pedestrian and bicycle crashes: A cross-comparison of estimation methods",
+      "abstract": null
+    },
+    {
+      "id": "W2116962183",
+      "title": "A conceptual framework for road safety and mobility applied to cycling safety",
+      "abstract": "Scientific literature lacks a model which combines exposure to risk, risk, and the relationship between them. This paper presents a conceptual road safety framework comprising mutually interacting factors for exposure to risk resulting from travel behaviour (volumes, modal split, and distribution of traffic over time and space) and for risk (crash and injury risk). The framework's three determinants for travel behaviour are locations of activities; resistances (generalized transport costs); needs, opportunities, and abilities. Crash and injury risks are modelled by the three 'safety pillars': infrastructure, road users and the vehicles they use. Creating a link in the framework between risk and exposure is important because of the 'non-linear relationship' between them, i.e. risk tends to decrease as exposure increases. Furthermore, 'perceived' risk (a type of travel resistance) plays a role in mode choice, i.e. the perception that a certain type of vehicle is unsafe can be a deterrent to its use. This paper uses theories to explain how the elements in the model interact. Cycling is an area where governments typically have goals for both mobility and safety. To exemplify application of the model, the paper uses the framework to link research on cycling (safety) to land use and infrastructure. The model's value lies in its ability to identify potential consequences of measures and policies for both exposure and risk. This is important from a scientific perspective and for policy makers who often have objectives for both mobility and safety."
+    },
+    {
+      "id": "W1981825568",
+      "title": "The cycling boom in large German cities\u2014Empirical evidence for successful cycling campaigns",
+      "abstract": null
+    },
+    {
+      "id": "W2790921206",
+      "title": "A cross-comparison of different techniques for modeling macro-level cyclist crashes",
+      "abstract": null
+    },
+    {
+      "id": "W2216132170",
+      "title": "The Dutch road to a high level of cycling safety",
+      "abstract": null
+    },
+    {
+      "id": "W2268753056",
+      "title": "Bike Score\u00ae: Associations between urban bikeability and cycling behavior in 24 cities",
+      "abstract": "BACKGROUND: There is growing interest in designing cities that support not only walking, but also cycling. Bike Score\u00ae is a metric capturing environmental characteristics associated with cycling that is now available for over 160 US and Canadian cities. Our aim was to determine if Bike Score was associated with between and within-city variability in cycling behavior. METHODS: We used linear regression to model associations between Bike Score and journey to work cycling mode share (US: American Community Survey, 2013 or 2012 5-year estimates; Canada: 2011 National Household Survey) for 5664 census tracts in 24 US and Canadian cities. RESULTS: At the city level, the correlation between mean Bike Score and mean journey to work cycling mode share was moderate (r = 0.52). At the census tract level, the correlation was 0.35; a ten-unit increase in Bike Score was associated with a 0.5% (95% CI: 0.5 to 0.6) increase in the proportion of population cycling to work, a meaningful difference given the low modal shares (mean = 1.9%) in many North American cities. Census tracts with the highest Bike Scores (>90 to 100) had mode shares 4.0 higher (\u03b2 = 4.0, 95% CI: 2.9 to 5.0) than the lowest Bike Score areas (0-25). City specific analyses indicated between-city variability in associations, with regression estimates between Bike Score and mode share ranging from 0.2 to 3.5%. CONCLUSIONS: The Bike Score metric was associated bicycle mode share between and within cities, suggesting its utility for planning bicycle infrastructure."
+    },
+    {
+      "id": "W120942210",
+      "title": "Steps Forward: Review and Recommendations for Research on Walkability, Physical Activity and Cardiovascular Health",
+      "abstract": "Built environments that support walking and other physical activities have the potential to reduce cardiovascular disease (CVD). Walkable neighborhoods-characterized by density, land use diversity, and well-connected transportation networks-have been linked to more walking, less obesity, and lower coronary heart disease risk. Yet ongoing research on pedestrian-friendly built environments has the potential to address important gaps. While much of the literature has focused on urban form and planning characteristics, additional aspects of street-scapes, such as natural and architectural amenities, should also be considered. Promising future directions include (1) integration of multiple built environment measures that facilitate an understanding of how individuals perceive and act within their environment; (2) examination of both the daily physical activities that are most feasibly influenced by the local environment and those more deliberate or vigorous patterns of physical activity that are most predictive of CVD; (3) consideration of multiple pathways that could mediate a link between walkability and CVD, including not only physical activity, but also air quality improvements from reduced vehicle mileage and enhanced neighborhood social cohesion from unplanned interactions; (4) testing competing hypotheses that may explain interactions of built environment characteristics with each other and with personal barriers to walking; (5) stronger conceptualization of the multiple neighborhoods or activity spaces that structure opportunities for physical activity throughout the day; (6) collecting and strategically analyzing longitudinal data to support causal inference; and (7) studying neighborhood preferences and selection to move beyond biased assessments of neighborhood health effects. While walkability has been linked to health-related behaviors and CVD risk factors, the implications of the observed correlations are not yet clear. New theoretical insights, measurement technologies, and built environment changes represent opportunities to enhance the evidence base for bringing health promotion and cardiovascular disease prevention into the conversation about how communities are planned and built."
+    },
+    {
+      "id": "W2124729896",
+      "title": "An international review of the frequency of single-bicycle crashes (SBCs) and their relation to bicycle modal share",
+      "abstract": "OBJECTIVES: To study cyclists' share of transport modes (modal share) and single-bicycle crashes (SBCs) in different countries in order to investigate if the proportion of cyclist injuries resulting from SBCs is affected by variation in modal share. METHODS: A literature search identified figures (largely from western countries) on SBC casualties who are fatally injured, hospitalised or treated at an emergency department. Correlation and regression analyses were used to investigate how bicycle modal share is related to SBCs. RESULTS: On average, 17% of fatal injuries to cyclists are caused by SBCs. Different countries show a range of values between 5% and 30%. Between 60% and 95% of cyclists admitted to hospitals or treated at emergency departments are victims of SBCs. The proportion of all injured cyclists who are injured in SBCs is unrelated to the share of cycling in the modal split. The share of SBC casualties among the total number of road crash casualties increases proportionally less than the increase in bicycle modal share. CONCLUSIONS: While most fatal injuries among cyclists are due to motor vehicle-bicycle crashes, most hospital admissions and emergency department attendances result from SBCs. As found in previous studies of cyclists injured in collisions, this study found that the increase in the number of SBC casualties is proportionally less than the increase in bicycle modal share."
+    },
+    {
+      "id": "W1965687831",
+      "title": "\u2018Eyes on where children play\u2019: a retrospective study of active free play",
+      "abstract": "The purpose of this study was to examine factors that influenced childhood active free play. Participants were 13 young adults who resided in one western Canadian city. They took part in semi-structured and walk-along interviews during which they were asked about their memories and experiences of play. Analysis showed that, whereas parental restrictions and safety concerns were limiting factors, a sense of community and safety in numbers facilitated their involvement in active free play. However, the young adults thought these factors had since become eroded from modern society. We concluded a reduced sense of perceived safety exists because there are fewer eyes on where children play."
+    },
+    {
+      "id": "W3216504581",
+      "title": "E-bikes and their capability to reduce car CO2 emissions",
+      "abstract": "We estimate the maximum capability to reduce CO2 by substituting private car travel for e-bike. We use spatial microsimulation (population-synthesis) to simulate the adult population within every small area in England, taking account of area type and geodemographic circumstances of the population. By estimating for individuals the distance they are capable of travelling by e-bike and the extent to which they are capable of replacing private car travel, we find the upper limit on the capability to reduce CO2 by substituting car travel for e-bike use is 24.4 MTCO2 p.a. (per annum) in England. CO2 saving capability per person and per small area are highest (over 750 kg CO2 per person p.a.) for residents of rural areas and the rural urban fringe. e-bikes offer major conurbations more modest CO2 saving capability per person. We identify areas which are vulnerable to car related economic stress and also have high capability to replace car km with e-bikes, which if supported appropriately could contribute to equitable carbon reduction. Though capable of a very significant contribution to transport carbon reduction, other changes in technology and reduction in demand would also be necessary to reach zero emissions. Our results are directly relevant to policy actors internationally who require evidence on place-based decarbonisation capability, particularly where car dependence is high. The results highlight how context is important in any attempt to design policy for equitable carbon reduction both to influence discussion on what is possible, as well as practical identification of areas for targeted intervention. Digital indicators covering all zones in a country's geography such as this are also useful because of the rapid digitalisation of policy making. We provide code so that others can produce similar analyses in other countries (https://github.com/DrIanPhilips/e-bikeCarbonReductionCapability)."
+    },
+    {
+      "id": "W2194354292",
+      "title": "Are signalized intersections with cycle tracks safer? A case\u2013control study based on automated surrogate safety analysis using video data",
+      "abstract": null
+    },
+    {
+      "id": "W2607059690",
+      "title": "Factors contributing to bicycle\u2013motorised vehicle collisions: a systematic literature review",
+      "abstract": "Bicycle\u2013motorised vehicle (BMV) collisions account for the majority of the recorded bicyclists\u2019 fatalities and serious injuries. This systematic review intends to examine the main factors contributing to BMV collisions. We performed a comprehensive literature review on Scopus, TRID, ProQuest, and Web of Science databases. Fifty-nine English-language peer-reviewed articles met the eligibility criteria and were included in the final analysis. The main factors contributing to BMV collisions identified were classified in accordance with a recently published conceptual framework for road safety. The majority of studies have identified factors related to road users\u2019 behaviour (59.3%) and infrastructure characteristics (57.6%). A minority of studies identified variables related to exposure (40.7%) and vehicles (15.3%) as contributor factors to BMV collisions. A small but significant proportion of studies (20.3%) provided evidence that environmental factors may also play a role, although to a lesser extent, in determining BMV collisions. In addition to the three factors comprised in the applied conceptual framework for road safety, we identified environmental conditions as a category of factors contributing to BMV collisions."
+    },
+    {
+      "id": "W2037377171",
+      "title": "Cyclist activity and injury risk analysis at signalized intersections: A Bayesian modelling approach",
+      "abstract": null
+    },
+    {
+      "id": "W2162838662",
+      "title": "\u201cSafety in Numbers\u201d re-examined: Can we make valid or practical inferences from available evidence?",
+      "abstract": null
+    },
+    {
+      "id": "W2955066688",
+      "title": "The influence of green streets on cycling behavior in European cities",
+      "abstract": null
+    },
+    {
+      "id": "W1964303516",
+      "title": "Measuring the potential for bicycling and walking at a metropolitan commuter university",
+      "abstract": null
+    },
+    {
+      "id": "W2125957158",
+      "title": "Using an agent-based model to simulate children\u2019s active travel to school",
+      "abstract": "BACKGROUND: Despite the multiple advantages of active travel to school, only a small percentage of US children and adolescents walk or bicycle to school. Intervention studies are in a relatively early stage and evidence of their effectiveness over long periods is limited. The purpose of this study was to illustrate the utility of agent-based models in exploring how various policies may influence children's active travel to school. METHODS: An agent-based model was developed to simulate children's school travel behavior within a hypothetical city. The model was used to explore the plausible implications of policies targeting two established barriers to active school travel: long distance to school and traffic safety. The percent of children who walk to school was compared for various scenarios. RESULTS: To maximize the percent of children who walk to school the school locations should be evenly distributed over space and children should be assigned to the closest school. In the case of interventions to improve traffic safety, targeting a smaller area around the school with greater intensity may be more effective than targeting a larger area with less intensity. CONCLUSIONS: Despite the challenges they present, agent based models are a useful complement to other analytical strategies in studying the plausible impact of various policies on active travel to school."
+    },
+    {
+      "id": "W2075730262",
+      "title": "Urban Design: Is there a Distinctive View from the Bicycle?",
+      "abstract": "Would urban design considerations and practices be different if the experience of bicycling was given a more central place? Drawing on a review of international literature and practice, this paper compares the characteristics of cyclists with those of pedestrians and motorists, showing that cyclists have a substantial number of unique characteristics that warrant further investigation in terms of a special urban design response. Focusing on four issues\u2014community layout, cycling facilities, analysis and design processes, and detailed design\u2014the paper offers a framework and central considerations for cycling-oriented urban design. It concludes with a call to take the experience of cycling seriously in urban design. This involves moving beyond a concern with safe and convenient facilities and complete networks to a more substantial interest in the experience of the environment from a cyclist's point of view."
+    },
+    {
+      "id": "W2999798237",
+      "title": "Persistence of walking in Chile: lessons for urban sustainability",
+      "abstract": "An extensive body of work from the urban planning, health, and other disciplines has documented the importance of walking to urban sustainability from health, safety, security, environmental and other perspectives. These studies come mainly from countries in North America and Europe, where the majority of the population relies on cars for transportation. Notwithstanding, in many countries in the Global South, walking remains a majority transport mode, while cars increasingly dominate the urban streetscape, but are accessible only to a minority of the population. Chile provides fertile terrain for studying this phenomenon. This article reviews current practice and recent research of walking in Chile, in light of international findings regarding walkability, equity and urban sustainability. To elaborate an overview of the depth and breadth of walking in Chile, an interdisciplinary team conducted a literature review, examined relevant case study material from experience from Chile and in particular from Santiago, and triangulated this mainly qualitative data with results from the origin-destination survey applied in Chile\u2019s main cities, Chilean traffic safety data) and results from official transport reports of other Latin American cities [Tirachini, A. (2019). South America: The challenge of transition. In J. Stanley & D. Hensher (Eds.), A research agenda for transport policy. Northampton, MA: Edward Elgar Publishing]. Findings show that despite priority public investments that have largely prioritised infrastructure for cars, walking in Chile has remained as the majority transport mode up until today, especially for lower-middle income groups, and particularly for care-related tasks performed mainly by women. In this sense, walking in Chile has proven remarkably persistent. The importance of walking as the main transport mode, against the odds, reflects economic, cultural, and urban form determinants, which are explored in this article. Furthermore, a recent upsurge in public interest and community design initiatives to improve walking, particularly the generation of a Chilean approach to \u201ccomplete streets\u201d has emerged, opening up opportunities to challenge Chile\u2019s version of automobility in favour of more equitable, active and public transportation modes. There is, therefore, in Chile an opportunity to prioritise the walking mode, improve infrastructure for walkers and build from preserving current high pedestrian modal shares, rather than having to reverse widespread car use, as occurs in many countries in Europe and North America. This potential is highly relevant as these conditions are similar to those in other Latin American cities and, potentially, other cities elsewhere in the Global South."
+    },
+    {
+      "id": "W2143512772",
+      "title": "Safety countermeasures and crash reduction in New York City\u2014Experience and lessons learned",
+      "abstract": null
+    },
+    {
+      "id": "W2216337094",
+      "title": "Using mental mapping to unpack perceived cycling risk",
+      "abstract": null
+    },
+    {
+      "id": "W2028608738",
+      "title": "Complexity in Built Environment, Health, and Destination Walking: A Neighborhood-Scale Analysis",
+      "abstract": null
+    },
+    {
+      "id": "W2338411162",
+      "title": "Children\u2019s route choice during active transportation to school: difference between shortest and actual route",
+      "abstract": "BACKGROUND: The purpose of this study is to increase our understanding of environmental correlates that are associated with route choice during active transportation to school (ATS) by comparing characteristics of actual walking and cycling routes between home and school with the shortest possible route to school. METHODS: Children (n = 184; 86 boys, 98 girls; age range: 8-12 years) from seven schools in suburban municipalities in the Netherlands participated in the study. Actual walking and cycling routes to school were measured with a GPS-device that children wore during an entire school week. Measurements were conducted in the period April-June 2014. Route characteristics for both actual and shortest routes between home and school were determined for a buffer of 25 m from the routes and divided into four categories: Land use (residential, commercial, recreational, traffic areas), Aesthetics (presence of greenery/natural water ways along route), Traffic (safety measures such as traffic lights, zebra crossings, speed bumps) and Type of street (pedestrian, cycling, residential streets, arterial roads). Comparison of characteristics of shortest and actual routes was performed with conditional logistic regression models. RESULTS: Median distance of the actual walking routes was 390.1 m, whereas median distance of actual cycling routes was 673.9 m. Actual walking and cycling routes were not significantly longer than the shortest possible routes. Children mainly traveled through residential areas on their way to school (>80% of the route). Traffic lights were found to be positively associated with route choice during ATS. Zebra crossings were less often present along the actual routes (walking: OR = 0.17, 95% CI = 0.05-0.58; cycling: OR = 0.31, 95% CI = 0.14-0.67), and streets with a high occurrence of accidents were less often used during cycling to school (OR = 0.57, 95% CI = 0.43-0.76). Moreover, percentage of visible surface water along the actual route was higher compared to the shortest routes (walking: OR = 1.04, 95% CI = 1.01-1.07; cycling: OR = 1.03, 95% CI = 1.01-1.05). DISCUSSION: This study showed a novel approach to examine built environmental exposure during active transport to school. Most of the results of the study suggest that children avoid to walk or cycle along busy roads on their way to school."
+    },
+    {
+      "id": "W2481580495",
+      "title": "Travel behaviour and health: A conceptual model and research agenda",
+      "abstract": null
+    },
+    {
+      "id": "W2536869046",
+      "title": "The effect of zonal factors in estimating crash risks by transportation modes: Motor vehicle, bicycle and pedestrian",
+      "abstract": null
+    },
+    {
+      "id": "W1978815278",
+      "title": "Road crash fatality rates in France: A comparison of road user types, taking account of travel practices",
+      "abstract": null
+    },
+    {
+      "id": "W2081089151",
+      "title": "Bicycle helmet legislation: Can we reach a consensus?",
+      "abstract": null
+    },
+    {
+      "id": "W2476129264",
+      "title": "Measuring multiple impacts of low-carbon energy options in a green economy context",
+      "abstract": null
+    },
+    {
+      "id": "W4319869569",
+      "title": "Systematic literature review of 10 years of cyclist safety research",
+      "abstract": null
+    },
+    {
+      "id": "W2114228770",
+      "title": "Injuries to pedal cyclists on New Zealand roads, 1988-2007",
+      "abstract": "BACKGROUND: The risk of injury is one of the major barriers to engaging in cycling. We investigated exposure-based rates and profiles of traffic injuries sustained by pedal cyclists that resulted in death or hospital inpatient treatment in New Zealand, one of the most car dependent countries. METHODS: Pedal cyclist traffic injuries were identified from the Mortality Collection and the National Minimum Dataset. Total time spent cycling was used as the measure of exposure and computed from National Household Travel Surveys. Analyses were undertaken for the periods 1988-91, 1996-99 and 2003-07 in relation to other major road users and by age, gender and body region affected. A modified Barell matrix was used to characterise the profiles of pedal cyclist injuries by body region affected and nature of injury. RESULTS: Cyclists had the second highest rate of traffic injuries compared to other major road user categories and the rate increased from 1996-99 to 2003-07. During 2003-07, 31 injuries occurred per million hours spent cycling. Non-collision crashes (40%) and collisions with a car, pick-up truck or van (26%) accounted for two thirds of the cycling injuries. Children and adolescents aged under 15 years were at the highest risk, particularly of non-collision crashes. The rate of traumatic brain injuries fell from 1988-91 to 1996-99; however, injuries to other body parts increased steadily. Traumatic brain injuries were most common in collision cases whereas upper extremity fractures were most common in other crashes. CONCLUSIONS: The burden of fatal and hospitalised injuries among pedal cyclists is considerable and has been increasing over the last decade. This underscores the development of road safety and injury prevention programmes for cyclists alongside the cycling promotion strategies."
+    },
+    {
+      "id": "W2252360749",
+      "title": "Cargo bikes as a growth area for bicycle vs. auto trips: Exploring the potential for mode substitution behavior",
+      "abstract": null
+    },
+    {
+      "id": "W2073058224",
+      "title": "Commuting by bike in Belgium, the costs of minor accidents",
+      "abstract": null
+    },
+    {
+      "id": "W3036933256",
+      "title": "Fifty Years of Accident Analysis & Prevention: A Bibliometric and Scientometric Overview",
+      "abstract": null
+    },
+    {
+      "id": "W4233742173",
+      "title": "Cycling, Health and Safety",
+      "abstract": "This report of the International Transport Forum's Cycling Safety Working Group monitors international trends in cycling, safety and policy, and explores options that may help decision makers design safe environments for cycling."
+    },
+    {
+      "id": "W3048786945",
+      "title": "The characteristics of dockless electric rental scooter-related injuries in a large U.S. city",
+      "abstract": "OBJECTIVE: To describe the characteristics of dockless electric rental scooter (\"e-scooter\")-related injuries presenting to two emergency departments in one large U.S. city. METHODS: This observational cohort study utilized the city's public health syndromic surveillance system to prospectively identify patients with e-scooter-related injuries presenting between September and November 2018. The medical records for all adult patients treated at the two participating emergency departments were manually reviewed to extract demographic and clinical data. Cases involving mobility scooters or non-electric scooters were excluded. RESULTS: For the 124 included adult patients with e-scooter-related injuries, the median age was 30 years (IQR: 22-43), they were predominantly male (59.7%), and approximately half (51.6%) arrived by ambulance. Falling from the scooter (84.7%) was the most common mechanism; twelve patients (9.7%) had collided with a motor vehicle. Head and face injuries (45.5%) were common; only 2 patients (1.6%) were documented as wearing a helmet at the time of injury. Most patients (n = 112, 90.3%) required imaging, more than half (n = 78, 62.9%) required an emergency department procedure, and 26 (21.0%) required surgical intervention. Most patients were discharged home, but 35 (28.2%) were admitted to hospital. Two patients (1.6%) were admitted to the intensive care unit. CONCLUSIONS: E-scooters are an emerging transportation technology associated with a wide range of potentially serious injuries that consume substantial emergency department and hospital resources. Head injuries are a particular concern, as few e-scooter riders are wearing helmets at the time of injury."
+    },
+    {
+      "id": "W2117089598",
+      "title": "The impact of compulsory cycle helmet legislation on cyclist head injuries in New South Wales, Australia",
+      "abstract": null
+    },
+    {
+      "id": "W3021342374",
+      "title": "Policy implementation of multi-modal (shared) mobility: review of a supply-demand value proposition canvas",
+      "abstract": "Urban mobility options have increased in recent years, assisted by the widespread availability of smart device software apps, geo-positioning technology, and convenient electronic financial transactions. Multi-modal shared mobility consists of public transit systems and shared mobilities that support first/last mile travel, denoting the capability of Mobility as a Service (MaaS), and to stimulate additional non-private car travel demand. This paper reviews the supply and demand sides of implementation of multi-modal shared mobility. It found that an abundance of shared modes of car, bike, and e-scooter that are linked to public transport, can improve transport accessibility to meet specific public preferences, reduce social inequality, and minimise dilemmas from the demand side. This study introduces government policy innovations and other supporting system to improve the implementation of multi-modal shared mobility. Government policies play a key role in supporting shared mobility and technology development. However, governments do not have much information about new products such as shared mobility, which creates difficulties in subsidising multi-modal shared mobility services and potentially leads to policy failures around shared mobility schemes. This study suggests that policy entrepreneurship in collaboration with other partners, policy innovation, and the notions of merit goods and second-best policymaking can enable policy initiatives towards multi-modal shared mobility and provide supporting arguments if policies encounter failures. Implementing multi-modal shared mobility requires a collaborative partnership for a paradigm shift: service providers and government must jointly set a merit-based business model, with the support of organisations to achieve improved infrastructure provision, and smart technology applications. The findings will assist the community, business providers and government policymakers to promote multi-modal shared mobility as a pathway towards more efficient, environmentally sustainable, and socially responsive mobility solutions."
+    },
+    {
+      "id": "W3131975812",
+      "title": "Perceived built environment and dockless bikeshare as a feeder mode of metro",
+      "abstract": null
+    },
+    {
+      "id": "W3045608358",
+      "title": "Fear of cycling: Social, spatial, and temporal dimensions",
+      "abstract": null
+    },
+    {
+      "id": "W3198684168",
+      "title": "Biking where Black: Connecting transportation planning and infrastructure to disproportionate policing",
+      "abstract": "This study asks whether deficiencies in transportation are associated with disproportionate policing in Chicago using the case of cycling. I examine how the number of bicycle citations issued per street segment are influenced by the availability of bicycle facilities and street characteristics, controlling for crash incidence, police presence, and neighborhood characteristics. Tickets were issued 8 times more often per capita in majority Black tracts and 3 times more often in majority Latino tracts compared to majority white tracts. More tickets were issued on major streets, but up to 85% fewer were issued when those streets had bike facilities, which were less prevalent in Black and Latino neighborhoods. Tickets were not associated with bicycle injury-crashes and inversely associated with vehicle injury-crashes. Infrastructure inequities compound the effects of racially-biased policing in the context of transportation safety strategies. Remedies include the removal of traffic enforcement from safe systems strategies and equitable investment in cycling."
+    },
+    {
+      "id": "W4283169675",
+      "title": "Unsafety on two wheels, or social prejudice? Proxying behavioral reports on bicycle and e-scooter riding safety \u2013 A mixed-methods study",
+      "abstract": "The use of non-motorized transportation and micro-mobility is increasing in many cities. Bicycle riding and e-scooter use are now more common and affordable than ever. However, users of these devices face certain key issues. These include their own risky behaviors as well as involvement in conflicts with other road users. Self-report data may not adequately capture these behaviors and interactions. Despite this, more objective data (i.e., how third parties perceive these users\u2019 road behaviors) is scarce. Aims: This study aimed to understand whether e-scooter riders have comparable or different riding behaviors than cyclists. This was investigated using a mixed-method study. Methods: This paper is divided into two sub-studies. In Study 1, 950 Spanish non-cyclists and non-e-scooter riders (mean age 31.98 \u00b1 13.27 years; 55.3% female) provided external ratings (proxies) regarding the perceived behaviors of bicycle and e-scooter riders. In Study 2, collective Rapid Assessment Processes (RAPs; n = 23) were used to develop qualitative configurations of some of the key risky behaviors highlighted in Study 1. Results: There were significant differences in the perceived errors and violations rated by proxies for both types of riders (with e-scooter riders perceived as having higher rates of risky behaviors). However, there were also structural differences in the effects of external raters\u2019 risk perceptions, traffic rule knowledge, and traffic incidents with two-wheeled riders on how they rated the behaviors. Conclusion: The results of both studies suggest that external raters\u2019 perceptions provide further understanding of the causes, dynamics, and conflicts related to road behaviors performed by certain groups of road users. This is particularly apparent when there is no clear legislation and information on safe riding in urban areas. In this sense, improving infrastructure could promote safer interactions. Finally, road safety education could focus on promoting safer practices and interactions in order to improve how others perceive riders\u2019 behavior."
+    },
+    {
+      "id": "W4319069206",
+      "title": "Space sharing between pedestrians and micro-mobility vehicles: A systematic review",
+      "abstract": null
+    },
+    {
+      "id": "W3097476153",
+      "title": "State-of-the-art review: preventing child and youth pedestrian motor vehicle collisions: critical issues and future directions",
+      "abstract": "AIM: To undertake a comprehensive review of the best available evidence related to risk factors for child pedestrian motor vehicle collision (PMVC), as well as identification of established and emerging prevention strategies. METHODS: Articles on risk factors were identified through a search of English language publications listed in Medline, Embase, Transport, SafetyLit, Web of Science, CINHAL, Scopus and PsycINFO within the last 30 years (~1989 onwards). RESULTS: This state-of-the-art review uses the road safety Safe System approach as a new lens to examine three risk factor domains affecting child pedestrian safety (built environment, drivers and vehicles) and four cross-cutting critical issues (reliable collision and exposure data, evaluation of interventions, evidence-based policy and intersectoral collaboration). CONCLUSIONS: Research conducted over the past 30 years has reported extensively on child PMVC risk factors. The challenge facing us now is how to move these findings into action and intervene to reduce the child PMVC injury and fatality rates worldwide."
+    },
+    {
+      "id": "W4366547324",
+      "title": "Merging Green and Active Transportation Infrastructure towards an Equitable Accessibility to Green Areas: Barcelona Green Axes",
+      "abstract": "The UN\u2019s 2030 Sustainable Development Goals (SDGs) call for the provision of universal access to: (a) safe, inclusive, and accessible green and public spaces, and (b) safe, affordable, accessible, and sustainable transport systems for all. The Barcelona green axes plan aims to transform one third of the streets within its 19th century extension grid, increasing the tree cover and the vegetation, adopting sustainable urban drainage systems, limiting motor traffic, and providing a safer and more comfortable environment for pedestrians, cyclists, and other social activities in healthier environments. These transformations become even greater at the intersection of the axes, where former traffic junctions are becoming squares and urban gardens. This study gives an in-depth analysis of the origins of the superblocks plan, the rationale behind the transformation, and the implementation process. The GIS-based analysis shows how the green axes and the new square gardens (a) transform the city\u2019s disconnected urban green areas into a more interconnected green infrastructure system, and (b) significantly increase accessibility to green areas. The study reveals this strategy\u2019s potential to create a city of proximity, improve the well-being of the population, and build a more equitable city, which could be a useful tool for planning and decision making at both city and regional levels."
+    },
+    {
+      "id": "W2985265916",
+      "title": "Pedestrian safety at signalized intersections: Modelling spatial effects of exposure, geometry and signalization on a large urban network",
+      "abstract": null
+    },
+    {
+      "id": "W2099713100",
+      "title": "Active transport between home and school assessed with GPS: a cross-sectional study among Dutch elementary school children",
+      "abstract": "BACKGROUND: Active transport to school is associated with higher levels of physical activity in children. Promotion of active transport has therefore gained attention as a potential target to increase children's physical activity levels. Recent studies have recognized that the distance between home and school is an important predictor for active travel among children. These studies did not yet use the promising global positioning system (GPS) methods to objectively assess active transport. This study aims to explore active transport to school in relation to the distance between home and school among a sample of Dutch elementary school children, using GPS. METHODS: Seventy-nine children, aged 6-11 years, were recruited in six schools that were located in five cities in the Netherlands. All children were asked to wear a GPS receiver for one week. All measurements were conducted between December 2008 and April 2009. Based on GPS recordings, the distance of the trips between home and school were calculated. In addition, the mode of transport (i.e., walking, cycling, motorized transport) was determined using the average and maximum speed of the GPS tracks. Then, proportion of walking and cycling trips to school was determined in relation to the distance between home and school. RESULTS: Out of all school trips that were recorded (n=812), 79.2% were classified as active transport. On average, active commuting trips were of a distance of 422 meters with an average speed of 5.2 km/hour. The proportion of walking trips declined significantly at increased school trip distance, whereas the proportion of cycling trips (\u03b2=1.23, p<0.01) and motorized transport (\u03b2=3.61, p<0.01) increased. Almost all GPS tracks less than 300 meters were actively commuted, while of the tracks above 900 meters, more than half was passively commuted. CONCLUSIONS: In the current research setting, active transport between home and school was the most frequently used mode of travel. Increasing distance seems to be associated with higher levels of passive transport. These results are relevant for those involved in decisions on where to site schools and residences, as it may affect healthy behavior among children."
+    },
+    {
+      "id": "W3043291568",
+      "title": "A Bayesian spatial Poisson-lognormal model to examine pedestrian crash severity at signalized intersections",
+      "abstract": null
+    },
+    {
+      "id": "W3118753113",
+      "title": "United States fatal pedestrian crash hot spot locations and characteristics",
+      "abstract": "US pedestrian fatalities are at their highest level in nearly three decades and account for an increasing share of total traffic fatalities (16%). To achieve the vision of a future transportation system that produces zero deaths, pedestrian safety must be improved. In this study, we screened the entire US roadway network to identify fatal pedestrian crash \u201chot spot\u201d corridors: 1,000-meter-long sections of roadway where six or more fatal pedestrian crashes occurred during an eightyear period. We identified 34 hot spot corridors during 2001-2008 and 31 during 2009-2016. While only five corridors were hot spots during both analysis periods, the 60 unique hot spots had remarkably consistent characteristics. Nearly all (97%) were multilane roadways, with 70% requiring pedestrians to cross five or more lanes. More than three-quarters had speed limits of 30 mph or higher, and 62% had traffic volumes exceeding 25,000 vehicles per day. All had adjacent commercial retail and service land uses, 72% had billboards, and three-quarters were bordered by low-income neighborhoods. Corridors with these characteristics clearly have the potential to produce high numbers of pedestrian fatalities. We also used hierarchical clustering to classify the hot spots based on their roadway and surrounding landuse characteristics into three types: regional highways, urban primary arterial roadways, and New York City thoroughfares. Each context may require different safety strategies. Our results support a systemic approach to improve pedestrian safety: Agencies should identify other roadway corridors with similar characteristics throughout the US and take actions to reduce the risk of future pedestrian fatalities."
+    },
+    {
+      "id": "W2176438409",
+      "title": "Potential risk and its influencing factors for separated bicycle paths",
+      "abstract": null
+    },
+    {
+      "id": "W2797285562",
+      "title": "The impact of weather, road surface, time\u2010of\u2010day, and light conditions on severity of bicycle\u2010motor vehicle crash injuries",
+      "abstract": "BACKGROUND: This study examined whether environmental variables including weather, road surface, time-of-day, and light conditions were associated with the severity of injuries resulting from bicycle-motor vehicle crashes. METHODS: Using log-binomial regressions, we analyzed 113 470 police reports collected between 2000 and 2014 in four U.S. states with environmental and injury severity information. \"Severe\" injuries included fatal and incapacitating injuries, and \"non-severe\" included non-incapacitating, possible or no-injuries. RESULTS: Light condition was significantly associated with the injury severity to the bicyclist with more severe injuries at dawn (RR = 1.62 [95%CI 1.35-1.94]) and during darkness (both lighted and unlighted roads: 1.32 [1.24-1.40], respectively, 1.57 [1.41-1.76]) as compared to daylight. In these conditions of low visibility, risk was further increased during early morning hours before 7 am (1.61 [1.22-2.13]). CONCLUSIONS: Crashes in low light conditions and during early morning hours are more likely to result in higher injury severity."
+    },
+    {
+      "id": "W2052093655",
+      "title": "Increasing active travel: aims, methods and baseline measures of a quasi-experimental study",
+      "abstract": "BACKGROUND: Policy advisers are seeking robust evidence on the effectiveness of measures, such as promoting walking and cycling, that potentially offer multiple benefits, including enhanced health through physical activity, alongside reductions in energy use, traffic congestion and carbon emissions. This paper outlines the 'ACTIVE' study, designed to test whether the Model Communities Programme in two New Zealand cities is increasing walking and cycling. The intervention consists of the introduction of cycle and walkway infrastructure, along with measures to encourage active travel. This paper focuses on the rationale for our chosen study design and methods. METHOD: The study design is multi-level and quasi-experimental, with two intervention and two control cities. Baseline measures were taken in 2011 and follow-up measures in 2012 and 2013. Our face-to-face surveys measured walking and cycling, but also awareness, attitudes and habits. We measured explanatory and confounding factors for mode choice, including socio-demographic and well-being variables. Data collected from the same households on either two or three occasions will be analysed using multi-level models that take account of clustering at the household and individual levels. A cost-benefit analysis will also be undertaken, using our estimates of carbon savings from mode shifts. The matching of the intervention and control cities was quite close in terms of socio-demographic variables, including ethnicity, and baseline levels of walking and cycling. DISCUSSION: This multidisciplinary study provides a strong design for evaluating an intervention to increase walking and cycling in a developed country with relatively low baseline levels of active travel. Its strengths include the use of data from control cities as well as intervention cities, an extended evaluation period with a reasonable response rate from a random community survey and the availability of instrumental variables for sensitivity analyses."
+    },
+    {
+      "id": "W4308119847",
+      "title": "E-Scooter Presence in Urban Areas: Are Consistent Rules, Paying Attention and Smooth Infrastructure Enough for Safety?",
+      "abstract": "Electric micromobility represents a sustainable mobility option for specific classes of users and distance thresholds. Had this mobility solution been integrated into a comprehensive mobility framework from the beginning, it would have expanded the coverage and accessibility of urban transit services. Instead, slow and incoherent regulation has established a contrast between enthusiastic users (who consider electric micromobility vehicles \u201cfun\u201d and \u201ceasy to use\u201d) and recalcitrant public opinion (wherein electric micromobility vehicles are deemed \u201cunsafe\u201d and \u201cdangerous\u201d). Beyond the few attempts made by transport experts to assess the capability of e-scooters to become a sound mobility option (through mobility surveys, pattern analysis, fleet and routing problems), safety and infrastructure design should be developed in a consistent way in order to guarantee a balanced transport setting. With respect to this challenge, a methodology framework is proposed to address the increasing proliferation of micromobility in the context of a coherent transport system. Special attention is devoted to those aspects that have received less attention from the scientific community, namely infrastructure and safe interactions at intersections. The similarities and differences between e-scooters and bikes, chosen in this study as the representative of traditional soft mobility modes, have been taken into consideration. To support the proposed approach, tests investigating e-scooter performance and the perception of both the modes at safety-critical nodes (such as intersections) under different conditions are presented, and the methodology can be applied to a variety of urban scales. The results can be adopted by local authorities, transport companies and e-mobility providers to optimize infrastructure and increase the number and quality of available mobility options."
+    },
+    {
+      "id": "W3038536546",
+      "title": "Vulnerable Road Users or Vulnerable Transport Planning?",
+      "abstract": "This paper subjects the concept of vulnerable road users, which states that walkers and cyclists are easily injured and killed in a car-dominated road space, to a critical analysis. The paper finds this term wanting because research and practice shows that the real vulnerability lies within transport planning that gives in to influences that are more focused on the needs of motorized transport. The paper proposes the concept of vulnerable transport planning to underscore the fact that transport planning often lacks inclusion and is influenced by forces that favour motor vehicles. This influence leads to omission and neglect of walkers, cyclists, children, disabled persons, the elderly and highway-adjacent communities in transport and land-use planning."
+    },
+    {
+      "id": "W4409050984",
+      "title": "E-scooter crash severity in the United Kingdom: A comparative analysis using machine learning techniques and random parameters logit with heterogeneity in means and variances",
+      "abstract": "The increasing use of e-scooters in urban areas has raised safety concerns, necessitating research for effective safety interventions. This study analyzes three years of e-scooter crash data from the United Kingdom using statistical and machine learning methods to identify key factors influencing crash severity. We employed a random parameters logit model and investigated several machine learning algorithms , with XGBoost performing best. Analysis reveals that severe injuries are more likely in crashes involving senior riders, at night with lighting, and at T, staggered, or crossroad junctions. Further insights from the XGBoost-SHAP analysis and heterogeneity in means and variances of random parameters revealed nuanced patterns. While crashes involving female riders or crashes at give way or uncontrolled junctions typically have less severe outcomes, specific condition (young female riders or nighttime crashes at these junctions) intensify the risk of severe injuries. These insights advocate for tailored public policy adjustments and infrastructure enhancements to mitigate e-scooter risks, ensuring safer urban mobility for all demographics."
+    },
+    {
+      "id": "W4405501461",
+      "title": "Toward the Human Scale in Smart Cities: Exploring the Role of Active Mobility in Ecosystemic Urbanism",
+      "abstract": "Active Mobility (AM) currently presents an opportunity to change the paradigm of the competitive and dispersed city created by motorized mobility, revaluing the role of walking and cycling in generating more sustainable urban ecosystems. This article addresses the challenges and opportunities for AM to contribute to the regeneration of urban systems and the capacity for anticipation. This article analyzes AM using the Ecosystemic Urbanism (EU) as an analysis framework within its four axes: social cohesion, complexity, efficiency, and compactness and functionality. Through this analysis, the points of incidence of AM were identified within each of these axes. The study highlights the potential of AM to act as a transformative driver in urban development, integrating an ecological framework where urban systems are interconnected and mutually reinforced. This perspective reveals walking and cycling as a catalyst for reshaping urban interactions. In light of this, future cities must adopt a human urban scale through compactness that fosters complexity and diverse and engaging urban interactions. In addition, the enjoyability achieved through AM brings significant ecosystem benefits by promoting awareness of others, nature, and the interconnectedness between the individual and the city. This represents a new paradigm shift in which the automobile does not play the central role, allowing more sustainable ways of living together."
+    },
+    {
+      "id": "W2102992074",
+      "title": "Cyclist route choice, traffic-related air pollution, and lung function: a scripted exposure study",
+      "abstract": "BACKGROUND: A travel mode shift to active transportation such as bicycling would help reduce traffic volume and related air pollution emissions as well as promote increased physical activity level. Cyclists, however, are at risk for exposure to vehicle-related air pollutants due to their proximity to vehicle traffic and elevated respiratory rates. To promote safe bicycle commuting, the City of Berkeley, California, has designated a network of residential streets as \"Bicycle Boulevards.\" We hypothesized that cyclist exposure to air pollution would be lower on these Bicycle Boulevards when compared to busier roads and this elevated exposure may result in reduced lung function. METHODS: We recruited 15 healthy adults to cycle on two routes - a low-traffic Bicycle Boulevard route and a high-traffic route. Each participant cycled on the low-traffic route once and the high-traffic route once. We mounted pollutant monitors and a global positioning system (GPS) on the bicycles. The monitors were all synced to GPS time so pollutant measurements could be spatially plotted. We measured lung function using spirometry before and after each bike ride. RESULTS: We found that fine and ultrafine particulate matter, carbon monoxide, and black carbon were all elevated on the high-traffic route compared to the low-traffic route. There were no corresponding changes in the lung function of healthy non-asthmatic study subjects. We also found that wind-speed affected pollution concentrations. CONCLUSIONS: These results suggest that by selecting low-traffic Bicycle Boulevards instead of heavily trafficked roads, cyclists can reduce their exposure to vehicle-related air pollution. The lung function results indicate that elevated pollutant exposure may not have acute negative effects on healthy cyclists, but further research is necessary to determine long-term effects on a more diverse population. This study and broader field of research have the potential to encourage policy-makers and city planners to expand infrastructure to promote safe and healthy bicycle commuting."
+    },
+    {
+      "id": "W1976147625",
+      "title": "Mapping bicycle use and the risk of accidents for commuters who cycle to work in Belgium",
+      "abstract": null
+    },
+    {
+      "id": "W2141627888",
+      "title": "Geographies of inequality: Child pedestrian injury and walking school buses in Auckland, New Zealand",
+      "abstract": null
+    },
+    {
+      "id": "W2156587698",
+      "title": "No clear evidence from countries that have enforced the wearing of helmets",
+      "abstract": "Do enforced bicycle helmet laws improve public health?While many public health specialists believe this argument has been settled in the affirmative, it remains hotly contested in some quarters.We've provided space to Dorothy Robinson to set out her arguments against legislation and asked Brent Hagel and colleagues to respond No clear evidence from countries that have enforced the wearing of helmets D L RobinsonCase-control studies suggest that cyclists who choose to wear helmets have fewer head injuries than non-wearers.Consequently, the BMA recommended that the United Kingdom introduce and enforce bicycle helmet laws. 1 However, regular exercise such as cycling is beneficial to health, and non-helmeted commuter cyclists have lower mortality than non-cyclists. 2Helmet laws would be counterproductive if they discouraged cycling and increased car use.Wearing helmets may also encourage cyclists to take more risks, or motorists to take less care when they encounter cyclists. 3Recent epidemiological research highlighted problems adjusting for confounders in observational studies, causing biased, misleading results. 4Thus the best estimate of the benefits of helmet laws is what actually happens when laws are passed.I reviewed data from all jurisdictions that have introduced legislation and increased use of helmets by at least 40 percentage points within a few months: New Zealand, Nova Scotia (Canada), and the Australian states of Victoria, New South Wales, South Australia, and Western Australia.To avoid confusing reductions in injuries (from safer roads or less cycling) with benefits of helmets, I have focused on percentages of cyclists with head injuries.Head injuries were most commonly classified as admissions to hospital with head wounds, skull or facial fracture, concussion, or other intracranial injury.The data include 10 504 head injuries, and in most cases were available as percentages of all cyclist injuries.Details of data sources and methods are given on bmj.com."
+    },
+    {
+      "id": "W1547359344",
+      "title": "Association between Roadway Intersection Characteristics and Pedestrian Crash Risk in Alameda County, California",
+      "abstract": "Each year from 1998 to 2007, an average of approximately 4,800 pedestrians were killed and 71,000 pedestrians were injured in traffic crashes in the United States. Because many pedestrian crashes occur at roadway intersections, it is important to understand the intersection characteristics that are associated with pedestrian crash risk. The present study uses detailed pedestrian crash data and pedestrian volume estimates to analyze the pedestrian crash risk at 81 intersections along arterial and collector roadways in Alameda County, California. The analysis compares pedestrian crash rates (the number of crashes per 10,000,000 pedestrian crossings) with intersection characteristics. In addition, more than 30 variables were considered for use in the development of a statistical model of the number of pedestrian crashes reported at each study intersection from 1998 to 2007. After the pedestrian and motor vehicle volumes at each intersection were accounted for, negative binomial regression showed that significantly more pedestrian crashes occurred at intersections with more right-turn-only lanes, more nonresidential driveways within 50 ft (15 m), more commercial properties within 0.1 mi (161 m), and a greater percentage of residents within 0.25 mi (402 m) who were younger than age 18 years. Raised medians on both intersecting streets were associated with lower numbers of pedestrian crashes. These results, viewed in combination with other research findings, can be used by practitioners to design safer intersections for pedestrians. This exploratory study also provides a methodological framework for future pedestrian safety studies."
+    },
+    {
+      "id": "W2068598998",
+      "title": "Urban-rural variation in mortality and hospital admission rates for unintentional injury in Ireland",
+      "abstract": "OBJECTIVE: To explore urban-rural differences in the mortality and hospital admission rates for unintentional injuries in the Republic of Ireland. DESIGN: Standardised mortality ratios (SMRs) in residents of urban and non-city areas (called rural areas) from all causes of unintentional injury were calculated using Central Statistics Office mortality data from 1980-2000. Hospital admission data (Hospital In-Patient Enquiry) from 1993-2000 were used to calculate standardised hospital admission ratios (SARs) in urban and rural residents. Population data were obtained from the 1981, 1986, 1991, and 1996 censuses. RESULTS: The rate of unintentional injury mortality was significantly higher in rural residents for all-cause unintentional injury mortality (SMR 103.0, 95% confidence interval 101 to 105), and specifically for deaths related to motor vehicle trauma (MVT), drowning, machinery, and firearms. There were significantly higher SMRs in urban residents for falls and poisoning. The rate of unintentional injury hospital admission was significantly higher in rural residents for all-cause unintentional injury (SAR 104.6, 95% confidence interval 104 to 105) and specifically for injuries from falls, MVT, being struck by or against an object, injuries in pedal cyclists, fire/burn injuries, and machinery injuries. SARs were significantly higher in residents of urban areas for poisoning and injuries in pedestrians. CONCLUSIONS: There are urban-rural differences in mortality and admissions for injuries in Ireland. Possible reasons for the higher rural mortality rates are higher case fatality in MVT and rural exposure to hazardous farm machinery, firearms, and open areas of water. This information could assist in targeting prevention programmes under the proposed National Injury Prevention Strategy."
+    },
+    {
+      "id": "W1983183853",
+      "title": "Why do cyclists infringe at red lights? An investigation of Australian cyclists\u2019 reasons for red light infringement",
+      "abstract": null
+    },
+    {
+      "id": "W2176200676",
+      "title": "A systematic review of economic analyses of active transport interventions that include physical activity benefits",
+      "abstract": null
+    },
+    {
+      "id": "W2021469800",
+      "title": "Pedestrian Injury and Human Behaviour: Observing Road-Rule Violations at High-Incident Intersections",
+      "abstract": "BACKGROUND: Human behaviour is an obvious, yet under-studied factor in pedestrian injury. Behavioural interventions that address rule violations by pedestrians and motorists could potentially reduce the frequency of pedestrian injury. In this study, a method was developed to examine road-rule non-compliance by pedestrians and motorists. The purpose of the study was to examine the potential association between violations made by pedestrians and motorists at signalized intersections, and collisions between pedestrians and motor-vehicles. The underlying hypothesis is that high-incident pedestrian intersections are likely to vary with respect to their aetiology, and thus are likely to require individualized interventions--based on the type and rate of pedestrian and motorist violation. METHODS: High-incident pedestrian injury intersections in Vancouver, Canada were identified using geographic information systems. Road-rule violations by pedestrians and motorists were documented at each incident hotspot by a team of observers at several different time periods during the day. RESULTS: Approximately 9,000 pedestrians and 18,000 vehicles were observed in total. In total for all observed intersections, over 2000 (21%) pedestrians committed one of the observed pedestrian road-crossing violations, while approximately 1000 (5.9%) drivers committed one of the observed motorist violations. Great variability in road-rule violations was observed between intersections, and also within intersections at different observation periods. CONCLUSIONS: Both motorists and pedestrians were frequently observed committing road-rule violations at signalized intersections, suggesting a potential human behavioural contribution to pedestrian injury at the study sites. These results suggest that each intersection may have unique mechanisms that contribute to pedestrian injury, and may require targeted behavioural interventions. The method described in this study provides the basis for understanding the relationship between violations and pedestrian injury risk at urban intersections. Findings could be applied to targeted prevention campaigns designed to reduce the number of pedestrian injuries at signalized intersections."
+    },
+    {
+      "id": "W2139897526",
+      "title": "The potential modal shift and health benefits of implementing a public bicycle share program in Montreal, Canada",
+      "abstract": "BACKGROUND: This study estimated the modal shift associated with the implementation of a public bicycle share program in Montreal, Canada. METHODS: A population-based sample of adults participated in two cross sectional telephone surveys. Self-reported travel behaviors were collected at the end of the first (fall 2009) and second (fall 2010) season of implementation. The sample included 2502 (Mean age=47.8 years, 61.8% female), and 2509 (Mean age=48.9 years, 59.0% female) adult respondents in each survey. RESULTS: The estimated modal shift associated with the implementation of the PBSP from motor vehicle use to walking, cycling, and public transportation was 6483 and 8023 trips in 2009 and 2010. This change represents 0.34% and 0.43% of all motor vehicle trips in Montreal. CONCLUSIONS: The implementation of a PBSP was associated with a shift toward active transportation. The modal shift was complex and not simply the result of a discrete shift from one mode to another. Promotion of active transportation should encourage integration of multiple active transportation modes to better reflect people's actual transportation behaviors."
+    },
+    {
+      "id": "W2065974912",
+      "title": "Are school zones effective? An examination of motor vehicle versus child pedestrian crashes near schools",
+      "abstract": "OBJECTIVE: To analyse the relationships between factors related to school location and motor vehicle versus child pedestrian collisions. METHODS: Data on all police-reported motor vehicle collisions involving pedestrians less than 18 years of age that occurred in Toronto, Canada, between 2000 and 2005 were analysed. Geographic information systems (GIS) software was used to assess the distance of each collision relative to school location. The relationships between distance from school and collision-related factors such as temporal patterns of school travel times and crossing locations were analysed. RESULTS: Study data showed a total of 2717 motor vehicle versus child (<18) pedestrian collisions. The area density of collisions (collisions/area), particularly fatal collisions, was highest in school zones and decreased as distance from schools increased. The highest proportion of collisions (37.3%) occurred among 10-14-year-olds. Within school zones, collisions were more likely to occur among 5-9-year-old children as they travelled to and from school during months when school was in session. Most collisions within school zones occurred at midblock locations versus intersections. CONCLUSIONS: Focusing interventions around schools with attention to age, travel times, and crossing location will reduce the burden of injury in children. Future studies that take into account traffic and pedestrian volume surrounding schools would be useful for prevention efforts as well as for promotion of walking. These results will help identify priorities and emphasise the importance of considering spatial and temporal patterns in child pedestrian research."
+    },
+    {
+      "id": "W2017399821",
+      "title": "A Spatial Analysis of Land Use and Network Effects on Frequency and Severity of Cyclist\u2013Motorist Crashes in the Copenhagen Region",
+      "abstract": "OBJECTIVE: Urban and transport planners worldwide have recently designed and implemented policies for increasing the number of cyclists. Although cycling is on the rise even in car-oriented cities and regions, the fear of being involved in a crash is still the main obstacle to further increases in cycling market shares. The current study proposes the first joint model of frequency and severity of cyclist-motorist collisions with the aim of unraveling the factors contributing to both the probability of being involved in a crash and, conditional on the crash occurrence, experiencing a severe injury outcome. METHOD: A multivariate Poisson-lognormal model with correlated autoregressive priors was estimated on a sample of 5,349 cyclist-motorist crashes that occurred in the Copenhagen region between 2009 and 2013. The model considered the links of the road network in the region as the unit of observation, controlled for traffic exposure of nonmotorized and motorized transport modes, evaluated the effect of infrastructure and land use, and accounted for heterogeneity and spatial correlation across links. RESULTS: Results confirmed the existence of the phenomenon of safety in numbers and added to the narrative by emphasizing that the most severe crashes are the ones most benefiting from an increase in the number of cyclists. In addition, results argued that the construction of Copenhagen-style bicycle paths would significantly contribute to increasing safety, especially in suburban areas where the speed differential between cyclists and motorists is greater. Last, results illustrated a need for thinking about cycling safety in intersection design and reflecting on the importance of spatial and aspatial correlation both within and between injury categories. CONCLUSIONS: The findings from this study illustrated how encouraging cycling would increase safety in relation to the phenomenon of safety in numbers and how, in turn, increasing safety would convince more people to cycle. In addition, they suggested how the design of bicycle infrastructure should not only consider bicycle lanes but in particular focus on bicycle paths where the number of conflicts and the stress for sharing the road are highly reduced and how thinking about road design should extend to the general level and include a discourse about safer intersections. Last, attention should be given to the road design in the city center and to traffic management, because clearly safer traffic implies more cyclists and, in turn, more cyclists imply fewer cars and less congestion."
+    },
+    {
+      "id": "W2080320538",
+      "title": "Influence of road markings, lane widths and driver behaviour on proximity and speed of vehicles overtaking cyclists",
+      "abstract": null
+    },
+    {
+      "id": "W2084722832",
+      "title": "Health implications of transport planning, development and operations",
+      "abstract": null
+    },
+    {
+      "id": "W1985124211",
+      "title": "Safety in numbers? Investigating Australian driver behaviour, knowledge and attitudes towards cyclists",
+      "abstract": null
+    },
+    {
+      "id": "W2073509318",
+      "title": "Factors influencing mode of transport in older adolescents: a qualitative study",
+      "abstract": "BACKGROUND: Since a decline in activity levels occurs in adolescence, active transport could be important to increase daily physical activity in older adolescents (17-18 years). To promote active transport, it is necessary to be aware of the barriers and facilitators of this type of transport, but also of other transport modes. This study sought to uncover the factors influencing the choice of transport mode for short distance travel to various destinations in older adolescents using focus groups. METHODS: Thirty-two focus group volunteers (mean age of 17 \u00b1 1.2 years) were recruited from the two final years of the secondary school in Antwerp (Belgium). Five focus groups were conducted (five to eight participants/group). Content analysis was performed using NVivo 9 software (QSR International). Grounded theory was used to derive categories and subcategories. RESULTS: Data were categorized in three main themes with several subcategories: personal factors (high autonomy, low costs and health), social factors (good social support) and physical environmental factors (short travel time, good access to transport modes and to facilities, good weather, an adapted built environment, perceived safety and ecology). CONCLUSIONS: For older adolescents, the interplay between short travel time, high autonomy, good social support, low costs, good access to transport modes and facilities, and good weather was important for choosing active transport over other transport forms for travelling short distances to various destinations. Other well-known factors such as safety, ecology and health seemed not to have a big influence on their transport mode choice."
+    },
+    {
+      "id": "W2145535490",
+      "title": "Why do young adults choose different transport modes? A focus group study",
+      "abstract": null
+    },
+    {
+      "id": "W2158182760",
+      "title": "Injury incidence rates of cyclists compared to pedestrians, car occupants and powered two-wheeler riders, using a medical registry and mobility data, Rh\u00f4ne County, France",
+      "abstract": null
+    },
+    {
+      "id": "W1670913835",
+      "title": "Car driver attitudes, perceptions of social norms and aggressive driving behaviour towards cyclists",
+      "abstract": null
+    },
+    {
+      "id": "W2153505939",
+      "title": "Conspicuity and bicycle crashes: preliminary findings of the Taupo Bicycle Study",
+      "abstract": "OBJECTIVE: To describe the methods, characteristics of participants, and report on the preliminary findings of a longitudinal study of cyclists. DESIGN: Web-based survey to establish a cohort of cyclists. SETTING: Participants in the largest mass-participation bicycle event in New Zealand, the Wattyl Lake Taupo Cycle Challenge. PARTICIPANTS: 2469 riders who had enrolled online in the 2006 Wattyl Lake Taupo Cycle Challenge. MAIN OUTCOME MEASURES: Self-reported crashes in preceding 12 months. RESULTS: Of 5653 eligible riders, 2469 (44%) completed the study questionnaire. Mean age was 44 years, 73% were male, and the average number of kilometers cycled per week in the preceding 12 months was 130. The annual incidence of crashes leading to injury that disrupted usual daily activities for at least 24 h was 0.5 per cyclist/year. About one-third of these crashes resulted in presentation to a health professional. The mean number of days absent from work attributable to bicycle crashes was 0.39 per cyclist/year. After adjustment for potential confounders and exposure (kilometers cycled per year), the rate of days off work from bicycle crash injury was substantially lower among riders who reported always wearing fluorescent colors (multivariate incidence rate ratio 0.23, 95% CI 0.09 to 0.59). CONCLUSIONS: Low cyclist conspicuity may increase the risk of crash-related injury and subsequent time off work. Increased use of high-visibility clothing is a simple intervention that may have a large impact on the safety of cycling."
+    },
+    {
+      "id": "W2749249183",
+      "title": "Evaluating the impact of connectivity, continuity, and topography of sidewalk network on pedestrian safety",
+      "abstract": null
+    },
+    {
+      "id": "W2145196503",
+      "title": "Safety in Numbers for walkers and bicyclists: exploring the mechanisms",
+      "abstract": "This article is part of the Proceedings of the 6th Annual International Cycling Safety Conference held in Davis, California, USA on September 20th through 23rd in the year 2017. Paper ID: 48"
+    },
+    {
+      "id": "W1980254784",
+      "title": "Walking school buses in the Auckland region: A longitudinal assessment",
+      "abstract": null
+    },
+    {
+      "id": "W2753974954",
+      "title": "How bicycle level of traffic stress correlate with reported cyclist accidents injury severities: A geospatial and mixed logit analysis",
+      "abstract": null
+    },
+    {
+      "id": "W1468938169",
+      "title": "The health and economic benefits of active transport policies in Barcelona",
+      "abstract": null
+    },
+    {
+      "id": "W2182437758",
+      "title": "Global bike share: What the data tells us about road safety",
+      "abstract": null
+    },
+    {
+      "id": "W1992682373",
+      "title": "Contrasts in active transport behaviour across four countries: How do they translate into public health benefits?",
+      "abstract": "OBJECTIVE: Countries and regions vary substantially in transport related physical activity that people gain from walking and cycling and in how this varies by age and gender. This study aims to quantify the population health impacts of differences between four settings. METHOD: The Integrated Transport and Health Model (ITHIM) was used to estimate health impacts from changes to physical activity that would arise if adults in urban areas in England and Wales adopted travel patterns of Switzerland, the Netherlands, and California. The model was parameterised with data from travel surveys from each setting and estimated using Monte Carlo simulation. Two types of scenarios were created, one in which the total travel time budget was assumed to be fixed and one where total travel times varied. RESULTS: Substantial population health benefits would accrue if people in England and Wales gained as much transport related physical activity as people in Switzerland or the Netherlands, whilst smaller but still considerable harms would occur if active travel fell to the level seen in California. The benefits from achieving the travel patterns of the high cycling Netherlands or high walking Switzerland were similar. CONCLUSION: Differences between high income countries in how people travel have important implications for population health."
+    },
+    {
+      "id": "W2758793422",
+      "title": "Ancillary health effects of climate mitigation scenarios as drivers of policy uptake: a review of air quality, transportation and diet co-benefits modeling studies",
+      "abstract": "Background: Significant mitigation efforts beyond the Nationally Determined Commitments (NDCs) coming out of the 2015 Paris Climate Agreement are required to avoid warming of 2\u00b0C above pre-industrial temperatures. Health co-benefits represent selected near term, positive consequences of climate policies that can offset mitigation costs in the short term before the beneficial impacts of those policies on the magnitude of climate change are evident. The diversity of approaches to modeling mitigation options and their health effects inhibits meta-analyses and syntheses of results useful in policy-making. Methods/Design: We evaluated the range of methods and choices in modeling health co-benefits of climate mitigation to identify opportunities for increased consistency and collaboration that could better inform policy-making. We reviewed studies quantifying the health co-benefits of climate change mitigation related to air quality, transportation, and diet published since the 2009 Lancet Commission 'Managing the health effects of climate change' through January 2017. We documented approaches, methods, scenarios, health-related exposures, and health outcomes. Results/Synthesis: Forty-two studies met the inclusion criteria. Air quality, transportation, and diet scenarios ranged from specific policy proposals to hypothetical scenarios, and from global recommendations to stakeholder-informed local guidance. Geographic and temporal scope as well as validity of scenarios determined policy relevance. More recent studies tended to use more sophisticated methods to address complexity in the relevant policy system. Discussion: Most studies indicated significant, nearer term, local ancillary health benefits providing impetus for policy uptake and net cost savings. However, studies were more suited to describing the interaction of climate policy and health and the magnitude of potential outcomes than to providing specific accurate estimates of health co-benefits. Modeling the health co-benefits of climate policy provides policy-relevant information when the scenarios are reasonable, relevant, and thorough, and the model adequately addresses complexity. Greater consistency in selected modeling choices across the health co-benefits of climate mitigation research would facilitate evaluation of mitigation options particularly as they apply to the NDCs and promote policy uptake."
+    },
+    {
+      "id": "W2028996744",
+      "title": "Investigation of pedestrian crashes on two-way two-lane rural roads in Ethiopia",
+      "abstract": null
+    },
+    {
+      "id": "W2010748446",
+      "title": "Urban Form Relationships with Youth Physical Activity",
+      "abstract": "This article summarizes and synthesizes empirical research on relationships between youth physical activity and urban form across several disciplines, for a planning audience. It highlights how physical activity is characterized, introduces ecological theories of physical activity behavior, provides a conceptual model of interactions between urban form and other influences on youth physical activity behavior, and discusses implications of new evidence for future research and policy. Further research is needed to address several gaps and inconsistencies across studies and to build on recent methodological developments. Despite the limitations of existing research, it is evident that urban form can either serve to constrain or promote physical activity. Urban form interventions have the potential to result in lasting influences on the behavior of large populations of youth."
+    },
+    {
+      "id": "W1988890575",
+      "title": "Environmental supports for walking/biking and traffic safety: Income and ethnicity disparities",
+      "abstract": null
+    },
+    {
+      "id": "W2051984188",
+      "title": "Motor Vehicle-Pedestrian Collisions and Walking to School: The Role of the Built Environment",
+      "abstract": "OBJECTIVES: Initiatives to increase active school transportation are popular. However, increased walking to school could increase collision risk. The built environment is related to both pedestrian collision risk and walking to school. We examined the influence of the built environment on walking to school and child pedestrian collisions in Toronto, Canada. METHODS: Police-reported pedestrian collision data from 2002 to 2011 for children ages 4 to 12, proportion of children walking to school, and built environment data were mapped onto school attendance boundaries. Collision rates were calculated by using 2006 census populations and modeled by using negative binomial regression. RESULTS: There were 481 collisions with a mean collision rate of 7.4/10 000 children per year. The relationship between walking proportion and collision rate was not statistically significant after adjusting for population density and roadway design variables including multifamily dwelling density, traffic light, traffic calming and 1-way street density, school crossing guard presence, and school socioeconomic status. CONCLUSIONS: Pedestrian collisions are more strongly associated with built environment features than with proportions walking. Road design features were related to higher collision rates and warrant further examination for their safety effects for children. Future policy designed to increase children's active transportation should be developed from evidence that more clearly addresses child pedestrian safety."
+    },
+    {
+      "id": "W2068513935",
+      "title": "CicLAvia and human infrastructure in Los Angeles: ethnographic experiments in equitable bike planning",
+      "abstract": null
+    },
+    {
+      "id": "W1796351663",
+      "title": "Quantifying the Health Impacts of Active Travel: Assessment of Methodologies",
+      "abstract": "In the past several years, active travel (walking and cycling) has increasingly been recognized as an effective means of improving public health by increasing physical activity and by avoiding the negative externalities of motorized transport. The impacts of increased active travel on mortality and morbidity rates have been quantified through a range of methodologies. In this study, the existing publications in this field of research have been reviewed to compare and contrast the methodologies adapted and to identify the key considerations and the best practices. The publications were classified in terms of the health summary outcomes and exposure variables considered, the model structures used in the studies and the impact of these choices on the results. Increased physical activity was identified as the most important determinant of the health impacts of active travel but different ways of quantifying these health impacts can lead to substantial differences in the scale of the impact. Further research is required into the relationship between increased physical activity and health effects in order to reach consensus on the most reliable modelling approach for this important determinant of benefits. Critical discussions on other exposure variables have also been provided to ascertain best practices. Additionally, a logical flow of the modelling processes (and their variations) has also been illustrated which can be followed for developing future studies into the health impacts of active travel."
+    },
+    {
+      "id": "W2078724875",
+      "title": "An autoethnographic account of a cycling charity challenge event: Exploring manifest and latent aspects of the experience",
+      "abstract": "Charity challenges are an increasingly popular form of alternative tourism, drawing upon charity events, sports and tourism. This study adopts a thematic/analytic autoethnographic approach to explore some of the themes present in the author's experience of a 3-day cycling charity challenge event in Queensland, Australia. The aim of the research was specifically to draw forth both the manifest and latent aspects of the experience using diary entries recorded during the event. Using an emic, inductive approach, eight manifest themes that could be analysed with respect to the broader literature on tourism, sports and charity events were identified. An additional two latent themes that had not been examined previously within this context also appeared in the analysis. The first was the notion of creative expression as a result of fundraising for the event, and the second was related to overcoming a fear of cycling in traffic. The findings raise questions about how we might understand the unspoken facets of the tourism experience as topics such as fear and anxiety are not easy to discuss with external researchers or to capture in their entirety through more prescriptive research methods, such as surveys and structured or semi-structured interviews. This paper provides insights into one event that occurs at the boundaries of cycling tourism, sports and charity events whilst advocating for an understanding of the nuances that permeate participants' experiences of such events. Failure to recognise and acknowledge these nuances may lead to misleading managerial suggestions, poor policy design and unsuccessful new initiatives."
+    },
+    {
+      "id": "W2797190427",
+      "title": "Policy design for sustainable urban transport in the global south",
+      "abstract": "Many urban areas, both in the Global North and South, are becoming increasingly automobile-dominated and less sustainable. The need to take action is well recognized but all too often governance arrangements and the symbolism attached to automobility stand in the way. Drawing on international experience, this article summarizes some of the necessary preconditions of urban governance for promoting more sustainable urban transport in the Global South, highlights priority policy areas for action, reviews a range of key policy measures for promoting sustainable urban transport, and discusses the potential for transferring experience and practice from the Global North to the Global South."
+    },
+    {
+      "id": "W1521180546",
+      "title": "Performance of Municipal Cycling Policies in Medium-Sized Cities in the Netherlands since 2000",
+      "abstract": "With its high cycling mode share, the Netherlands is often seen as a best practice for cycling policies. However, there is little insight into the drivers behind this phenomenon, specifically which policy interventions increased cycling rates and which did not. The knowledge gap on the effectiveness of cycling policies seriously limits the potential for learning from the Dutch experience. This paper will address this gap, by exploring the performance of Dutch cycling policies in 22 medium-sized cities since 2000. First, the existing ideas regarding the effectiveness of cycling policy are reviewed. These insights structure the exploration of data from Statistics Netherlands and the Dutch Cyclists' Union, complemented with a survey of local policy-makers by means of an explorative data-mining methodology called rough set analysis. Our findings support the following hypotheses regarding the performance of cycling policy in Dutch cities: first of all, the way cycling policy is implemented seems important: setting measurable and verifiable goals, following through with most of the proposed policy interventions, allowing for experimental measures to be explored and showing strong leadership. Second, providing adequate cycling infrastructure and decreasing the attractiveness of car use (e.g. by increasing parking tariffs and increasing the area of paid on-street car parking) seem to be key drivers. Finally, we found that external circumstances, such as demographic trends, seem to influence cycling policy outcomes. Future research is needed to test these hypotheses."
+    },
+    {
+      "id": "W1999461624",
+      "title": "Disaggregate Exposure Measures and Injury Frequency Models of Cyclist Safety at Signalized Intersections",
+      "abstract": "This paper proposes a new approach to represent cyclist risk exposure. This approach considers disaggregate motor vehicle and cyclist flows and develops cyclist injury frequency models. Three definitions of risk exposure were used in this research, including aggregated flows, motor vehicle flows aggregated by movement type, and potential conflicts between motor vehicles and cyclists. As an application environment, a large sample of signalized intersections on the island of Montreal, Quebec, Canada, was used, along with data that comprised disaggregate motor vehicle and cyclist flows. Several negative binomial models were fitted to the data. This study showed that cyclist collisions were sensitive to changes in both cyclist and motor vehicle flows. A 10% increase in bicycle flow was associated with a 4.4% increase in the frequency of cyclist injuries. A 10% increase in the total number of motor vehicles that passed through the intersection would result in a 3.4% increase in cyclist injury occurrence. When motor vehicle flows were considered on the basis of movement type, right-turn movements had a great effect on injury occurrence. Similar results, which identified right turns as having the greatest effect on cyclist injuries, were produced when the impact of potential conflicts was determined. The number of bus stops in the proximity of the intersection increased cyclist injury occurrence. Some geometric design factors, such as the presence of a median, parking entrance, and the number of intersection legs, were tested. The effect, however, was found to be statistically nonsignificant."
+    },
+    {
+      "id": "W1441434601",
+      "title": "Health impact model for modal shift from car use to cycling or walking in Flanders: application to two bicycle highways",
+      "abstract": null
+    },
+    {
+      "id": "W2090680092",
+      "title": "Exploring complex causal pathways between urban renewal, health and health inequality using a theory-driven realist approach",
+      "abstract": null
+    },
+    {
+      "id": "W2163985786",
+      "title": "Research Article: Evidence on Why Bike-Friendly Cities Are Safer for All Road Users",
+      "abstract": "Biking is increasingly being recognized as a highly sustainable form of transportation. Consequently, a growing number of American cities have seen tremendous growth in bicycle travel, in part because many cities are also investing resources into improving bicycling infrastructure. Aside from the environmental advantages, there is now growing evidence to suggest that cities with higher bicycling rates also have better road safety records. This study attempts to better understand this phenomenon of lower fatality rates in bike-oriented cities by examining 11 years of road safety data (1997\u20132007) from 24 California cities. The analysis included accounting for crashes across all severity levels, as well as for three classes of road users: vehicle occupants, pedestrians, and bicyclists. Additionally, we looked at issues of street and street network design to help determine the role that these features might play in affecting both bicycling rates and road safety outcomes. Overall, cities with a high bicycling rate among the population generally show a much lower risk of fatal crashes for all road users when compared to the other cities in our database. The fact that this pattern of low fatality risk is consistent for all classes of road users strongly suggests that the crashes in cities with a high bicycling rate are occurring at lower speeds. This agrees with the finding that street network density was one of the most notable differences found between the safer and less safe cities. Our data suggest that improving the streets and street networks to better accommodate bicycles may lead to a self-reinforcing cycle that can help enhance overall safety for all road users."
+    },
+    {
+      "id": "W2586815467",
+      "title": "Severity of pedestrian injuries due to traffic crashes at signalized intersections in Hong Kong: a Bayesian spatial logit model",
+      "abstract": "Summary The present study intended to (1) investigate the injury risk of pedestrian casualties involved in traffic crashes at signalized intersections in Hong Kong; (2) determine the effect of pedestrian volumes on the severity levels of pedestrian injuries; and (3) explore the role of spatial correlation in econometric crash\u2010severity models. The data from 1889 pedestrian\u2010related crashes at 318 signalized intersections between 2008 and 2012 were elaborately collected from the Traffic Accident Database System maintained by the Hong Kong Transport Department. To account for the cross\u2010intersection heterogeneity, a Bayesian hierarchical logit model with uncorrelated and spatially correlated random effects was developed. An intrinsic conditional autoregressive prior was specified for the spatial correlation term. Results revealed that (1) signalized intersections with greater pedestrian volumes generally exhibited a lower injury risk; (2) ignoring the spatial correlation potentially results in reduced model goodness\u2010of\u2010fit, an underestimation of variability and standard error of parameter estimates, as well as inconsistent, biased, and erroneous inference; (3) special attention should be paid to the following factors, which led to a significantly higher probability of pedestrians being killed or sustaining severe injury: pedestrian age greater than 65 years, casualties with head injuries, crashes that occurred on footpaths that were not obstructed/overcrowded, heedless or inattentive crossing, crashes on the two\u2010way carriageway, and those that occurred near tram or light\u2010rail transit stops. Copyright \u00a9 2017 John Wiley & Sons, Ltd."
+    },
+    {
+      "id": "W638667503",
+      "title": "Bicyclist safety performance functions for a U.S. city",
+      "abstract": null
+    },
+    {
+      "id": "W2145621017",
+      "title": "How does a modal shift from short car trips to cycling affect road safety?",
+      "abstract": "Governments aim to promote a shift from car to bicycle, but concerns about road safety seem to represent an important argument against this encouragement. This study examines the road safety impact of a modal shift from short car trips to cycling in Dutch municipalities. The road safety effect is estimated using Accident Prediction Models (APMs) that account for the non-linearity of risk. APMs are developed utilizing Negative Binomial regression. This study is the first to develop APMs using crash and mobility data from municipalities, and utilizing these models to estimate the effects of changing modal splits of current car and bicycle use to modal splits that actually exist in these municipalities. The results suggest that, under conditions such as in Dutch municipalities, transferring short trips made by cars to bicycles does not change the number of fatalities, but increases the number of serious road injuries. The neutral effect on fatalities, despite the high fatality risk for cyclists, can be explained by there being fewer cars on the road to pose a risk to others, the shorter length of bicycle trips compared to the car trips they replace, and the \"safety in numbers\" phenomenon. The rise in the number of serious road injuries is due wholly to the high number of cycling crashes with no other vehicle involved. The effect of a modal shift is dependent on the age of the population in which the shift is concentrated, and can be influenced by measures affecting cyclists' injury risk."
+    },
+    {
+      "id": "W2608208903",
+      "title": "Cyclists as a minority group?",
+      "abstract": null
+    },
+    {
+      "id": "W2059436143",
+      "title": "Transport: challenging disabling environments",
+      "abstract": "This article brings together the concerns of environmental and disability movements through examining the role of transport. Both movements critique current transport policy and practice. The disability movement has analysed how it marginalises the needs of disabled people, while environmentalists argue current transport trends are unsustainable and marginalise alternatives. Although these critiques operate independently and even seem opposed to each other, a common agenda can be developed through extending the social model of disability. The social model can be used to understand how car-dominated transport systems can be understood as disabling populations larger than those conventionally recognised as \u00e2\u20ac\u0153disabled\u00e2\u20ac\ufffd. The car offers the technological fix of enabling abilities, in particular speed and strength, but in practice disables in a number of ways. Urban sprawl and traffic increase barriers to participation and access for many both \u00e2\u20ac\u0153able-bodied\u00e2\u20ac\ufffd and \u00e2\u20ac\u0153disabled\u00e2\u20ac\ufffd, while car dominance damages social interaction and limits sensory perception. Furthermore, the car economy is a major cause of impairment through crashes and physical inactivity. Understanding these together requires integrating the social model of disability with an eco-social model of impairment. This can show how unequal forms of social organisation are embodied in people and environments to produce patterns of impairment, disability and disadvantage. Finally we suggest policies to move towards sustainable societies with increased opportunities for broader social participation. The article argues that the two movements can create and benefit from a shared vision of socially inclusive, low-energy, sustainable transport."
+    },
+    {
+      "id": "W2059630036",
+      "title": "Safety and Security in Discretionary Travel Decision Making",
+      "abstract": "Considerations of whether a travel alternative (e.g., mode, destination) affords a traveler an acceptable level of safety from traffic collisions and personal security from crime may be especially important for active modes of walking and bicycling. Although theory suggests that safety and security influence nonmotorized travel decision making, empirical evidence to support these hypotheses is inconclusive. In addition to measurement limitations and data constraints, safety and security concerns are often inadequately distinguished. This study advances knowledge in this area by analyzing objective safety and security measures within a mode\u2013destination choice context. Discretionary trips from a Portland, Oregon, household travel survey were analyzed with a joint mode\u2013destination choice multinomial logit model. Some measures of traffic safety\u2014more comfortable facilities, sidewalks, traffic signals, and traffic calming installations\u2014were positively associated with walking and bicycling. Measures of a lack of personal security (higher levels of crime) were negatively associated with walking, but this effect was countered by a positive interaction of origin\u2013destination crime on walking. Age and gender rarely moderated these safety and security relationships. Although results provide tentative support of hypotheses on the relationship between safety and security and travel mode choice, more work is needed in this area. Measuring safety and security perceptions and applying more flexible structures for discrete choice modeling might be the most promising avenues for future research on the effects of safety and security in discretionary decision making of active travel. This analysis informs interventions to promote active travel and provides one way to include safety and security concerns in travel demand models."
+    },
+    {
+      "id": "W2161208828",
+      "title": "Health Impact Assessment of increased cycling to place of work or education in Copenhagen",
+      "abstract": "OBJECTIVE: To quantify the effects of increased cycling on both mortality and morbidity. DESIGN: Health Impact Assessment. SETTING: Cycling to place of work or education in Copenhagen, Denmark. POPULATION: Effects were calculated based on the working-age population of Copenhagen. MAIN OUTCOME MEASURES: The primary outcome measure was change in burden of disease (measured as disability-adjusted life years (DALY)) due to changed exposure to the health determinants physical inactivity, air pollution (particulate matter <2.5 \u03bcm) and traffic accidents. RESULTS: Obtainment of the proposed increase in cycling could reduce the burden of disease in the study population by 19.5 DALY annually. This overall effect comprised a reduction in the burden of disease from health outcomes associated with physical inactivity (76.0 DALY) and an increase in the burden of disease from outcomes associated with air pollution and traffic accidents (5.4 and 51.2 DALY, respectively). CONCLUSION: This study illustrates how quantitative Health Impact Assessment can help clarify potential effects of policies: increased cycling involves opposing effects from different outcomes but with the overall health effect being positive. This result illustrates the importance of designing policies that promote the health benefits and minimise the health risks related to cycling."
+    },
+    {
+      "id": "W2395893776",
+      "title": "Safety in numbers for cyclists\u2014conclusions from a multidisciplinary study of seasonal change in interplay and conflicts",
+      "abstract": "In many European countries, it is a political goal that future growth in local travel should be absorbed by sustainable transport modes. Concerns that increased walking and cycling produce more accidents have been countered by the \"safety in numbers\" (SiN) argument. According to SiN, the more walkers/cyclists there are in a population, the lower their risk. SiN has been demonstrated in cross sectional and longitudinal studies, but the mechanisms behind the effect have yet to be proven. Previous studies have mostly relied on register data. The current study, carried out in 2013 and 2014 tests the existence of this effect in a more controlled manner. This is achieved through the use of three data sets: (1) roadside survey data with cyclists, pedestrians and car drivers from Oslo carried out at three time points in the cycling season (2) a panel study covering the same time period, and (3) video observations at four different locations in Oslo. By exploiting the natural seasonal variation in cycling frequency, and by using a repeated measures design we can further control for other factors suggested to lie behind the SiN mechanism, such as differences in infrastructure and traffic culture. The results suggest that bicyclists experience a short term Safety in Numbers effect through the season. Each individual cyclist experiences fewer occasions of being overlooked by cars and fewer safety critical situations (near-misses). Video observation data confirm this pattern. However, the SiN effect seems to be countered by another mechanism taking place at the same time: the influx of inexperienced and risk-taking cyclists through the season. Thus car drivers and pedestrians also report to find themselves being surprised by cyclists in traffic late in the season."
+    },
+    {
+      "id": "W2768074414",
+      "title": "Determinants of pedestrian and bicyclist crash severity by party at fault in San Francisco, CA",
+      "abstract": null
+    },
+    {
+      "id": "W2034618239",
+      "title": "Bicycle helmets \u2013 A case of risk compensation?",
+      "abstract": null
+    },
+    {
+      "id": "W2530248975",
+      "title": "Bicycle Use and Cyclist Safety Following Boston\u2019s Bicycle Infrastructure Expansion, 2009\u20132012",
+      "abstract": "OBJECTIVES: To evaluate changes in bicycle use and cyclist safety in Boston, Massachusetts, following the rapid expansion of its bicycle infrastructure between 2007 and 2014. METHODS: We measured bicycle lane mileage, a surrogate for bicycle infrastructure expansion, and quantified total estimated number of commuters. In addition, we calculated the number of reported bicycle accidents from 2009 to 2012. Bicycle accident and injury trends over time were assessed via generalized linear models. Multivariable logistic regression was used to examine factors associated with bicycle injuries. RESULTS: Boston increased its total bicycle lane mileage from 0.034 miles in 2007 to 92.2 miles in 2014 (P < .001). The percentage of bicycle commuters increased from 0.9% in 2005 to 2.4% in 2014 (P = .002) and the total percentage of bicycle accidents involving injuries diminished significantly, from 82.7% in 2009 to 74.6% in 2012. The multivariable logistic regression analysis showed that for every 1-year increase in time from 2009 to 2012, there was a 14% reduction in the odds of being injured in an accident. CONCLUSIONS: The expansion of Boston's bicycle infrastructure was associated with increases in both bicycle use and cyclist safety."
+    },
+    {
+      "id": "W2890782500",
+      "title": "Active Mobility: Bringing Together Transport Planning, Urban Planning, and Public Health",
+      "abstract": null
+    },
+    {
+      "id": "W1554680064",
+      "title": "Cycling and health: an opportunity for positive change?",
+      "abstract": null
+    },
+    {
+      "id": "W1988247813",
+      "title": "Extended prediction models for crashes at roundabouts",
+      "abstract": null
+    },
+    {
+      "id": "W2051417002",
+      "title": "Personal and Environmental Characteristics Associated with Choice of Active Transport Modes versus Car Use for Different Trip Purposes of Trips up to 7.5 Kilometers in The Netherlands",
+      "abstract": "INTRODUCTION: This explorative study examines personal and neighbourhood characteristics associated with short-distance trips made by car, bicycle or walking in order to identify target groups for future interventions. METHODS: Data were derived from 'Mobility Research Netherlands (2004-2009; MON)', a dataset including information regarding trips made by household members (n = \u00b153,000 respondents annually). Using postal codes of household addresses, MON data were enriched with data on neighbourhood typologies. Multilevel logistic modelling was used to calculate odds ratio (OR) of active transport versus car use associated with four different trip purposes (shopping (reference), commuting, taking or bringing persons or sports). A total of 277,292 short distance trips made by 102,885 persons were included in analyses. RESULTS: Compared to women shopping, women less often take active transport to sports clubs (OR = 0.88) and men less often take active transport for shopping (OR = 0.92), or for bringing or taking persons (OR = 0.76). Those aged 25-34 years (OR = 0.83) and 35-44 years (OR = 0.96) were more likely to use active transport for taking or bringing persons than persons belonging to the other age groups (relative to trips made for shopping by those 65 years or over). A higher use of active transport modes by persons with an university or college degree was found and particularly persons living in urban-centre neighbourhoods were likely to use active transport modes. CONCLUSION: IN DEVELOPING POLICIES PROMOTING A MODE SHIFT SPECIAL ATTENTION SHOULD BE GIVEN TO THE FOLLOWING GROUPS: a) men making short distance trips for taking or bringing persons, b) women making short distance trips to sport facilities, c) persons belonging to the age groups of 25-44 years of age, d) Persons with a primary school or lower general secondary education degree and persons with a high school or secondary school degree and e) persons living in rural or urban-green neighbourhoods."
+    },
+    {
+      "id": "W2171706342",
+      "title": "Who are Londoners on Bikes and what do they want? Negotiating identity and issue definition in a \u2018pop-up\u2019 cycle campaign",
+      "abstract": null
+    },
+    {
+      "id": "W2507427216",
+      "title": "Evaluating the impact of bike network indicators on cyclist safety using macro-level collision prediction models",
+      "abstract": null
+    },
+    {
+      "id": "W2910709990",
+      "title": "Bicycle train intermodality: Effects of demography, station characteristics and the built environment",
+      "abstract": null
+    },
+    {
+      "id": "W2019130135",
+      "title": "When may road fatalities start to decrease?",
+      "abstract": null
+    },
+    {
+      "id": "W2795337062",
+      "title": "The effects of roadway and built environment characteristics on pedestrian fatality risk: A national assessment at the neighborhood scale",
+      "abstract": null
+    },
+    {
+      "id": "W1966029349",
+      "title": "A naturalistic study of commuter cyclists in the greater Stockholm area",
+      "abstract": null
+    },
+    {
+      "id": "W2105576583",
+      "title": "Severity of urban cycling injuries and the relationship with personal, trip, route and crash characteristics: analyses using four severity metrics",
+      "abstract": "OBJECTIVE: To examine the relationship between cycling injury severity and personal, trip, route and crash characteristics. METHODS: Data from a previous study of injury risk, conducted in Toronto and Vancouver, Canada, were used to classify injury severity using four metrics: (1) did not continue trip by bike; (2) transported to hospital by ambulance; (3) admitted to hospital; and (4) Canadian Triage and Acuity Scale (CTAS). Multiple logistic regression was used to examine associations with personal, trip, route and crash characteristics. RESULTS: Of 683 adults injured while cycling, 528 did not continue their trip by bike, 251 were transported by ambulance and 60 were admitted to hospital for further treatment. Treatment urgencies included 75 as CTAS=1 or 2 (most medically urgent), 284 as CTAS=3, and 320 as CTAS=4 or 5 (least medically urgent). Older age and collision with a motor vehicle were consistently associated with increased severity in all four metrics and statistically significant in three each (both variables with ambulance transport and CTAS; age with hospital admission; and motor vehicle collision with did not continue by bike). Other factors were consistently associated with more severe injuries, but statistically significant in one metric each: downhill grades; higher motor vehicle speeds; sidewalks (these significant for ambulance transport); multiuse paths and local streets (both significant for hospital admission). CONCLUSIONS: In two of Canada's largest cities, about one-third of the bicycle crashes were collisions with motor vehicles and the resulting injuries were more severe than in other crash circumstances, underscoring the importance of separating cyclists from motor vehicle traffic. Our results also suggest that bicycling injury severity and injury risk would be reduced on facilities that minimise slopes, have lower vehicle speeds, and that are designed for bicycling rather than shared with pedestrians."
+    },
+    {
+      "id": "W2514507453",
+      "title": "Association between intersection characteristics and perceived crash risk among school-aged children",
+      "abstract": null
+    },
+    {
+      "id": "W2137532576",
+      "title": "Does more cycling also reduce the risk of single-bicycle crashes?",
+      "abstract": "OBJECTIVE: This paper examines the relationship between the amount of bicycle use and the number of single-bicycle crashes (ie, only one cyclist involved) in Dutch municipalities. Previous research has focused on crashes between bicycles and motor vehicles; however, most cyclists admitted to hospital are victims of single-bicycle crashes. METHODS: This correlational study used three data sets which included data relating to single-bicycle crashes and kilometres travelled by bicycle. Negative binomial regression was used to compare the amount of bicycling with the number of injuries incurred in single-bicycle crashes in Dutch municipalities. RESULTS: The likelihood of single-bicycle crashes varied inversely with the level of bicycle use. The exponent for the change in the number of single-bicycle crashes in response to changes in bicycle volumes was <1 in all analyses (ie, the increase in the number of single-bicycle crashes in a given municipality is proportionally less than the increase in the number of bicycle kilometres travelled by its inhabitants). The value was reduced in analyses of single-bicycle crashes with more severe injuries. CONCLUSIONS: Cyclists are less likely to be involved in a severe single-bicycle crash in municipalities with a high amount of cycling. Given the large numbers of patients admitted to hospital as a result of single-bicycle crashes, it is important to include the risks of these in road safety and health effect evaluations, and to take into account the non-linearity of the relationship between single-bicycle crashes and bicycle use if road safety measures are to affect the level of bicycle use."
+    },
+    {
+      "id": "W2174314217",
+      "title": "Physical Activity through Sustainable Transport Approaches (PASTA): protocol for a multi-centre, longitudinal study",
+      "abstract": "BACKGROUND: Physical inactivity is one of the leading risk factors for non-communicable diseases, yet many are not sufficiently active. The Physical Activity through Sustainable Transport Approaches (PASTA) study aims to better understand active mobility (walking and cycling for transport solely or in combination with public transport) as an innovative approach to integrate physical activity into individuals' everyday lives. The PASTA study will collect data of multiple cities in a longitudinal cohort design to study correlates of active mobility, its effect on overall physical activity, crash risk and exposure to traffic-related air pollution. METHODS/DESIGN: A set of online questionnaires incorporating gold standard approaches from the physical activity and transport fields have been developed, piloted and are now being deployed in a longitudinal study in seven European cities (Antwerp, Barcelona, London, Oerebro, Rome, Vienna, Zurich). In total, 14000 adults are being recruited (2000 in each city). A first questionnaire collects baseline information; follow-up questionnaires sent every 13 days collect prospective data on travel behaviour, levels of physical activity and traffic safety incidents. Self-reported data will be validated with objective data in subsamples using conventional and novel methods. Accelerometers, GPS and tracking apps record routes and activity. Air pollution and physical activity are measured to study their combined effects on health biomarkers. Exposure-adjusted crash risks will be calculated for active modes, and crash location audits are performed to study the role of the built environment. Ethics committees in all seven cities have given independent approval for the study. DISCUSSION: The PASTA study collects a wealth of subjective and objective data on active mobility and physical activity. This will allow the investigation of numerous correlates of active mobility and physical activity using a data set that advances previous efforts in its richness, geographical coverage and comprehensiveness. Results will inform new health impact assessment models and support efforts to promote and facilitate active mobility in cities."
+    },
+    {
+      "id": "W2895537628",
+      "title": "Bayesian approach to model pedestrian crashes at signalized intersections with measurement errors in exposure",
+      "abstract": null
+    }
+  ]
+}

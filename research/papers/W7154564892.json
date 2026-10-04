@@ -1,0 +1,35 @@
+{
+  "id": "W7154564892",
+  "title": "CRDT Based Peer To Peer Collaboration Editor",
+  "doi": "https://doi.org/10.5281/zenodo.19615257",
+  "publication_date": "2026-01-01",
+  "publication_year": 2026,
+  "type": "article",
+  "cited_by_count": 0,
+  "authors": [
+    "Abhinav Anil",
+    "Rajan Patel",
+    "Nilay Pravin Sabnis",
+    "Mrs. Geetha C"
+  ],
+  "venue": "Zenodo (CERN European Organization for Nuclear Research)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://doi.org/10.5281/zenodo.19615257",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": false,
+    "grobid_xml": false
+  },
+  "content_urls": null,
+  "abstract": "The design of this product presents a fully featured collaborative document editor built using Conflict-free Repli-cated Data Types (CRDTs) and peer-to-peer communication over WebRTC. The system leverages Y.js as its core synchro-nization engine to enable real-time, decentralized collaboration without reliance on a centralized server for document state management. Traditional collaborative editors often depend on Operational Transformation (OT) and centralized architectures to maintain consistency. In contrast, this implementation adopts a CRDT-based model, allowing each client to maintain a local replica of the document while guaranteeing eventual consistency across all peers. By integrating WebRTC for direct peer-to-peer communication, the system reduces latency, improves scalability, and enhances resilience against single points of failure. The editor supports rich-text formatting, concurrent multi-user editing, cursor awareness, offline editing with au-tomatic synchronization upon reconnection, and conflict-free merging of changes. Y.js manages shared data structures and efficiently propagates incremental updates between peers. The WebRTC layer establishes secure data channels for real-time message exchange, enabling seamless synchronization across distributed clients. Key challenges addressed include peer dis-covery, network reliability, conflict resolution in highly concur-rent environments, and maintaining low-latency performance at scale. The architecture separates document state management, networking, and user interface layers to ensure modularity and extensibility. This method demonstrates how CRDTs combined with modern web technologies can deliver a scalable, decentral-ized alternative to traditional collaborative editing systems. The resulting platform provides strong consistency guarantees, high performance, and fault tolerance, making it suitable for real-time document collaboration in distributed and intermittently connected environments.",
+  "topics": [
+    "Peer-to-Peer Network Technologies",
+    "Multimedia Communication and Technology",
+    "Cloud Computing and Remote Desktop Technologies"
+  ],
+  "references": [],
+  "cited_by": []
+}

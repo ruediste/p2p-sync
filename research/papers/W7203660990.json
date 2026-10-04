@@ -1,0 +1,35 @@
+{
+  "id": "W7203660990",
+  "title": "NeuroLab OS: A local-first software environment for scientist-reviewed neural time-series modelling and provenance-aware simulation",
+  "doi": "https://doi.org/10.21203/rs.3.rs-10719973/v1",
+  "publication_date": "2026-08-18",
+  "publication_year": 2026,
+  "type": "preprint",
+  "cited_by_count": 0,
+  "authors": [
+    "peiman  jp jannatipour"
+  ],
+  "venue": "Research Square",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://www.researchsquare.com/article/rs-10719973/latest.pdf",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W7203660990.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W7203660990.grobid-xml"
+  },
+  "abstract": null,
+  "topics": [
+    "Scientific Computing and Data Management",
+    "Neural dynamics and brain function",
+    "Cell Image Analysis Techniques"
+  ],
+  "references": [],
+  "cited_by": []
+}

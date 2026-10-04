@@ -1,0 +1,35 @@
+{
+  "id": "W7165143518",
+  "title": "A Composable CRDT Layer for Byzantine-Resilient Deterministic Reconstruction",
+  "doi": "https://doi.org/10.48550/arxiv.2606.18966",
+  "publication_date": "2026-06-17",
+  "publication_year": 2026,
+  "type": "preprint",
+  "cited_by_count": 0,
+  "authors": [
+    "Amos Brocco"
+  ],
+  "venue": "arXiv (Cornell University)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://arxiv.org/pdf/2606.18966",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W7165143518.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W7165143518.grobid-xml"
+  },
+  "abstract": "Conflict-free Replicated Data Types (CRDTs) ensure Strong Eventual Consistency without coordination, but typically assume benign participants and rely on validation or exclusion to handle Byzantine behavior. We address this problem through deterministic state reconstruction: rather than deciding which updates are admissible, all accepted updates are incorporated, while only a subset contributes to the reconstructed state. We instantiate this approach in Melda, a non-intrusive delta-state CRDT for JSON documents, and show that its reconstruction model guarantees convergence even under arbitrary update injection: adversarial updates are either structurally rejected or treated as inputs to the reconstruction process. We formalize this model and prove that replicas deriving state from the same set of updates cannot diverge despite equivocation, omission, or message reordering. We further show that authentication, authorization, and confidentiality can be layered without affecting convergence. Overall, this approach suggests that Byzantine tolerance can be achieved by decoupling update propagation from state derivation, allowing agreement on updates to be handled independently by external dissemination or consensus mechanisms.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Security and Verification in Computing",
+    "Cryptography and Data Security"
+  ],
+  "references": [],
+  "cited_by": []
+}

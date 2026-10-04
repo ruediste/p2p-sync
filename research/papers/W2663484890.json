@@ -1,0 +1,48 @@
+{
+  "id": "W2663484890",
+  "title": "Data Replication in P2P Systems",
+  "doi": null,
+  "publication_date": "2007-05-24",
+  "publication_year": 2007,
+  "type": "dissertation",
+  "cited_by_count": 3,
+  "authors": [
+    "Vidal Martins"
+  ],
+  "venue": "HAL (Le Centre pour la Communication Scientifique Directe)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://theses.hal.science/tel-00481828v1/file/Thesis_Vidal.pdf",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2663484890.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2663484890.grobid-xml"
+  },
+  "abstract": "This thesis addresses data replication in P2P systems. Its approach is motivated by the advances in distributed collaborative applications and their specific needs in terms of data replication, data consistency, scalability, and high availability. Using the example of a P2P Wiki application, we show that the replication requirements of collaborative applications are: high-level of autonomy, multi-master replication, semantic conflict detection and resolution, eventual consistency among replicas, weak network assumptions, and data type independence. Although optimistic replication addresses most of these requirements, existing solutions are unsuitable for P2P networks since they are either centralized or do not take into account the network limitations. On the other hand, existing P2P replication solutions do not satisfy all such requirements simultaneously. In particular, none of them provide eventual consistency among replicas along with weak network assumptions. This thesis aims to provide a scalable and highly available reconciliation solution for P2P collaborative applications by developing a reconciliation protocol that assures eventual consistency among replicas and takes into account data access costs. This goal is accomplished in five steps. First, we present existing optimistic replication solutions and P2P replication strategies and analyze their advantages and disadvantages. This analysis allows us to identify the functionalities and properties that our solution should provide. Second, we design a replication service for APPA (Atlas Peer-to-Peer Architecture). In a third step, we elaborate an algorithm for distributed semantic reconciliation called DSR, which can be executed in different distributed environments (e.g. cluster, Grid, P2P). A fourth step is to turn DSR into a reconciliation protocol for P2P networks called P2P-reconciler. Finally, the fifth step produces a new version of P2P-reconciler, called P2P-reconciler-TA, which exploits topology-aware P2P networks in order to improve reconciliation performance. We validated our solutions and evaluated their performance through experimentation and simulation. The results showed that our replication solution yields high availability, excellent scalability, with acceptable performance and limited overhead.",
+  "topics": [
+    "Data Quality and Management",
+    "Peer-to-Peer Network Technologies",
+    "Semantic Web and Ontologies"
+  ],
+  "references": [],
+  "cited_by": [
+    {
+      "id": "W2045700378",
+      "title": "Scalable and topology-aware reconciliation on P2P networks"
+    },
+    {
+      "id": "W2099025287",
+      "title": "Brief Announcement: A Note on Replication of Documents"
+    },
+    {
+      "id": "W2625729024",
+      "title": "Testing and Validation of Peer-to-peer Systems"
+    }
+  ]
+}

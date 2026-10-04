@@ -1,0 +1,1167 @@
+{
+  "id": "W2295541535",
+  "title": "Optimistic replication",
+  "doi": "https://doi.org/10.1145/1057977.1057980",
+  "publication_date": "2005-03-01",
+  "publication_year": 2005,
+  "type": "article",
+  "cited_by_count": 739,
+  "authors": [
+    "Yasushi Sait\u014d",
+    "Marc Shapiro"
+  ],
+  "venue": "ACM Computing Surveys",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://inria.hal.science/hal-01248208",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": false,
+    "pdf": false
+  },
+  "content_urls": null,
+  "abstract": "Data replication is a key technology in distributed systems that enables higher availability and performance. This article surveys optimistic replication algorithms. They allow replica contents to diverge in the short term to support concurrent work practices and tolerate failures in low-quality communication links. The importance of such techniques is increasing as collaboration through wide-area and mobile networks becomes popular.Optimistic replication deploys algorithms not seen in traditional \u201cpessimistic\u201d systems. Instead of synchronous replica coordination, an optimistic algorithm propagates changes in the background, discovers conflicts after they happen, and reaches agreement on the final contents incrementally.We explore the solution space for optimistic replication algorithms. This article identifies key challenges facing optimistic replication systems---ordering operations, detecting and resolving conflicts, propagating changes efficiently, and bounding replica divergence---and provides a comprehensive survey of techniques developed for addressing these challenges.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Parallel Computing and Optimization Techniques",
+    "Distributed and Parallel Computing Systems"
+  ],
+  "references": [
+    "https://openalex.org/W125650716",
+    "https://openalex.org/W132337706",
+    "https://openalex.org/W147895047",
+    "https://openalex.org/W182346126",
+    "https://openalex.org/W205319591",
+    "https://openalex.org/W635811254",
+    "https://openalex.org/W1490833583",
+    "https://openalex.org/W1502870524",
+    "https://openalex.org/W1515932031",
+    "https://openalex.org/W1527961683",
+    "https://openalex.org/W1530666332",
+    "https://openalex.org/W1535062612",
+    "https://openalex.org/W1545155892",
+    "https://openalex.org/W1560512596",
+    "https://openalex.org/W1578968375",
+    "https://openalex.org/W1608539452",
+    "https://openalex.org/W1652742168",
+    "https://openalex.org/W1779735989",
+    "https://openalex.org/W1818099451",
+    "https://openalex.org/W1855065956",
+    "https://openalex.org/W1872975934",
+    "https://openalex.org/W1917641734",
+    "https://openalex.org/W1948792560",
+    "https://openalex.org/W1963734157",
+    "https://openalex.org/W1967141605",
+    "https://openalex.org/W1968064228",
+    "https://openalex.org/W1975637639",
+    "https://openalex.org/W1975950716",
+    "https://openalex.org/W1980446225",
+    "https://openalex.org/W1987272746",
+    "https://openalex.org/W1991099580",
+    "https://openalex.org/W1993525802",
+    "https://openalex.org/W1993865637",
+    "https://openalex.org/W1996958808",
+    "https://openalex.org/W1999255105",
+    "https://openalex.org/W2001803004",
+    "https://openalex.org/W2006007456",
+    "https://openalex.org/W2007415020",
+    "https://openalex.org/W2019957811",
+    "https://openalex.org/W2020299987",
+    "https://openalex.org/W2035300188",
+    "https://openalex.org/W2035362408",
+    "https://openalex.org/W2038562061",
+    "https://openalex.org/W2039812194",
+    "https://openalex.org/W2043671329",
+    "https://openalex.org/W2050731094",
+    "https://openalex.org/W2055101374",
+    "https://openalex.org/W2056980397",
+    "https://openalex.org/W2058322021",
+    "https://openalex.org/W2059432328",
+    "https://openalex.org/W2061325653",
+    "https://openalex.org/W2061644848",
+    "https://openalex.org/W2064360543",
+    "https://openalex.org/W2070834743",
+    "https://openalex.org/W2071596433",
+    "https://openalex.org/W2071933194",
+    "https://openalex.org/W2072730741",
+    "https://openalex.org/W2073669509",
+    "https://openalex.org/W2074250816",
+    "https://openalex.org/W2078775767",
+    "https://openalex.org/W2082002418",
+    "https://openalex.org/W2085631457",
+    "https://openalex.org/W2097607609",
+    "https://openalex.org/W2098111776",
+    "https://openalex.org/W2101939036",
+    "https://openalex.org/W2104483571",
+    "https://openalex.org/W2110568694",
+    "https://openalex.org/W2110765100",
+    "https://openalex.org/W2111427271",
+    "https://openalex.org/W2111586962",
+    "https://openalex.org/W2112355842",
+    "https://openalex.org/W2115806861",
+    "https://openalex.org/W2117260615",
+    "https://openalex.org/W2117442303",
+    "https://openalex.org/W2118153508",
+    "https://openalex.org/W2118856838",
+    "https://openalex.org/W2118871086",
+    "https://openalex.org/W2119636671",
+    "https://openalex.org/W2122269925",
+    "https://openalex.org/W2124074197",
+    "https://openalex.org/W2125011947",
+    "https://openalex.org/W2125374545",
+    "https://openalex.org/W2125581798",
+    "https://openalex.org/W2125930899",
+    "https://openalex.org/W2126356880",
+    "https://openalex.org/W2127270326",
+    "https://openalex.org/W2128258320",
+    "https://openalex.org/W2133128142",
+    "https://openalex.org/W2133227863",
+    "https://openalex.org/W2133943294",
+    "https://openalex.org/W2135044397",
+    "https://openalex.org/W2137286918",
+    "https://openalex.org/W2141730834",
+    "https://openalex.org/W2142423295",
+    "https://openalex.org/W2142849519",
+    "https://openalex.org/W2143229717",
+    "https://openalex.org/W2145220267",
+    "https://openalex.org/W2145388050",
+    "https://openalex.org/W2147865129",
+    "https://openalex.org/W2148036333",
+    "https://openalex.org/W2149649316",
+    "https://openalex.org/W2151943351",
+    "https://openalex.org/W2153531297",
+    "https://openalex.org/W2154193287",
+    "https://openalex.org/W2154833213",
+    "https://openalex.org/W2154837369",
+    "https://openalex.org/W2156027558",
+    "https://openalex.org/W2158145873",
+    "https://openalex.org/W2164215197",
+    "https://openalex.org/W2169600013",
+    "https://openalex.org/W2171979270",
+    "https://openalex.org/W2172408677",
+    "https://openalex.org/W2247585028",
+    "https://openalex.org/W2296427920",
+    "https://openalex.org/W2338603254",
+    "https://openalex.org/W2603514790",
+    "https://openalex.org/W2612949623",
+    "https://openalex.org/W2672228231",
+    "https://openalex.org/W2796041158",
+    "https://openalex.org/W3137220996",
+    "https://openalex.org/W4205883304",
+    "https://openalex.org/W4213362721",
+    "https://openalex.org/W4236601696",
+    "https://openalex.org/W4236824789",
+    "https://openalex.org/W4242865030",
+    "https://openalex.org/W4243255773",
+    "https://openalex.org/W4246829777",
+    "https://openalex.org/W4251434705",
+    "https://openalex.org/W4253493261",
+    "https://openalex.org/W4254126235",
+    "https://openalex.org/W4285719527",
+    "https://openalex.org/W6906355099"
+  ],
+  "cited_by": [
+    {
+      "id": "W1516319412",
+      "title": "Conflict-Free Replicated Data Types",
+      "abstract": null
+    },
+    {
+      "id": "W2170803695",
+      "title": "Logically centralized?",
+      "abstract": "Software Defined Networks (SDN) give network designers freedom to refactor the network control plane. One core benefit of SDN is that it enables the network control logic to be designed and operated on a global network view, as though it were a centralized application, rather than a distributed system - logically centralized. Regardless of this abstraction, control plane state and logic must inevitably be physically distributed to achieve responsiveness, reliability, and scalability goals. Consequently, we ask: \"How does distributed SDN state impact the performance of a logically centralized control application?\""
+    },
+    {
+      "id": "W2612759782",
+      "title": "Amazon Aurora",
+      "abstract": "Amazon Aurora is a relational database service for OLTP workloads offered as part of Amazon Web Services (AWS). In this paper, we describe the architecture of Aurora and the design considerations leading to that architecture. We believe the central constraint in high throughput data processing has moved from compute and storage to the network. Aurora brings a novel architecture to the relational database to address this constraint, most notably by pushing redo processing to a multi-tenant scale-out storage service, purpose-built for Aurora. We describe how doing so not only reduces network traffic, but also allows for fast crash recovery, failovers to replicas without loss of data, and fault-tolerant, self-healing storage. We then describe how Aurora achieves consensus on durable state across numerous storage nodes using an efficient asynchronous scheme, avoiding expensive and chatty recovery protocols. Finally, having operated Aurora as a production service for over 18 months, we share the lessons we have learnt from our customers on what modern cloud applications expect from databases."
+    },
+    {
+      "id": "W1916848204",
+      "title": "Making Geo-Replicated Systems Fast as Possible, Consistent when Necessary",
+      "abstract": "Abstract: Online services distribute and replicate state across geographically diverse data centers and direct user requests to the closest or least loaded site. While effectively ensuring low latency responses, this approach is at odds with maintaining cross-site consistency. We make three contributions to address this tension. First, we propose RedBlue consistency, which enables blue operations to be fast (and eventually consistent) while the remaining red operations are strongly consistent (and slow). Second, to make use of fast operation whenever possible and only resort to strong consistency when needed, we identify conditions delineating when operations can be blue and must be red. Third, we introduce a method that increases the space of potential blue operations by breaking them into separate generator and shadow phases. We built a coordination infrastructure called Gemini that offers RedBlue consistency, and we report on our experience modifying the TPC-W and RU-BiS benchmarks and an online social network to use Gemini. Our experimental results show that RedBlue consistency provides substantial performance gains without sacrificing consistency. 1"
+    },
+    {
+      "id": "W2151541805",
+      "title": "Data consistency for P2P collaborative editing",
+      "abstract": "Peer-to-peer (P2P) networks are very efficient for distributing content. We want to use this potential to allow not only distribution but collaborative editing of this content. Existing collaborative editing systems are centralised or depend on the number of sites. Such systems cannot scale when deployed on P2P networks. In this paper, we propose a new model for building a collaborative editing system. This model is fully decentralised and does not depend on the number of sites."
+    },
+    {
+      "id": "W1601925768",
+      "title": "Highly available transactions",
+      "abstract": "To minimize network latency and remain online during server failures and network partitions, many modern distributed data storage systems eschew transactional functionality, which provides strong semantic guarantees for groups of multiple operations over multiple data items. In this work, we consider the problem of providing Highly Available Transactions (HATs): transactional guarantees that do not suffer unavailability during system partitions or incur high network latency. We introduce a taxonomy of highly available systems and analyze existing ACID isolation and distributed data consistency guarantees to identify which can and cannot be achieved in HAT systems. This unifies the literature on weak transactional isolation, replica consistency, and highly available systems. We analytically and experimentally quantify the availability and performance benefits of HATs---often two to three orders of magnitude over wide-area networks---and discuss their necessary semantic compromises."
+    },
+    {
+      "id": "W2209943643",
+      "title": "Coordination avoidance in database systems",
+      "abstract": "Minimizing coordination, or blocking communication between concurrently executing operations, is key to maximizing scalability, availability, and high performance in database systems. However, uninhibited coordination-free execution can compromise application correctness, or consistency. When is coordination necessary for correctness? The classic use of serializable transactions is sufficient to maintain correctness but is not necessary for all applications, sacrificing potential scalability. In this paper, we develop a formal framework, invariant confluence, that determines whether an application requires coordination for correct execution. By operating on application-level invariants over database states (e.g., integrity constraints), invariant confluence analysis provides a necessary and sufficient condition for safe, coordination-free execution. When programmers specify their application invariants, this analysis allows databases to coordinate only when anomalies that might violate invariants are possible. We analyze the invariant confluence of common invariants and operations from real-world database systems (i.e., integrity constraints) and applications and show that many are invariant confluent and therefore achievable without coordination. We apply these results to a proof-of-concept coordination-avoiding database prototype and demonstrate sizable performance gains compared to serializable execution, notably a 25-fold improvement over prior TPC-C New-Order performance on a 200 server cluster."
+    },
+    {
+      "id": "W2082133002",
+      "title": "Eventual consistency today",
+      "abstract": "How can applications be built on eventually consistent infrastructure given no guarantee of safety?"
+    },
+    {
+      "id": "W2008333370",
+      "title": "Fault-tolerance in the borealis distributed stream processing system",
+      "abstract": "Over the past few years, Stream Processing Engines (SPEs) have emerged as a new class of software systems, enabling low latency processing of streams of data arriving at high rates. As SPEs mature and get used in monitoring applications that must continuously run (e.g., in network security monitoring), a significant challenge arises: SPEs must be able to handle various software and hardware faults that occur, masking them to provide high availability (HA). In this article, we develop, implement, and evaluate DPC (Delay, Process, and Correct), a protocol to handle crash failures of processing nodes and network failures in a distributed SPE. Like previous approaches to HA, DPC uses replication and masks many types of node and network failures. In the presence of network partitions, the designer of any replication system faces a choice between providing availability or data consistency across the replicas. In DPC, this choice is made explicit: the user specifies an availability bound (no result should be delayed by more than a specified delay threshold even under failure if the corresponding input is available), and DPC attempts to minimize the resulting inconsistency between replicas (not all of which might have seen the input data) while meeting the given delay threshold. Although conceptually simple, the DPC protocol tolerates the occurrence of multiple simultaneous failures as well as any further failures that occur during recovery. This article describes DPC and its implementation in the Borealis SPE. We show that DPC enables a distributed SPE to maintain low-latency processing at all times, while also achieving eventual consistency, where applications eventually receive the complete and correct output streams. Furthermore, we show that, independent of system size and failure location, it is possible to handle failures almost up-to the user-specified bound in a manner that meets the required availability without introducing any inconsistency."
+    },
+    {
+      "id": "W2085422792",
+      "title": "Building consistent transactions with inconsistent replication",
+      "abstract": "Application programmers increasingly prefer distributed storage systems with strong consistency and distributed transactions (e.g., Google's Spanner) for their strong guarantees and ease of use. Unfortunately, existing transactional storage systems are expensive to use -- in part because they require costly replication protocols, like Paxos, for fault tolerance. In this paper, we present a new approach that makes transactional storage systems more affordable: we eliminate consistency from the replication protocol while still providing distributed transactions with strong consistency to applications."
+    },
+    {
+      "id": "W2057583008",
+      "title": "Data Consistency Properties and the Trade-offs in Commercial Cloud Storages: the Consumers' Perspective",
+      "abstract": "A new class of data storage systems, called NoSQL (Not Only SQL), have emerged to complement traditional database systems, with rejection of general ACID transactions as one common feature. Different platforms, and indeed different primitives within one NoSQL platform, can offer various consistency properties, from Eventual Consistency to single-entity ACID. For the platform provider, weaker consistency should allow better availability, lower latency, and other benefits. This paper investigates what consumers observe of the consistency and performance properties of various offerings. We find that many platforms seem in practice to offer more consistency than they promise; we also find cases where the platform offers consumers a choice between stronger and weaker consistency, but there is no observed benefit from accepting weaker consistency properties. 1."
+    },
+    {
+      "id": "W2134308710",
+      "title": "Replicated abstract data types: Building blocks for collaborative applications",
+      "abstract": null
+    },
+    {
+      "id": "W2149864282",
+      "title": "Detecting model inconsistency through operation-based model construction",
+      "abstract": "Nowadays, large-scale industrial software systems may involve hundreds of developers working on hundreds of different but related models representing parts of the same system specification. Detecting and resolving structural inconsistencies between these models is then critical. In this article we propose to represent models by sequences of elementary construction operations, rather than by the set of model elements they contain. Structural and methodological consistency rules can then be expressed uniformly as logical constraints on such sequences. Our approach is meta-model independent, allowing us to deal with consistency between different models whatever their kind. We have validated our approach by building a Prolog engine that detects violations of structural and methodological constraints specified on UML 2.1 models and requirement models. This engine has been integrated into two contemporary UML-based modelling environments, Eclipse EMF and Rational Software Architect (RSA)."
+    },
+    {
+      "id": "W2170849273",
+      "title": "Logoot: A Scalable Optimistic Replication Algorithm for Collaborative Editing on P2P Networks",
+      "abstract": "Massive collaborative editing becomes a reality through leading projects such as Wikipedia. This massive collaboration is currently supported with a costly central service. In order to avoid such costs, we aim to provide a peer-to-peer collaborative editing system. Existing approaches to build distributed collaborative editing systems either do not scale in terms of number of users or in terms of number of edits. We present the Logoot approach that scales in these both dimensions while ensuring causality, consistency and intention preservation criteria. We evaluate the Logoot approach and compare it to others using a corpus of all the edits applied on a set of the most edited and the biggest pages of Wikipedia."
+    },
+    {
+      "id": "W1983472973",
+      "title": "Replicated data consistency explained through baseball",
+      "abstract": "A broader class of consistency guarantees can, and perhaps should, be offered to clients that read shared data."
+    },
+    {
+      "id": "W2046654145",
+      "title": "Principles of Eventual Consistency",
+      "abstract": "In globally distributed systems, shared state is never perfect. When communication is neither fast nor reliable, we cannot achieve strong consistency, low latency, and availability at the same time. Unfortunately, abandoning strong consistency has wide ramifications. Eventual consistency, though attractive from a performance viewpoint, is challenging to understand and reason about, both for system architects and programmers. To provide robust abstractions, we need not just systems, but also principles: we need the ability to articulate what a consistency protocol is supposed to guarantee, and the ability to prove or refute such claims. In this tutorial, we carefully examine both the what and the how of consistency in distributed systems. First, we deconstruct consistency into individual guarantees relating the data type, the conflict resolution, and the ordering, and then reassemble them into a hierarchy of consistency models that starts with linearizability and gradually descends into sequential, causal, eventual, and quiescent consistency. Second, we present a collection of consistency protocols that illustrate common techniques, and include templates for implementations of arbitrary replicated data types that are fully available under partitions. Third, we demonstrate that our formalizations serve their purpose of enabling proofs and refutations, by proving both positive results (the correctness of the protocols) and a negative result (a version of the CAP theorem for sequential consistency)."
+    },
+    {
+      "id": "W137525769",
+      "title": "Hyder - A Transactional Record Manager for Shared Flash",
+      "abstract": "Hyder supports reads and writes on indexed records within classi-cal multi-step transactions. It is designed to run on a cluster of servers that have shared access to a large pool of network-addressable raw flash chips. The flash chips store the indexed records as a multiversion log-structured database. Log-structuring leverages the high random I/O rate of flash and automatically wear-levels it. Hyder uses a data-sharing architecture that scales out without partitioning the database or application. Each transac-tion executes on a snapshot, logs its updates in one record, and broadcasts the log record to all servers. Each server rolls forward the log against its locally-cached partial-copy of the last committed state, using optimistic concurrency control to determine whether each transaction commits. This paper explains the architecture of the overall system and its three main components: the log, the index, and the roll-forward algorithm. Simulations and prototype measurements are presented that show Hyder can scale out to support high transaction rates. 1."
+    },
+    {
+      "id": "W2186001977",
+      "title": "Consistency in Non-Transactional Distributed Storage Systems",
+      "abstract": "Over the years, different meanings have been associated with the wordconsistencyin the distributed systems community. While in the \u201980s \u201cconsistency\u201d typically meantstrong consistency, later defined also aslinearizability, in recent years, with the advent of highly available and scalable systems, the notion of \u201cconsistency\u201d has been at the same time both weakened and blurred. In this article, we aim to fill the void in the literature by providing a structured and comprehensive overview of different consistency notions that appeared in distributed systems, and in particularstoragesystems research, in the last four decades. We overview more than 50 different consistency notions, ranging from linearizability to eventual and weak consistency, defining precisely many of these, in particular where the previous definitions were ambiguous. We further provide a partial order among different consistency predicates, ordering them by their semantic \u201cstrength,\u201d which we believe will be useful in future research. Finally, we map the consistency semantics to different practical systems and research prototypes. The scope of this article is restricted to non-transactional semantics, that is, those that apply to single storage object operations. As such, our article complements the existing surveys done in the context of transactional, database consistency semantics."
+    },
+    {
+      "id": "W2147470852",
+      "title": "Making cloud intermediate data fault-tolerant",
+      "abstract": "Parallel dataflow programs generate enormous amounts of distributed data that are short-lived, yet are critical for completion of the job and for good run-time performance. We call this class of data as intermediate data. This paper is the first to address intermediate data as a first-class citizen, specifically targeting and minimizing the effect of run-time server failures on the availability of intermediate data, and thus on performance metrics such as job completion time. We propose new design techniques for a new storage system called ISS (Intermediate Storage System), implement these techniques within Hadoop, and experimentally evaluate the resulting system. Under no failure, the performance of Hadoop augmented with ISS (i.e., job completion time) turns out to be comparable to base Hadoop. Under a failure, Hadoop with ISS outperforms base Hadoop and incurs up to 18% overhead compared to base no-failure Hadoop, depending on the testbed setup."
+    },
+    {
+      "id": "W2772466107",
+      "title": "Data Storage Management in Cloud Environments",
+      "abstract": "Storage as a Service (StaaS) is a vital component of cloud computing by offering the vision of a virtually infinite pool of storage resources. It supports a variety of cloud-based data store classes in terms of availability, scalability, ACID (Atomicity, Consistency, Isolation, Durability) properties, data models, and price options. Application providers deploy these storage classes across different cloud-based data stores not only to tackle the challenges arising from reliance on a single cloud-based data store but also to obtain higher availability, lower response time, and more cost efficiency. Hence, in this article, we first discuss the key advantages and challenges of data-intensive applications deployed within and across cloud-based data stores. Then, we provide a comprehensive taxonomy that covers key aspects of cloud-based data store: data model, data dispersion, data consistency, data transaction service, and data management cost. Finally, we map various cloud-based data stores projects to our proposed taxonomy to validate the taxonomy and identify areas for future research."
+    },
+    {
+      "id": "W1484025826",
+      "title": "Web Data Management",
+      "abstract": "The Internet and World Wide Web have revolutionized access to information. Users now store information across multiple platforms from personal computers to smartphones and websites. As a consequence, data management concepts, methods and techniques are increasingly focused on distribution concerns. Now that information largely resides in the network, so do the tools that process this information. This book explains the foundations of XML with a focus on data distribution. It covers the many facets of distributed data management on the Web, such as description logics, that are already emerging in today's data integration applications and herald tomorrow's semantic Web. It also introduces the machinery used to manipulate the unprecedented amount of data collected on the Web. Several 'Putting into Practice' chapters describe detailed practical applications of the technologies and techniques. The book will serve as an introduction to the new, global, information systems for Web professionals and master's level courses."
+    },
+    {
+      "id": "W2141481407",
+      "title": "A Novel Cost-Effective Dynamic Data Replication Strategy for Reliability in Cloud Data Centres",
+      "abstract": "Nowadays, large-scale Cloud-based applications have put forward higher demand for storage ability of data centres. Data in the Cloud need to be stored with high efficiency and cost effectiveness while meeting the requirement of reliability. While in current Cloud systems, typical 3-replicas data replication strategies are applied for data reliability, in this paper we propose a novel cost-effective dynamic data replication strategy which facilitates an incremental replication method to reduce the storage cost and meet the data reliability requirement at the same time. This replication strategy works very well especially for data which are only used temporarily and/or have a relatively low reliability requirement. The simulation shows that our replication strategy for reliability can reduce the data storage cost in data centres substantially."
+    },
+    {
+      "id": "W2999181646",
+      "title": "Eventual Consistency Today: Limitations, Extensions, and Beyond",
+      "abstract": "In a July 2000 conference keynote, Eric Brewer, now VP of engineering at Google and a professor at the University of California, Berkeley, publicly postulated the CAP (consistency, availability, and partition tolerance) theorem, which would change the landscape of how distributed storage systems were architected. Brewer\u2019s conjecture--based on his experiences building infrastructure for some of the first Internet search engines at Inktomi--states that distributed systems requiring always-on, highly available operation cannot guarantee the illusion of coherent, consistent single-system operation in the presence of network partitions, which cut communication between active servers. Brewer\u2019s conjecture proved prescient: in the following decade, with the continued rise of large-scale Internet services, distributed-system architects frequently dropped \"strong\" guarantees in favor of weaker models--the most notable being eventual consistency."
+    },
+    {
+      "id": "W1771264736",
+      "title": "Cloud Types for Eventual Consistency",
+      "abstract": null
+    },
+    {
+      "id": "W2946936847",
+      "title": "Erlay",
+      "abstract": "Bitcoin is a top-ranked cryptocurrency that has experienced huge growth and survived numerous attacks. The protocols making up Bitcoin must therefore accommodate the growth of the network and ensure security."
+    },
+    {
+      "id": "W2402305308",
+      "title": "A dynamic, cost-aware, optimized data replication strategy for heterogeneous cloud data centers",
+      "abstract": null
+    },
+    {
+      "id": "W2131460078",
+      "title": "Eventually Consistent Transactions",
+      "abstract": null
+    },
+    {
+      "id": "W3000052962",
+      "title": "Peer-to-Peer-Based Social Networks: A Comprehensive Survey",
+      "abstract": "Abstract The use of online social networks, such as Facebook and Twitter, has grown at a phenomenal rate. These platforms offer services that support interactions via messaging, chatting or audio/video conferencing, and also sharing of content. Most, if not all, of these platforms use centralized computing systems; therefore, the control and management of the systems lies entirely in the hands of one provider, who must be trusted to treat the data and communication traces securely. As a zero-trust alternative, peer-to-peer (P2P) technologies promise to support end-to-end communication, uncompromising access control, anonymity and resilience against censorship and massive data leaks through misused trust. The goals of this survey are threefold. First, the survey elaborates the properties of P2P-based online social networks and defines the requirements for such (zero-trust) platforms. Second, it gives an exposition of the building blocks for P2P frameworks that allow the creation of such sophisticated and demanding applications, such as user/identity management, reliable data storage, secure communication, access control and general-purpose extensibility, which are not properly addressed in other P2P surveys. As a third point, it gives a comprehensive analysis of proposed P2P-based online social network applications, frameworks and architectures by exploring the technical details, inter-dependencies and maturity of these solutions."
+    },
+    {
+      "id": "W2554771217",
+      "title": "A string-wise CRDT algorithm for smart and large-scale collaborative editing systems",
+      "abstract": null
+    },
+    {
+      "id": "W4402369907",
+      "title": "Approaches to Conflict-free Replicated Data Types",
+      "abstract": "Conflict-free Replicated Data Types (CRDTs) allow optimistic replication in a principled way. Different replicas can proceed independently, being available even under network partitions and always converging deterministically: Replicas that have received the same updates will have equivalent state, even if received in different orders. After a historical tour of the evolution from sequential data types to CRDTs, we present in detail the two main approaches to CRDTs, operation-based and state-based, including two important variations, the pure operation-based and the delta-state based. Intended for prospective CRDT researchers and designers, this article provides solid coverage of the essential concepts, clarifying some misconceptions that frequently occur, but also presents some novel insights gained from considerable experience in designing both specific CRDTs and approaches to CRDTs."
+    },
+    {
+      "id": "W2141742398",
+      "title": "Fault-tolerance in the Borealis distributed stream processing system",
+      "abstract": "We present a replication-based approach to fault-tolerant distributed stream processing in the face of node failures, network failures, and network partitions. Our approach aims to reduce the degree of inconsistency in the system while guaranteeing that available inputs capable of being processed are processed within a specified time threshold. This threshold allows a user to trade availability for consistency: a larger time threshold decreases availability but limits inconsistency, while a smaller threshold increases availability but produces more inconsistent results based on partial data. In addition, when failures heal, our scheme corrects previously produced results, ensuring eventual consistency.Our scheme uses a data-serializing operator to ensure that all replicas process data in the same order, and thus remain consistent in the absence of failures. To regain consistency after a failure heals, we experimentally compare approaches based on checkpoint/redo and undo/redo techniques and illustrate the performance trade-offs between these schemes."
+    },
+    {
+      "id": "W2059723463",
+      "title": "Replication for web hosting systems",
+      "abstract": "Replication is a well-known technique to improve the accessibility of Web sites. It generally offers reduced client latencies and increases a site's availability. However, applying replication techniques is not trivial, and various Content Delivery Networks (CDNs) have been created to facilitate replication for digital content providers. The success of these CDNs has triggered further research efforts into developing advanced Web replica hosting systems. These are systems that host the documents of a website and manage replication automatically. To identify the key issues in designing a wide-area replica hosting system, we present an architectural framework. The framework assists in characterizing different systems in a systematic manner. We categorize different research efforts and review their relative merits and demerits. As an important side-effect, this review and characterization shows that there a number of interesting research questions that have not received much attention yet, but which deserve exploration by the research community."
+    },
+    {
+      "id": "W2129388329",
+      "title": "Logoot-Undo: Distributed Collaborative Editing System on P2P Networks",
+      "abstract": "Peer-to-peer systems provide scalable content distribution for cheap and resist to censorship attempts. However, P2P networks mainly distribute immutable content and provide poor support for highly dynamic content such as produced by collaborative systems. A new class of algorithms called CRDT (Commutative Replicated Data Type), which ensures consistency of highly dynamic content on P2P networks, is emerging. However, if existing CRDT algorithms support the \"edit anywhere, anytime\u201d feature, they do not support the \"undo anywhere, anytime\u201d feature. In this paper, we present the Logoot-Undo CRDT algorithm, which integrates the \"undo anywhere, anytime\u201d feature. We compare the performance of the proposed algorithm with related algorithms and measure the impact of the undo feature on the global performance of the algorithm. We prove that the cost of the undo feature remains low on a corpus of data extracted from Wikipedia."
+    },
+    {
+      "id": "W2121928206",
+      "title": "Challenges on Distributed Web Retrieval",
+      "abstract": "In the ocean of Web data, Web search engines are the primary way to access content. As the data is on the order of petabytes, current search engines are very large centralized systems based on replicated clusters. Web data, however, is always evolving. The number of Web sites continues to grow rapidly and there are currently more than 20 billion indexed pages. In the near future, centralized systems are likely to become ineffective against such a load, thus suggesting the need of fully distributed search engines. Such engines need to achieve the following goals: high quality answers, fast response time, high query throughput, and scalability. In this paper we survey and organize recent research results, outlining the main challenges of designing a distributed Web retrieval system."
+    },
+    {
+      "id": "W2142912368",
+      "title": "Synthesis Lectures on Data Management",
+      "abstract": null
+    },
+    {
+      "id": "W1495802359",
+      "title": "Zeno: Eventually Consistent Byzantine Fault Tolerance",
+      "abstract": "Many distributed services are hosted at large, shared, geographically diverse data centers, and they use replication to achieve high availability despite the unreachability of an entire data center. Recent events show that non-crash faults occur in these services and may lead to long outages. While Byzantine-Fault Tolerance (BFT) could be used to withstand these faults, current BFT protocols can become unavailable if a small fraction of their replicas are unreachable. This is because existing BFT protocols favor strong safety guarantees (consistency) over liveness (availability). This paper presents a novel BFT state machine replication protocol called Zeno that trades consistency for higher availability. In particular, Zeno replaces strong consistency (linearizability) with a weaker guarantee (eventual consistency): clients can temporarily miss each other\u2019s updates but when the network is stable the states from the individual partitions are merged by having the replicas agree on a total order for all requests. We have built a prototype of Zeno and our evaluation using micro-benchmarks shows that Zeno provides better availability than traditional BFT protocols. 1"
+    },
+    {
+      "id": "W1971443766",
+      "title": "Tombstone Transformation Functions for Ensuring Consistency in Collaborative Editing Systems",
+      "abstract": "In collaborative editing, consistency maintenance of the copies of shared data is a critical issue. In the last decade, operational transformation (OT) approach revealed as a suitable mechanism for maintaining consistency. Unfortunately, none of the published propositions relying on this approach are able to satisfy the mandatory correctness properties TP1and TP2defined in the Ressel's framework. This paper addresses this correctness issue by proposing a new way to model shared state by retaining tombstones when elements are removed. An instantiation of the proposed model for a linear data structure and the related transformation functions are provided"
+    },
+    {
+      "id": "W2071968957",
+      "title": "Evaluating CRDTs for real-time document editing",
+      "abstract": "Nowadays, real-time editing systems are catching on. Tools such as Etherpad or Google Docs enable multiple authors at dispersed locations to collaboratively write shared documents. In such systems, a replication mechanism is required to ensure consistency when merging concurrent changes performed on the same document. Current editing systems make use of operational transformation (OT), a traditional replication mechanism for concurrent document editing."
+    },
+    {
+      "id": "W2914395890",
+      "title": "Database Replication",
+      "abstract": null
+    },
+    {
+      "id": "W2295058494",
+      "title": "Differential synchronization",
+      "abstract": "This paper describes the Differential Synchronization (DS) method for keeping documents synchronized. The key feature of DS is that it is simple and well suited for use in both novel and existing state-based applications without requiring application redesign. DS uses deltas to make efficient use of bandwidth, and is fault-tolerant, allowing copies to converge in spite of occasional errors. We consider practical implementation of DS and describe some techniques to improve its performance in a browser environment."
+    },
+    {
+      "id": "W2137760911",
+      "title": "A Taxonomy and Survey on Distributed File Systems",
+      "abstract": "Applications that process large volumes of data (such as, search engines, grid computing applications, data mining applications, etc.) require a backend infrastructure for storing data. The distributed file system is the central component for storing data infrastructure. There have been many projects focused on network computing that have designed and implemented distributed file systems with a variety of architectures and functionalities. In this paper, we develop a comprehensive taxonomy for describing distributed file system architectures and use this taxonomy to survey existing distributed file system implementations in very large-scale network computing systems such as Grids, Search Engines, etc. We use the taxonomy and the survey results to identify architectural approaches that have not been fully explored in the distributed file system research."
+    },
+    {
+      "id": "W2085335712",
+      "title": "Lasp",
+      "abstract": "We propose Lasp, a new programming model designed to simplify large-scale distributed programming. Lasp combines ideas from deterministic dataflow programming together with conflict-free replicated data types (CRDTs). This provides support for computations where not all participants are online together at a given moment. The initial design presented here provides powerful primitives for composing CRDTs, which lets us write long-lived fault-tolerant distributed applications with nonmonotonic behavior in a monotonic framework. Given reasonable models of node-to-node communications and node failures, we prove formally that a Lasp program can be considered as a functional program that supports functional reasoning and programming techniques. We have implemented Lasp as an Erlang library built on top of the Riak Core distributed systems framework. We have developed one nontrivial large-scale application, the advertisement counter scenario from the SyncFree research project. We plan to extend our current prototype into a general-purpose language in which synchronization is used as little as possible."
+    },
+    {
+      "id": "W1985225835",
+      "title": "LSEQ",
+      "abstract": "Distributed collaborative editing systems allow users to work distributed in time, space and across organizations. Trending distributed collaborative editors such as Google Docs, Etherpad or Git have grown in popularity over the years. A new kind of distributed editors based on a family of distributed data structure replicated on several sites called Conflict-free Replicated Data Type (CRDT for short) appeared recently. This paper considers a CRDT that represents a distributed sequence of basic elements that can be lines, words or characters (sequence CRDT). The possible operations on this sequence are the insertion and the deletion of elements. Compared to the state of the art, this approach is more decentralized and better scales in terms of the number of participants. However, its space complexity is linear with respect to the total number of inserts and the insertion points in the document. This makes the overall performance of such editors dependent on the editing behaviour of users. This paper proposes and models LSEQ, an adaptive allocation strategy for a sequence CRDT. LSEQ achieves in the average a sub-linear spatial-complexity whatever is the editing behaviour. A series of experiments validates LSEQ showing that it outperforms existing approaches."
+    },
+    {
+      "id": "W1555012181",
+      "title": "Engineering of Software-Intensive Systems: State of the Art and Research Challenges",
+      "abstract": null
+    },
+    {
+      "id": "W2130068507",
+      "title": "Convergent and Commutative Replicated Data Types",
+      "abstract": "Eventual consistency aims to ensure that replicas of some mutable shared object converge without foreground synchronisation. Previous approaches to eventual consistency are ad-hoc and error-prone. We study a principled approach: to base the design of shared data types on some simple formal conditions that are sufficient to guarantee eventual consistency. We call these types Convergent or Commutative Replicated Data Types (CRDTs). This paper formalises asynchronous object replication, either state based or operation based, and provides a sufficient condition appropriate for each case. It describes several useful CRDTs, including container data types supporting both add and remove operations with clean semantics, and more complex types such as graphs and monotonic DAGs. It discusses some properties needed to implement non-trivial CRDTs."
+    },
+    {
+      "id": "W2996998733",
+      "title": "Building Consistent Transactions with Inconsistent Replication",
+      "abstract": "Application programmers increasingly prefer distributed storage systems with strong consistency and distributed transactions (e.g., Google\u2019s Spanner) for their strong guarantees and ease of use. Unfortunately, existing transactional storage systems are expensive to use\u2014in part, because they require costly replication protocols, like Paxos, for fault tolerance. In this article, we present a new approach that makes transactional storage systems more affordable: We eliminate consistency from the replication protocol, while still providing distributed transactions with strong consistency to applications. We present the Transactional Application Protocol for Inconsistent Replication (TAPIR), the first transaction protocol to use a novel replication protocol, called inconsistent replication , that provides fault tolerance without consistency. By enforcing strong consistency only in the transaction protocol, TAPIR can commit transactions in a single round-trip and order distributed transactions without centralized coordination. We demonstrate the use of TAPIR in a transactional key-value store, TAPIR-KV . Compared to conventional systems, TAPIR-KV provides better latency and better throughput."
+    },
+    {
+      "id": "W2085605383",
+      "title": "Dynamic QoS-aware data replication in grid environments based on data \u201cimportance\u201d",
+      "abstract": null
+    },
+    {
+      "id": "W1967852324",
+      "title": "Verifying eventual consistency of optimistic replication systems",
+      "abstract": "We address the verification problem of eventual consistency of optimistic replication systems. Such systems are typically used to implement distributed data structures over large scale networks. We introduce a formal definition of eventual consistency that applies to a wide class of existing implementations, including the ones using speculative executions. Then, we reduce the problem of checking eventual consistency to reachability and model checking problems. This reduction enables the use of existing verification tools for message-passing programs in the context of verifying optimistic replication systems. Furthermore, we derive from these reductions decision procedures for checking eventual consistency of systems implemented as finite-state programs communicating through unbounded unordered channels."
+    },
+    {
+      "id": "W2117172400",
+      "title": "Survey of Large-Scale Data Management Systems for Big Data Applications",
+      "abstract": null
+    },
+    {
+      "id": "W1594778301",
+      "title": "Model Synchronization: Mappings, Tiles, and Categories",
+      "abstract": null
+    },
+    {
+      "id": "W1758226005",
+      "title": "Emerging Information Infrastructures: Cooperation in Disasters",
+      "abstract": null
+    },
+    {
+      "id": "W2076866478",
+      "title": "Supporting Adaptable Granularity of Changes for Massive-scale Collaborative Editing",
+      "abstract": "Since the Web 2.0 era, the Internet is a huge content editing place in which users contribute to the content they browse. Users do not just edit the content but they collaborate on this content. Such shared content can be edited by thousands of people. However, current consistency maintenance algor"
+    },
+    {
+      "id": "W1998688529",
+      "title": "Rethinking eventual consistency",
+      "abstract": "There has been a resurgence of work on replicated, distributed database systems to meet the demands of intermittently-connected clients and of disaster-tolerant databases that span data centers. Many systems weaken the criteria for replica-consistency or isolation, and in some cases add new mechanisms, to improve partition-tolerance, availability, and performance. We present a framework for comparing these criteria and mechanisms, to help architects navigate through this complex design space."
+    },
+    {
+      "id": "W2044049108",
+      "title": "Integrating peer-to-peer and cloud computing for massively multiuser online games",
+      "abstract": null
+    },
+    {
+      "id": "W2542748170",
+      "title": "Europeana RDF Store Report",
+      "abstract": "Expressing data in RDF is one of the principles to be considered when making data available as Linked Data on the Web. This can be achieved using RDF-wrappers for existing (relational) data stores or by using RDF stores as data repositories. The latter requires special RDF storage solutions, many of which are available today. Organizations often have difficulties to decide which solution they should adopt because comprehensive comparisons of existing RDF stores are hardly available and experiences w.r.t performance and scalability are still missing. In this report, we summarize the results of qualitative and quantitative study we carried out on existing RDF stores in the context of the European Digital Library project. We give a detailed overview on existing RDF store solutions, analyze their functional and non-functional features, summarize the outcomes of other, previously carried out studies, and conduct a Linked-Data oriented performance evaluation on a subset of existing triple stores w.r.t to load and query time. The results of this study show that certain RDF stores, such as OpenLink Virtuoso or 4Store, can deal with the Europeana data volume and answer those SPARQL queries that are relevant for exposing Europeana metadata as Linked Data in an acceptable time-range."
+    },
+    {
+      "id": "W2101028480",
+      "title": "Cluster-based Replication for Large-scale Mobile Ad-hoc Networks",
+      "abstract": "Replication provides a feasible solution for improving data accessibility in highly dynamic and fault prone mobile ad-hoc environments. Efficient replica management, however, remains a challenging problem due to the inherent unreliable and unstable nature of mobile ad-hoc networks. This paper proposes a novel optimistic replication scheme, for achieving efficient consistency maintenance in large-scale ad-hoc mobile networks. Distributed hash table replication (DHTR) organizes all mobile nodes into non-overlapping clusters and builds a two-level distributed replica information directory on cluster heads to facilitate the propagation of query and update messages. DHTR also employs distributed hash table techniques to speed up the directory lookup process. Simulation results demonstrate that DHTR improves the performance with respect to update propagation in comparison with the ROAM replication system."
+    },
+    {
+      "id": "W2138750344",
+      "title": "Flexible Cache Consistency Maintenance over Wireless Ad Hoc Networks",
+      "abstract": "One of the major applications of wireless ad hoc networks is to extend the Internet coverage and support pervasive and efficient data dissemination and sharing. To reduce data access cost and delay, caching has been widely used as an important technique. The efficiency of data access in caching systems largely depends on the cost for maintaining cache consistency, which can be high in wireless ad hoc networks due to network dynamism. Therefore, to make better trade-off between cache consistency and the cost incurred, it would be highly desirable to provide users the flexibility in specifying consistency requirements for their applications. In this paper, we propose a general consistency model called Probabilistic Delta Consistency (PDC), which integrates the flexibility granted by existing consistency models, covering them as special cases. We also propose the Flexible Combination of Push and Pull (FCPP) algorithm which satisfies user-specified consistency requirements under the PDC model. The analytical model of FCPP is used to derive the balance of minimizing the consistency maintenance cost and ensuring the specified consistency requirement. Extensive simulations are conducted to evaluate whether FCPP can satisfy arbitrarily specified consistency requirements, and whether FCPP works cost-effectively in dynamic wireless ad hoc networks. The evaluation results show that FCPP can adaptively tune itself to satisfy various user-specified consistency requirements. Moreover, it can save the traffic cost by up to 50 percent and reduce the query delay by up to 40 percent, compared with the widely used Pull with TTR algorithm."
+    },
+    {
+      "id": "W1546165700",
+      "title": "Centrifuge: integrated lease management and partitioning for cloud services",
+      "abstract": "Abstract: Making cloud services responsive is critical to providing a compelling user experience. Many largescale sites, including LinkedIn, Digg and Facebook, address this need by deploying pools of servers that operate purely on in-memory state. Unfortunately, current technologies for partitioning requests across these inmemory server pools, such as network load balancers, lead to a frustrating programming model where requests for the same state may arrive at different servers. Leases are a well-known technique that can provide a better programming model by assigning each piece of state to a single server. However, in-memory server pools host an extremely large number of items, and granting a lease per item requires fine-grained leasing that is not supported in prior datacenter lease managers. This paper presents Centrifuge, a datacenter lease manager that solves this problem by integrating partitioning and lease management. Centrifuge consists of a set of libraries linked in by the in-memory servers and a replicated state machine that assigns responsibility for data items (including leases) to these servers. Centrifuge has been implemented and deployed in production as part of Microsoft\u2019s Live Mesh, a large-scale commercial cloud service in continuous operation since April 2008. When cloud services within Mesh were built using Centrifuge, they required fewer lines of code and did not need to introduce their own subtle protocols for distributed consistency. As cloud services become ever more complicated, this kind of reduction in complexity is an increasingly urgent need. 1"
+    },
+    {
+      "id": "W2178355018",
+      "title": "Performance optimization for state machine replication based on application semantics: A review",
+      "abstract": null
+    },
+    {
+      "id": "W2527771912",
+      "title": "Correlated crash vulnerabilities",
+      "abstract": "Modern distributed storage systems employ complex protocols to update replicated data. In this paper, we study whether such update protocols work correctly in the presence of correlated crashes. We find that the correctness of such protocols hinges on how local file-system state is updated by each replica in the system. We build PACE, a framework that systematically generates and explores persistent states that can occur in a distributed execution. PACE uses a set of generic rules to effectively prune the state space, reducing checking time from days to hours in some cases. We apply PACE to eight widely used distributed storage systems to find correlated crash vulnerabilities, i.e., problems in the update protocol that lead to user-level guarantee violations. PACE finds a total of 26 vulnerabilities across eight systems, many of which lead to severe consequences such as data loss, corrupted data, or unavailable clusters."
+    },
+    {
+      "id": "W1996914338",
+      "title": "Data Replication Strategies in P2P Systems: A Survey",
+      "abstract": "Data replication means storing copies of the same data at multiple peers thus improving availability and scalability. Replication can be seen as a family of techniques. Full documents or just chunks can be replicated. Since the same data can be found at multiple peers, availability is assured in case of peer failure. Consistency is a challenge in replication systems that allow dynamic updates of replicas. Fundamental to any of them is the degree of replication (full or partial), as well as the source of the updates and the way updates are propagated in the system. In this paper we study some data replication strategies and requirements for different P2P applications. We identify several contexts and use cases where data replication can be used. We will also discuss about existing optimistic replication solutions and P2P replication strategies and analyze their advantages and disadvantages."
+    },
+    {
+      "id": "W2414647798",
+      "title": "Consensus in the Cloud: Paxos Systems Demystified",
+      "abstract": "Coordination and consensus play an important role in datacenter and cloud computing, particularly in leader election, group membership, cluster management, service discovery, resource/access management, and consistent replication of the master nodes in services. Paxos protocols and systems provide a fault-tolerant solution to the distributed consensus problem and have attracted significant attention as well as generating substantial confusion. In order to elucidate the correct use of distributed coordination systems, we compare and contrast popular Paxos protocols and Paxos systems and present advantages and disadvantages for each. We also categorize the coordination use-patterns in cloud, and examine Google and Facebook infrastructures, as well as Apache top-level projects to investigate how they use Paxos protocols and systems. Finally, we analyze tradeoffs in the distributed coordination domain and identify promising future directions for achieving more scalable distributed coordination systems."
+    },
+    {
+      "id": "W2963257872",
+      "title": "Incremental consistency guarantees for replicated objects",
+      "abstract": "Programming with replicated objects is difficult. Developers must face the fundamental trade-off between consistency and performance head on, while struggling with the complexity of distributed storage stacks. We introduce Correctables, a novel abstraction that hides most of this complexity, allowing developers to focus on the task of balancing consistency and performance. To aid developers with this task, Correctables provide incremental consistency guarantees, which capture successive refinements on the result of an ongoing operation on a replicated object. In short, applications receive both a preliminary--fast, possibly inconsistent--result, as well as a final--consistent--result that arrives later.We show how to leverage incremental consistency guarantees by speculating on preliminary values, trading throughput and bandwidth for improved latency. We experiment with two popular storage systems (Cassandra and ZooKeeper) and three applications: a Twissandra-based microblogging service, an ad serving system, and a ticket selling system. Our evaluation on the Amazon EC2 platform with YCSB workloads A, B, and C shows that we can reduce the latency of strongly consistent operations by up to 40% (from 100ms to 60ms) at little cost (10% bandwidth increase, 6% throughput drop) in the ad system. Even if the preliminary result is frequently inconsistent (25% of accesses), incremental consistency incurs a bandwidth overhead of only 27%."
+    },
+    {
+      "id": "W2008097699",
+      "title": "Simba",
+      "abstract": "Developers of cloud-connected mobile apps need to ensure the consistency of application and user data across multiple devices. Mobile apps demand different choices of distributed data consistency under a variety of usage scenarios. The apps also need to gracefully handle intermittent connectivity and disconnections, limited bandwidth, and client and server failures. The data model of the apps can also be complex, spanning inter-dependent structured and unstructured data, and needs to be atomically stored and updated locally, on the cloud, and on other mobile devices."
+    },
+    {
+      "id": "W2147515467",
+      "title": "Fail-Aware Untrusted Storage",
+      "abstract": "We consider a set of clients collaborating through an online service provider that is subject to attacks and hence not fully trusted by the clients. We introduce the abstraction of a fail-aware untrusted service, with meaningful semantics even when the provider is faulty. In the common case, when the provider is correct, such a service guarantees consistency (linearizability) and liveness (wait-freedom) of all operations. In addition, the service always provides accurate and complete consistency and failure detection. We illustrate our new abstraction by presenting a Fail-Aware Untrusted STorage service (FAUST). Existing storage protocols in this model guarantee so-called forking semantics. We observe, however, that none of the previously suggested protocols suffices for implementing fail-aware untrusted storage with the desired liveness and consistency properties (at least wait-freedom and linearizability when the server is correct). We present a new storage protocol, which does not suffer from this limitation, and implements a new consistency notion, called weak fork-linearizability. We show how to extend this protocol to provide eventual consistency and failure awareness in FAUST."
+    },
+    {
+      "id": "W2548072145",
+      "title": "High Responsiveness for Group Editing CRDTs",
+      "abstract": "Group editing is a crucial feature for many end-user applications. It requires high responsiveness, which can be provided only by optimistic replication algorithms, which come in two classes: classical Operational Transformation (OT), or more recent Conflict-Free Replicated Data Types (CRDTs)."
+    },
+    {
+      "id": "W2077546582",
+      "title": "Alleviating scalability issues of checkpointing protocols",
+      "abstract": "Current fault tolerance protocols are not sufficiently scalable for the exascale era. The most-widely used method, coordinated checkpointing, places enormous demands on the I/O subsystem and imposes frequent synchronizations. Uncoordinated protocols use message logging which introduces message rate limitations or undesired memory and storage requirements to hold payload and event logs. In this paper we propose a combination of several techniques, namely coordinated checkpointing, optimistic message logging, and a protocol that glues them together. This combination eliminates some of the drawbacks of each individual approach and proves to be an alternative for many types of exascale applications. We evaluate performance and scaling characteristics of this combination using simulation and a partial implementation. While not a universal solution, the combined protocol is suitable for a large range of existing and future applications that use coordinated checkpointing and enhances their scalability."
+    },
+    {
+      "id": "W2130204304",
+      "title": "Low Latency Fault Tolerance System",
+      "abstract": "The low latency fault tolerance (LLFT) system provides fault tolerance for distributed applications within a local-area network, using a leader\u2013follower replication strategy. LLFT provides application-transparent replication, with strong replica consistency, for applications that involve multiple interacting processes or threads. Its novel system model enables LLFT to maintain a single consistent infinite computation, despite faults and asynchronous communication. The LLFT messaging protocol provides reliable, totally ordered message delivery by employing a group multicast, where the message ordering is determined by the primary replica in the destination group. The leader-determined membership protocol provides reconfiguration and recovery when a replica becomes faulty and when a replica joins or leaves a group, where the membership of the group is determined by the primary replica. The virtual determinizer framework captures the ordering information at the primary replica and enforces the same ordering of non-deterministic operations at the backup replicas. LLFT does not employ a majority-based, multiple-round consensus algorithm and, thus, it can operate in the common industrial case where there is a primary replica and only one backup replica. The LLFT system achieves low latency message delivery during normal operation and low latency reconfiguration and recovery when a fault occurs."
+    },
+    {
+      "id": "W2151160534",
+      "title": "Dynamic Data Replication Based on Access Cost in Distributed Systems",
+      "abstract": "Data replication is a common method to reduce the bandwidth consumption and the access latency in distributed systems. The existing replication methods mostly deal with the read-only data, thus the replica management mechanism is relatively simple. Most replication methods replicate files in all nodes or two endpoints on a query path. Naturally, the larger number of replicas, the better performance it can obtain. However, these methods lead to high overhead for unnecessary file replications and consistency maintenance. This paper presents a dynamic minimum access cost based replication strategy (MAC replication strategy). MAC replication strategy takes into account the access frequency, the status of the network connection and average response time to perform optimal replication. It first selects the popular files. To each popular file, the average response time is calculated to determine which logical resource should be replicated. Then MAC replication strategy calculates an appropriate site to replicate for better shortening the response time of the data resource. Simulation results demonstrate the efficiency and effectiveness of MAC replication strategy in comparison with other approaches."
+    },
+    {
+      "id": "W2736314372",
+      "title": "Design and Implementation of Atlas P2P Architecture",
+      "abstract": "International audience"
+    },
+    {
+      "id": "W4304694950",
+      "title": "Real-time collaborative multi-level modeling by conflict-free replicated data types",
+      "abstract": null
+    },
+    {
+      "id": "W2084391248",
+      "title": "Near-optimal dynamic replication in unstructured peer-to-peer networks",
+      "abstract": "Replicating data in distributed systems is often needed for availability and performance. In unstructured peer-to-peer networks, with epidemic messaging for query routing, replicating popular data items is also crucial to ensure high probability of finding the data within a bounded search distance from the requestor. This paper considers such networks and aims to maximize the probability of successful search. Prior work along these lines has analyzed the optimal degrees of replication for data items with non-uniform but global request rates, but did not address the issue of where replicas should be placed and was very very limited in the capabilities for handling heterogeneity and dynamics of network and workload."
+    },
+    {
+      "id": "W2464667358",
+      "title": "A survey on elasticity management in PaaS systems",
+      "abstract": null
+    },
+    {
+      "id": "W2053233366",
+      "title": "Data Management in the APPA System",
+      "abstract": null
+    },
+    {
+      "id": "W2252895160",
+      "title": "An improved database synchronization mechanism for mobile data using software-defined networking control",
+      "abstract": null
+    },
+    {
+      "id": "W2628854485",
+      "title": "CoSMeDis: A Distributed Social Media Platform with Formally Verified Confidentiality Guarantees",
+      "abstract": "We present the design, implementation and information flow verification of CoSMeDis, a distributed social media platform. The system consists of an arbitrary number of communicating nodes, deployable at different locations over the Internet. Its registered users can post content and establish intra-node and inter-node friendships, used to regulate access control over the posts. The system's kernel has been verified in the proof assistant Isabelle/HOL and automatically extracted as Scala code. We formalized a framework for composing a class of information flow security guarantees in a distributed system, applicable to input/output automata. We instantiated this framework to confidentiality properties for CoSMeDis's sources of information: posts, friendship requests, and friendship status."
+    },
+    {
+      "id": "W2090677012",
+      "title": "Syxaw: Data Synchronization Middleware for the Mobile Web",
+      "abstract": null
+    },
+    {
+      "id": "W2584262307",
+      "title": "Geo-distribution of actor-based services",
+      "abstract": "Many service applications use actors as a programming model for the middle tier, to simplify synchronization, fault-tolerance, and scalability. However, efficient operation of such actors in multiple, geographically distant datacenters is challenging, due to the very high communication latency. Caching and replication are essential to hide latency and exploit locality; but it is not a priori clear how to combine these techniques with the actor programming model. We present Geo, an open-source geo-distributed actor system that improves performance by caching actor states in one or more datacenters, yet guarantees the existence of a single latest version by virtue of a distributed cache coherence protocol. Geo's programming model supports both volatile and persistent actors, and supports updates with a choice of linearizable and eventual consistency. Our evaluation on several workloads shows substantial performance benefits, and confirms the advantage of supporting both replicated and single-instance coherence protocols as configuration choices. For example, replication can provide fast, always-available reads and updates globally, while batching of linearizable storage accesses at a single location can boost the throughput of an order processing workload by 7x."
+    },
+    {
+      "id": "W3206444683",
+      "title": "A Highly-Available Move Operation for Replicated Trees",
+      "abstract": "Replicated tree data structures are a fundamental building block of distributed filesystems, such as Google Drive and Dropbox, and collaborative applications with a JSON or XML data model. These systems need to support amoveoperation that allows a subtree to be moved to a new location within the tree. However, such a move operation is difficult to implement correctly if different replicas can concurrently perform arbitrary move operations, and we demonstrate bugs in Google Drive and Dropbox that arise with concurrent moves. In this article we present a CRDT algorithm that handles arbitrary concurrent modifications on trees, while ensuring that the tree structure remains valid (in particular, no cycles are introduced), and guaranteeing that all replicas converge towards the same consistent state. Our algorithm requires no synchronous coordination between replicas, making it highly available in the face of network partitions. We formally prove the correctness of our algorithm using the Isabelle/HOL proof assistant, and evaluate the performance of our formally verified implementation in a geo-replicated setting."
+    },
+    {
+      "id": "W2325274158",
+      "title": "C-Set : a Commutative Replicated Data Type for Semantic Stores",
+      "abstract": "Abstract. Web 2.0 tools are currently evolving to embrace semantic web technologies. Blogs, CMS, Wikis, social networks and real-time notifications, integrate ways to provide semantic annotations and therefore contribute to the linked data and more generally to the semantic web vision. This evolution generates a lot of semantic datasets of different qualities, different trust levels and partially replicated. This raises the issue of managing the consistency among these replicas. This issue is challenging because semantic data-spaces can be very large, they can be managed by autonomous participants and the number of replicas is unknown. A new class of algorithms called Commutative Replicated Data Type are emerging for ensuring eventual consistency of highly dynamic content on P2P networks. In this paper, we define C-Set a CRDT specifically designed to be integrated in Triple-stores. C-Set allows efficient P2P synchronisation of an arbitrary number of autonomous semantic stores."
+    },
+    {
+      "id": "W2045384056",
+      "title": "A partial replication approach for anywhere anytime mobile commenting",
+      "abstract": "Commenting systems play increasingly important roles in the interactive web applications. Meanwhile, more and more web applications are visited on mobile devices. However, the intermittent connection of mobile networks and resource limitation of mobile devices pose great challenges, mainly in terms of interactive responsiveness and data consistency. In this paper, we present the first work of partial replication solution based on collaborative editing techniques, which can address the issues of local responsiveness and resource limitation on mobile commenting systems. We report how we address the consistency maintenance challenges that come with the partial replication approach. With this approach, users are allowed to smoothly comment anywhere anytime. The comment thread can be incrementally updated and automatically synchronized with strong data consistency guarantees. We implemented a system prototype called Hydra and evaluated it on a real data set."
+    },
+    {
+      "id": "W2935469002",
+      "title": "Pyro: Generating Domain-Specific Collaborative Online Modeling Environments",
+      "abstract": "We present Pyro, a framework for enabling domain-specific modeling via the internet. Provided with an adequate metamodel specification, Pyro turns your browser into a collaborative, domain-specific, graphical development environment with features reminiscent of desktop IDEs for textual programming languages. The required metamodeling is supported in a high-level, simplicity-driven fashion, and the entire ready-to-run browser-based domain-specific development environment is generated fully automatically. We will illustrate the steps of this development along the realization of a graphical IDE for the Architecture Analysis and Design Language (AADL)."
+    },
+    {
+      "id": "W2946807092",
+      "title": "An optimized RGA supporting selective undo for collaborative text editing systems",
+      "abstract": null
+    },
+    {
+      "id": "W155189069",
+      "title": "Wooki: A P2P Wiki-Based Collaborative Writing Tool",
+      "abstract": null
+    },
+    {
+      "id": "W1569388719",
+      "title": "Design Space of Heterogeneous Synchronization",
+      "abstract": null
+    },
+    {
+      "id": "W2113288486",
+      "title": "Exploiting schemas in data synchronization",
+      "abstract": null
+    },
+    {
+      "id": "W2091076045",
+      "title": "Grid Data Management: Open Problems and New Issues",
+      "abstract": null
+    },
+    {
+      "id": "W1489177980",
+      "title": "Scalable XML Collaborative Editing with Undo",
+      "abstract": null
+    },
+    {
+      "id": "W2290177015",
+      "title": "Mysteries of DropBox: Property-Based Testing of a Distributed Synchronization Service",
+      "abstract": "File synchronization services such as Dropbox are used by hundreds ofmillions of people to replicate vital data. Yet rigorous models of theirbehavior are lacking. We present the first formal -- and testable -- model ofthe core behavior of a modern file synchronizer, and we use it to discoversurprising behavior in two widely deployed synchronizers. Our model isbased on a technique for testing nondeterministic systems that avoidsrequiring that the system's internal choices be made visible to the testing framework."
+    },
+    {
+      "id": "W2261042760",
+      "title": "Optimistic Byzantine fault tolerance",
+      "abstract": "The primary concern of traditional Byzantine fault tolerance is to ensure strong replica consistency by executing incoming requests sequentially according to a total order. Speculative execution at both clients and server replicas has been proposed as a way of reducing the end-to-end latency. In this article, we introduce optimistic Byzantine fault tolerance. Optimistic Byzantine fault tolerance aims to achieve higher throughput and lower end-to-end latency by using a weaker replica consistency model. Instead of ensuring strong safety as in traditional Byzantine fault tolerance, nonfaulty replicas are brought to a consistent state periodically and on-demand in optimistic Byzantine fault tolerance. Not all applications are suitable for optimistic Byzantine fault tolerance. We identify three types of applications, namely, realtime collaborative editing, event stream processing, and services constructed with conflict-free replicated data types, as good candidates for applying optimistic Byzantine fault tolerance. Furthermore, we provide a design guideline on how to achieve eventual consistency and how to recover from conflicts at different replicas. In optimistic Byzantine fault tolerance, a replica executes a request immediately without first establishing a total order of the message, and Byzantine agreement is used only to establish a common state synchronization point and the set of individual states needed to resolve conflicts. The recovery mechanism ensures both replica consistency and the validity of the system by identifying and removing the operations introduced by faulty clients and server replicas."
+    },
+    {
+      "id": "W2110768875",
+      "title": "Formal Specification and Verification of CRDTs",
+      "abstract": null
+    },
+    {
+      "id": "W1526003685",
+      "title": "D-Praxis : A Peer-to-Peer Collaborative Model Editing Framework",
+      "abstract": null
+    },
+    {
+      "id": "W2042380414",
+      "title": "Asynchronous reconciliation based on operational transformation for P2P collaborative environments",
+      "abstract": "Reconciling divergent copies is a problem encountered in distributed systems, groupware, version control systems and personal work involving several mobile computing devices. Published reconciliation methods, whether synchronous or asynchronous, require some ordering facility provided either by a central component (master copy, sequencer) or by a fully distributed mechanism (timestamps, state vectors,...). Nevertheless, scalability is limited. This paper presents an asynchronous algorithm based on Operational Transformations which provides the means to reconcile any number of copies, without this limitation. Copies can be modified (concurrently or not) and then reconciled pair-wise, at any time, regardless of the pair, while their convergence is achieved. Its main advantage is thus to enable free propagation of update operations while ensuring they will be ordered in the same global order."
+    },
+    {
+      "id": "W2060311671",
+      "title": "Dynamic hybrid replication effectively combining tree and grid topology",
+      "abstract": null
+    },
+    {
+      "id": "W2017383981",
+      "title": "A comparison of optimistic approaches to collaborative editing of Wiki pages",
+      "abstract": "Wikis, a popular tool for sharing knowledge, are basically collaborative editing systems. However, existing Wiki systems offer limited support for co-operative authoring, and they do not scale well, because they are based on a centralised architecture. This paper compares the well-known centralised MediaWiki system with several peer-to-peer approaches to editing of wiki pages: an operational transformation approach (MOT2), a commutativity-oriented approach (WOOTO) and a conflict resolution approach (ACF). We evaluate and compare them, according to a number of qualitative and quantitative metrics."
+    },
+    {
+      "id": "W1915343313",
+      "title": "Bounded Version Vectors",
+      "abstract": null
+    },
+    {
+      "id": "W2093903294",
+      "title": "Fail-Aware Untrusted Storage",
+      "abstract": "We consider a set of clients collaborating through an online service provider that is subject to attacks, and hence not fully trusted by the clients. We introduce the abstraction of a fail-aware untrusted service, with meaningful semantics even when the provider is faulty. In the common case, when the provider is correct, such a service guarantees consistency (linearizability) and liveness (wait-freedom) of all operations. In addition, the service always provides accurate and complete consistency and failure detection. We illustrate our new abstraction by presenting a Fail-Aware Untrusted STorage service (FAUST). Existing storage protocols in this model guarantee so-called forking semantics. We observe, however, that none of the previously suggested protocols suffice for implementing fail-aware untrusted storage with the desired liveness and consistency properties (at least wait-freedom and linearizability when the server is correct). We present a new storage protocol, which does not suffer from this limitation, and implements a new consistency notion, called weak fork-linearizability. We show how to extend this protocol to provide eventual consistency and failure awareness in FAUST."
+    },
+    {
+      "id": "W2096689343",
+      "title": "Replicated Data Management for Mobile Computing",
+      "abstract": null
+    },
+    {
+      "id": "W2110193654",
+      "title": "Consistency Models for Replicated Data",
+      "abstract": null
+    },
+    {
+      "id": "W1985408196",
+      "title": "Eventually linearizable shared objects",
+      "abstract": "Linearizability is the strongest known consistency property of shared objects. In asynchronous message passing systems, Linearizability can be achieved with \u25caS and a majority of correct processes. In this paper we introduce the notion of Eventual Linearizability, the strongest known consistency property that can be attained with \u25caS and any number of crashes. We show that linearizable shared object implementations can be augmented to support weak operations, which need to be linearized only eventually. Unlike strong operations that require to be always linearized, weak operations terminate in worst case runs. However, there is a tradeoff between ensuring termination of weak and strong operations when processes have only access to \u25caS. If weak operations terminate in the worst case, then we show that strong operations terminate only in the absence of concurrent weak operations. Finally, we show that an implementation based on P exists that guarantees termination of all operations."
+    },
+    {
+      "id": "W2952409363",
+      "title": "Impact of Adaptive Consistency on Distributed SDN Applications: An Empirical Study",
+      "abstract": "Scalability of the control plane in a software-defined network (SDN) is enabled by means of decentralization of the decision-making logic, i.e., by replication of controller functions to physically or virtually dislocated controller replicas. Replication of a centralized controller state also enables the protection against controller failures by means of primary and backup replicas responsible for managing the underlying SDN data plane devices. In this paper, we investigate the effect of the deployed consistency model on scalability and correctness metrics of the SDN control plane. In particular, we compare the strong and eventual consistency, and make a case for a novel adaptive consistency approach. The existing controller platforms rely on either strong or eventual consistency mechanisms in their state distribution. We show how an adaptive consistency model offers the scalability benefits in terms of the total request-handling throughput and response time, in contrast to the strong consistency model. We also outline how the adaptive consistency approach can provide for correctness semantics that are unachievable with the eventual consistency paradigm in practice. The adaptability of our approach provides a balanced and tunable tradeoff of scalability and correctness for the SDN application implemented on top of the adaptive framework. To validate our assumptions, we evaluate and compare the different approaches in an emulated testbed with an example of a load balancer controller application. The experimental setup comprises up to five extended OpenDaylight controller instances and two network topologies from the area of service provider and data center networks."
+    },
+    {
+      "id": "W979228131",
+      "title": "P2P Data Replication: Techniques and Applications",
+      "abstract": null
+    },
+    {
+      "id": "W1484631715",
+      "title": "Caching and Replication in Mobile Data Management.",
+      "abstract": "Replication increases the availability of data in mobile and distributed systems. For example, if we copy calendar data from a web service onto a mobile device, the calendar can be accessed even when the network cannot. In peer-based data sharing systems, maintaining a copy of the shared data on a local node enables query answering when remote peers are offline, guarantees privacy, and improves performance. But along with these advantages, replication brings complications: whenever one replica is updated, the others also need to be refreshed to keep the whole system consistent. Therefore, in systems built on replication, synchronization mechanisms are critical. In simple applications, the replicas are just that\u2014carbon copies of each other. But often the copied data needs to be transformed in different ways on each replica. For example, web services and mobile devices represent calendars in different formats (iCal vs. Palm Datebook). Likewise, in data sharing systems for scientific data, the peers usually have heterogeneous schemas. In these more complicated systems, the replicas behave like views, and so mechanisms for updating and maintaining views are also important. The mapping between sources and views defined by a query is not generally one-to-one and this loss of information is what makes view update and view maintenance difficult. It has often been observed that provenance\u2014 i.e., metadata that tracks the origins of values as they flow through a query\u2014could be used to cope with this loss of information and help with these problems [5, 6, 4, 23], but only a few existing systems (e.g., AutoMed [11]) explicitly use provenance in this way, and only for limited classes of views. This article presents a pair of case studies illustrating how provenance can be incorporated into systems for handling replicated data. The first describes how provenance is used in lenses for ordered data [2]. Lenses define updatable views, and are used to handle heterogeneous replicas in the Harmony synchronization framework [22, 12]. They use a simple form of provenance to express the complex update policies needed to correctly handle ordered data. The second case study describes ORCHESTRA [16, 18], a collaborative data sharing system [21]. In ORCHESTRA, data is distributed across tables located on many different peers, and the relationship between connected peers is specified using GLAV [15] schema mappings. Every node coalesces data from remote peers and uses its own copy of the data to answer queries over the distributed dataset. Provenance is used to perform incremental maintenance of each peer as updates are applied to remote peers, and to filter \u201cincoming\u201d updates according to trust conditions."
+    },
+    {
+      "id": "W1548777079",
+      "title": "Warranties for faster strong consistency",
+      "abstract": "We present a new mechanism, warranties, to enable building distributed systems with linearizable transac-tions. A warranty is a time-limited assertion about one or more distributed objects. These assertions generalize op-timistic concurrency control, improving throughput be-cause clients holding warranties need not communicate to verify the warranty\u2019s assertion. Updates that might cause an active warranty to become false are delayed un-til the warranty expires, trading write latency for read latency. For workloads biased toward reads, warranties improve scalability and system throughput. Warranties can be expressed using language-level computations, and they integrate harmoniously into the programming model as a form of memoization. Experiments with some non-trivial programs demonstrate that warranties enable high performance despite the simple programming model. 1"
+    },
+    {
+      "id": "W2110549225",
+      "title": "Gumball",
+      "abstract": "Query intensive applications augment a Relational Database Management System (RDBMS) with a middle-tier cache to enhance performance. An example is memcached in use by very large well known sites such as Facebook. In the presence of updates to the normalized tables of the RDBMS, invalidation based consistency techniques delete the impacted key-value pairs residing in the cache. A subsequent reference for these key-value pairs observes a cache miss, recomputes the new values from the RDBMS, and inserts the new key-value pairs in the cache. These techniques suffer from race conditions that result in cache states that produce stale data. The Gumball Technique (GT) addresses this limitation by preventing race conditions. Experimental results show GT enhances the accuracy of an application hundreds of folds and, in some cases, may reduce system performance slightly."
+    },
+    {
+      "id": "W1563589800",
+      "title": "Vector-field consistency for ad-hoc gaming",
+      "abstract": null
+    },
+    {
+      "id": "W2090724834",
+      "title": "Byzantine Fault Tolerance for Services with Commutative Operations",
+      "abstract": "In this paper, we present a comprehensive study on how to achieve Byzantine fault tolerance for services with commutative operations. Recent research suggests that services may be implemented using Conflict-free Replicated Data Types (CRDTs) for highly efficient optimistic replication with the crash-fault model. We extend such studies by adopting the Byzantine fault model, which encompasses crash faults as well as malicious faults. We carefully analyze the threats towards the operations in a system constructed with CRDTs, and propose a lightweight solution to achieve Byzantine fault tolerance with low runtime overhead. We define a set of correctness properties for such systems and prove that the proposed Byzantine fault tolerance mechanisms guarantee these properties. Furthermore, we show that our mechanisms exhibit excellent performance with a proof-of-concept replicated shopping cart service constructed using CRDTs."
+    },
+    {
+      "id": "W2121107042",
+      "title": "A sequence transformation algorithm for supporting cooperative work on mobile devices",
+      "abstract": "Operational transformation (OT) is a promising technique for supporting collaboration using mobile devices because it allows users to work on local data replicas even in a disconnected mode. However, as work goes mobile, a large number of operations may accumulate, defying the capacity of current OT algorithms that are mostly designed for real-time group editing. Since their assumption is that operations are propagated frequently, they generally only address how to integrate one remote operation at a time. As a consequence, most algorithms take O(|H|2) to integrate one operation and thus O(|H|3) to integrate a long sequence, where H is the operation history. This paper proposes a novel algorithm that provides optimized transformation of long sequences, improving the time complexity to O(|H|). Our experiments will show that it takes 59 minutes in a recent algorithm versus 1.5 seconds in this work to integrate two long sequences on a mobile device. The performance improvement is critical towards achieving desired responsiveness and group productivity in a class of mobile collaborative applications."
+    },
+    {
+      "id": "W2167493836",
+      "title": "Document replication strategies for geographically distributed web search engines",
+      "abstract": null
+    },
+    {
+      "id": "W2312479428",
+      "title": "Consistency of Data Replication Protocols in Database Systems: A Review",
+      "abstract": "In this paper, a review for consistency of data replication protocols has been investigated.A brief deliberation about consistency models in data replication is shown.Also we debate on propagation techniques such as eager and lazy propagation.Differences of replication protocols from consistency view point are studied.Also the advantages and disadvantages of the replication protocols are shown.We advent into essential technical details and positive comparisons, in order to determine their respective contributions as well as restrictions are made.Finally, some literature research strategies in replication and consistency techniques are reviewed."
+    },
+    {
+      "id": "W2740163210",
+      "title": "An adaptive peer-sampling protocol for building networks of browsers",
+      "abstract": null
+    },
+    {
+      "id": "W2043994652",
+      "title": "Effective and efficient compromise recovery for weakly consistent replication",
+      "abstract": "Weakly consistent replication of data has become increasingly important both for loosely-coupled collections of personal devices and for large-scale infrastructure services. Unfortunately, automatic replication mechanisms are agnostic about the quality of the data they replicate. Inappropriate updates, whether malicious or simply the result of misuse, propagate automatically and quickly. The consequences may not be noticed until days later, when the corrupted data has been fully replicated, thereby deleting or overwriting all traces of the valid data. In this sort of situation, it can be hard or impossible to restore an entire distributed system to a clean state without losing data and disrupting users."
+    },
+    {
+      "id": "W2099342989",
+      "title": "HAT, not CAP: towards highly available transactions",
+      "abstract": "While the CAP Theorem is often interpreted to preclude the availability of transactions in a partition-prone environment, we show that highly available systems can provide useful transactional semantics, often matching those of today\u2019s ACID databases. We propose Highly Available Transactions (HATs) that are available in the presence of partitions. HATs support many desirable ACID guarantees for arbitrary transactional sequences of read and write operations and permit low-latency operation. 1"
+    },
+    {
+      "id": "W4234514454",
+      "title": "Alleviating scalability issues of checkpointing protocols",
+      "abstract": "Current fault tolerance protocols are not sufficiently scalable for the exascale era. The most-widely used method, coordinated checkpointing, places enormous demands on the I/O subsystem and imposes frequent synchronizations. Uncoordinated protocols use message logging which introduces message rate limitations or undesired memory and storage requirements to hold payload and event logs. In this paper we propose a combination of several techniques, namely coordinated checkpointing, optimistic message logging, and a protocol that glues them together. This combination eliminates some of the drawbacks of each individual approach and proves to be an alternative for many types of exascale applications. We evaluate performance and scaling characteristics of this combination using simulation and a partial implementation. While not a universal solution, the combined protocol is suitable for a large range of existing and future applications that use coordinated checkpointing and enhances their scalability."
+    },
+    {
+      "id": "W2557744001",
+      "title": "An efficient and highly available framework of data recency enhancement for eventually consistent data stores",
+      "abstract": null
+    },
+    {
+      "id": "W2954660873",
+      "title": "Interleaving anomalies in collaborative text editors",
+      "abstract": "Collaborative text editors allow two or more users to concurrently edit a shared document without merge conflicts. Such systems require an algorithm to provide convergence, ensuring all clients that have seen the same set of document edits are in the same state. Unfortunately convergence alone does not guarantee that a collaborative text editor is usable. Several published algorithms for collaborative text editing exhibit an undesirable anomaly in which concurrently inserted portions of text with a well-defined order may be randomly interleaved on a character-by-character basis, resulting in an unreadable jumble of letters. Although this anomaly appears to be known informally by some researchers in the field, we are not aware of any published work that fully explains or addresses it. We show that several algorithms suffer from this problem, explain its cause, and also identify a lesser variant of the anomaly that occurs in another algorithm. Moreover, we propose a specification of collaborative text editing that rules out the anomaly, and show how to prevent the lesser anomaly from occurring in one particular algorithm."
+    },
+    {
+      "id": "W2993126026",
+      "title": "Strict Timed Causal Consistency as a Hybrid Consistency Model in the Cloud Environment",
+      "abstract": null
+    },
+    {
+      "id": "W3017121320",
+      "title": "PushPin",
+      "abstract": "Fully peer-to-peer application software promises many benefits over cloud software, in particular, being able to function indefinitely without requiring servers. Research on distributed consistency mechanisms such as CRDTs has laid the foundation for P2P data synchronisation and collaboration. In this paper we report on our experience in taking these technologies beyond research prototypes, and working towards commercial-grade P2P collaboration software. We identify approaches that work well in our experience, such as the functional reactive programming paradigm, and highlight areas in need of further research, such as the reliability of NAT traversal and usability challenges."
+    },
+    {
+      "id": "W1977401017",
+      "title": "Byzantine fault tolerant collaborative editing",
+      "abstract": "In this paper, we describe a lightweight solution for protecting real-time collaborative editing systems against Byzantine faults. We observe that a centralized coordination algorithm not only reduces the complexity of the editing system, it makes easier to harden the system with Byzantine fault tolerance. We perform a comprehensive analysis of the potential threats towards collaborative editing systems and introduce a set of Byzantine fault tolerance mechanisms without requiring any additional redundant resources. If the system has sufficient redundancy, such mechanisms can be used to ensure strong protection against various malicious faults. Even without sufficient redundancy in the system, our mechanisms would still help limit the damages caused by a faulty user."
+    },
+    {
+      "id": "W2141327882",
+      "title": "Unifying divergence bounding and locality awareness in replicated systems with vector-field consistency",
+      "abstract": "Abstract Data replication is a very relevant technique for improving performance, availability, and scalability. These are requirements of many applications such as multiplayer distributed games, cooperative software tools, etc. However, consistency of the replicated shared state is hard to ensure. Current consistency models and middleware systems lack the required adaptability and efficiency. Thus, developing such robust applications is still a daunting task. We propose a new consistency model, named Vector-Field Consistency (VFC) that unifies (i) several forms of consistency enforcement and a multidimensional criteria (time, sequence, and value) to limit replica divergence with (ii) techniques based on locality-awareness (w.r.t. players position). Based on the VFC model, we propose a generic meta-architecture that can be easily instantiated both to centralized and (dynamically) partitioned architectures: (i) a single central server in which the VFC algorithm runs or (ii) a set of servers in which each one is responsible for a slice of the data being shared. The first approach is clearly more adapted to ad hoc networks of resource-constrained devices, while the second, being more scalable, is well adapted to large-scale networks. We developed and evaluated two prototypes of VFC (for ad hoc and large-scale networks) with very good performance results."
+    },
+    {
+      "id": "W2129898713",
+      "title": "A semantically rich approach for collaborative model edition",
+      "abstract": "We propose a novel approach and tool for collaborative software engineering and development. In model-based software engineering, the underlying data structure is a complex, directed and labeled graph. Collaborative engineering requires that developers be able to copy the graph, make independent changes, compare them, detect conflicts, and merge non-conflicting graphs. To support different collaboration and development styles requires a very flexible toolset. Worldwide, loosely-coupled development teams require the support of large-scale networks of users, possibly disconnected, in a decentralised fashion. No matter how the graph replicas evolve, they must eventually converge. We describe and evaluate C-Praxis, a tool that satisfies these requirements."
+    },
+    {
+      "id": "W3104510503",
+      "title": "Analysis of the Matrix Event Graph Replicated Data Type",
+      "abstract": "Matrix is a new kind of decentralized, topic-based publish-subscribe middleware for communication and data storage that is getting particularly popular as a basis for secure instant messaging. By comparison with traditional decentralized communication systems, Matrix replaces pure message passing with a replicated data structure. This data structure, which we extract and call the Matrix Event Graph (MEG), depicts the causal history of messages. We show that this MEG represents an interesting and important replicated data type for decentralized applications that are based on causal histories of publish-subscribe events: First, we prove that the MEG is a Conflict-Free Replicated Data Type for causal histories and, thus, provides Strong Eventual Consistency (SEC). With SEC being among the best known achievable trade-offs in the scope of the well-known CAP theorem, the MEG provides a powerful consistency guarantee while being available during network partition. Second, we discuss the implications of byzantine attackers on the data type's properties. We note that the MEG, as it does not strive for consensus or strong consistency, can cope with n > f environments with n participants, of which f are byzantine. Furthermore, we analyze scalability: Using Markov chains, we study the number of forward extremities of the MEG over time and observe an almost optimal evolution. We conjecture that this property is inherent to the underlying spatially inhomogeneous random walk. With the properties shown, a MEG represents a promising element in the set of data structures for decentralized applications, but with distinct trade-offs compared to traditional blockchains and distributed ledger technologies."
+    },
+    {
+      "id": "W47798387",
+      "title": "Optimized OR-Sets without Ordering Constraints",
+      "abstract": null
+    },
+    {
+      "id": "W2241718421",
+      "title": "Exploring Energy-Consistency Trade-Offs in Cassandra Cloud Storage System",
+      "abstract": "Apache Cassandra is an open-source cloud storage system that offers multiple types of operation-level consistency including eventual consistency with multiple levels of guarantees and strong consistency. It is being used by many data-center applications (e.g., Facebook and App Scale). Most existing research efforts have been dedicated to exploring trade-offs such as: consistency vs. Performance, consistency vs. Latency and consistency vs. Monetary cost. In contrast, a little work is focusing on the consistency vs. Energy trade-off. As power bills have become a substantial part of the monetary cost for operating a data-center, this paper aims to provide a clearer understanding of the interplay between consistency and energy consumption. Accordingly, a series of experiments have been conducted to explore the implication of different factors on the energy consumption in Cassandra. Our experiments have revealed a noticeable variation in the energy consumption depending on the consistency level. Furthermore, for a given consistency level, the energy consumption of Cassandra varies with the access pattern and the load exhibited by the application. This further analysis indicates that the uneven distribution of the load amongst different nodes also impacts the energy consumption in Cassandra. Finally, we experimentally compare the impact of four storage configuration and data partitioning policies on the energy consumption in Cassandra: interestingly, we achieve 23% energy saving when assigning 50% of the nodes to the hot pool for the applications with moderate ratio of reads and writes, while applying eventual (quorum) consistency. This study points to opportunities for future research on consistency-energy trade-offs and offers useful insight into designing energy-efficient techniques for cloud storage systems."
+    },
+    {
+      "id": "W2035959787",
+      "title": "Octopus: An Upperware based system for building personal pervasive environments",
+      "abstract": null
+    },
+    {
+      "id": "W4213217266",
+      "title": "Vector-Field Consistency for Ad-Hoc Gaming",
+      "abstract": null
+    },
+    {
+      "id": "W2067512427",
+      "title": "Building a collaborative peer-to-peer wiki system on a structured overlay",
+      "abstract": null
+    },
+    {
+      "id": "W2068007286",
+      "title": "Quality-aware schedulers for weak consistency key-value data stores",
+      "abstract": null
+    },
+    {
+      "id": "W2017633061",
+      "title": "Efficient Model for Replica Consistency Maintenance in Data Grids",
+      "abstract": "In order to improve the efficiency of replica consistency management, one efficient consistency maintaining model is proposed. In this model, replica clustering coefficient is defined for representing social capacity, by which replica nodes are classified into multi-levels to form one replica-tree, and constitute a peer-to-peer network with first-class replica nodes of different VOs. The experimental results show that the proposed model can reduce conflict number and response time compared with some existing models."
+    },
+    {
+      "id": "W4406327968",
+      "title": "Efficient State Synchronization in Distributed Electrical Grid Systems Using Conflict-Free Replicated Data Types",
+      "abstract": "Modern electrical grids are evolving towards distributed architectures, necessitating efficient and reliable state synchronization mechanisms to maintain structural and functional consistency. This paper investigates the application of conflict-free replicated data types (CRDTs) for representing and synchronizing the states of distributed electrical grid systems (DEGSs). We present a general structure for DEGSs based on CRDTs, focusing on the Convergent Replicated Data Type (CvRDT) model with delta state propagation to optimize the communication overhead. The Observed Remove Set (ORSet) and Last-Writer-Wins Register (LWW-Register) are utilized to handle concurrent updates and ensure that only the most recent state changes are retained. An actor-based framework, \u201cVigilant Hawk\u201d, leveraging the Akka toolkit, was developed to simulate the asynchronous and concurrent nature of DEGSs. Each electrical grid node is modelled as an independent actor with isolated state management, facilitating scalability and fault tolerance. Through a series of experiments involving 100 nodes under varying latency degradation coefficients (LDK), we examined the impact of network conditions on the state synchronization efficiency. The simulation results demonstrate that CRDTs effectively maintain consistency and deterministic behavior in DEGSs, even with increased network latency and node disturbances. An effective LDK range was identified (LDK effective = 2 or 4), where the network remains stable without significant delays in state propagation. The linear relationship between the full state distribution time (FSDT) and LDK indicates that the system can scale horizontally without introducing complex communication overhead. The findings affirm that using CRDTs for state synchronization enhances the resilience and operational efficiency of distributed electrical grids. The deterministic and conflict-free properties of CRDTs eliminate the need for complex concurrency control mechanisms, making them suitable for real-time monitoring and control applications. Future work will focus on addressing identified limitations, such as optimizing message routing based on the network topology and incorporating security measures to protect state information in critical infrastructure systems."
+    },
+    {
+      "id": "W2076088000",
+      "title": "Consistency without concurrency control in large, dynamic systems",
+      "abstract": "Replicas of a commutative replicated data type (CRDT) eventually converge without any complex concurrency control. We validate the design of a non-trivial CRDT, a replicated sequence, with performance measurements in the context of Wikipedia. Furthermore, we discuss how to eliminate a remaining scalability bottleneck: Whereas garbage collection previously required a system-wide consensus, here we propose a flexible two-tier architecture and a protocol for migrating between tiers. We also discuss how the CRDT concept can be generalised, and its limitations."
+    },
+    {
+      "id": "W1605176624",
+      "title": "Peer-to-Peer Semantic Wikis",
+      "abstract": null
+    },
+    {
+      "id": "W2157257000",
+      "title": "Quality-of-Service for Consistency of Data Geo-replication in Cloud Computing",
+      "abstract": null
+    },
+    {
+      "id": "W1896060185",
+      "title": "Unconscious Eventual Consistency with Gossips",
+      "abstract": null
+    },
+    {
+      "id": "W2101735094",
+      "title": "Evaluation of intra\u2010group optimistic data replication in P2P groupware systems",
+      "abstract": "Summary Peer\u2010to\u2010peer (P2P) computing systems have become very popular during the last years because of their ability to scale to a large number of users and efficient communication among peers. They can support complex computational processes, beyond simple file sharing, while offering advantages of decentralized distributed systems. However, such systems may suffer from availability and reliability. To increase availability and reliability, and therefore, improve the perception of peers, yielding to fast response times and rich experience, data replication techniques are the foremost means in such systems. Indeed, in many P2P applications, for example, in a groupware, documents generated along application life cycle can change over time. The need is then to efficiently replicate dynamic documents and data to support group processes and collaboration. In this paper, we propose a replication system for documents structured as XML files and evaluate it under different scenarios. The proposed system has a super\u2010peer architecture that provides fast consistency for late joining peers. It uses optimistic replication techniques with propagating update operations from source to destination node in push mode. The system is suitable for asynchronous collaboration in online collaborative teams accomplishing a common project in a P2P environment. Copyright \u00a9 2012 John Wiley & Sons, Ltd."
+    },
+    {
+      "id": "W2142637263",
+      "title": "Distributed Data Summaries for Approximate Query Processing in PDMS",
+      "abstract": "Evolving from heterogeneous database systems one of the main problems in peer data management systems (PDMS) is distributed query processing. With the absence of global knowledge such strategies have to focus on routing the query efficiently to only those peers that are most likely to contribute to the final result. Using routing indexes is one possibility to achieve this. Since data may change over time these structures have to be updated and maintained which can be very expensive. In this paper, we present a novel kind of routing indexes that enables efficient query routing. Furthermore, we propose a threshold based update strategy that can help to reduce maintenance costs by far. We exemplify the benefit of these indexes using a distributed skyline strategy as an example. Finally, we show how relaxing exactness requirements, that are usually posed on results, can compensate the use of slightly outdated index information"
+    },
+    {
+      "id": "W1978608510",
+      "title": "Data Replication in P2P Collaborative Systems",
+      "abstract": "Data replication techniques have been extensively used in distributed systems to achieve, among others, due to system nodes failures: (a) high data availability, (b) system's reliability and (c) scalability. Due to the various characteristics of distributed systems as well as system's and application's requirements, a variety of data replication techniques have been proposed in the distributed computing field. One important distributed computing paradigm is that of P2P systems, which distinguish for their large scale and unreliable nature. The study and application of replication techniques becomes a must in such systems. While it is well understood and easy to achieve replication of immutable information (typically files) in P2P systems, it becomes more challenging to implement data replication techniques of dynamic data under highly dynamic nature of large P2P systems. Indeed, replicating documents that could change over time requires addressing the consistency issues. In this paper we study some data replication techniques for P2P collaborative systems. We identify several contexts and use cases where data replication can greatly support collaboration. We then consider as a case study replication techniques for dynamic documents in the context of a peer-group based P2P system of super-peer architecture. P2P collaborative systems arise in many groupware applications, such as collaborative work in online teams, having requirements for high availability and system reliability (e.g. in disaster management scenarios). We propose a replication system for documents structured as XML files to address the dynamics of the documents at peers and use the super-peer to ensure a satisfactory level of document consistency among peers."
+    },
+    {
+      "id": "W2155788099",
+      "title": "A Fast Operational Transformation Algorithm for Mobile and Asynchronous Collaboration",
+      "abstract": "In a mobile collaboration environment, the shared files are often replicated so that the users can work in parallel during periods of disconnection. When reconnected, sequences of updates made by different users are merged to produce a consistent view of shared files. This paper presents a novel transformation-based merging algorithm for supporting mobile collaboration. Compared to alternative optimistic consistency control methods, it can merge any updates to the same file automatically at the finest granularity without causing loss of work. Moreover, it improves the time complexity of the state-of-the-art transformation-based merging algorithms from O(n3) to O(n), where n is the size of either sequence when their sizes are comparable. This improvement is drastic and important especially for mobile devices that run on batteries and have limited processing power."
+    },
+    {
+      "id": "W1479725431",
+      "title": "Database Replication: A Tutorial",
+      "abstract": null
+    },
+    {
+      "id": "W2139982073",
+      "title": "Context-driven migration and diffusion of pervasive services on the OSGi framework",
+      "abstract": "The ubiquity of wireless ad hoc networks and the benefits of loosely coupled services have fostered a growing interest in service-oriented architectures for pervasive computing. Context-aware services and runtime adaptation are key to expedite human interaction with dynamic pervasive computing environments. We explore two types of live service mobility to avoid service disruptions in mobile ad hoc networks. Service migration moves a service at runtime from one host to another including its state, while service diffusion replicates the service and the state on multiple hosts. We analyse the basic requirements for service mobility and evaluate our OSGi-based implementation for service mobility with real life experiments. Our results show that the overhead of state transfer and synchronisation is limited for relatively small applications and that the delay for handing over to a replicated service in a small scale network with enforced network failures remains minimal."
+    },
+    {
+      "id": "W46571277",
+      "title": "Pervasive Services on the Move: Smart Service Diffusion on the OSGi Framework",
+      "abstract": null
+    },
+    {
+      "id": "W2131962854",
+      "title": "Client-centric consistency formalization and verification for system with large-scale distributed data storage",
+      "abstract": null
+    },
+    {
+      "id": "W2471818031",
+      "title": "Transactions with Consistency Choices on Geo-Replicated Cloud Storage",
+      "abstract": "Pileus is a replicated and scalable key-value storage system that features geo-replicated transactions with varying degrees of consistency chosen by applications. Each transaction reads from a snapshot selected based on its requested consistency, from strong to eventual consistency or intermediate guarantees such as read-my-writes, monotonic, bounded, and causal."
+    },
+    {
+      "id": "W2563048284",
+      "title": "Strategies for replica consistency in data grid \u2013 a comprehensive survey",
+      "abstract": "Summary Data grid provides an efficient solution for data\u2010oriented applications that need to manage and process large data sets located at geographically distributed storage resources. Data grid relies on data replicas to enhance the performance and to ensure the fault tolerant results to the users. Replicas are developed to increase the availability of data and to provide better data access. Replicas have their own advantages, but there are a number of issues that must be resolved. Among various existing issues, the critical concern is replica consistency. Various replica consistency strategies are available in the literature. These strategies rationalize and investigate various parameters like bandwidth consumption, access cost, scalability, execution time, storage consumption, staleness, and freshness of replicas. In this paper, several asynchronous replica consistencies are classified and analyzed based on various strategies such as topology, level of abstraction, update propagation, and locality. Some other strategies are also discussed and analyzed like adaptive consistency, quorum\u2010based consistency, load balancing, and agent\u2010based economically efficient, check\u2010pointing, fault tolerance, and conflict management. Parameters on which these strategies are analyzed are methodology, replication classification, consistency, grid topology, environment, evaluation parameters, and performance. Copyright \u00a9 2016 John Wiley & Sons, Ltd."
+    },
+    {
+      "id": "W2921262352",
+      "title": "CAP Theorem: Revision of Its Related Consistency Models",
+      "abstract": "The CAP theorem states that only two of these properties can be simultaneously guaranteed in a distributed service: (i) consistency, (ii) availability and (iii) network partition tolerance. This theorem was stated and proved assuming that \u2018consistency\u2019 refers to atomic consistency. However, multiple consistency models exist and atomic consistency is located at the strongest edge of that spectrum. Many distributed services deployed in cloud platforms should be highly available and scalable. Network partitions may arise in those deployments and should be tolerated. One way of dealing with CAP constraints consists in relaxing consistency. Therefore, it is interesting to explore the set of consistency models not supported in an available and partition-tolerant service (CAP-constrained models). Other weaker consistency models could be maintained when scalable services are deployed in partitionable systems (CAP-free models). Three contributions arise: (i) multiple other CAP-constrained models are identified, (ii) a borderline between CAP-constrained and CAP-free models is set and (iii) a hierarchy of consistency models depending on their strength and convergence is built."
+    },
+    {
+      "id": "W3124048408",
+      "title": "Multi-Model Evolution through Model Repair.",
+      "abstract": "Design and development of complex software systems usually comprises multiple inter-related models, i.e. abstract representations of certain aspects of the underlying system. The relations between these models induce global consistency conditions which the models collectively must fulfill. At the same time, these models are subject to frequent changes, and as a result, maintaining their global consistency over time becomes an important issue in model management in general and Model-Driven Software Engineering in particular. In this paper, we present a comprehensive feature model providing an overview of the current state of the art of model management. In this feature model, we further identify the central role of model repair as an implementation pattern for (multi-)model evolution."
+    },
+    {
+      "id": "W2186533123",
+      "title": "Performance analysis of distributed virtual environments",
+      "abstract": "I hereby declare that I am the sole author of this thesis. This is a true copy of the thesis, including any required final revisions, as accepted by my examiners. I understand that my thesis may be made electronically available to the public. ii A distributed virtual environment (DVE) is a shared virtual environment where multiple users at their workstations interact with each other. Some of these systems may support a large number of users, e.g., massive multi-player online games, and these users may be geographically distributed. An important performance measure in a DVE system is the delay for an update of a user\u2019s state (e.g., his position in the virtual environment) to arrive at the workstations of those users who are affected by the update. This update delay often has a stringent requirement (e.g., less than 100 ms) in order to ensure interactivity among users. In designing a DVE system, an important issue is how well the system scales as the number of users increases. In terms of scalability, a promising system archi-"
+    },
+    {
+      "id": "W2051137002",
+      "title": "Automated Conflict Avoidance in Multi-user CAD",
+      "abstract": "The NSF Center for e-Design, Brigham Young University (BYU) site has re-architected Computer Aided Design (CAD) tools enabling multiple users to concurrently create, modify and view the same CAD part or assembly. This technology allows engineers, designers and manufacturing personnel to simultaneously contribute to the design of a part or assembly in real time, enabling parallel work environments within the CAD system. Such systems are only as robust as their methods for managing conflicts (i.e. simultaneous edits of the same feature by multiple users). A heavy-handed conflict prevention would limit collaborative freedom. This paper discusses an automated feature reservation method which prevents multiple users from simultaneously editing the same feature. The method is implemented in a commercial CAD system. Results show that this methodology prevents data inconsistency that results from feature/self conflicts. This system prevents CAD modeling conflicts, while providing an agile user experience within t..."
+    },
+    {
+      "id": "W2096665667",
+      "title": "An Efficient Replica Location Method in Hierarchical P2P Networks",
+      "abstract": "The existing replica location services mostly deal with read-only data, thus the replica location mechanism is relatively simple. This paper aims to provide global replica view in logic for better supporting all-around replica management to realize optimal replication strategy and replication selection strategy. We present the bidirectional linked list based replica location service (BLL-RLS) on tree-based hierarchical unstructured overlay networks, including the deployment of replica location service and the design of the bidirectional linked list based replica catalog. In the absence of the centralized replication management, it can logically provide a global replica view of the original. Based on the bidirectional linked list based replica catalog, replica location and selection algorithm is also proposed. Simulation results show that the algorithm has better performance."
+    },
+    {
+      "id": "W3200166391",
+      "title": "Leader Confirmation Replication for Millisecond Consensus in Private Chains",
+      "abstract": "The private chain-based Internet-of-Things (IoT) system ensures the security of cross-organizational data sharing. As a widely used consensus model in private chains, the leader-based state-machine replication (SMR) model meets the performance bottleneck in IoT blockchain applications, where nontransactional sensor data are generated on a scale. We analyzed IoT private chain systems and found that the leader maintains too many connections due to high latency and client request frequency, which results in lower consensus performance and efficiency. To meet this challenge, we propose a novel solution for maintaining low request latency and high transactions per second (TPS): replicate nontransactional data by followers and confirm by the leader to achieve nonconfliction SMR, rather than all by the leader. Our solution, named leader confirmation replication (LCR), uses the newly proposed future log and confirmation signal to achieve nontransactional data replication on the followers, thereby reducing the leader\u2019s network traffic and the request latency of transactional data. In addition, the generation replication strategy is designed to ensure the reliability and consistency of LCR when meeting membership changes. We evaluated LCR with various cluster sizes and network latencies. The experimental results show that in ms-network latency (2\u201330) environments, the TPS of LCR is 1.4X-1.9X higher than Raft, the transactional data response time is reduced by 40%\u201360%, and the network traffic is reduced by 20%\u201330% with acceptable network traffic and CPU cost on the followers. In addition, LCR shows high portability and availability since it does not change the number of leaders or the election process."
+    },
+    {
+      "id": "W2299946894",
+      "title": "Scalable Data-Oriented Replication with Flexible Consistency in Real-Time Data Systems",
+      "abstract": "Scalability is an increasingly important target for distributed real-time databases. Replication is widely applied to improve the scalability and availability of data. With full replication, database systems cannot scale well, since all updates must be replicated to all nodes, whether or not they are needed there. With virtual Full Replication, all nodes have an image of a fully replicated database and the system manages the knowledge of what is needed for each node to adapt to the actual needs, so that the system can be more scalable. This work proposes a scalable and consistent replication protocol using an adaptive clustering technique that dynamically detects the new data requirements. Because time is critical in such systems, the clustering technique must take into account both the communication time cost and the timing properties of the data. The proposed protocol also proposes a new updated method for addressing the temporal inconsistency problem by skipping unnecessary operations. It allows many database nodes to update their data concurrently, without any need for distributed synchronization. It uses state-transfer propagation with on-demand integration techniques to reduce the temporal inconsistency. The experimental results show the ability of the proposed protocol to reduce the system resources consumed and improves system scalability while maintaining consistency."
+    },
+    {
+      "id": "W3202087829",
+      "title": "Highly-available and consistent group collaboration at the edge with colony",
+      "abstract": "Edge applications, such as gaming, cooperative engineering, or in-the-field information sharing, enjoy immediate response, autonomy and availability by distributing and replicating data at the edge. However, application developers and users demand the highest possible consistency guarantees, and specific support for group collaboration. To address this challenge, Colony guarantees Transactional Causal Plus Consistency (TCC+) globally, strengthened to Snapshot Isolation within edge groups. To help with scalability, fault tolerance and security, its logical communication topology is forest-like, with replicated roots in the core cloud, but with the flexibility to migrate a node or a group. Despite this hybrid approach, applications enjoy the same semantics everywhere in the topology. Our experiments show that local caching and peer groups improve throughput and response time significantly, performance is not affected in offline mode, and that migration is seamless."
+    },
+    {
+      "id": "W2068476747",
+      "title": "Live linked data: synchronising semantic stores with commutative replicated data types",
+      "abstract": "Linked Data is currently interconnecting information on the web, creating the web of data. It allows data consumers to combine different data sets and perform powerful queries. However, this means either to copy data sets locally or perform distributed querying. Local copies have problems of freshness, distributed queries, of scalability and performance. Linked Data producers are currently going live by providing streams of data updates, opening a third way to query: synchronise and search. Each Linked Data node can follow update streams of others, creating a social network of live updates: the Live Linked Data (LLD). Unfortunately, synchronising data among autonomous participants raises issues of concurrency and consistency. In this paper, we propose SU-Set, a Commutative Replicated Data Type (CRDT) for RDF graph updated with SPARQL Update 1.1. We describe how a semantic store can use SU-Set to ensure eventual consistency in LLD, with a low overhead in time, space and communication."
+    },
+    {
+      "id": "W2141297235",
+      "title": "A Scalable Conflict-Free Replicated Set Data Type",
+      "abstract": "Replication of state is the fundamental approach to achieve scalability and availability. In order to maintain or restore replica consistency under updates, some form of synchronization is needed. Conflict-free Replicated Data Types (CRDTs) ensure eventual consistency, such that replicas converge to a common state, equivalent to a correct sequential execution without foreground synchronization. A particular CRDT is the set data type, which is a pervasive abstraction for storing collections of unique elements and constitutes an important building block for other, more complex data structures. Since the original specification is not scalable, we improve it by introducing an efficient algorithm for sending deltas of updates between replicas and by partitioning a set replica into disjunctive subsets. We further add support for limited-lifetime elements, which, in turn, enable simple garbage collection strategies to address the problem of unbounded database growth. Lastly, implementation details and evaluation results of a client library for this data structure are presented."
+    },
+    {
+      "id": "W2536136375",
+      "title": "B-Set: A synchronization method for distributed semantic stores",
+      "abstract": "Nowadays, there are increasing interests in developing methods for synchronizing distributed triple-stores by ensuring eventual data consistency in distributed architecture. The most well-known of them have been designed to serve as a common replicated data type (CRDT), where all concurrent operations commute independently of the centralized control. In this context, CRDT has been proposed for semantic stores, such as SWOOKI, C-Set and SU-Set. However none of the exiting synchronization solutions mention how to ensure Causality, Consistency and Intention preservation criteria of CCI model. This paper proposes B-Set, a new CRDT for the synchronization of semantic stores. B-Set is designed not only to ensure convergence of triples replicas but also to preserve user's intentions integrated in distributed architecture. The sets of operations are also defined in order to allow concurrent editing of the same shared triple-stores."
+    },
+    {
+      "id": "W2785214157",
+      "title": "A Software Architecture for Centralized Management of Structured Documents in a Cooperative Editing Workflow",
+      "abstract": null
+    },
+    {
+      "id": "W1699585028",
+      "title": "XWiki Concerto: A P2P Wiki System Supporting Disconnected Work",
+      "abstract": null
+    },
+    {
+      "id": "W2156302731",
+      "title": "Incremental stream processing using computational conflict-free replicated data types",
+      "abstract": "Information has become a key commodity for most service providers. Analyzing streams of data efficiently, in real time, has become increasingly more important for supporting new products and applications."
+    },
+    {
+      "id": "W4312038601",
+      "title": "Reversible conflict-free replicated data types",
+      "abstract": "Conflict-free replicated data types (CRDTs) are popular for optimistic replication and ensuring strong eventual consistency (SEC) in distributed systems. However, reversibility is an underdeveloped functionality for CRDTs, despite its usefulness in system restoration from an erroneous state or undoing unwanted operations. In this paper, we define the concept and design of reversible CRDTs (rCRDTs). Reverse operations compensate for the effect of reversed updates, and they extend existing CRDT interfaces. Three abstractions for reversibility are proposed: reversing a single update, multiple causally related updates, and multiple logically related updates that capture the user intention behind the updates. Moreover, a replicated and distributed key-value store, rKVCRDT, is implemented as a proof of concept that integrates the support of reversible CRDTs. The rCRDTs' evaluation show that although adding reversibility affects the system's performance, the end result depends on multiple factors and varies based on the underlying CRDTs. System designers must consider the trade-off between the benefit of reversibility and the performance impact."
+    },
+    {
+      "id": "W1984822421",
+      "title": "Conflict-Free Collaborative Decision-Making over Mind-Mapping",
+      "abstract": "As the integration of disaster management, distributed computing, and collaborative technologies, collaborative disaster management systems can overcome the challenges, such as data replication and updating, real-time information dissemination, distributed resources sharing, and collaborative decision-making. Collaborative decision-making systems over Mind-Mapping are modeled by a set of sites connected by a communication network with each site hosting a replica of shared data. When a site executes a modification, it generates a corresponding operation that is performed immediately on its local copy, and then is propagated to all sites in order to be executed remotely. However, if the consistency is not properly guaranteed it can lead to divergences, practically, in the case of concurrent decisions over the shared Mind-Mapping. This paper aims to provide a solution to the problem of consistency in collaborative decision-making over Mind- Mapping. This solution allows distributed users to work together to reach a common goal without central servers and coordination among them is achieved in a Peer-to-Peer manner. A prototype developed about nuclear disaster scenario demonstrates the effectiveness of our approach."
+    },
+    {
+      "id": "W2039852615",
+      "title": "Controlled conflict resolution for replicated document",
+      "abstract": "Collaborative working is increasingly popular, but it presents challenges due to the need for high responsiveness and disconnected work support. To address these challenges the data is optimistically replicated at the edges of the network, i.e. personal computers or mobile devices. This replication"
+    },
+    {
+      "id": "W2119587654",
+      "title": "Autonomous Storage Management for Personal Devices with PodBase",
+      "abstract": "People use an increasing number of personal electronic devices like notebook computers, MP3 players and smart phones in their daily lives. Making sure that data on these devices is available where needed and backed up regularly is a time-consuming and error-prone burden on users. In this paper, we describe and evaluate PodBase, a system that automates storage management on personal devices. The system takes advantage of unused storage and incidental connectivity to propagate the system state and replicate files. PodBase ensures the durability of data despite device loss or failure; at the same time, it aims to make data available on devices where it is useful.\r\n\r\nPodBase seeks to exploit available storage and pairwise device connections with little or no user attention. Towards this goal, it relies on a declarative specification of its replication goals and uses linear optimization to compute a replication plan that considers the current distribution of files, availability of storage, and history of device connections. Results from a user study in ten real households show that, under a wide range of conditions, PodBase transparently manages the durability and availability of data on personal devices."
+    },
+    {
+      "id": "W2150206103",
+      "title": "Peer-to-Peer Data Replication Meets Delay Tolerant Networking",
+      "abstract": "Work on delay tolerant networks (DTN) and peer-to-peer replication systems has made rapid advances with the similar goal of permitting reliable message delivery in challenged communication environments. Techniques developed for both types of systems also bear some similarity. Both exploit opportunistic connectivity to route messages and updates to their desired destinations while making minimal assumptions about end-to-end connectivity. However, they also have some unique characteristics. DTNs have recently incorporated forwarding algorithms that make use of historical information on past encounters between participants and predictions of future connectivity. Modern replication systems utilize protocols with low overheads that guarantee eventual consistency and at-most-once delivery while supporting content-based filters. In this paper, we show how a DTN-like messaging system can be readily built as a simple application on top of a peer-to-peer replication platform. To reduce delivery delays while retaining the desirable replication guarantees, we then extend the replication substrate to permit pluggable DTN routing protocols. We describe the implementation of four representative DTN schemes as replication policies and evaluate these extensions with emulations driven by traces of e-mail messaging and vehicular mobility. We conclude that DTNs and replication systems can benefit substantially from a cross-fertilization of ideas."
+    },
+    {
+      "id": "W2796642286",
+      "title": "Eventual Consistency for CRDTs",
+      "abstract": "We address the problem of validity in eventually consistent (EC) systems: In what sense does an EC data structure satisfy the sequential specification of that data structure? Because EC is a very weak criterion, our definition does not describe every EC system; however it is expressive enough to describe any Convergent or Commutative Replicated Data Type (CRDT)."
+    },
+    {
+      "id": "W2951138559",
+      "title": "Controlled conflict resolution for replicated document",
+      "abstract": "Abstract\u2014Collaborative working is increasingly popular, but it presents challenges due to the need for high responsiveness and disconnected work support. To address these challenges the data is optimistically replicated at the edges of the network, i.e. personal computers or mobile devices. This replication requires a merge mechanism that preserves the consistency and structure of the shared data subject to concurrent modifications. In this paper, we propose a generic design to ensure eventual consistency (every replica will eventually view the same data) and to maintain the specific constraints of the replicated data. Our layered design provides to the application engineer the complete control over system scalability and behavior of the replicated data in face of concurrent modifications. We show that our design allows replication of complex data types with acceptable performances. Index Terms\u2014optimistic replication, replicated document, col-laborative editing I."
+    },
+    {
+      "id": "W1665195354",
+      "title": "A Cloud Computing Based Patient Centric Medical Information System",
+      "abstract": null
+    },
+    {
+      "id": "W1508957011",
+      "title": "A SyncML Middleware-Based Solution for Pervasive Relational Data Synchronization",
+      "abstract": null
+    },
+    {
+      "id": "W2079890098",
+      "title": "Finding the silver lining for data freshness on the cloud",
+      "abstract": "Emerging NoSQL key-value data stores rely on data partitioning and replication to achieve higher levels of availability and scalability. Such design choices typically exhibit a tradeoff in which data freshness is sacrificed in favor of reduced access latencies. In this work, we argue that the same tradeoff is further manifested at a local-level (i.e., replica-level) and is primarily shaped by the resource allocation strategies deployed for managing the processing of user queries and replica updates. To this end, we study several strategies for efficiently allocating such recourses so that to strike a fine balance between both the quality of service (QoS) and quality of data (QoD) perceived by the end-user."
+    },
+    {
+      "id": "W2081964606",
+      "title": "Load Balancing to Increase the Consistency of Replicas in Data Grids",
+      "abstract": "Data grids are current solutions to the needs of large scale systems and provide a set of different geographically distributed resources. Their goal is to offer an important capacity of parallel calculation, ensure a data effective and rapid access, improve the availability, and tolerate the breakdowns. In such systems, however, these advantages are possible only by using the replication technique. The use of this technique raises the problem of maintaining consistency of replicas of the same data set. In order to guarantee replica set reliability, it is necessary to have high coherence. This fact, however, penalizes performance. In this paper, the authors propose studying balancing influence on replica quality. For this reason, a service of hybrid consistency management is developed, which combines the pessimistic and optimistic approaches and is extended by a load balancing service to improve service quality. This service is articulated on a hierarchical model with two levels."
+    },
+    {
+      "id": "W2166672644",
+      "title": "GUESSTIMATE",
+      "abstract": "We present a new programming model GUEESSTIMATE for developing collaborative distributed systems. The model allows atomic, isolated operations that transform a system from consistent state to consistent state, and provides a shared transactional store for a collection of such operations executed by various machines in a distributed system. In addition to \"committed state\" which is identical in all machines in the distributed system, GUESSTIMATE allows each machine to have a replicated local copy of the state (called \"guesstimated state\") so that operations on shared state can be executed locally without any blocking, while also guaranteeing that eventually all machines agree on the sequences of operations executed. Thus, each operation is executed multiple times, once at the time of issue when it updates the guesstimated state of the issuing machine, once when the operation is committed (atomically) to the committed state of all machines, and several times in between as the guesstimated state converges toward the committed state. While we expect the results of these executions of the operation to be identical most of the time in the class of applications we study, it is possible for an operation to succeed the first time when it is executed on the guesstimated state, and fail when it is committed. GUESSTIMATE provides facilities that allow the programmer to deal with this potential discrepancy. This paper presents our programming model, its operational semantics, its realization as an API in C#, and our experience building collaborative distributed applications with this model."
+    },
+    {
+      "id": "W2013910571",
+      "title": "The Median Resource Failure Checkpointing",
+      "abstract": "In grid computing, the realization of an enviable fault tolerance ability is linked with the proper utilization of resources and scheduling of jobs. The literature offers two solutions to these two challenging tasks, viz. checkpointing and replication. A checkpointing strategy is being proposed that uses the median of failure intervals of the resources in deciding the checkpoint intervals for the given jobs. The strategy shows improved system throughput, job losses and job execution times while eliminating unnecessary checkpoints."
+    },
+    {
+      "id": "W2032689896",
+      "title": "A paradox of eventual linearizability in shared memory",
+      "abstract": "This paper compares, for the first time, the computational power of linearizable objects with that of eventually linearizable ones. We present the following paradox. We show that, unsurprisingly, no set of eventually linearizable objects can (1) implement any non-trivial linearizable object, nor (2) boost the consensus power of simple objects like linearizable registers. We also show, perhaps surprisingly, that any implementation of an eventually linearizable complex object like a fetch&increment counter (from linearizable base objects), can itself be viewed as a fully linearizable implementation of the same fetch&increment counter (using the exact same set of base objects)."
+    },
+    {
+      "id": "W7469863",
+      "title": "Liana: A Framework That Utilizes Causality to Schedule Contention Management across Networked Systems",
+      "abstract": null
+    },
+    {
+      "id": "W2287970975",
+      "title": "Layered Consistency Management for Advanced Collaborative Compound Document Authoring",
+      "abstract": null
+    },
+    {
+      "id": "W1973422299",
+      "title": "A hybrid approach to replica management in data grids",
+      "abstract": "Data grids are current solutions suggested to meet the needs of large-scale systems. They provide a set of various resources which are geographically distributed. A data grid allows quick and efficient access to data, enhancement of availability, and fault tolerance. In large-scale systems, these advantages are possible only by the use of replication. The latter, however, poses the problem of the maintenance of the consistency of replicas of the same data set. In this paper, we propose a hybrid method combining the pessimistic and optimistic approaches conceived for data consistency maintenance. Our approach is based on a hierarchical representation model with two levels, which facilitates the management of replica consistency in the large-scale systems."
+    },
+    {
+      "id": "W1520303659",
+      "title": "A Constraint-Based Formalism for Consistency in Replicated Systems",
+      "abstract": null
+    },
+    {
+      "id": "W2156976263",
+      "title": "Fuego: Experiences with Mobile Data Communication and Synchronization",
+      "abstract": "In this paper, we present a summary of our experiences with mobile middleware research in the four-year Fuego Core project. The presented work focuses on data communication and synchronization. We present three middleware services for data communication and synchronization, namely the messaging, event, and file synchronizer services, and discuss their development and usage. We conclude with an integrated architecture of these services and the lessons we have learned"
+    },
+    {
+      "id": "W2168127974",
+      "title": "Towards a Reliable Distributed Web Service Execution Engine",
+      "abstract": "This paper presents an approach for providing a reliable distributed Web service execution engine. Instead of using a Web service execution engine running on a single host to conduct the execution of a composite service, the responsibility of conducting the execution of the composite service has been delegated to the service providers that are chosen to provide the main functionalities of the tasks in the composite service. The operations of the tasks are represented as a set of XML-based notations. The notations are platform independent. Thus, they can be (a) retrieved by service providers based on different platforms, and, (b) interpreted and executed by the service providers. The approach also provides a mechanism for coping with possible failure in the system"
+    },
+    {
+      "id": "W2168718091",
+      "title": "Model-versioning-in-the-large: Algebraic foundations and the tile notation",
+      "abstract": "Model-versioning-in-the-large is concerned with complex scenarios involving multiple updates and multiple replicas of a model. The paper introduces tile systems as rephrasing of double categories in model versioning terms, and shows that the tile language enables a very general formalization of versioning concepts. The formalization makes the concepts amenable to algebraic analysis and provides a convenient notation for version system designers. It also allows one to formulate algebraic laws that a correct versioning system must or may want to satisfy."
+    },
+    {
+      "id": "W2105660606",
+      "title": "Consistency Management for Data Grid in OptorSim Simulator",
+      "abstract": "One of the principal motivations to use the grids computing and data grids comes from the applications using of large sets from data, for example, in high-energy physics or life science to improve the total output of the software environments used to carry these applications on the grids, data replication are deposited on various selected sites. In the field of the grids the majority of the strategies of replication of the data and scheduling of the jobs were tested by simulation. Several simulators of grids were born. One of the most simulators interesting for our study is the OptorSim tool. In this paper, we present an extension of the OptorSim simulator by a consistency management module of the replicas in the Data Grids. This extension corresponds to a hybrid approach of consistency, it inspired by the pessimistic and optimistic approaches of consistency. This suggested approach has two vocations, in the first time, it makes it possible to reduce the response times compared with the completely pessimistic approach, in the second time, it gives a good quality of service compared with the optimistic approach."
+    },
+    {
+      "id": "W2138356941",
+      "title": "Virtual Full Replication by Adaptive Segmentation",
+      "abstract": "We propose virtual full replication by adaptive segmentation (ViFuR-A), and evaluate its ability to maintain scalability in a replicated real-time database. With full replication and eventual consistency, transaction timeliness becomes independent of network delays for all transactions. However, full replication does not scale well, since all updates must be replicated to all nodes, also when data is needed only at a subset of the nodes. With virtual full replication that adapts to actual data needs, resource usage can be bounded and the database can be made scalable. We propose a scheme for adaptive segmentation that detects new data needs and adapts replication. The scheme includes an architecture, a scalable protocol and a replicated directory service that together maintains scalability. We show that adaptive segmentation bounds the required storage at a significantly lower level compared to static segmentation, for a typical workload where the data needs change repeatedly. Adaptation time can be kept constant for the workload when there are sufficient resources. Also, the storage is constant with an increasing amount of nodes and linear with an increasing rate of change to data needs."
+    },
+    {
+      "id": "W2131833270",
+      "title": "LaCOLLA: Middleware for Self-Sufficient Online Collaboration",
+      "abstract": "The LaCOLLA middleware makes it possible for collaborators to interact using their own resources without depending on centralized regimes. By contributing their own resources, group members can organize and communicate using a federated peer-to-peer model. This lets the group function regardless of whether a member removes resources and despite network or node failures or disconnection. In turn, this capacity for self-organization, together with location transparency, lets application developers create self-sufficient applications for collaborative activity"
+    },
+    {
+      "id": "W1993747836",
+      "title": "Transaction processing in a peer to peer database network",
+      "abstract": null
+    },
+    {
+      "id": "W2172038085",
+      "title": "Models and Software Model Checking of a Distributed File Replication System",
+      "abstract": null
+    },
+    {
+      "id": "W2172075711",
+      "title": "A Hybrid Approach for Consistency Management in Large Scale Systems",
+      "abstract": "The emergence of grid architectures brings in new challenges in terms of high latencies, dynamic resource availability, and data sharing. Data grids connect collections of thousands of geographically distributed computational and storage resources, and promote their sharing between users. Data sharing can be accomplished through data replication. Although this later is a well-established technique, its implementation presents additional problems such as the management of replica consistency. In this paper, we propose a new model to address this specific problem in large scale systems. The model combines two existing approaches. It benefits from their advantages and offers more. It optimizes the cost of replica consistency management and resists to changes in large systems"
+    },
+    {
+      "id": "W2096328449",
+      "title": "Concurrency awareness in a P2P wiki system",
+      "abstract": "Currently, wikis are the most popular form of collaborative editors. Recently, some researches have proposed fully decentralized wikis relying on peer-to-peer networks. This new architecture subtly changes the behavior of wiki in case of concurrent changes. While traditional wikis ensure that all pages have been reviewed by a user, some pages in a P2P wiki are produced by the system through a automatic merge. To overcome this problem, this paper introduces concurrency awareness, a mechanism that makes users aware about the status of wiki pages. The particular context of a P2P wiki system makes traditional awareness mechanisms inadequate and requires the design of a new one."
+    },
+    {
+      "id": "W2167740772",
+      "title": "A mechanism for replicated data consistency in mobile computing environments",
+      "abstract": "Mobile computing allows for the development of new and sophisticated database applications. Such applications require the reading of current and consistent data. In order to improve data availability, increase performance and maximize throughput, data replication is used. However, due to inherent limitations in mobile and other loosely-coupled environments, the concurrency control and replica control mechanisms must be revisited. This paper proposes a new protocol that guarantees the consistency of replicated data in a mobile computing environment, while provide high data availability and ensure an eventual replica convergence towards a strongly consistent state."
+    },
+    {
+      "id": "W4211009496",
+      "title": "Replicated Data Management for Mobile Computing",
+      "abstract": null
+    },
+    {
+      "id": "W1491710744",
+      "title": "Replicating for Performance: Case Studies",
+      "abstract": null
+    },
+    {
+      "id": "W2157033902",
+      "title": "Adaptive Distributed Database Replication Through Colonies of Pogo Ants",
+      "abstract": "We address the problem of optimizing the distribution of partially replicated databases over a computer network. Replication is used to increase data availability in the presence of site or communication failures and to decrease retrieval costs by local access if possible. We present a new bio-inspired replication management approach which is adaptive, completely decentralized, and based on swarm intelligence. Each node has the autonomy to start at any time, depending on the internal state of its stored data objects, a redistribution process. \"Redistribution\" means replicate, create, delete, update, or move data objects to other nodes of the network. The redistribution process is a dynamic load-balancing scheme which runs with lower priority in the background. The system is event-driven, but the learning process is not synchronized with the events."
+    },
+    {
+      "id": "W2163909791",
+      "title": "Synchronizing semantic stores with commutative replicated data types",
+      "abstract": "Social semantic web technologies led to huge amounts of data and information being available. The production of knowledge from this information is challenging, and major efforts, like DBpedia, has been done to make it reality. Linked data provides interconnection between this information, extending the scope of the knowledge production. The knowledge construction between decentralized sources in the web follows a co-evolution scheme, where knowledge is generated collaboratively and continuously. Sources are also autonomous, meaning that they can use and publish only the information they want. The updating of sources with this criteria is intimately related with the problem of synchronization, and the consistency between all the replicas managed. Recently, a new family of algorithms called Commutative Replicated Data Types have emerged for ensuring eventual consistency in highly dynamic environments. In this paper, we define SU-Set, a CRDT for RDF-Graph that supports SPARQL Update 1.1 operations."
+    },
+    {
+      "id": "W2275791451",
+      "title": "EpTO",
+      "abstract": "The ordering of events is a fundamental problem of distributed computing and has been extensively studied over several decades. From all the available orderings, total ordering is of particular interest as it provides a powerful abstraction for building reliable distributed applications. Unfortunately, deterministic total order algorithms scale poorly and are therefore unfit for modern large-scale applications. The main contribution of this paper is EpTO, a total order algorithm with probabilistic agreement that scales both in the number of processes and events. EpTO provides deterministic safety and probabilistic liveness: integrity, total order and validity are always preserved, while agreement is achieved with arbitrarily high probability. We show that EpTO is well-suited for large-scale dynamic distributed systems: it does not require a global clock nor synchronized processes, and it is highly robust even when the network suffers from large delays and significant churn and message loss."
+    },
+    {
+      "id": "W1604914670",
+      "title": "Fisheye Consistency: Keeping Data in Synch in a Georeplicated World",
+      "abstract": null
+    },
+    {
+      "id": "W2027357437",
+      "title": "Automated and user involved data synchronization in collaborative e-health environments",
+      "abstract": null
+    },
+    {
+      "id": "W2107931661",
+      "title": "Telex: A Semantic Platform for Cooperative Application Development",
+      "abstract": "International audience"
+    },
+    {
+      "id": "W2130008303",
+      "title": "Efficient Locally Trackable Deduplication in Replicated Systems",
+      "abstract": null
+    },
+    {
+      "id": "W2511929112",
+      "title": "Byzantine fault tolerance for collaborative editing with commutative operations",
+      "abstract": "In this paper, we present a study on how to achieve Byzantine fault tolerance for collaborative editing systems with commutative operations. Recent research suggests that Conflict-free Replicated Data Types (CRDTs) can be used to construct collaborative editing systems where concurrent update operations are commutative. This new approach is shown to avoid the complex issue of conflict resolution for concurrent updates to a shared document. The shared document is often modeled as a linear text buffer where each basic element is assigned a globally unique and totally ordered identifier. The linear text buffer constructed this way would constitute as a CRDT, which would make concurrent update operations issued by different users commutative. State convergence at all users can be achieved automatically as long as the users could receive the same set of operations irrespective of their relative ordering. However, it is not straightforward to guarantee state convergence in the presence of malicious users and external adversaries. In this paper, we carefully analyze the threats towards this type of systems, and propose a lightweight solution to achieve Byzantine fault tolerance with low runtime overhead. We define a set of correctness properties for such systems and prove that the proposed Byzantine fault tolerance mechanisms guarantee these properties."
+    },
+    {
+      "id": "W2042162145",
+      "title": "An interoperability approach based on asynchronous replication among distributed internet databases",
+      "abstract": "Nowadays, there is a growing interest in telemedicine in Brazil, because the country is the fifth largest country in the world and there is a huge gap between the population size and the number of available doctors. Institutions and the government are considering solutions for the integration and availability of data produced by several different systems. In this paper we present a contribution that is characterized by an asynchronous replication strategy between distributed medical databases. The contribution, named PGR, is an enhancement to the PostgreSQL database software that introduces lightweight asynchronous operations. In addition, we have implemented a multi-master engine with partial replication and hybrid fragmentation in order to allow interoperability between different telemedicine systems. Our early results indicate that the model and its implementation have reached a successful level in terms of performance and interoperability."
+    },
+    {
+      "id": "W2058402254",
+      "title": "P2P data replication and trustworthiness for a JXTA-Overlay P2P system using fuzzy logic",
+      "abstract": null
+    },
+    {
+      "id": "W2110399174",
+      "title": "A formalism for consistency and partial replication",
+      "abstract": "Replication protocols are complex and it is difficult to compare their consistency properties. To this effect, we propose a formalism where a replica executes actions subject to constraints in its local view or multilog. Schedules are selected non-deterministically from the set of sound schedules. This set grows with the number of actions and shrinks as the number of constraints increases. If the size of the set is one, the site has converged; if the size becomes zero, the site has detected an unrecoverable conflict. If every site runs the same schedule, they are consistent. We formalise this intuitive concept of consistency in four different ways, which generalise classical consistency criteria and which expose different aspects of consistency protocols. We prove them equivalent. We provide the first formal definition of consistency for partially replicated data. In general, achieving consistency entails global consensus; we exhibit sufficient conditions for deciding locally and derive a new decentralised protocol. In a separate technical report we prove the consistency of some published consistency protocols; this underscores the deep commonalities between them. Microsoft Research"
+    }
+  ]
+}

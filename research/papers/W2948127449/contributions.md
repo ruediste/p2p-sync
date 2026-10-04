@@ -1,0 +1,12 @@
+# Syncpal: A simple and iterative reconciliation algorithm for file synchronizers (Shekow, 2019)
+
+This PhD thesis is directly applicable to building a multi-master, offline-capable file synchronizer, especially for state-based (snapshot-diff) reconciliation between two replicas after long disconnections.
+
+Key contributions:
+
+- **File system model F**: a formal model of file-system objects and operations (create, delete, move, edit), plus an analysis of six file-system capabilities (object identity, supported types, atomicity, namespace limits, metadata, locking) and concrete advice for handling incompatibilities between replicas — essential when nodes run heterogeneous platforms.
+- **Update detection**: state-based operation detection by diffing the current filesystem snapshot against a persisted DB snapshot, including *operation consolidation* and its side effects: missing serialization order and missing intermediate `move` operations that create cycles. Operation sorting (topological ordering of create/delete/move dependencies) and cycle detection/breaking are described in implementable detail.
+- **Conflict handling via precondition analysis**: conflicts (e.g., Edit-Edit, Create-Create, Move-Move, including "pseudo" conflicts where both replicas made the same change) are identified by checking operation preconditions. A four-step framework derives resolution rules from informal consistency properties to concrete resolution operations.
+- **Syncpal algorithm**: an iterative three-phase loop (update detection → reconciliation → propagation). Conflicts are resolved one at a time, restarting the loop after each resolution so that one resolution never invalidates another; non-conflicting operations are topologically sorted, with cycle-breaking operations when needed. Each operation updates physical replicas, the metadata DB, and in-memory update trees atomically-ish, tolerating lack of filesystem transactions via a dynamic synchronization architecture.
+
+Relation to the topic: Syncpal addresses multi-master divergence, move/rename conflict detection, and eventual convergence between any pair of replicas after arbitrary offline periods — pairwise reconciliation being the primitive a >2-node multi-master system can repeatedly apply. Evaluation against five industrial synchronizers shows concrete failure modes (data loss after long offline periods) that a robust design must avoid.

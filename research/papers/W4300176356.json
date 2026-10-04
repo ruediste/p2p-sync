@@ -1,0 +1,52 @@
+{
+  "id": "W4300176356",
+  "title": "Nested Pure Operation-Based CRDTs",
+  "doi": "https://doi.org/10.4230/lipics.ecoop.2023.2",
+  "publication_date": "2023-01-01",
+  "publication_year": 2023,
+  "type": "article",
+  "cited_by_count": 3,
+  "authors": [
+    "Bauwens, Jim",
+    "Gonzalez Boix, Elisa"
+  ],
+  "venue": "DROPS (Schloss Dagstuhl \u2013 Leibniz Center for Informatics)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://drops.dagstuhl.de/storage/00lipics/lipics-vol263-ecoop2023/LIPIcs.ECOOP.2023.2/LIPIcs.ECOOP.2023.2.pdf",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4300176356.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4300176356.grobid-xml"
+  },
+  "abstract": "Modern distributed applications increasingly replicate data to guarantee high availability and optimal user experience. Conflict-free Replicated Data Types (CRDTs) are a family of data types specially designed for highly available systems that guarantee some form of eventual consistency. Designing CRDTs is very difficult because it requires devising designs that guarantee convergence in the presence of conflicting operations. Even though design patterns and structured frameworks have emerged to aid developers with this problem, they mostly focus on statically structured data; nesting and dynamically changing the structure of a CRDT remains to be an open issue. This paper explores support for nested CRDTs in a structured and systematic way. To this end, we define an approach for building nested CRDTs based on the work of pure operation-based CRDTs, resulting in nested pure operation-based CRDTs. We add constructs to control the nesting of CRDTs into a pure operation-based CRDT framework and show how several well-known CRDT designs can be defined in our framework. We provide an implementation of nested pure operation-based CRDTs as an extension to the Flec, an existing TypeScript-based framework for pure operation-based CRDTs. We validate our approach, 1) by implementing a portfolio of nested data structures, 2) by implementing and verifying our approach in the VeriFx language, and 3) by implementing a real-world application scenario and comparing its network usage against an implementation in the closest related work, Automerge. We show that the framework is general enough to nest well-known CRDT designs like maps and lists, and its performance in terms of network traffic is comparable to the state of the art.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Data Storage Technologies",
+    "Distributed and Parallel Computing Systems"
+  ],
+  "references": [],
+  "cited_by": [
+    {
+      "id": "W4403754230",
+      "title": "Collaborative Text Editing with Eg-walker: Better, Faster, Smaller",
+      "abstract": "Collaborative text editing algorithms allow several users to concurrently modify a text file, and automatically merge concurrent edits into a consistent state. Existing algorithms fall in two categories: Operational Transformation (OT) algorithms are slow to merge files that have diverged substantially due to offline editing; CRDTs are slow to load and consume a lot of memory. We introduce Eg-walker, a collaboration algorithm for text that avoids these weaknesses. Compared to existing CRDTs, it consumes an order of magnitude less memory in the steady state, and loading a document from disk is orders of magnitude faster. Compared to OT, merging long-running branches is orders of magnitude faster. In the worst case, the merging performance of Eg-walker is comparable with existing CRDT algorithms. Eg-walker can be used everywhere CRDTs are used, including peer-to-peer systems without a central server. By offering performance that is competitive with centralised algorithms, our result paves the way towards the widespread adoption of peer-to-peer collaboration software."
+    },
+    {
+      "id": "W4409095640",
+      "title": "Proceedings of the 12th Workshop on Principles and Practice of Consistency for Distributed Data",
+      "abstract": "The 12th workshop on the Principles and Practice of Consistency (PaPoC) for Distributed Data was held in Rotterdam, the Netherlands on"
+    },
+    {
+      "id": "W4409095472",
+      "title": "ReDunT: Automatically Deriving Redundancy Relations for Pure Op-Based CRDTs",
+      "abstract": "Conflict-free Replicated Data Types (CRDTs) are a family of data structures that incorporate conflict resolution mechanisms to ensure state convergence and ease the development of highly available distributed systems. Pure operation-based CRDTs provide a unified framework for defining CRDTs based on a partially ordered log of operations. The framework eases the implementation of CRDTs and reduces the risk of introducing bugs. However, developers are still required to manually define the CRDT semantics and compaction functions, which can be complex and error-prone. This paper proposes ReDunT, a framework for the automatic synthesis of compaction functions for pure op-based CRDTs using a rewrite-based semantic approach. We evaluate ReDunT by applying it to a portfolio of pure operation-based CRDTs, including sets and flags, and comparing the obtained results with the manually optimised specifications. We also demonstrate the feasibility of the framework by implementing it as an automatic tool in K semantic framework."
+    }
+  ]
+}

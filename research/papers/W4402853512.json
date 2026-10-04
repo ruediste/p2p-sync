@@ -1,0 +1,85 @@
+{
+  "id": "W4402853512",
+  "title": "MyWebstrates: Webstrates as Local-first Software",
+  "doi": "https://doi.org/10.1145/3654777.3676445",
+  "publication_date": "2024-10-11",
+  "publication_year": 2024,
+  "type": "conference-paper",
+  "cited_by_count": 6,
+  "authors": [
+    "Clemens Nylandsted Klokmose",
+    "James Eagan",
+    "Peter van Hardenberg"
+  ],
+  "venue": "ACM Symposium on User Interface Software and Technology (UIST)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "hybrid",
+    "oa_url": "https://doi.org/10.1145/3654777.3676445",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": false,
+    "pdf": false
+  },
+  "content_urls": null,
+  "abstract": "Webstrates are web substrates, a practical realization of shareable dynamic media under which distributability, shareability, and malleability are fundamental software principles. Webstrates blur the distinction between application and document in a way that enables users to share, repurpose, and refit software across a variety of domains, but its reliance on a central server constrains its use; it is at odds with personal and collective control of data; and limits applications to the web. We extend the fundamental principles to include interoperability and sovereignty over data and propose MyWebstrates, an implementation of Webstrates on top of a new, lower-level substrate for synchronization built around local-first software principles. MyWebstrates registers itself in the user\u2019s browser and function as a piece of local software that can selectively synchronise data over sync servers or peer-to-peer connections. We show how MyWebstrates extends Webstrates to enable offline collaborative use, interoperate between Webstrates on non-web technologies such as Unity, and maintain personal and collective sovereignty over data. We demonstrate how this enables new types of applications of Webstrates and discuss limitations of this approach and new challenges that it reveals.",
+  "topics": [
+    "Mobile and Web Applications",
+    "Web Applications and Data Management",
+    "Multimedia Communication and Technology"
+  ],
+  "references": [
+    "https://openalex.org/W15090851",
+    "https://openalex.org/W239634878",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1996958808",
+    "https://openalex.org/W2014191808",
+    "https://openalex.org/W2031482152",
+    "https://openalex.org/W2034967522",
+    "https://openalex.org/W2051172185",
+    "https://openalex.org/W2105465615",
+    "https://openalex.org/W2133353349",
+    "https://openalex.org/W2133646464",
+    "https://openalex.org/W2180178255",
+    "https://openalex.org/W2271345687",
+    "https://openalex.org/W2745370893",
+    "https://openalex.org/W2765872439",
+    "https://openalex.org/W2775663585",
+    "https://openalex.org/W2888308855",
+    "https://openalex.org/W2968117381",
+    "https://openalex.org/W2979846168",
+    "https://openalex.org/W2980354276",
+    "https://openalex.org/W3029185620",
+    "https://openalex.org/W3097042790",
+    "https://openalex.org/W3154760432",
+    "https://openalex.org/W3162038281",
+    "https://openalex.org/W3163513731",
+    "https://openalex.org/W3213423586",
+    "https://openalex.org/W4297156375",
+    "https://openalex.org/W4387801191",
+    "https://openalex.org/W4394865965"
+  ],
+  "cited_by": [
+    {
+      "id": "W4407098491",
+      "title": "DashSpace: A Live Collaborative Platform for Immersive and Ubiquitous Analytics",
+      "abstract": "We introduce DashSpace, a live collaborative immersive and ubiquitous analytics (IA/UA) platform designed for handheld and head-mounted Augmented/Extended Reality (AR/XR) implemented using WebXR and open standards. To bridge the gap between existing web-based visualizations and the immersive analytics setting, DashSpace supports visualizing both legacy D3 and Vega-Lite visualizations on 2D planes, and extruding Vega-Lite specifications into 2.5D. It also supports fully 3D visual representations using the Optomancy grammar. To facilitate authoring new visualizations in immersive XR, the platform provides a visual authoring mechanism where the user groups specification snippets to construct visualizations dynamically. The approach is fully persistent and collaborative, allowing multiple participants-whose presence is shown using 3D avatars and webcam feeds-to interact with the shared space synchronously, both co-located and remotely. We present three examples of DashSpace in action: immersive data analysis in 3D space, synchronous collaboration, and immersive data presentations."
+    },
+    {
+      "id": "W4409735933",
+      "title": "Datamancer: Bimanual Gesture Interaction in Multi-Display Ubiquitous Analytics Environments",
+      "abstract": "We introduce Datamancer, a wearable device enabling bimanual gesture interaction across multi-display ubiquitous analytics environments. Datamancer addresses the gap in gesture-based interaction within data visualization settings, where current methods are often constrained by limited interaction spaces or the need for installing bulky tracking setups. Datamancer integrates a finger-mounted pinhole camera and a chest-mounted gesture sensor, allowing seamless selection and manipulation of visualizations on distributed displays. By pointing to a display, users can acquire the display and engage in various interactions, such as panning, zooming, and selection, using both hands. Our contributions include (1) an investigation of the design space of gestural interaction for physical ubiquitous analytics environments; (2) a prototype implementation of the Datamancer system that realizes this model; and (3) an evaluation of the prototype through demonstration of application scenarios, an expert review, and a user study."
+    },
+    {
+      "id": "W4414564581",
+      "title": "Denicek: Computational Substrate for Document-Oriented End-User Programming",
+      "abstract": null
+    },
+    {
+      "id": "W7214078259",
+      "title": "\u201cBooks are social spaces\u201d: Challenges in Collaborating Across File Formats in Independent Publishing",
+      "abstract": "This paper investigates the challenges faced by independent publishing professionals as they collaborate on multiformat books. We ran four structured participatory design sessions with 16 professionals to collect detailed examples of how they appropriate their specialised but isolated authoring tools, and negotiate the tensions between their personal needs, objectives, expertise and even values. We found that collaboration breakdowns arise primarily from interoperability problems across file formats rather than a lack of coordination across applications. We introduce the novel concept of ecologies of formats to characterise these findings and show that the interplay of formats and people is essential for reducing friction in publishing. We then introduce information synchronisation graphs , a notation tool that reveals recurring patterns in ecologies of artifacts and use it to analyse four publishing workflows. We conclude with recommendations for the design of collaborative publishing systems and suggestions for improving the organisation of their work practices."
+    }
+  ]
+}

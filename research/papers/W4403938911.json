@@ -1,0 +1,37 @@
+{
+  "id": "W4403938911",
+  "title": "Walker-Breaker Games on $G_{n,p}$",
+  "doi": "https://doi.org/10.37236/11866",
+  "publication_date": "2024-10-18",
+  "publication_year": 2024,
+  "type": "article",
+  "cited_by_count": 0,
+  "authors": [
+    "Dennis Clemens",
+    "Pranshu Gupta",
+    "Yannick Mogge"
+  ],
+  "venue": "The Electronic Journal of Combinatorics",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "diamond",
+    "oa_url": "https://www.combinatorics.org/ojs/index.php/eljc/article/download/v31i4p14/pdf",
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4403938911.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4403938911.grobid-xml"
+  },
+  "abstract": "The Maker-Breaker connectivity game and Hamilton cycle game belong to the best studied games in positional games theory, including results on biased games, games on random graphs and fast winning strategies. Recently, the Connector-Breaker game variant, in which Connector has to claim edges such that her graph stays connected throughout the game, as well as the Walker-Breaker game variant, in which Walker has to claim her edges according to a walk, have received growing attention.For instance, London and Pluh\u00e1r studied the threshold bias for the Connector-Breaker connectivity game on a complete graph $K_n$, and showed that there is a big difference between the cases when Maker's bias equals $1$ or $2$. Moreover, a recent result by the first and third author as well as Kirsch shows that the threshold probability $p$ for the $(2:2)$ Connector-Breaker connectivity game on a random graph $G\\sim G_{n,p}$ is of order $n^{-2/3+o(1)}$. We extent this result further to Walker-Breaker games and prove that this probability is also enough for Walker to create a Hamilton cycle.",
+  "topics": [
+    "Cellular Automata and Applications",
+    "Optimization and Search Problems",
+    "Complexity and Algorithms in Graphs"
+  ],
+  "references": [],
+  "cited_by": []
+}

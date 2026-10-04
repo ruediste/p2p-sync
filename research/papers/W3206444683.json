@@ -1,0 +1,204 @@
+{
+  "id": "W3206444683",
+  "title": "A Highly-Available Move Operation for Replicated Trees",
+  "doi": "https://doi.org/10.1109/tpds.2021.3118603",
+  "publication_date": "2021-10-10",
+  "publication_year": 2021,
+  "type": "article",
+  "cited_by_count": 21,
+  "authors": [
+    "Martin Kleppmann",
+    "Dominic P. Mulligan",
+    "Victor B. F. Gomes",
+    "Alastair R. Beresford"
+  ],
+  "venue": "IEEE Transactions on Parallel and Distributed Systems",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://doi.org/10.17863/cam.76461",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": false,
+    "grobid_xml": false
+  },
+  "content_urls": null,
+  "abstract": "Replicated tree data structures are a fundamental building block of distributed filesystems, such as Google Drive and Dropbox, and collaborative applications with a JSON or XML data model. These systems need to support amoveoperation that allows a subtree to be moved to a new location within the tree. However, such a move operation is difficult to implement correctly if different replicas can concurrently perform arbitrary move operations, and we demonstrate bugs in Google Drive and Dropbox that arise with concurrent moves. In this article we present a CRDT algorithm that handles arbitrary concurrent modifications on trees, while ensuring that the tree structure remains valid (in particular, no cycles are introduced), and guaranteeing that all replicas converge towards the same consistent state. Our algorithm requires no synchronous coordination between replicas, making it highly available in the face of network partitions. We formally prove the correctness of our algorithm using the Isabelle/HOL proof assistant, and evaluate the performance of our formally verified implementation in a geo-replicated setting.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Data Storage Technologies",
+    "Distributed and Parallel Computing Systems"
+  ],
+  "references": [
+    "https://openalex.org/W182346126",
+    "https://openalex.org/W266135116",
+    "https://openalex.org/W1489177980",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1523874359",
+    "https://openalex.org/W1525865893",
+    "https://openalex.org/W1535062612",
+    "https://openalex.org/W1550959033",
+    "https://openalex.org/W1571434026",
+    "https://openalex.org/W1581325065",
+    "https://openalex.org/W1943176887",
+    "https://openalex.org/W1979481420",
+    "https://openalex.org/W1985225835",
+    "https://openalex.org/W1993994360",
+    "https://openalex.org/W1996958808",
+    "https://openalex.org/W2015055913",
+    "https://openalex.org/W2046654145",
+    "https://openalex.org/W2054584570",
+    "https://openalex.org/W2059574400",
+    "https://openalex.org/W2061940402",
+    "https://openalex.org/W2082133002",
+    "https://openalex.org/W2104954161",
+    "https://openalex.org/W2107138518",
+    "https://openalex.org/W2116335447",
+    "https://openalex.org/W2117260615",
+    "https://openalex.org/W2118242633",
+    "https://openalex.org/W2124074197",
+    "https://openalex.org/W2128258320",
+    "https://openalex.org/W2129388329",
+    "https://openalex.org/W2134308710",
+    "https://openalex.org/W2143725230",
+    "https://openalex.org/W2152465173",
+    "https://openalex.org/W2153704625",
+    "https://openalex.org/W2172038085",
+    "https://openalex.org/W2209943643",
+    "https://openalex.org/W2274598213",
+    "https://openalex.org/W2282477915",
+    "https://openalex.org/W2290177015",
+    "https://openalex.org/W2295541535",
+    "https://openalex.org/W2296636214",
+    "https://openalex.org/W2510332240",
+    "https://openalex.org/W2727092525",
+    "https://openalex.org/W2775924136",
+    "https://openalex.org/W2948219221",
+    "https://openalex.org/W2999181646",
+    "https://openalex.org/W3015972331",
+    "https://openalex.org/W3098667566",
+    "https://openalex.org/W3103287347",
+    "https://openalex.org/W3123835709",
+    "https://openalex.org/W3132251169",
+    "https://openalex.org/W3132826558",
+    "https://openalex.org/W3137220996",
+    "https://openalex.org/W4250850800",
+    "https://openalex.org/W4285719527",
+    "https://openalex.org/W6607407682",
+    "https://openalex.org/W6631563883",
+    "https://openalex.org/W6632109424",
+    "https://openalex.org/W6632879528",
+    "https://openalex.org/W6677176497",
+    "https://openalex.org/W6723307503",
+    "https://openalex.org/W6791191651",
+    "https://openalex.org/W7147545955"
+  ],
+  "cited_by": [
+    {
+      "id": "W4319069004",
+      "title": "BeauForT: Robust Byzantine Fault Tolerance for Client-Centric Mobile Web Applications",
+      "abstract": "In recent years, part of the web is shifting to a client-centric, decentralized model where web clients become the leading execution environment for application logic and data storage. However, current solutions to build decentralized web applications with multiple distrusting parties often involve a decentralized backend of servers running a BFT protocol between them. Existing consensus protocols using either all-to-all communication, or leader-based gossip suffer from performance degradation in unstable network conditions. In this paper, we present BeauForT, a purely browser-based platform for decentralized BFT consensus in client-centric, community-driven applications. We propose a novel, optimistic, leaderless, gossip-based consensus protocol, tolerating Byzantine replicas, combined with a robust and efficient state-based synchronization protocol. This protocol makes BeauForT well suited for the decentralized client-centric web and its dynamic nature with many network disruptions or node failures."
+    },
+    {
+      "id": "W4406327968",
+      "title": "Efficient State Synchronization in Distributed Electrical Grid Systems Using Conflict-Free Replicated Data Types",
+      "abstract": "Modern electrical grids are evolving towards distributed architectures, necessitating efficient and reliable state synchronization mechanisms to maintain structural and functional consistency. This paper investigates the application of conflict-free replicated data types (CRDTs) for representing and synchronizing the states of distributed electrical grid systems (DEGSs). We present a general structure for DEGSs based on CRDTs, focusing on the Convergent Replicated Data Type (CvRDT) model with delta state propagation to optimize the communication overhead. The Observed Remove Set (ORSet) and Last-Writer-Wins Register (LWW-Register) are utilized to handle concurrent updates and ensure that only the most recent state changes are retained. An actor-based framework, \u201cVigilant Hawk\u201d, leveraging the Akka toolkit, was developed to simulate the asynchronous and concurrent nature of DEGSs. Each electrical grid node is modelled as an independent actor with isolated state management, facilitating scalability and fault tolerance. Through a series of experiments involving 100 nodes under varying latency degradation coefficients (LDK), we examined the impact of network conditions on the state synchronization efficiency. The simulation results demonstrate that CRDTs effectively maintain consistency and deterministic behavior in DEGSs, even with increased network latency and node disturbances. An effective LDK range was identified (LDK effective = 2 or 4), where the network remains stable without significant delays in state propagation. The linear relationship between the full state distribution time (FSDT) and LDK indicates that the system can scale horizontally without introducing complex communication overhead. The findings affirm that using CRDTs for state synchronization enhances the resilience and operational efficiency of distributed electrical grids. The deterministic and conflict-free properties of CRDTs eliminate the need for complex concurrency control mechanisms, making them suitable for real-time monitoring and control applications. Future work will focus on addressing identified limitations, such as optimizing message routing based on the network topology and incorporating security measures to protect state information in critical infrastructure systems."
+    },
+    {
+      "id": "W4406221809",
+      "title": "Grove: A Bidirectionally Typed Collaborative Structure Editor Calculus",
+      "abstract": "Version control systems typically rely on a patch language , heuristic patch synthesis algorithms like diff , and three-way merge algorithms . Standard patch languages and merge algorithms often fail to identify conflicts correctly when there are multiple edits to one line of code or code is relocated. This paper introduces Grove, a collaborative structure editor calculus that eliminates patch synthesis and three-way merge algorithms entirely. Instead, patches are derived directly from the log of the developer\u2019s edit actions and all edits commute, i.e. the repository state forms a commutative replicated data type (CmRDT). To handle conflicts that can arise due to code relocation, the core datatype in Grove is a labeled directed multi-graph with uniquely identified vertices and edges. All edits amount to edge insertion and deletion, with deletion being permanent. To support tree-based editing, we define a decomposition from graphs into groves , which are a set of syntax trees with conflicts\u2013including local, relocation, and unicyclic relocation conflicts\u2013represented explicitly using holes and references between trees. Finally, we define a type error localization system for groves that enjoys a totality property, i.e. all editor states in Grove are statically meaningful, so developers can use standard editor services while working to resolve these explicitly represented conflicts. The static semantics is defined as a bidirectional marking system in line with recent work, with gradual typing employed to handle situations where errors and conflicts prevent type determination. We then layer on a unification-based type inference system to opportunistically fill type holes and fail gracefully when no solution exists. We mechanize the metatheory of Grove using the Agda theorem prover. We implement these ideas as the Grove Workbench , which generates the necessary data structures and algorithms in OCaml given a syntax tree specification."
+    },
+    {
+      "id": "W4409095581",
+      "title": "Directed Acyclic Graph CRDTs",
+      "abstract": "Directed Acyclic Graphs (DAGs) are essential for applications like modeling task dependencies. Maintaining DAG integrity in distributed and collaborative systems is challenging, especially in environments prioritizing high availability over strong consistency. These challenges are amplified by unreliable connectivity or offline operations, where clients replicate and independently modify the graph. Ensuring invariants such as cycle freedom and valid edge connections under concurrent updates is crucial."
+    },
+    {
+      "id": "W4394865965",
+      "title": "Extending JSON CRDTs with Move Operations",
+      "abstract": "Conflict-Free Replicated Data Types (CRDTs) for JSON allow users to concurrently update a JSON document and automatically merge the updates into a consistent state. Moving a subtree in a map or reordering elements in a list within a JSON CRDT is challenging: naive merge algorithms may introduce unexpected results such as duplicates or cycles. In this paper, we introduce an algorithm for move operations in a JSON CRDT that handles the interaction with concurrent non-move operations, and uses novel optimisations to improve performance. We plan to integrate this algorithm into the Automerge CRDT library."
+    },
+    {
+      "id": "W4403295750",
+      "title": "Consistent Local-First Software: Enforcing Safety and Invariants for Local-First Applications",
+      "abstract": "Local-first software embraces data replication as a means to achieve scalability and offline availability. A crucial ingredient of local-first software are mergeable data types, like conflict-free replicated data types (CRDTs), which feature eventual consistency by enabling processes to access data locally and later merge it with other replicas in an asynchronous manner. Notably, the merging process needs to adhere to application constraints for correctness. Ensuring such application-level invariants poses a challenge, as developers must reason about the replicated program state and resort to manual synchronization of specific application components to enforce the invariant. This paper introducesConLoc(Consistent Local-First Software), a novel system designed to automatically enforce safety and maintain invariants in local-first applications.ConLoceffectively addresses the issue of preserving invariants in the execution of programs with replicated data types, including CRDTs. Our approach is able to verify the correctness of many CRDTs examined in the literature and in implementations, such the ones used in the Riak database.ConLocensures that applications are automatically synchronized correctly, resulting in substantial latency and throughput improvements when compared to sequential execution, while upholding the same set of invariants."
+    },
+    {
+      "id": "W4387673910",
+      "title": "Secure RDTs: Enforcing Access Control Policies for Offline Available JSON Data",
+      "abstract": "Replicated Data Types (RDTs) are a type of data structure that can be replicated over a network, where each replica can be kept (eventually) consistent with the other replicas. They are used in applications with intermittent network connectivity, since local (offline) edits can later be merged with the other replicas. Applications that want to use RDTs often have an inherent security component that restricts data access for certain clients. However, access control for RDTs is difficult to enforce for clients that are not running within a secure environment, e.g., web applications where the client-side software can be freely tampered with. In essence, an application cannot prevent a client from reading data which they are not supposed to read, and any malicious changes will also affect well-behaved clients. This paper proposes Secure RDTs (SRDTs), a data type that specifies role-based access control for offline-available JSON data. In brief, a trusted application server specifies a security policy based on roles with read and write privileges for certain fields of an SRDT. The server enforces read privileges by projecting the data and security policy to omit any non-readable fields for the user's given role, and it acts as an intermediary to enforce write privileges. The approach is presented as an operational semantics engineered in PLT Redex, which is validated by formal proofs and randomised testing in Redex to ensure that the formal specification is secure."
+    },
+    {
+      "id": "W7125926740",
+      "title": "From Characters to Structure: Rethinking Real-Time Collaborative Programming Models",
+      "abstract": "Multiple programming tasks require synchronous collaboration between developers, giving rise to real-time collaborative programming tools that enable simultaneous editing of shared source code. However, most existing tools operate at the text level, propagating every keystroke\u2013including syntactically invalid ones\u2013without considering program structure. This results in excessive communication overhead, frequent propagation of build-breaking states, and poor synchronization. A major consequence is noticeable lag, especially under unstable network conditions, as collaborators are overwhelmed with unnecessary updates that disrupt their workflow and degrade the shared coding experience. In this paper, we introduce a novel structure-aware propagation model that transmits only syntactically valid code changes. For evaluation we implemented our tool as an IntelliJ plugin and evaluate it against three industry-standard tools\u2013VS Code Live Share, Code With Me, and Replit\u2013across eight representative programming scenarios. Our results show that it significantly lowers the number and size of propagated messages while maintaining consistent, buildable program states. Our findings demonstrate the potential of structure-aware propagation as a foundation for the next generation of real-time collaborative programming environments."
+    },
+    {
+      "id": "W4385357145",
+      "title": "A fog-assisted privacy preserving scheme for vehicular LBS query",
+      "abstract": null
+    },
+    {
+      "id": "W4404239275",
+      "title": "SVGDoc: A CRDT for Collaborative Vector Graphics Editing",
+      "abstract": "Conflict-free Replicated Data Types (CRDTs) are a class of algorithms that allow decentralized editing of documents as data structures in which concurrent operations are commutative, while there has been extensive research on generic CRDTs which allow CRDTs to be modeled according to application data. Current generic CRDTs use a CRDT map or an operation log which lack a tree structure with support for move operations to represent a vector graphics document or does not preserve updates that are concurrent to deletions. In this paper, a set of concurrent editing scenarios that are frequently made by user's of collaborative vector graphics editing are described. A CRDT for collaborative vector graphics editing which cover these scenarios named SVGDoc is then introduced. The main idea of SVGDoc is to use the UWMap (Update-Wins Map) as described by Preguica to allow updates to be preserved when concurrently made to deletions in combination with the move operation log described by Kleppmann et al to allow move operations among nodes in a tree. SVGDoc is also tested through unit testing and further validated by applying it to a minimal collaborative vector graphics editor."
+    },
+    {
+      "id": "W4286307986",
+      "title": "An Efficient Approach to Move Elements in a Distributed Geo-Replicated Tree",
+      "abstract": "Replicated tree data structures are extensively used in collaborative applications and distributed file systems, where clients often perform move operations. Local move operations at different replicas may be safe. However, remote move operations may not be safe. We present an efficient algorithm to perform move operations on the distributed replicated tree while ensuring eventual consistency. The proposed technique is primarily concerned with resolving conflicts efficiently, requires no interaction between replicas, and works well with network partitions. We use the last write win semantics for conflict resolution based on globally unique operation timestamps. The proposed solution requires only one compensation operation to avoid cycles being formed when move operations are applied. The proposed approach achieves an effective speedup of 14.6-68.19\u00d7 over the state-of-the-art approach in a geo-replicated setting,"
+    },
+    {
+      "id": "W4409095640",
+      "title": "Proceedings of the 12th Workshop on Principles and Practice of Consistency for Distributed Data",
+      "abstract": "The 12th workshop on the Principles and Practice of Consistency (PaPoC) for Distributed Data was held in Rotterdam, the Netherlands on"
+    },
+    {
+      "id": "W3205543144",
+      "title": "Typed Image-based Programming with Structure Editing",
+      "abstract": "Many beloved programming systems are image-based: self-contained worlds that persist both code and data in a single file. Examples include Smalltalk, LISP, HyperCard, Flash, and spreadsheets. Image-based programming avoids much of the complexity of modern programming technology stacks and encourages more casual and exploratory programming. However conventional file-based programming has better support for collaboration and deployment. These problems have been blamed for the limited commercial success of Smalltalk. We propose to enable collaboration in image-based programming via types and structure editing. We focus on the problem of schema change on persistent data. We turn to static types, which paradoxically require more schema change but also provide a mechanism to express and execute those changes. To determine those changes we turn to structure editing, so that we can capture changes in type definitions with sufficient fidelity to automatically adapt the data to suit. We conjecture that typical schema changes can be handled through structure editing of static types. That positions us to tackle collaboration with what could be called version control for structure editing. We present a theory realizing this idea, which is our main technical contribution. While we focus here on editing types, if we can extend the approach to cover the entire programming experience then it would offer a new way to collaborate in image-based programming."
+    },
+    {
+      "id": "W4292974104",
+      "title": "An Efficient Approach to Move Elements in a Distributed Geo-Replicated Tree",
+      "abstract": "Replicated tree data structures are extensively used in collaborative applications and distributed file systems, where clients often perform move operations. Local move operations at different replicas may be safe. However, remote move operations may not be safe. When clients perform arbitrary move operations concurrently on different replicas, it could result in various bugs, making this operation challenging to implement. Previous work has revealed bugs such as data duplication and cycling in replicated trees. In this paper, we present an efficient algorithm to perform move operations on the distributed replicated tree while ensuring eventual consistency. The proposed technique is primarily concerned with resolving conflicts efficiently, requires no interaction between replicas, and works well with network partitions. We use the last write win semantics for conflict resolution based on globally unique timestamps of operations. The proposed solution requires only one compensation operation to avoid cycles being formed when move operations are applied. The proposed approach achieves an effective speedup of 14.6\u00d7 to 68.19\u00d7 over the state-of-the-art approach in a geo-replicated setting."
+    },
+    {
+      "id": "W4383335034",
+      "title": "Comparing Causal Convergence Consistency Models",
+      "abstract": null
+    },
+    {
+      "id": "W4393858892",
+      "title": null,
+      "abstract": "Bulletin of ChSTU is a peer-reviewed collection of scientific works in the field of technical sciences published by Cherkasy State Technological University. Founded in 1991, Bulletin of ChSTU is included in the List of Scientific Professional Journals of Ukraine (category \"\u0411\")"
+    },
+    {
+      "id": "W4393860247",
+      "title": "Review of joint text editing algorithms Conflict-free Replicated Data Types (CRDT)",
+      "abstract": "Analysing and selecting algorithms for collaborative text editing, especially implementing conflict-free replicated data types, is critical to understanding how modern systems can achieve real-time collaboration while ensuring data integrity. The purpose of the study is to review various collaborative editing algorithms and conduct a comparative analysis to understand their advantages, disadvantages, and applications. Statistical methods, methods for analysing algorithms and their use in real-world scenarios are used. The study results showed that the use of collaborative text editing algorithms contributes to solving important tasks and challenges in the modern world of information technology. Collaborative editing algorithms are determined to facilitate realtime communication and information exchange. This is especially important in the context of remote work and communication, which have become the standard for many organisations. Collaborative text editing is widely used in various fields and industries where teamwork, real-time collaboration, and document sharing are essential, such as scientific research, education, software development, book and manuscript editing, legal cooperation, contract draughting, medical reports, etc. In addition, using optimised collaborative editing algorithms helps reduce the time required to process data and create text materials. Collaborative editing algorithms have a wide range of applications in research, business, and education. They allow teams and individual users to solve problems more efficiently and work together on projects. The ability to use the results obtained in practical activities will allow using algorithms for joint text editing for further innovation and development of information technologies, which will allow working together and exchanging information with the whole world in real-time"
+    },
+    {
+      "id": "W4411272168",
+      "title": "Semantic-Aware Replicated Data Types for Improved Conflict Resolution in Near-Synchronous Code Collaboration",
+      "abstract": "This dissertation addresses the limitations of convergence in near-synchronous code collaboration. Current techniques predominantly rely on string-based synchronization, which often results in conflict resolution that fails to address the underlying structural, syntactic, or semantic context of the code. This work proposes a semantic-aware approach that explores different levels of granularity in replicated data types (RDT) to overcome these limitations while enabling near-synchronous visualization of code evolution, enhancing interactive programming environments. The main contributions include: (1) a classification of conflict scenarios and intent-preserving code merging behavior, (2) a novel RDT approach exploring different granularity levels, (3) near-synchronous visualization of code semantics, and (4) extended RDT approaches utilizing nested replicated data types for improved conflict resolution in educational programming contexts."
+    },
+    {
+      "id": "W4415400088",
+      "title": "Towards a New Distributed Overlay File System: An Overview and Proposal",
+      "abstract": "This paper provides an overview of existing distributed file systems, discussing their advantages and limitations in the context of modern environments such as distributed computing systems. The main focus is on cloud distributed file systems such as Google File System, HDFS, JuiceFS and OctopusFS. In addition, it presents a brief proposal for a new distributed overlay file system. This work outlines the initial design principles, key objectives, and potential research directions for the proposed system."
+    },
+    {
+      "id": "W7117558073",
+      "title": "Proxy-Based Programming: Making Programming More Accessible through Virtual, Physical, and Social Embodiment",
+      "abstract": "From a theoretical perspective, this article examines the role of embodiment in K-12 computer science education through three distinct perspectives: virtual embodiment for cognitive understanding, physical embodiment for emotional engagement, and social embodiment for collaborative learning. The research introduces proxy-based programming as a novel programming paradigm that helps novice programmers overcome pragmatic programming challenges by providing a visual proxy that serves as an embodiment of the object being programmed. This proxy features dual temporal representation that simultaneously shows both the present and future situations resulting from programming actions. Unlike programming approaches that primarily address syntactic challenges, proxy-based programming also mitigates semantic and pragmatic aspects of computational thinking. RULER.game, a Collaborative Computational Thinking Tool, implements four core principles of proxy-based programming, enabling safe programming experimentation while proactively preventing errors. Initial studies comparing proxy-based programming with block-based programming show significant reductions in error rates. The article explores how embodiment plays a role in making programming more accessible from both theoretical and practical perspectives. Additionally, the article explores the motivational benefits of physical embodiment, where students create games by first drawing objects on paper before importing them digitally, as well as social embodiment through awareness interfaces that make collaborators\u2019 actions and intentions visible in real-time. This comprehensive approach to embodiment presents a novel framework for making programming more accessible and engaging for K-12 students."
+    },
+    {
+      "id": "W7155394780",
+      "title": "AegisSheet: A Compositional CRDT for Collaborative Spreadsheets",
+      "abstract": "Applications that support online collaboration over shared documents such as text files and spreadsheets are becoming increasingly popular. While collaborative text editing is well studied and multiple specialized data structures exist, there has been surprisingly little innovation in the field of collaborative spreadsheets, which allow multiple users to collaboratively organize data, and perform data-driven computations: Major providers often still resort to \u201clast-writer-wins\u201d semantics for common conflict scenarios, resulting in potential data loss that makes these applications ill-equipped for asynchronous and offline collaboration."
+    }
+  ]
+}

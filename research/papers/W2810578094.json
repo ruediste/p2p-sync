@@ -1,0 +1,168 @@
+{
+  "id": "W2810578094",
+  "title": "Conflict-free Replicated Data Types: An Overview",
+  "doi": "https://doi.org/10.48550/arxiv.1806.10254",
+  "publication_date": "2018-06-27",
+  "publication_year": 2018,
+  "type": "preprint",
+  "cited_by_count": 17,
+  "authors": [
+    "Nuno Pregui\u00e7a"
+  ],
+  "venue": "arXiv (Cornell University)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://arxiv.org/pdf/1806.10254",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": false,
+    "grobid_xml": false
+  },
+  "content_urls": null,
+  "abstract": "Internet-scale distributed systems often replicate data at multiple geographic locations to provide low latency and high availability, despite node and network failures. Geo-replicated systems that adopt a weak consistency model allow replicas to temporarily diverge, requiring a mechanism for merging concurrent updates into a common state. Conflict-free Replicated Data Types (CRDT) provide a principled approach to address this problem. This document presents an overview of Conflict-free Replicated Data Types research and practice, organizing the presentation in the aspects relevant for the application developer, the system developer and the CRDT developer.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Distributed and Parallel Computing Systems",
+    "Parallel Computing and Optimization Techniques"
+  ],
+  "references": [
+    "https://openalex.org/W79592965",
+    "https://openalex.org/W1490833583",
+    "https://openalex.org/W1601925768",
+    "https://openalex.org/W1758333435",
+    "https://openalex.org/W1762472983",
+    "https://openalex.org/W1828386109",
+    "https://openalex.org/W1932822274",
+    "https://openalex.org/W1963615255",
+    "https://openalex.org/W1969925795",
+    "https://openalex.org/W1975637639",
+    "https://openalex.org/W1981521402",
+    "https://openalex.org/W1981780124",
+    "https://openalex.org/W1981851173",
+    "https://openalex.org/W1996958808",
+    "https://openalex.org/W1999610418",
+    "https://openalex.org/W2017666672",
+    "https://openalex.org/W2026801616",
+    "https://openalex.org/W2038562061",
+    "https://openalex.org/W2059432328",
+    "https://openalex.org/W2071933194",
+    "https://openalex.org/W2085335712",
+    "https://openalex.org/W2087946700",
+    "https://openalex.org/W2090828855",
+    "https://openalex.org/W2101939036",
+    "https://openalex.org/W2105986479",
+    "https://openalex.org/W2117465524",
+    "https://openalex.org/W2118153508",
+    "https://openalex.org/W2118242633",
+    "https://openalex.org/W2124074197",
+    "https://openalex.org/W2125536021",
+    "https://openalex.org/W2131414602",
+    "https://openalex.org/W2134308710",
+    "https://openalex.org/W2161119415",
+    "https://openalex.org/W2161730338",
+    "https://openalex.org/W2162460714",
+    "https://openalex.org/W2170849273",
+    "https://openalex.org/W2274918431",
+    "https://openalex.org/W2282477915",
+    "https://openalex.org/W2295616151",
+    "https://openalex.org/W2476146301",
+    "https://openalex.org/W2506181100",
+    "https://openalex.org/W2604182236",
+    "https://openalex.org/W2606583141",
+    "https://openalex.org/W2745302287",
+    "https://openalex.org/W2766916843",
+    "https://openalex.org/W2904215295",
+    "https://openalex.org/W2951099054",
+    "https://openalex.org/W3137220996",
+    "https://openalex.org/W3137759927"
+  ],
+  "cited_by": [
+    {
+      "id": "W3104510503",
+      "title": "Analysis of the Matrix Event Graph Replicated Data Type",
+      "abstract": "Matrix is a new kind of decentralized, topic-based publish-subscribe middleware for communication and data storage that is getting particularly popular as a basis for secure instant messaging. By comparison with traditional decentralized communication systems, Matrix replaces pure message passing with a replicated data structure. This data structure, which we extract and call the Matrix Event Graph (MEG), depicts the causal history of messages. We show that this MEG represents an interesting and important replicated data type for decentralized applications that are based on causal histories of publish-subscribe events: First, we prove that the MEG is a Conflict-Free Replicated Data Type for causal histories and, thus, provides Strong Eventual Consistency (SEC). With SEC being among the best known achievable trade-offs in the scope of the well-known CAP theorem, the MEG provides a powerful consistency guarantee while being available during network partition. Second, we discuss the implications of byzantine attackers on the data type's properties. We note that the MEG, as it does not strive for consensus or strong consistency, can cope with n > f environments with n participants, of which f are byzantine. Furthermore, we analyze scalability: Using Markov chains, we study the number of forward extremities of the MEG over time and observe an almost optimal evolution. We conjecture that this property is inherent to the underlying spatially inhomogeneous random walk. With the properties shown, a MEG represents a promising element in the set of data structures for decentralized applications, but with distinct trade-offs compared to traditional blockchains and distributed ledger technologies."
+    },
+    {
+      "id": "W4389245905",
+      "title": "LoRe: A Programming Model for Verifiably Safe Local-first Software",
+      "abstract": "Local-first software manages and processes private data locally while still enabling collaboration between multiple parties connected via partially unreliable networks. Such software typically involves interactions with users and the execution environment (the outside world). The unpredictability of such interactions paired with their decentralized nature make reasoning about the correctness of local-first software a challenging endeavor. Yet, existing solutions to develop local-first software do not provide support for automated safety guarantees and instead expect developers to reason about concurrent interactions in an environment with unreliable network conditions. We propose LoRe , a programming model and compiler that automatically verifies developer-supplied safety properties for local-first applications. LoRe combines the declarative data flow of reactive programming with static analysis and verification techniques to precisely determine concurrent interactions that violate safety invariants and to selectively employ strong consistency through coordination where required. We propose a formalized proof principle and demonstrate how to automate the process in a prototype implementation that outputs verified executable code. Our evaluation shows that LoRe simplifies the development of safe local-first software when compared to state-of-the-art approaches and that verification times are acceptable."
+    },
+    {
+      "id": "W3015714379",
+      "title": "Composing and decomposing op-based CRDTs with semidirect products",
+      "abstract": "Operation-based Conflict-free Replicated Data Types (CRDTs) are eventually consistent replicated data types that automatically resolve conflicts between concurrent operations. Op-based CRDTs must be designed differently for each data type, and current designs use ad-hoc techniques to handle concurrent operations that do not naturally commute. We present a new construction, the semidirect product of op-based CRDTs, which combines the operations of two CRDTs into one while handling conflicts between their concurrent operations in a uniform way. We demonstrate the construction's utility by using it to construct novel CRDTs, as well as decomposing several existing CRDTs as semidirect products of simpler CRDTs. Although it reproduces common CRDT semantics, the semidirect product can be viewed as a restricted kind of operational transformation, thus forming a bridge between these two opposing techniques for constructing replicated data types."
+    },
+    {
+      "id": "W3197243248",
+      "title": "Delta-State-Based Synchronization of CRDTs in Opportunistic Networks",
+      "abstract": "Conflict-Free Replicated Data Types (CRDTs) are distributed data types that support optimistic replication: replicas can be updated locally, and updates propagate asynchronously among replicas, so consistency is eventually obtained. This ability to tolerate asynchronous communication makes them ideal candidates to serve as software building blocks in opportunistic networks (OppNets), that is, mobile networks in which the dissemination of information can only depend on unpredicted transient radio contacts between pairs of nodes. In this paper we investigate the problem of implementing CRDTs in an Opp-Net, and we propose a delta-state-based algorithm to solve this problem. Experimental results confirm that this algorithm ensures the synchronization of CRDT replicas in an OppNet, and that it outperforms a pure state-based synchronization algorithm when dealing with container CRDTs."
+    },
+    {
+      "id": "W3152591574",
+      "title": "Improving the Reactivity of Pure Operation-Based CRDTs",
+      "abstract": "Modern distributed applications increasingly replicate data to guarantee both high availability of the system and an optimal user experience. Conflict-Free Replicated Data Types (CRDTs) are a family of data types specially designed for highly available systems which guarantee some form of eventual consistency. In this paper, we show that the reliance on reliable causal broadcasting (RCB) middleware by existing CRDT frameworks may lead to less reactive CRDTs which in turn hampers user experience. We propose a solution that improves the reactivity of CRDTs built on an RCB middleware by reifying buffered operations. We apply our strategy to the pure operation-based CRDT framework, allowing for reactive pure operation-based CRDTs. We describe our approach as a formal extension to the framework and implement it in Flec, an extensible and open CRDT framework. The extension is then used to create new Add-Wins and Remove-Wins sets which exhibit higher reactivity."
+    },
+    {
+      "id": "W3095839508",
+      "title": "From causality to stability: understanding and reducing meta-data in CRDTs",
+      "abstract": "Modern distributed applications increasingly replicate data to guarantee both high availability of systems and optimal user experience. Conflict-Free Replicated Data Types (CRDTs) are a family of data types specially designed for highly available systems that guarantee some form of eventual consistency. To ensure state convergence between replicas, CRDT implementations need to keep track of additional meta-data. This is not a scalable strategy, as a growing amount of meta-data has to be kept."
+    },
+    {
+      "id": "W4312058524",
+      "title": "PS-CRDTs: CRDTs in highly volatile environments",
+      "abstract": "The implementation of collaborative applications in highly volatile environments, such as the ones composed of mobile devices, requires low coordination mechanisms. The replication without coordination semantics of Conflict-Free Replicated Data Types (CRDTs) makes them a natural solution for these execution contexts. However, the current CRDT models require each replica to know all other replicas beforehand or to discover them on-the-fly. Such solutions are not compatible with the dynamic ingress and egress of nodes in volatile environments. To cope with this limitation, we propose the Publish/Subscribe Conflict-Free Replicated Data Type (PS-CRDT) model that combines CRDTs with the publish/subscribe interaction model, and, with that, enable the spatial and temporal decoupling of update propagation. We implemented PS-CRDTs in Thyme, a reactive storage system for mobile edge computing. Our experimental results show that PS-CRDTs require less communication than other CRDT-based solutions in volatile environments."
+    },
+    {
+      "id": "W4410058294",
+      "title": "Akka as a tool for modelling and managing a smart grid system",
+      "abstract": "The article addresses big data processing challenges, fault tolerance, and consumer interaction in a smart grid network management system. It analyses the use of Akka for agent-based modelling of smart grid systems, which enables the creation of distributed, resilient systems that can efficiently scale and recover from failures. The article describes how the hierarchical structure of Akka actors can improve the management of disparate components within a smart grid system, allowing developers to create complex interaction and management models. The approach ensures multithreading and asynchronous operation, geographic distribution of management nodes, and enhanced system security, allowing the simulation of system hierarchy down to the level of the end device or user, which is crucial for overall system reliability."
+    },
+    {
+      "id": "W3017421613",
+      "title": "AutoCouch",
+      "abstract": "Most web-based applications require an undisrupted connection to some kind of server for updating the current application state and propagating changes made locally at the clients. By their very nature, CRDTs provide the right semantics for these applications as they resolve conflicts after concurrent state changes from different users or when a user reconnects after some period of unavailability. Although the JSON format is often used to summarize and represent the complete state of web applications, there is currently - to our knowledge - no generic integrated implementation of a JSON CRDT framework that supports the standard clientserver setup for web apps."
+    },
+    {
+      "id": "W4310530714",
+      "title": "LoRe: Local-First Reactive Programming with Verified Safety Guarantees",
+      "abstract": "Nowadays, the dominant design approach in distributed software is cloud-centric. This comes at the cost of several issues including loss of control over data ownership and privacy, lack of offline availability, poor latency, inefficient use of communication infrastructure, and waste of (powerful) computing resources on the edge. Local-first software presents an alternative approach where data is stored and managed locally and devices primarily communicate in a peer-to-peer manner. However, the decentralized nature of local-first software paired with the unpredictability of interactions driven from the outside world impede reasoning about correctness of such applications. Yet, existing solutions to develop local-first software do not provide safety guarantees and instead expect developers to reason about concurrent interactions in an environment with unreliable network conditions."
+    },
+    {
+      "id": "W4285325709",
+      "title": "Remove-Win: a Design Framework for Conflict-free Replicated Data Types",
+      "abstract": "Distributed storage systems employ replication to improve performance and reliability. To provide low latency data access, replicas are often required to accept updates without coordination with each other, and the updates are then propagated asynchronously. This brings the critical challenge of conflict resolution among concurrent updates. Conflict-free Replicated Data Type (CRDT) is a principled approach to addressing this challenge. However, existing CRDT designs are tricky, and hard to be generalized to other data types. A design framework is in great need to guide the systematic design of new CRDTs. To address this challenge, we propose RWF - the Remove-Win design Framewerk for CRDTs. RWF leverages the simple but powerful remove-win strategy to resolve conflicting updates, and provides generic design for a variety of data container types. Two exemplar implementations following RWF are given over the Redis data type store, which demonstrate the effectiveness of RWF. Performance measurements of our implementations further show the efficiency of CRDT designs following RWF."
+    },
+    {
+      "id": "W4286307986",
+      "title": "An Efficient Approach to Move Elements in a Distributed Geo-Replicated Tree",
+      "abstract": "Replicated tree data structures are extensively used in collaborative applications and distributed file systems, where clients often perform move operations. Local move operations at different replicas may be safe. However, remote move operations may not be safe. We present an efficient algorithm to perform move operations on the distributed replicated tree while ensuring eventual consistency. The proposed technique is primarily concerned with resolving conflicts efficiently, requires no interaction between replicas, and works well with network partitions. We use the last write win semantics for conflict resolution based on globally unique operation timestamps. The proposed solution requires only one compensation operation to avoid cycles being formed when move operations are applied. The proposed approach achieves an effective speedup of 14.6-68.19\u00d7 over the state-of-the-art approach in a geo-replicated setting,"
+    },
+    {
+      "id": "W3217304872",
+      "title": "Conflict-free Collaborative Set Sharing for Distributed Systems",
+      "abstract": "Collaborative Data Sharing is widely noticed to be essential for distributed systems. Among several proposed strategies, conflict-free techniques are considered useful for serverless concurrent systems. They aim at making shared data be consistent between peers in such a way that their local data do not become equal at once, but they arrive at the same data eventually when no updates occur in any peer. Although the Conflict-free Replicated Data Type (CRDT) approach could be used in data sharing as well, it puts restrictions on available operations so as to concurrent updates never cause conflicts. Even for sets, popular operations such as insertion and deletion are not freely used, for example. We propose a novel scheme for Conflict-free Collaborative Set Sharing that allows both insertion and deletion operations. It will provide a new synchronization method for data sharing and gives a fresh insight into designing conflict-free replicated data types. We might consider that this becomes a substitute for CRDTs."
+    },
+    {
+      "id": "W2942537654",
+      "title": "Remove-Win: a Design Framework for Conflict-free Replicated Data Collections.",
+      "abstract": "Internet-scale distributed systems often replicate data within and across data centers to provide low latency and high availability despite node and network failures. Replicas are required to accept updates without coordination with each other, and the updates are then propagated asynchronously. This brings the issue of conflict resolution among concurrent updates, which is often challenging and error-prone. The Conflict-free Replicated Data Type (CRDT) framework provides a principled approach to address this challenge. \r\nThis work focuses on a special type of CRDT, namely the Conflict-free Replicated Data Collection (CRDC), e.g. list and queue. The CRDC can have complex and compound data items, which are organized in structures of rich semantics. Complex CRDCs can greatly ease the development of upper-layer applications, but also makes the conflict resolution notoriously difficult. This explains why existing CRDC designs are tricky, and hard to be generalized to other data types. A design framework is in great need to guide the systematic design of new CRDCs. \r\nTo address the challenges above, we propose the Remove-Win Design Framework. The remove-win strategy for conflict resolution is simple but powerful. The remove operation just wipes out the data item, no matter how complex the value is. The user of the CRDC only needs to specify conflict resolution for non-remove operations. This resolution is destructed to three basic cases and are left as open terms in the CRDC design skeleton. Stubs containing user-specified conflict resolution logics are plugged into the skeleton to obtain concrete CRDC designs. We demonstrate the effectiveness of our design framework via a case study of designing a conflict-free replicated priority queue. Performance measurements also show the efficiency of the design derived from our design framework."
+    },
+    {
+      "id": "W3177195845",
+      "title": "AutoGR: Automated Geo-Replication with Fast System Performance and Preserved Application Semantics.",
+      "abstract": null
+    },
+    {
+      "id": "W4292974104",
+      "title": "An Efficient Approach to Move Elements in a Distributed Geo-Replicated Tree",
+      "abstract": "Replicated tree data structures are extensively used in collaborative applications and distributed file systems, where clients often perform move operations. Local move operations at different replicas may be safe. However, remote move operations may not be safe. When clients perform arbitrary move operations concurrently on different replicas, it could result in various bugs, making this operation challenging to implement. Previous work has revealed bugs such as data duplication and cycling in replicated trees. In this paper, we present an efficient algorithm to perform move operations on the distributed replicated tree while ensuring eventual consistency. The proposed technique is primarily concerned with resolving conflicts efficiently, requires no interaction between replicas, and works well with network partitions. We use the last write win semantics for conflict resolution based on globally unique timestamps of operations. The proposed solution requires only one compensation operation to avoid cycles being formed when move operations are applied. The proposed approach achieves an effective speedup of 14.6\u00d7 to 68.19\u00d7 over the state-of-the-art approach in a geo-replicated setting."
+    },
+    {
+      "id": "W4310493679",
+      "title": "Programming Support for Local-First Software: Enabling the Design of Privacy-Preserving Distributed Software without Relying on the Cloud",
+      "abstract": "Local-first software manages and processes private data locally while still enabling collaboration between multiple parties connected via partially unreliable networks. Such software typically involves interactions with users and the execution environment (the outside world). The decentralized nature of local-first software paired with the unpredictability of interactions driven from the outside world impede reasoning about their correctness. Yet, existing solutions to develop local-first software do not provide safety guarantees and instead expect developers to reason about concurrent interactions in an environment with unreliable network conditions. This is too much to ask of application developers, who are usually not experts in designing distributed systems."
+    }
+  ]
+}

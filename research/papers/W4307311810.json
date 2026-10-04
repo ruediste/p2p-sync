@@ -1,0 +1,43 @@
+{
+  "id": "W4307311810",
+  "title": "Keep CALM and CRDT On",
+  "doi": "https://doi.org/10.48550/arxiv.2210.12605",
+  "publication_date": "2022-10-23",
+  "publication_year": 2022,
+  "type": "preprint",
+  "cited_by_count": 1,
+  "authors": [
+    "Shadaj Laddad",
+    "Conor Power",
+    "Mae Milano",
+    "Alvin Cheung",
+    "Natacha Crooks",
+    "Joseph M. Hellerstein"
+  ],
+  "venue": "arXiv (Cornell University)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://arxiv.org/pdf/2210.12605",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": false,
+    "grobid_xml": false
+  },
+  "content_urls": null,
+  "abstract": "Despite decades of research and practical experience, developers have few tools for programming reliable distributed applications without resorting to expensive coordination techniques. Conflict-free replicated datatypes (CRDTs) are a promising line of work that enable coordination-free replication and offer certain eventual consistency guarantees in a relatively simple object-oriented API. Yet CRDT guarantees extend only to data updates; observations of CRDT state are unconstrained and unsafe. We propose an agenda that embraces the simplicity of CRDTs, but provides richer, more uniform guarantees. We extend CRDTs with a query model that reasons about which queries are safe without coordination by applying monotonicity results from the CALM Theorem, and lay out a larger agenda for developing CRDT data stores that let developers safely and efficiently interact with replicated application state.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Data Storage Technologies",
+    "Caching and Content Delivery"
+  ],
+  "references": [],
+  "cited_by": [
+    {
+      "id": "W4414471529",
+      "title": "Logical Time in Actor Systems",
+      "abstract": null
+    }
+  ]
+}

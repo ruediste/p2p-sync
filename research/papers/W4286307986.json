@@ -1,0 +1,53 @@
+{
+  "id": "W4286307986",
+  "title": "An Efficient Approach to Move Elements in a Distributed Geo-Replicated Tree",
+  "doi": "https://doi.org/10.1109/ccgrid54584.2022.00089",
+  "publication_date": "2022-05-01",
+  "publication_year": 2022,
+  "type": "conference-paper",
+  "cited_by_count": 1,
+  "authors": [
+    "Parwat Singh Anjana",
+    "Adithya Rajesh Chandrassery",
+    "Sathya Peri"
+  ],
+  "venue": "IEEE International Symposium on Cluster, Cloud and Internet Computing (CCGrid)",
+  "open_access": {
+    "is_oa": false,
+    "oa_status": "closed",
+    "oa_url": null,
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "pdf": false,
+    "grobid_xml": false
+  },
+  "content_urls": null,
+  "abstract": "Replicated tree data structures are extensively used in collaborative applications and distributed file systems, where clients often perform move operations. Local move operations at different replicas may be safe. However, remote move operations may not be safe. We present an efficient algorithm to perform move operations on the distributed replicated tree while ensuring eventual consistency. The proposed technique is primarily concerned with resolving conflicts efficiently, requires no interaction between replicas, and works well with network partitions. We use the last write win semantics for conflict resolution based on globally unique operation timestamps. The proposed solution requires only one compensation operation to avoid cycles being formed when move operations are applied. The proposed approach achieves an effective speedup of 14.6-68.19\u00d7 over the state-of-the-art approach in a geo-replicated setting,",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Database Systems and Queries",
+    "Advanced Data Storage Technologies"
+  ],
+  "references": [
+    "https://openalex.org/W1689093460",
+    "https://openalex.org/W1989814541",
+    "https://openalex.org/W1997864675",
+    "https://openalex.org/W2172038085",
+    "https://openalex.org/W2810578094",
+    "https://openalex.org/W3132251169",
+    "https://openalex.org/W3137220996",
+    "https://openalex.org/W3206444683",
+    "https://openalex.org/W4236824789",
+    "https://openalex.org/W4286307986",
+    "https://openalex.org/W6791191651",
+    "https://openalex.org/W6803212251"
+  ],
+  "cited_by": [
+    {
+      "id": "W4286307986",
+      "title": "An Efficient Approach to Move Elements in a Distributed Geo-Replicated Tree",
+      "abstract": "Replicated tree data structures are extensively used in collaborative applications and distributed file systems, where clients often perform move operations. Local move operations at different replicas may be safe. However, remote move operations may not be safe. We present an efficient algorithm to perform move operations on the distributed replicated tree while ensuring eventual consistency. The proposed technique is primarily concerned with resolving conflicts efficiently, requires no interaction between replicas, and works well with network partitions. We use the last write win semantics for conflict resolution based on globally unique operation timestamps. The proposed solution requires only one compensation operation to avoid cycles being formed when move operations are applied. The proposed approach achieves an effective speedup of 14.6-68.19\u00d7 over the state-of-the-art approach in a geo-replicated setting,"
+    }
+  ]
+}

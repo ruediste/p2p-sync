@@ -1,0 +1,511 @@
+{
+  "id": "W1485389564",
+  "title": "Disconnected operation for AFS",
+  "doi": null,
+  "publication_date": "1993-08-02",
+  "publication_year": 1993,
+  "type": "report",
+  "cited_by_count": 92,
+  "authors": [
+    "Larry Huston",
+    "Peter Honeyman"
+  ],
+  "venue": "Deep Blue (University of Michigan)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://hdl.handle.net/2027.42/107945",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W1485389564.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W1485389564.grobid-xml"
+  },
+  "abstract": "AFS plays a prominent role in our plans for a mobile workstation. The AFS client manages a cache of the most recently used files and directories. But even when the cache is hot, access to cached data frequently involves some communication with one or more file servers to maintain consistency guarantees. Without network access, cached data is soon rendered unavailable. We have modified the AFS cache manager to offer optimistic consistency guarantees when it can not communicate with a file server. When the client reestablishes a connection with the file server, it tries to propagate all file modifications to the server. If conflicts are detected, the replay agent notifies the user that manual resolution is needed. Our system brings the benefits of contemporary distributed computing environments to mobile laptops, offering a fresh look at the potential for nomadic computing.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Distributed and Parallel Computing Systems",
+    "Advanced Data Storage Technologies"
+  ],
+  "references": [
+    "https://openalex.org/W19830081",
+    "https://openalex.org/W35638016",
+    "https://openalex.org/W1627303300",
+    "https://openalex.org/W1680355580",
+    "https://openalex.org/W1736140659",
+    "https://openalex.org/W1967141605",
+    "https://openalex.org/W2007415020",
+    "https://openalex.org/W2053978297",
+    "https://openalex.org/W2116142433",
+    "https://openalex.org/W2124074197",
+    "https://openalex.org/W2128258320",
+    "https://openalex.org/W2146749986",
+    "https://openalex.org/W2151847079"
+  ],
+  "cited_by": [
+    {
+      "id": "W2118828464",
+      "title": "The Bayou Architecture: Support for Data Sharing Among Mobile Users",
+      "abstract": "The Bayou System is a platform of replicated, highly-available, variable-consistency, mobile databases on which to build collaborative applications. This paper presents the preliminary system architecture along with the design goals that influenced it. We take a fresh, bottom-up and critical look at the requirements of mobile computing applications and carefully pull together both new and existing techniques into an overall architecture that meets these requirements. Our emphasis is on supporting application-specific conflict detection and resolution and on providing application controlled inconsistency."
+    },
+    {
+      "id": "W2110096104",
+      "title": "Automated hoarding for mobile computers",
+      "abstract": "A common problem facing mobile computing is &connected operation, or computing in the absence of a network.Hoarding eases disconnected operation by selecting a subset of the user's files forlocal storage.We describe a hoarding system that can operate without user intervention, by observing user activity and predicting future needs.The system calculates a new measure, semantic distance, between individual liles, and uses this to feed a clustering algorithm that chooses which files should be hoarded.A separatereplication system manages the actual transport of data; any of a number of replication systems may be used.We discuss practical problems encountered in the real world and present usage statistics showing that our system outperforms previous approaches by factors that can exceed 1O:l."
+    },
+    {
+      "id": "W1597347417",
+      "title": "An Analytical Approach to File Prefetching",
+      "abstract": "File prefetching is an effective technique for improving file access performance. In this paper, we present a file prefetching mechanism that is based on on-line analytic modeling of interesting system events and is transparent to higher levels. The mechanism, incorporated into a client's file cache manager, seeks to build semantic structures, called access trees, that capture the correlations between file accesses. It then heuristically uses these structures to represent distinct file usage patterns and exploits them to prefetch files from a file server. We show results of a simulation study and of a working implementation. Measurements suggest that our method can predict future file accesses with an accuracy around 90\\%,that it can reduce cache miss rate by up to 47\\% and application latency by up to 40\\%. Our method imposes little overhead, even under antagonistic circumstances."
+    },
+    {
+      "id": "W182346126",
+      "title": "Resolving file conflicts in the Ficus file system",
+      "abstract": "Abstract Ficus is a flexible replication facility with optimisticconcurrency control designed to span a wide range"
+    },
+    {
+      "id": "W2085631457",
+      "title": "What is a file synchronizer?",
+      "abstract": "Nloblle computing devices intended for disconnected operation, such as laptops and personal organizers, must employ optimistic replication strategi~for user files.Unlike traditional distributed systems.such devices do not attempt to present a \"single filesystem\" semanti~users are aware that their fles are replicated, and that updates to one rephca till not be seen in another until some point of synchronization is reached (often under the user's exphcit control).A variety of tools, collectively called file synchronizers, support this mode of operation.Unfortunately, present-day synchronizers seldom give the user enough information to predict how they will behave under all circumstances.Simple slogans fike \"Non-confecting updates are propagated to other replicas\" ignore numerous subtletim-e.g., Precisely what constitutes a confict be @een updates in different replicas?What does the synchronizer do if updatw confict?What happens when fles are renamed?What if the directory structure is reorganized in one replica?Our god is to offer a simple, concrete, and precise frame work for describing the behavior of file synchronizers.To this end, n?edivide the synchronization task into two conceptually distinct phasm update detection and Reconciliation.We dEcuss each phase in detail and develop a straightforn'ard specification of each.We sketch our on prototype implementation of these specifications and discuss how they apply to some existing synchronization tools. IntroductionThe grotih of mobile computing has brought to fore novel issues in data management, in particular data reification under disconnected operation.Support for rephcation can be provided either transparently (tith flesystem or database support for cfient-side caching, transaction logs, etc.) or by user-visible tools for exThcit rephca management.In this paper we investigate one class of user-visible tools-commonly called file syrtchTonizeTs-w\"hich allow, updates in different repficas to be reconciled at the user's request."
+    },
+    {
+      "id": "W1565378820",
+      "title": "Virtualization aware file systems: getting beyond the limitations of virtual disks",
+      "abstract": "Virtual disks are the main form of storage in today\u2019s virtual machine environments. They offer many attractive features, including whole system versioning, isolation, and mobility, that are absent from current file systems. Unfortunately, the low-level interface of virtual disks is very coarse-grained, forcing all-or-nothing whole system rollback, and opaque, offering no practical means of sharing. These problems impose serious limitations on virtual disks \u2019 usability, security, and ease of management. To overcome these limitations, we offer Ventana, a virtualization aware file system. Ventana combines the filebased storage and sharing benefits of a conventional distributed file system with the versioning, mobility, and access control features that make virtual disks so compelling. 1"
+    },
+    {
+      "id": "W2131414602",
+      "title": "Rover",
+      "abstract": "The Rover toolkit combines relocatable dynamic objects and queued remote procedure calls to provide unique services for \"roving\" mobile applications.A relocatable dynamic object is an object with a well-defined interface that can be dynamically loaded into a client computer from a server computer (or vice versa) to reduce clientserver communication requirements.Queued remote procedure call is a communication system that permits applications to continue to make non-blocking remote procedure call requests even when a host is disconnected, with requests and responses being exchanged upon network reconnection.The challenges of mobile environments include intermittent connectivity, limited bandwidth, and channeluse optimization.Experimental results from a Rover-based mail reader, calendar program, and two non-blocking versions of World-Wide Web browsers show that Rover's services are a good match to these challenges.The Rover toolkit also offers advantages for workstation applications by providing a uniform distributed object architecture for code shipping, object caching, and asynchronous object invocation. 1"
+    },
+    {
+      "id": "W2115223984",
+      "title": "Mobile computing with the Rover toolkit",
+      "abstract": "Rover is a software toolkit that supports the construction of both mobile-transparent and mobile-aware applications. The mobile-transparent approach aims to enable existing applications to run in a mobile environment without alteration. This transparency is achieved by developing proxies for system services that hide the mobile characteristics of the environment from applications. However, to excel, applications operating in the harsh conditions of a mobile environment must often be aware of and actively adapt to those conditions. Using the programming and communication abstractions present in the Rover toolkit, applications obtain increased availability, concurrency, resource allocation efficiency, fault tolerance, consistency, and adaptation. Experimental evaluation of a suite of mobile applications demonstrates that use of the toolkit requires relatively little programming overhead, allows correct operation, substantially increases interactive performance, and dramatically reduces network utilization."
+    },
+    {
+      "id": "W1980446225",
+      "title": "Exploiting weak connectivity for mobile file access",
+      "abstract": "Weak connectivity, in the form of intermittent, low-bandwidth, or expensive networks is a fact of life in mobile computing. In this paper, we describe how the Coda File System has evolved to exploit such networks. The underlying theme of this evolution has been the systematic introduction of adaptivity to eliminate hidden assumptions about strong connectivity. Many aspects of the system, including communication, cache validation, update propagation and cache miss handling have been modified. As a result, Coda is able to provide good performance even when network bandwidth varies over four orders of magnitude - from modem speeds to LAN speeds."
+    },
+    {
+      "id": "W1543889234",
+      "title": "An analysis of trace data for predictive file caching in mobile computing",
+      "abstract": "One way to provide mobile computers with access to the resources of a network, even in the absence of communication, is to predict which information will be used during disconnection and cache the appropriate data while still connected. To determine the feasibility of this approach, traces of file-access activity for three diverse application domains were collected for periods of over two months. Analysis of these traces using traditional and new measures reveals that user working sets tend to be small compared to modern disk sizes, that users tend to reference the same files for several days or even weeks at a time, and that different users do not tend to write to the same file except in highly constrained circumstances. These factors encourage the conclusion that an automated caching system can be built for a wide variety of environments. 1 Motivation The value of mobile computers is that they allow users to work while disconnected from their normal resources. However, mobile comput..."
+    },
+    {
+      "id": "W220861558",
+      "title": "Introduction to Mobile Computing",
+      "abstract": null
+    },
+    {
+      "id": "W2016589762",
+      "title": "Wukong: A cloud-oriented file service for mobile Internet devices",
+      "abstract": null
+    },
+    {
+      "id": "W2096689343",
+      "title": "Replicated Data Management for Mobile Computing",
+      "abstract": null
+    },
+    {
+      "id": "W2165870196",
+      "title": "Automated object persistence for JavaScript",
+      "abstract": "Traditionally web applications have required an internet con-nection in order to work with data. Browsers have lacked any mechanisms to allow web applications to operate offline with a set of data to provide constant access to applica-tions. Recently, through browser plug-ins such as Google Gears, browsers have gained the ability to persist data for offline use. However, until now it\u2019s been difficult for a web developer using these plug-ins to manage persisting data both locally for offline use and in the internet cloud due to: synchronization requirements, managing throughput and la-tency to the cloud, and making it work within the confines of a standards-compliant web browser. Historically in non-browser environments, programming language environments have offered automated object persistence to shield the de-veloper from these complexities. In our research we have cre-ated a framework which introduces automated persistence of data objects for JavaScript utilizing the internet. Un-like traditional object persistence solutions, ours relies only on existing or forthcoming internet standards and does not rely upon specific runtime mechanisms such as OS or in-terpreter/compiler support. A new design was required in order to be suitable to the internet\u2019s unique characteristics of varying connection quality and a browser\u2019s specific restric-tions. We validate our approach using benchmarks which show that our framework can handle thousands of data ob-jects automatically, reducing the amount of work needed by developers to support offline Web applications."
+    },
+    {
+      "id": "W2108805674",
+      "title": "Experience with Disconnected Operation in a Mobile Computing Environment",
+      "abstract": null
+    },
+    {
+      "id": "W2055371514",
+      "title": "Application Design for Wireless Computing",
+      "abstract": "As mobile computing becomes more prevulent, systems ond applications must deal with a growing disparity in resources types and availability at the user interface device. Network characteristics, display size, method of input, local storage and computing, are sorne of the rnore obuiously affected contponents. AIthough the chullenges of effectiuelg managing these resoarces are partially addressed bg etisting systems, their solutions are hindered by the system's lack of knowledge obout application behauior. This, combined with the nar'rower domain of applications comrnonly used during mobile computing, suggests addressing these concerns from the application leael. This paper presents strategies for designing applications f-or a wirCless enaironment, by reducing the demands placed on the wireless network. A World Wide Web client browser is used to illastrate this design."
+    },
+    {
+      "id": "W1570073551",
+      "title": "Challenges and Solutions to Adaptive Computing and Seamless Mobility over Heterogeneous Wireless Networks",
+      "abstract": null
+    },
+    {
+      "id": "W2050400752",
+      "title": "A framework for delivering multicast messages in networks with mobile hosts",
+      "abstract": null
+    },
+    {
+      "id": "W2052191249",
+      "title": "Intelligent file hoarding for mobile computers",
+      "abstract": "Mobile computing adds a new wrinkle to the ageold problem of caching. Today's wireless links are both slow and expensive, and are not always available to a user. Therefore, when a mobile user is disconnected, a cache miss means (at best) a substantial cost in time and money, or (at worst) a complete halt to work if critical information has not been cached. Existing solutions to this problem rely on some combination of explicit hoard profiles and spying on a user's file accesses."
+    },
+    {
+      "id": "W2048489908",
+      "title": "Designing distributed algorithms for mobile computing networks",
+      "abstract": null
+    },
+    {
+      "id": "W145617083",
+      "title": "Exploiting weak connectivity in a distributed file system",
+      "abstract": "Weak connectivity, in the form of intermittent, low-bandwidth, or expensive networks is a fact of life in mobile computing. For the foreseeable future, access to cheap, high-performance, reliable networks, or strong connectivity will be limited to a few oases, such as work or home, in a vast desert of weak connectivity. The design of distributed file systems has traditionally been based on an assumption of strong connectivity. Yet, to provide ubiquitous data access, it is vital that distributed file systems make effective use of weak connectivity. This dissertation describes the design, implementation, and evaluation of weakly connected operation in the Coda File System. The starting point of this work is disconnected operation, in which a file system client operates using data in its cache during server or network failures. Disconnected clients suffer frommany limitations: updates are not visible to other clients, cache misses may impede progress, updates are at risk from client loss..."
+    },
+    {
+      "id": "W2125682253",
+      "title": "A programming model and system support for disconnected-aware applications on resource-constrained devices",
+      "abstract": "The emergence of networked lightweight portable computing devices can potentially enable accessibility to a vast array of remote applications and data. In order to cope with shortage of local resources such as memory, CPU and bandwidth, such applications are typically designed as a thin-client thick-server applications. However, another highly desirable yet conflicting requirement is to support disconnected operation, due to the low quality and high cost of on-line connectivity. We present a novel programming model and a runtime infrastructure that addresses these requirements by automatically reconfiguring the application to operate in disconnected mode of operation, when voluntary disconnection is requested, and automatically resorting to normal distributed operation, upon reconnection. The programming model enables developers to design disconnected aware applications by providing a set of component reference annotations with special disconnection and reconnection semantics. Using these annotations, designers can identify critical components, priorities, dependencies, local component alternatives with reduced functionality, and state merging policies. The runtime infrastructures carries out dis- and re-connection semantics using component mobility and dynamic application layout. The disconnected operation framework, FarGo-DA, is an extension of FarGo, a mobile component framework for distributed applications."
+    },
+    {
+      "id": "W2009304635",
+      "title": "Simplifying automated hoarding methods",
+      "abstract": "A number of mobile computing systems have used the technique of hoarding, which allows a mobile device to store a chosen subset of known files, to give disconnected users the illusion of a complete filesystem in the presence of limited storage. We undertook an extensive and detailed simulation study of the parameters of a well-known hoarding system, seer, in an attempt to discover the parameters that would produce the best performance. To our surprise, we discovered that the best parameter combinations were those that completely disabled seer's complex clustering methods, reverting the system instead to a modified form of LRU hoarding. We discuss the experiments and our results, and propose designs for future systems and directions for future research."
+    },
+    {
+      "id": "W2101204010",
+      "title": "Remote Storage for Mobile Devices",
+      "abstract": "The ability to access remote file storage from mobile devices enables a number of new use cases for storing and sharing data. We describe the design and implementation of a Remote Storage Client framework on Symbian OS, the leading smart phone OS on the market. Our work is inspired and informed by previous work like Coda [1]. We describe why Coda cannot be used directly in our target scenarios and environments. We then describe how we adapted the Coda concepts to suit our needs. The advanced features supported by the framework include disconnected operation with whole-file caching and immediate file access (adapting whole-file caching principle to multimediacentric smart phones). Using this framework, we have implemented Symbian OS remote filesystems based on WebDAV and FTP."
+    },
+    {
+      "id": "W2408453118",
+      "title": "Improving virtual hardware interfaces",
+      "abstract": "Since the origin of virtual machine monitors in the 1960s, virtual hardware has often been designed with impure interfaces different from physical hardware interfaces. Paravirtualization, as this is now termed, is often used to simplify VMMs and boost VM performance. This thesis explores tradeoffs in a rarely seen form of paravirtual interface, where the virtual interface operates at a higher level of abstraction than the common hardware interface. We in particular examine the effects of providing a BSD socket-like interface to a VM instead of an Ethernet interface, and the effects of providing a file system interface instead of a block device interface. \r\nOur experiments show that higher-level (extreme) paravirtualization has direct benefits for sharing, security, and modularity. We also show that our approach requires little or no change to existing VMMs and operating systems. Given the availability of processor cores, it has minimal performance cost: 3% or less in every case for our paravirtual network stack, and under 4% for file system macro-benchmarks. In special cases, we even demonstrate speed-ups. \r\nWe further extend this high-level virtualization approach for virtual storage. Virtual disks have many attractive properties, such as a simple, powerful versioning model and an architecture that makes it easy to create and economically store large numbers of VMs. They also suffer from serious shortcomings: low-level isolation prevents shared access to storage, versioning takes place at the granularity of a whole virtual disk, and lack of structure obstructs searching or retrieving data. A higher-level virtual interface to storage aids sharing, but not their other shortcomings. \r\nTherefore, this thesis proposes the concept of a virtualization aware file system (VAFS) that combines the features of a virtual disk with those of a distributed file system. A VAFS extends a conventional distributed file system with versioning, access control, and disconnected operation features resembling those available from virtual disks. This gains the benefits of virtual disks, without compromising usability, security, or ease of management."
+    },
+    {
+      "id": "W2089248005",
+      "title": "File System Aware Storage Virtualization Management",
+      "abstract": "Virtualization has significantly improved hardware utilization, thus, allowing IT service providers to offer a wide range of application, platform and infrastructure solutions through low-cost, commoditized hardware. In this paper we focus on one such layer: storage virtualization, which enables a host system to map a guest VM''s file system to almost any storage media. A file system maintains track of the actual storage in an efficient way so as to maximize the throughout and at the same time minimizes the time taken in accessing a memory block by using minimal resources. In this paper we propose Omni, a file system architecture for organization of data and metadata that will efficiently organize and enable sharing besides exploiting the power of storage virtualization and maintaining simplicity in such a highly complex and virtualized environment."
+    },
+    {
+      "id": "W2507878397",
+      "title": "Global public computing",
+      "abstract": "High-bandwidth networking and cheap computing hardware are leading to a world in which the resources of one machine are available to groups of users beyond their immediate owner. This trend is visible in many different settings. Distributed computing, where applications are divided into parts that run on different machines for load distribution, geographical dispersion, or robustness, has recently found new fertile ground. Grid computing promises to provide a common framework for scheduling scientific computation and managing the associated large data sets. Proposals for utility computing envision a world in which businesses rent computing bandwidth in server farms on-demand instead of purchasing and maintaining servers themselves. All such architectures target particular user and application groups or deployment scenarios, where simplifying assumptions can be made. They expect centralised ownership of resources, cooperative users, and applications that are well-behaved and compliant to a specific API or middleware. Members of the public who are not involved in Grid communities or wish to deploy out-of-the-box distributed services, such as game servers, have no means to acquire resources on large numbers of machines around the world to launch their tasks. This dissertation proposes a new distributed computing paradigm, termed global public computing, which allows any user to run any code anywhere. Such platforms price computing resources, and ultimately charge users for resources consumed. This dissertation presents the design and implementation of the XenoServer Open Platform, putting this vision into practice. The efficiency and scalability of the developed mechanisms are demonstrated by experimental evaluation; the prototype platform allows the global-scale deployment of complex services in less than 45 seconds, and could scale to millions of concurrent sessions without presenting performance bottlenecks. To facilitate global public computing, this work addresses several research challenges. It introduces reusable mechanisms for representing, advertising, and supporting the discovery of resources. To allow flexible and federated control of resource allocation by all stakeholders involved, it proposes a novel role-based resource management framework for expressing and combining distributed management policies. Furthermore, it implements effective service deployment models for launching distributed services on large numbers of machines around the world easily, quickly, and efficiently. To keep track of resource consumption and pass charges on to consumers, it devises an accounting and charging infrastructure."
+    },
+    {
+      "id": "W2130359360",
+      "title": "Revising transaction concepts for mobile computing",
+      "abstract": "It is expected that in the near future millions of users will have access to on-line distributed databases through mobile computers. The restrictions imposed by the nature of the wireless medium and the resulting mobility of data consumers and data producers make traditional transaction models inadequate. In this paper, we investigate means for providing transaction support appropriate for mobile environments. Specifically, we define a model that ensures a weaker notion of consistency, accounts for mobility, and provides for recovery."
+    },
+    {
+      "id": "W2115226325",
+      "title": "Services to support distributed applications in a mobile environment",
+      "abstract": "A key characteristic of mobile computing is that the end systems involved can experience differing degrees of connectivity during typical operational cycles. The paper discusses the issues associated with developing distributed system services to operate in such an environment. We focus on the provision of file system support and argue that existing file systems, including those developed for use in a mobile environment, contain assumptions about their underlying communications infrastructures which are unlikely to hold in a mobile environment. This argument is supported by an in-depth examination of a specific file system issue: the support of shared libraries. A new service to support shared libraries in mobile environments is proposed and we discuss the integration of this service into a wider architecture of reactive services being developed to support distributed mobile computing.>"
+    },
+    {
+      "id": "W2042824491",
+      "title": "The importance of translucence in mobile computing systems",
+      "abstract": "Mobile computing has been an active area of research for the past decade, but its importance will increase substantially in the decade to come. One problem faced by designers of mobile systems is that of maintaining the illusion of connectivity even when network performance is poor or non-existent. The Coda file system uses its cache to maintain this illusion. Extensive experience with the system suggests that, although users find the functionality provided by the system extremely valuable, new users face an arduous learning curve and even experienced users are sometimes confused by the system's behavior. The fundamental problem is that the lack of a strong network connection causes the system to violate a key property of caching: transparency. To overcome this problem, we have built an interface, called the CodaConsole, that makes caching translucent to users through controlled exposure of cache management internals. The interface exposes critical aspects of caching to support the mobile user while hiding noncritical details to preserve usability. This article presents the design, implementation, and usability evaluation of this interface. The CodaConsole successfully makes caching translucent in the presence of disconnected or weakly connected operation. The most surprising result was that novice Coda users performed almost as well as experienced Coda users."
+    },
+    {
+      "id": "W2009975969",
+      "title": "A mobility-aware file system for partially connected operation",
+      "abstract": "The advent of affordable off-the-shelf wide-area wireless networking solutions for portable computers will result in partial (or intermittent) connectivity becoming the common networking mode for mobile users. This paper presents the design of PFS, a mobility-aware file system specially designed for partially connected operation.PFS supports the extreme modes of full connection and disconnection gracefully, but unlike other mobile file systems, it also provides an interrace for mobility-aware applications to direct the file system in its caching and consistency decisions in order to fully exploit intermittent connectivity. Using PFS, it is possible for an application to maintain consistency on only the critical portions of its data files. Since PFS provides adaptation at the file system level, even unaware applications can 'act' mobile-aware as a result of the transparent adaptation provided by PFS."
+    },
+    {
+      "id": "W1598369624",
+      "title": "Arla: a free AFS client",
+      "abstract": "AFS is a world-wide distributed file system that supports several advantages over NFS, like better administration and availability. Arla is a free AFS-client, today available for a number of systems for which there are not any Transarc clients. Porting it to new systems is not hard. Arla also has some disconnected functionality and supports encryption of the data stream, features that are not present in the Transarc code. Our preliminary measurements of the unoptimized code shows that the performance of Arla is close to that of UFS. 1"
+    },
+    {
+      "id": "W2136516589",
+      "title": "Changing Communication Environments in MosquitoNet",
+      "abstract": "MosquitoNet is a new project at Stanford University for investigating operating system and application issues in mobile and wireless computing. Our initial goals focus on providing the appearance of continuous network connectivity for mobile hosts. To achieve these goals we must first enable portable computers to move seamlessly from one communications medium to another, for example from an Ethernet connection to a wireless modem, without rebooting or restarting applications. Second, we must determine how to manage the resulting dynamic changes in network characteristics, either transparently or through a simple interface between the network and the applications. Other goals include developing power management policies for network devices and experimenting with file data consistency algorithms for networks in which disconnection may be economically desirable, but seamless network re-connection is almost always possible."
+    },
+    {
+      "id": "W4241364981",
+      "title": "The Bayou Architecture: support for data sharing among mobile users",
+      "abstract": "The Bayou System is a platform of replicated, highly-available, variable-consistency, mobile databases on which to build collaborative applications. This paper presents the preliminary system architecture along with the design goals that influenced it. We take a fresh, bottom-up and critical look at the requirements of mobile computing applications and carefully pull together both new and existing techniques into an overall architecture that meets these requirements. Our emphasis is on supporting application-specific conflict detection and resolution and on providing application controlled inconsistency."
+    },
+    {
+      "id": "W1507146980",
+      "title": "MODEC: A Multi-Granularity Mobile Object-Oriented Database Caching Mechanism, Prototype and Performance",
+      "abstract": null
+    },
+    {
+      "id": "W2142333098",
+      "title": "Enabling cooperation among disconnected mobile users",
+      "abstract": "Mobile computing and workgroup computing are emerging technologies which have so far been treated independently. Current approaches to support cooperative work neglect the special characteristics of mobile environments like limited bandwidth or temporary disconnection. On the other hand, approaches to support disconnected operation in mobile environments rely on the assumption that the degree of data sharing is low, which is obviously not appropriate for cooperative work. In this paper, we utilize the COACT (COoperative ACTivity) transaction model to provide support for parallel, disconnected activities. The model incorporates the notion of resolvable, simultaneous work. We show how the COACT 'merge' algorithm reduces conflicts by exploiting operational semantics and offering consistent sequences of operations. We believe that our new approach is a viable solution to the growing demand for cooperation in mobile environments."
+    },
+    {
+      "id": "W1484495013",
+      "title": "Reworking the RPC paradigm for mobile clients",
+      "abstract": null
+    },
+    {
+      "id": "W2161381382",
+      "title": "Configurable communication protocols for mobile computing",
+      "abstract": "Mobile computing systems present challenges for message routing, support for disconnected operation, and providing quality of service guarantees related to latency, bandwidth and jitter. While multiple approaches have been developed, existing systems typically support only a small set of solutions in each area. This paper describes the design of a collection of communication protocols that supports multiple solutions within a single integrated framework based on the Coyote system. These protocols are constructed by subdividing the required functionality into orthogonal functions and then implementing variants of these functions as fine-grain software modules called micro-protocols. A custom service is then realized by choosing micro-protocols based on functionality and configuring them together with a standard runtime system that implements an event-oriented execution model."
+    },
+    {
+      "id": "W1917580727",
+      "title": "Evaluating delayed write in a multilevel caching file system",
+      "abstract": null
+    },
+    {
+      "id": "W1760290520",
+      "title": "A toolkit approach to partially connected operation",
+      "abstract": "Partially connected operation is the circumstance in which the communication link between two computers is intermittent, either by choice or because or failure. This paper describes the design and performance of a user level toolkit that is suited to accessing the home directory of a partially connected user in a bandwidth-efficient manner. Compared to custom file systems for partially connected operation, the toolkit is easier to deploy and provides extra degrees of flexibility because it runs at user level and uses the local file system for its cache. The toolkit makes it possible for unaltered clients to access NFS file systems exported by unaltered servers. The maintenance of consistency between client and server is automatic provided that certain assumptions are upheld, the primary one being that sharing is limited in such a way that there is a \"single locus of update.\" That is, for extended periods, updates are applied either to the client's cache or directly to the server, but ..."
+    },
+    {
+      "id": "W2188230970",
+      "title": "Service Discovery: Access to Local Resources in a Nomadic Environment",
+      "abstract": "We propose a standard level of support for nomadic computing in which a mobile client can move into unfamiliar environments and obtain services for which it has no corresponding client RPC stub. We call this activity service discovery and motivate its importance for mobile computing. This paper describes the general components of service discovery and points out where traditional paradigms of distributed computing fall short of its requirements. We suggest an architecture for an environment which uses a directory service based on the ODP trading function and a dynamic interface mechanism for ad hoc client-server interaction. 1"
+    },
+    {
+      "id": "W4252536357",
+      "title": "Evaluating delayed write in a multilevel caching file system",
+      "abstract": "Delayed write in a multilevel file system cache hierarchy offers a way to improve performance in diverse client/server scenarios, such as integrating mass store into a distributed file system or providing distributed file system access over low-speed links. Using file system traces and cache simulations, we explore extensions and modifications to the traditional client-caching model employed in such file systems as AFS, Sprite, and DFS. High cache hit rates at an intermediate cache server-a machine logically interposed between clients and servers that provides cached file service to the clients-combined with high client cache hit rates lend practicality to an integrated mass storage file system. In such a system, magnetic tape or optical-based mass storage devices may be used as a first-class data repository, fronted by disk and RAM caches to offer acceptable access times to the large, but slow, mass storage system. Similarly, a high cache hit rate is necessary for users accessing file systems via low-speed links, where a delayed write intermediate caching server can mediate traffic to make better use of available bandwidth. In an example taken from mobile computing, an intermediate server might be used as a docking station at a user's home. This arrangement would be convenient for users of mobile computers who upload large amounts of data generated while operating in disconnected mode. Simulations of delayed write caching strategies are applicable to both the mass storage and low-speed link scenarios."
+    },
+    {
+      "id": "W1970049118",
+      "title": "Distributed Data Storage with Strong Offline Access Support",
+      "abstract": "In this paper, we propose a distributed data storage framework that supports unrestricted offline access. The system does not explicitly distinguish between connected and disconnected states. Its design is based on a lock-free distributed framework that avoids update conflicts through file versioning. The feasibility of this framework is confirmed by a proof-of-concept implementation. We also demonstrate that the proposed lock-free replica synchronization algorithm scales well. A future work will include also direct support for non-versioned files."
+    },
+    {
+      "id": "W2094317263",
+      "title": "Nonblocking Distributed Replication of Versioned Files",
+      "abstract": "In this paper, we propose a distributed data storage framework that supports unrestricted offline access. The system does not explicitly distinguish between connected and disconnected states. Its design is based on a lock-free distributed framework that avoids update conflicts through file versioning. We propose an algorithm for replica synchronization. The feasibility of this framework is confirmed by a proof-of-concept implementation. We also demonstrate that the proposed lock-free replica synchronization algorithm scales well. A future work will include also direct support for non- versioned files."
+    },
+    {
+      "id": "W4254067238",
+      "title": "Changing communication environments in MosquitoNet",
+      "abstract": "MosquitoNet is a new project at Stanford University for investigating operating system and application issues in mobile and wireless computing. Our initial goals focus on providing the appearance of continuous network connectivity for mobile hosts. To achieve these goals we must first enable portable computers to move seamlessly from one communications medium to another, for example from an Ethernet connection to a wireless modem, without rebooting or restarting applications. Second, we must determine how to manage the resulting dynamic changes in network characteristics, either transparently or through a simple interface between the network and the applications. Other goals include developing power management policies for network devices and experimenting with file data consistency algorithms for networks in which disconnection may be economically desirable, but seamless network re-connection is almost always possible."
+    },
+    {
+      "id": "W2042330517",
+      "title": "A design pattern for mobile-distributed knowledge spaces",
+      "abstract": "Mobility in collaboration is one of the key challenges for CSCW/L research. This contribution first looks at the central dimensions of connectivity, context and consistency for mobile collaboration out of a media viewpoint and a technical viewpoint. As a second step our architecture for mobile knowledge spaces is presented alongside these dimensions."
+    },
+    {
+      "id": "W1602596871",
+      "title": "MX: Mobile Object Exchange for Collaborative Applications",
+      "abstract": null
+    },
+    {
+      "id": "W1535062612",
+      "title": "Flexible and Safe Resolution of File Conflicts,",
+      "abstract": "In this paper we describe the support provided by the Coda File System for transparent resolution of conflicts arising from concurrent updates to a file in different network partitions. Such partitions often occur in mobile computing environments. Coda provides a framework for invoking customized pieces of code called application-specific resolvers (ASRs) that encapsulate the knowledge needed for file resolution. If resolution succeeds, the user notices nothing more than a slight performance delay. Only if resolution fails does the user have to resort to manual repair. Our design combines a rule-based approach to ASR selection with transactional encapsulation of ASR execution. This paper shows how such an approach leads to flexible and efficient file resolution without loss of security or robustness. 1 Introduction Optimistic replication has been shown to be a viable approach to high availability in distributed Unix file systems [15, 3]. It is especially valuable in mobile computin..."
+    },
+    {
+      "id": "W1500241917",
+      "title": "Data synchronization and browsing for home environments",
+      "abstract": null
+    },
+    {
+      "id": "W52251503",
+      "title": "A file system for mobile computing",
+      "abstract": "A File System for Mobile Computing Carl Downing Tait Distributed file systems are a fundamental structure of distributed computing, and much attention has been focused on their design. But one important new design point has not yet been explored thoroughly: how to support mobile clients. Portable workstations are becoming increasingly common, and people who use these machines should not be forced to accept inferior performance or usability. This dissertation argues that two ideas --- efficient variable-consistency replication and intelligent file prefetching --- lead to a file system that supports mobile clients particularly well. Algorithms, implementations, and analyses are presented to support this assertion. Contents Table of Contents i List of Figures iv List of Tables v Acknowledgements vi 1 Introduction 1 1.1 Thesis : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : 2 1.2 Sub-Theses : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : 3 1.2.1 Ef..."
+    },
+    {
+      "id": "W2111242607",
+      "title": "Communications and consistency in mobile file systems",
+      "abstract": "To overcome the availability, latency, bandwidth, and cost barriers of mobile networks, mobile clients of distributed file systems switch between connected and disconnected modes of operation. Lying between these are modes of operation that refine the consistency semantics of cached files, allowing a mobile client to select a mode appropriate for the prevailing network conditions. Clients can take advantage of network opportunities unsuitable for connected operation, obtaining improved performance, more effective sharing, and more stringent consistency guarantees as a result. Today's mobile computing technology lets nomadic users operate computers large and small from their offices and homes and places in between. However, mobile users are often frustrated by the quality of distributed services available to them. In this article, we describe ways to extend the advantages of distributed file systems to users of mobile computers."
+    },
+    {
+      "id": "W2532134569",
+      "title": "Revising Transaction Conceptsf or Mobile Computing",
+      "abstract": "It is expected that in the near future millions of users will have access to on-line distributed databases through mobile computers. The restrictions imposed by the nature of the wireless medium and the resulting mobility of data consumers and data producers make traditional transaction models inadequate. In this paper, we investigate means for providing transaction support appropriate for mobile environments. Specifically, we define a model that ensures a weaker notion of consistency, accounts for mobility, and provides for recovery."
+    },
+    {
+      "id": "W2164498384",
+      "title": "Experience with Connected and Disconnected Operation of Portable Notebook Computers in Distributed Systems",
+      "abstract": "DOC (Disconnected Operation Cache) is a two-level client caching system designed and implemented to support connected and disconnected operation of small form-factor, battery powered portable computers. This paper describes some design features of DOC, and our experiences with running it in the software engineering environment of AST Research. The uniqueness of the DOC project stems from the fact that it has been designed to completely support client caching and disconnected operation of currently existing portable notebook computers. The AST's local area network consisting of several Novell servers and top of the line notebooks running MS/DOS 6.2 as clients communicating via an Ethernet connection are used to support the system and perform experiments. DOC supports \"connected\", \"partially disconnected\", and \"disconnected\" modes of operation. The partially disconnected mode of operation has been designed to permit DOC to respond to requests on certain files that are not modified frequently, without server involvement. Results of our experiments indicate not only considerable performance gains for \"connected\" and \"partially disconnected\" system but also successful operation in the disconnected mode."
+    },
+    {
+      "id": "W1506476204",
+      "title": "Partially Connected Operation",
+      "abstract": "RPC latencies and other network-related delays can frustrate mobile users of a distributed file system. Disconnected operation helps, but fails to use networking opportunities to their full advantage. In this paper we describe partially connected operation, an extension of disconnected operation that resolves cache misses and preserves client cache consistency, but does not incur the write latencies of a fully connected client. Benchmarks of partially connected mode over a slow network indicate overall system performance comparable to fully connected operation over Ethernet. May 25, 1995 Center for Information Technology Integration University of Michigan 519 West William Street Ann Arbor, MI 48103-4943 Partially Connected Operation L.B. Huston lhuston@citi.umich.edu P. Honeyman honey@citi.umich.edu Center for Information Technology Integration University of Michigan Ann Arbor 1. Introduction An important advantage of a distributed computing environment is on-demand access to d..."
+    },
+    {
+      "id": "W2051240816",
+      "title": "Writing the Web while disconnected",
+      "abstract": "The World Wide Web has exploded as a medium for sharing information in a relatively simple, easy-to-use, and appealing manner. Technology for accessing Web resources has naturally evolved to support disconnected viewing of cached pages normally residing on servers around the world, and much attention has been given to providing this capability. The Web was originally conceived, however, as a medium for both information sharing and collaborative work, for creating and updating information, as well as for reading. Very little work has considered how to support the update and creation of material while disconnected, for propagation back to the appropriate servers upon reconnection. This article discusses issues arising in such support, compares the problem to that in disconnected file systems, and describes an approach for disconnected updates, as demonstrated by our Caubweb(TM) technology for disconnected interaction with Web-based resources."
+    },
+    {
+      "id": "W2159735528",
+      "title": "Multimedia nomadic services on today's hardware",
+      "abstract": "Describes nomadic computing services built with currently available hardware and used on a daily basis by a small community of users. This environment consists of applications accessing pagers, facsimile, answering machines, telephone lines, speech synthesis, and digital recording and playback. Its key contributions are the integration of multiple media into a cohesive nomadic information infrastructure and a graceful transition from desktop to nomadic locales. This integration is at the service and user interface levels; the point of the article is that one can successfully prototype a suite of multimedia nomadic services by cobbling together applications, shellscripts, and disparate hardware components. The nomadic services make strong use of speech to provide remote access over ordinary telephone lines to a suitable set of tasks that users normally perform at the desktop. The authors place particular emphasis on communication, spanning voice as well as text and facsimile messaging. In addition these services provide personal information management, remote database access, and short-term information caching. The link between nomadic and desktop computing also changes office applications-nomadic services utilize demanding new media and 24-hour access changes how subscribers use and rely on traditional desktop databases.>"
+    },
+    {
+      "id": "W2750228999",
+      "title": "Peephole Log Optimization",
+      "abstract": "The log files generated while operating a file system in disconnected mode grow to substantial sizes. Eliminating redundant or useless operations in these logs can free up scarce disk space on laptops, reduce replay times, and reduce the frequency of data conflict. Our approach uses a rule-based portable peephole optimizer for compilers. This work suggests a general method of optimization for any system that performs logging at the vnode layer. January 26, 1995 Center for Information Technology Integration University of Michigan 519 West William Street Ann Arbor, MI 48103-4943 Peephole Log Optimization L.B. Huston lhuston@citi.umich.edu P. Honeyman honey@citi.umich.edu Center for Information Technology Integration University of Michigan Ann Arbor 1. Introduction One goal of mobile computing is to provide users with a system that faithfully emulates the desktop environment. The mobile environment makes this goal a difficult one to reach because of limitations such as sporadic, l..."
+    },
+    {
+      "id": "W1980013748",
+      "title": "Using belief to reason about cache coherence",
+      "abstract": "The notion of belief has been useful in reasoning about authentication protocols. In this paper, we show how the notion of belief can be applied to reasoning about cache coherence in a distributed file system. To the best of our knowledge, this is the first formal analysis of this problem. We used an extended subset of a logic of authentication to help us analyze three cache coherence protocols: a validate-on-use protocol, an invalidation-based protocol, and a new large granularity protocol for use in weakly connected environments. In this paper, we present two runs from the large granularity protocol. Using our variant of the logic of authentication, we were able to find flaws in the design of the large granularity protocol. We found the notion of belief not only intuitively appealing for reasoning about our protocols, but also practical given the optimistic nature of our system model."
+    },
+    {
+      "id": "W2004214903",
+      "title": "Disconnected operation for heterogeneous servers",
+      "abstract": null
+    },
+    {
+      "id": "W1854478782",
+      "title": "An adaptive data distribution system for mobile environments",
+      "abstract": null
+    },
+    {
+      "id": "W2139166957",
+      "title": "Two-level client caching and disconnected operation of notebook computers in distributed systems",
+      "abstract": "Data caching in distributed file systems has been studied with regard to performance and availability [7,9,14,15]. The most common place for the cached data is the server's main memory. This type of caching is referred to as server caching, as opposed to client caching when the cached data is stored on the client (remote workstation) site. Although server caching improves performance considerably since it eliminates disk transfer time for each access, it has two drawbacks: it still suffers from a network transfer delay and is very vulnerable to server's failures. Server's failure renders the whole system virtually inoperable."
+    },
+    {
+      "id": "W2163232649",
+      "title": "A Client-Side-Only Approach to Disconnected File Access",
+      "abstract": "We discuss a client-side-only approach to providing disconnected access to a heterogeneous set of network file services. Our method contrasts with those used in systems such as Coda. primarily because Coda depends upon changes to both the client software and the server software. Instead. we assume that we cannot make changes to the servers. and we explore the resultant benefits and limitations. as manifested in our prototype implementation. Unlike the LITLE WORK approach to disconnected operation for AFS, we do not commit to a specific file access protocol; rather. we support access to multiple file services. We describe how a usability study affected our user model. system design. and implementation."
+    },
+    {
+      "id": "W2170146421",
+      "title": "Infrastructure support for cooperative mobile environments",
+      "abstract": "With the widespread use of distributed systems on one hand and the rapid deployment of mobile computing and communication infrastructure on the other, it becomes important to link both technologies together. This paper first outlines new problems arising from distributed mobile computing and then presents a software support architecture and system for mobile applications. We then discuss a system model for structuring mobile applications, a station software infrastructure for managing resource access in dynamic mobile environments, and a description technique for specifying behavioural aspects of mobile applications. The implementation is based on the remote procedure call of the OSF Distributed Computing Environment and on Microsoft RPC. First experiences with our prototype are reported and directions for future development are outlined."
+    },
+    {
+      "id": "W1522712375",
+      "title": "Issues in building mobile-aware applications with the Rover Toolkit",
+      "abstract": "Thesis (M.S.)--Massachusetts Institute of Technology, Dept. of Electrical Engineering and Computer Science, 1996."
+    },
+    {
+      "id": "W2101662171",
+      "title": "The computational requirements of mobile machines",
+      "abstract": "For the last few years mobile (or nomadic) computing has generated tremendous interest in both the research and the industrial community. Mobility is seen as an area of great potential benefits, both in terms of products and research contributions, However, at this time, mobile systems are so novel that there is little practical experience regarding their use. This has led to much speculation regarding a number of system issues such as determining what the killer apps will be, the hardware architecture of the nomadic machines, deciding whether communication or computation will be their primary feature and so on. One of the issues yet to be resolved is that of the architecture of these machines. Will mobile machines be essentially a new type of portable computer (although perhaps smaller, less powerful, friendlier, and pencentric) or will we carry around with us the equivalent of an X-window terminal (i.e., simply a display device, with all computation being carried out at a non-mobile server)? Examples of the first approach are the Apple Newton and the EO computers formerly marketed by AT&T, while the second approach is being explored by a number of other researchers (e.g., the InfoPad project at U.C. Berkeley, or the Xerox PARC tabs). This paper briefly describes the research issues involved and outlines the pros and cons of either approach. We also explore in detail one particular aspect, namely, the performance implications of the choice of architecture in a distributed information system. The results are presented as a set of simulation-based studies."
+    },
+    {
+      "id": "W1852992406",
+      "title": "Khnum \u2014 A Scalable Rapid Application Deployment System for Dynamic Hosting Infrastructures",
+      "abstract": null
+    },
+    {
+      "id": "W2154476959",
+      "title": "Supporting voluntary disconnection in WFMSs",
+      "abstract": "With the network and computing environment improvement in both wireless and wired area, mobile or portable devices like palmtops and notebooks have become prevalent. They are even considered as essential ingredients of the business workplace. Thus this mobile business environment should be accommodated in the business automation systems like workflow management systems (WFMSs). Researchers have focused on disconnected operation to provide continuous and safe services for the mobile devices in various fields. However disconnected operation has not been fully addressed in the area of WFMSs at all. We analyze the type and scope of disconnected service in WFMSs through the in-depth analysis of workflow task models. Based on this analysis, we show and discuss four general issues that should be addressed to support disconnected operation in WFMSs. The discussions are mainly focused on voluntary disconnection in the wired environment and issues like task classification, task relevant data handling, application handling, and task state emulation are included."
+    },
+    {
+      "id": "W1556473092",
+      "title": "Supporting autonomous work and reintegration in collaborative systems",
+      "abstract": null
+    },
+    {
+      "id": "W1603503395",
+      "title": "Scheduling Write Backs for Weakly-Connected Mobile Clients",
+      "abstract": null
+    },
+    {
+      "id": "W2068905838",
+      "title": "File hoarding under NFS and Linux",
+      "abstract": "This paper describes an implementation of a file hoarding system for the Linux/NFS platform.Designed as a cache manager on the mobile Linux platform, the system supports fully connected, partially connected and disconnected mode of operations.The unique feature of the system is the mechanism used for its implementation, i.e. the local proxy of the remote NFS server.This choice assures high flexibility and portability of the system since no modifications are required in the native system's kernel source code.The experiments presented in the paper show that this mechanism provides a viable solution for implementing fiie system extension~ such as file hoarding and disconnected operation."
+    },
+    {
+      "id": "W2146118097",
+      "title": "Distributed and persistent mobile agents for heterogeneous personal communications systems",
+      "abstract": "Problems of environment heterogeneity and interoperability between different mobile computing platforms are among the most urgent to address by the research community. This paper proposes an environment, which supports migration of mobile code developed using heterogeneous languages. Current developments in the area of mobile code and distributed mobile computing systems are discussed and placed within the context of the proposed system. The architecture behind the proposed portable environment small operating system (PESOS) provides an open platform for distributed persistent personal agents written using a variety of languages. Additionally PESOS introduces and discusses the concept of a uniform migration wrapper consisting of portable file systems (PFS) within which applications and data are embedded."
+    },
+    {
+      "id": "W4254783591",
+      "title": "Khnum - a scalable rapid application deployment system for dynamic hosting infrastructures",
+      "abstract": "In a dynamically scalable hosting infrastructure for E-business computing, servers need to be quickly allocated in order to satisfy a sudden demand for increased computing power for a hosted site. Khnum is the applications and data management component of Oceano - a dynamically scalable hosting infrastructure for E-business computing utilities. It is responsible for server reconfiguration and for application deployment. Application deployment involves all services, configuration directives, executables and data of the application. A hosted site may include several applications. Khnum enables Oceano to rapidly deploy multiple applications to tens of servers simultaneously in just a few minutes. It uses AFS as the infrastructure for secure storage, automatically mapping files and directories onto the new servers' local filesystems and multicasting hot AFS cache content to the new servers. To avoid overloading the AFS servers during the deployment process, the hot cache content is multicast to all the new servers, avoiding the boot storming (or \"rushing\") effect. This, in turn, improves the scalability of the deployment process; experimental results attest to Khnum's scalability in simultaneously deploying applications to tens of servers."
+    },
+    {
+      "id": "W627336927",
+      "title": "Duplication et coh\u00e9rence configurables dans les applications r\u00e9parties \u00e0 base de composants",
+      "abstract": "This thesis focuses on replication and consistency configuration in distributed applications. It aims to define configuration mechanisms that do not impose modifications to the business code of applications and that allow reuse of replication and consistency management code. The first point responds to the need to execute applications in different contexts. The second point allows replication protocols to be used in different applications. The thesis objectives are considered in the case of component-based applications. Non intrusive replication configuration is based on the separation between the components' business code and their system code. Replication code reuse is achieved through modeling of protocols in terms of application-independent components. The proposed models for programming, composition and execution of protocols and applications are validated using a Java prototype implementation. We measure the cost of our replication management and analyze the way its principles can be applied to the EJB and CCM environments. We show the configuration and reuse facilities of our prototype through several experiments involving different applications, as well as different replication protocols."
+    },
+    {
+      "id": "W1517184016",
+      "title": "A network architecture for continuous mobility",
+      "abstract": null
+    },
+    {
+      "id": "W174158501",
+      "title": "Communication Timestamps for File System Synchronization",
+      "abstract": "The problem of detecting various kinds of update conflicts in file system synchronization following a network partition is well-known. All systems of which we are aware use the version vectors of Parker et al. These require O(R*F) storage space for F files shared among R replicas. We propose a number of different methods, the most space-efficient of which uses O(R*F) space in the worst case, but O(R+F) in the expected case. To gain experience with the various methods, we implemented a file synchronization tool called Tra. Based on this experience, we discuss the advantages and disadvantages of each particular method. Tra itself turns out to be useful for a variety of tasks, including home directory maintenance, operating system installation, and managing offline work. We discuss some of these uses."
+    },
+    {
+      "id": "W2241069246",
+      "title": "FEW phone file system",
+      "abstract": "Trabalho apresentado no \u00e2mbito do Mestrado em Engenharia Inform\u00e1tica, como requisito parcial para obten\u00e7\u00e3o do grau de Mestre em Engenharia Inform\u00e1tica"
+    },
+    {
+      "id": "W4251231112",
+      "title": "Experience with connected and disconnected operation of portable notebook computers in distributed systems",
+      "abstract": "DOC (Disconnected Operation Cache) is a two-level client caching system designed and implemented to support connected and disconnected operation of small form-factor, battery powered portable computers. This paper describes some design features of DOC, and our experiences with running it in the software engineering environment of AST Research. The uniqueness of the DOC project stems from the fact that it has been designed to completely support client caching and disconnected operation of currently existing portable notebook computers. The AST's local area network consisting of several Novell servers and top of the line notebooks running MS/DOS 6.2 as clients communicating via an Ethernet connection are used to support the system and perform experiments. DOC supports \"connected\", \"partially disconnected\", and \"disconnected\" modes of operation. The partially disconnected mode of operation has been designed to permit DOC to respond to requests on certain files that are not modified frequently, without server involvement. Results of our experiments indicate not only considerable performance gains for \"connected\" and \"partially disconnected\" system but also successful operation in the disconnected mode."
+    },
+    {
+      "id": "W4253529805",
+      "title": "A client-side-only approach to disconnected file access",
+      "abstract": "We discuss a client-side-only approach to providing disconnected access to a heterogeneous set of network file services. Our method contrasts with those used in systems such as Coda. primarily because Coda depends upon changes to both the client software and the server software. Instead. we assume that we cannot make changes to the servers. and we explore the resultant benefits and limitations. as manifested in our prototype implementation. Unlike the LITLE WORK approach to disconnected operation for AFS, we do not commit to a specific file access protocol; rather. we support access to multiple file services. We describe how a usability study affected our user model. system design. and implementation."
+    },
+    {
+      "id": "W100252244",
+      "title": "Mobile Agent Abstractions: Formulation and Implementation",
+      "abstract": "We present mobile agent abstractions in terms of a few basic mobility and connec-tivity features. The features used in formulating the abstractions are identied as self-hopping, push by host, retraction by originator, push by originator, and mobility and disconnection of host machines. Combining these primitives leads to dierent agent abstractions with varying \\navors of mobility and interaction with hosts. Six such abstractions namely Autonomous Agent, Messenger Agent, Controlled Agent, Greedy Agent, Phoenix Agent and Disconnected Agent are presented. A unique feature of this work is that the abstractions themselves are described in the more general Ambient Calculus. Ambient descriptions bring out the subtle dierences between structural and behavioral properties of the agent abstractions. Guidelines for mapping the abstractions to an implementation over a mobility framework are also discussed."
+    },
+    {
+      "id": "W138676858",
+      "title": "An Architectural Approach to Replication Configuration.",
+      "abstract": "Replication is a traditional means for guaranteeing service availability in the distributed computing domain. However, existing solutions manage the inherent replication and consistency complexity by limiting the problem to the specific needs of a given application domain and of a given execution environment. The approach has two major drawbacks : (i) replication solutions are most challenging to reuse and (ii) applications cannot be deployed in different execution environments (with different replication and consistency requirements) without major changes to their structure and code."
+    },
+    {
+      "id": "W1501082618",
+      "title": "A hierarchical group model for programming sensor networks",
+      "abstract": "A hierarchical group model that decouples computation from hardware can characterize and aid in the construction of sensor network software with minimal overhead. Future sensor network applications will move beyond static, homogeneous deployments to include dynamic, heterogeneous elements. These sensor networks will also gain new users, including casual users who will expect intuitive interfaces to interact with sensor networks. To address these challenges, a new computational model and a system implementing the model are presented. This model ensures that computations can be readily (re)assigned as sensor nodes are introduced or removed. The model includes methods for communication to accommodate these dynamic elements.\r\nThis dissertation presents a detailed description and design of a computational model that resolves these challenges using a hierarchical group mechanism. In this model, computation is tasked to logical groups and split into collective and local components that communicate hierarchically. Local computation is primarily used for data production and publishes data to the collective computation. Similarly, collective computation is primarily used for data aggregation and pushes results back to the local computation. Finally, the model includes data-processing functions interposed between local and collective functions and are responsible for data conversion. \r\nThis dissertation also presents implementations and applications of the model. Implementations include Kensho, a C-based implementation of the hierarchical group model, that can be used for a variety of user applications. Another implementation, Tables, presents a spreadsheet-inspired view of the sensor network that takes advantage of hierarchical groups for both computation and communication. Users are able to specify both local and collective functions that execute on the sensor network via the spreadsheet interface. Applications of the model are also explored. One application, FUSN, provides a set of methods for constructing filesystem-based interfaces for sensor networks. This demonstrates the general applicability of the model as applied to sensor network programming and management interfaces. Finally, the model is applied to a novel privacy algorithm to demonstrate that the model isn't strictly limited to programming interfaces."
+    },
+    {
+      "id": "W1934635679",
+      "title": "Adaptive file system consistency for unreliable mobile computing environments",
+      "abstract": "This paper presents the design and implementation of the Mobile File and Adaptation System (MFAS), a system to provide efficient data access mechanisms over variable quality of service networks. MFAS supports fine-grained file caching and consistency, and provides a mechanism for mobility-aware applications to adapt the caching and consistency behavior as network conditions change. Over low-bandwidth links, MFAS shows substantial performance gains over typical network file systems by sending only the modified portions of files. To our knowledge, MFAS is the first system that efficiently supports application-directed consistency policies at the subfile level."
+    },
+    {
+      "id": "W2037932135",
+      "title": "Disconnected operation for heterogeneous servers: A practical approach",
+      "abstract": null
+    },
+    {
+      "id": "W2077555538",
+      "title": "Mobile file system support with virtual device drivers",
+      "abstract": null
+    },
+    {
+      "id": "W2182373250",
+      "title": "SERVICES FOR NETWORKS WITH MOBILE HOSTS",
+      "abstract": null
+    },
+    {
+      "id": "W2187598229",
+      "title": "Distributed Data Storage with Strong Offline Access Support",
+      "abstract": "In this paper, we propose a distributed data stor- age framework that supports unrestricted offline access. The system does not explicitly distinguish between connected and disconnected states. Its design is based on a lock-free distributed framework that avoids update conflicts through file versioning. The feasibility of this framework is confirmed by a proof-of- concept implementation. We also demonstrate that the proposed lock-free replica synchronization algorithm scales well. A future work will include also direct support for non-versioned files."
+    },
+    {
+      "id": "W2276952220",
+      "title": "Minimizing resource access and management disparities between desktop and Web applications",
+      "abstract": "Client applications, including both traditional desktop applications and modern Web applications, typically access and manage resources in order to perform their intended work. Unfortunately both approaches lack something the other has when it comes to resource access and management. Desktop applications typically do not provide enough security for resources to prevent malicious abuse of them. While operating systems provide access-control lists, they do not help facilitate enforcing the Principle of Least Privilege to minimize insecure resource access. Web applications, while they operate in a sandboxed environment which provides the necessary resource access restrictions, do not have a rich API for data storage management. While HTML5 provides two primitive APIs for a developer to use to manage stored data, neither approach allows for storing data in an object-oriented manner that a developer is used to. This thesis addresses the question of \u201dcan these two shortcomings in resource access and management be overcome in order to lessen the technological gap between desktop applications and Web applications?\u201d For desktop applications an approach using aspect-oriented software design has been created which adds enforcement of the Principle of Least Privilege by using I/O to dynamically choose what resource permissions to grant the application. I show that this approach can tie into Java applications with rich user interaction and I/O to control resource access while providing a way for third-parties to provide the security code for auditing purposes. For Web applications, a library has been designed which introduces automatic object persistence to JavaScript without re- quiring any modifications of the browser. I show that my library is able to persist a thousand objects without a user-perceptible impact on application performance, all while having minimal requirements placed upon the developer to use the library."
+    },
+    {
+      "id": "W2277134627",
+      "title": "Designing cooperative media-integrated mobile applications",
+      "abstract": "We believe that the trend towards cooperative applications is interwoven with trends towards both multimedia and mobile computing and with the trend towards integrated software solutions. This means that the design and development of cooperative applications should be treated in a larger context: the design and development of \"customized enterprise-wide cooperative media-integrated (i.e. multimedia and multimodal) mobile applications\" --- advanced cooperative applications for short. In our paper, we will motivate the importance of such a holistic approach and introduce a design framework for advanced cooperative applications, called Items. This design framework draws from the ideas of scenario-based design and offers five interrelated view types for describing an advanced cooperative application at different levels of detail and from different perspectives. The cooperation-related view types will be emphasized in the paper. Items represents work in progress."
+    },
+    {
+      "id": "W2395535483",
+      "title": "Ein komponentenbasiertes Meta-Modell kontextabh\u00e4ngiger Adaptionsgraphen f\u00fcr mobile und ubiquit\u00e4re Anwendungen",
+      "abstract": "Gegenw\u00e4rtige Infrastrukturen f\u00fcr verteilte Dienste und Anwendungen, insbesondere das Internet, entwickeln sich zunehmend zu mobilen verteilten Systemen. Durch die Integration drahtloser Netze, mobiler bzw. dedizierter Endger\u00e4te und nicht zuletzt durch die Mobilit\u00e4t der Benutzer steigt die Heterogenit\u00e4t und Dynamik der Systeme hinsichtlich der eingesetzten Endger\u00e4te, Kommunikationstechnologien sowie Benutzeranforderungen und Anwendungssituationen. Diese Eigenschaften sind mobilen Systemen inh\u00e4rent und bleiben trotz der fortschreitenden Entwicklung der Technologien bestehen. Daraus resultieren spezifische Anforderungen an Anwendungen und Dienste, denen insbesondere die Softwareentwicklung Rechnung tragen muss. In der vorliegenden Arbeit wird die Adaptivit\u00e4t von Softwaresystemen als wesentlicher L\u00f6sungsansatz f\u00fcr mobile verteilte Infrastrukturen thematisiert. Dazu werden wesentliche Mechanismen zur Adaption sowie der \u00dcberschneidungsbereich von Adaptionsmechanismen, \"Context-Awareness\" und Softwareentwicklung untersucht. Ziel ist es, Erkenntnisse \u00fcber Basismechanismen und Grundprinzipien der Adaption zu gewinnen und diese zur systematischen Entwicklung adaptiver Anwendungen auszunutzen. Aus der Analyse des State-of-the-Art werden als erstes wichtiges Ergebnis der Arbeit wesentliche Basismechanismen zur Adaption identifiziert, umfassend klassifiziert und hinsichtlich eines Einsatzes in mobilen verteilten Infrastrukturen bewertet. Auf dieser Grundlage wird ein Meta-Modell zur systematischen Entwicklung adaptiver Anwendungen erarbeitet. Dieses erlaubt die Beschreibung adaptiver Anwendungen durch die Komposition von Basismechanismen zur Struktur- und Parameteradaption. Die Steuerung der Adaption durch Kontext und Meta-Informationen kann explizit beschrieben werden. Das Meta-Modell kann Entwickler beim Entwurf adaptiver Anwendungen unterst\u00fctzen, stellt aber auch einen Ausgangspunkt f\u00fcr deren Analyse und Validierung sowie zur Kodegenerierung dar. Durch die explizite Beschreibung der verwendeten Adaptionsmechanismen und deren Abh\u00e4ngigkeiten von Kontext k\u00f6nnen Anwendungsmodelle au\u00dferdem zur Dokumentation verwendet werden. Im Rahmen der Validierung konnte die Integrierbarkeit der Basismechanismen und die flexible Anwendbarkeit des Modells zur systematischen Entwicklung adaptiver Anwendungen nachgewiesen werden."
+    },
+    {
+      "id": "W2613360479",
+      "title": "Performance Implications of Delayed-Write Policy in a Multilevel File System Cache",
+      "abstract": "Employing a delayed-write caching policy in a multilevel cache hierarchy may allow significant improvements in file system storage capacity as well as improving file system access over low-speed links. Cheap, high capacity mass storage systems can be viable as primary data repositories if front-end caching is used to mask the high access times typical of mass storage devices. Using distributed file system traces and cache simulations, we explore extensions and modifications to the traditional client caching model employed in such file systems as AFS and Sprite. High cache hit rates at an \"intermediate cache server\"---a machine logically interposed between clients and servers that provides cached file service to the clients---combined with high client cache hit rates, lend practicality to an integrated mass storage file system. In such a system, magnetic-tape or optical-based mass storage devices may be used as a first-class data repository, fronted by disk and RAM caches to offer accep..."
+    },
+    {
+      "id": "W2982393595",
+      "title": "Rethinking Home Networks in the Ultrabroadband Era",
+      "abstract": "The advent of ultrabroadband Internet connectivity brings a 2-3 orders of magnitude jump in the capacity of access networks (a.k.a. the \"last mile\"). Beyond mere capacity increase, this leap represents a qualitative shift in the overall Internet environment. Therefore, we argue that only by seizing the opportunity to re-think the way we structure network applications and services can we realize the full potential ultrabroadband provides. Specifically, with ultrabroadband residential networks, we have the opportunity to re-center our digital lives around our residence, similar to how our physical lives generally center around our homes. To this end, we introduce a new appliance in home networks-a \"home point of presence\"-that provides a variety of services to the users in the house regardless of where they are physically located and connected to the network. We illustrate the utility of this appliance by discussing a range of new services that both bring new functionality to the users and improve performance of existing applications."
+    },
+    {
+      "id": "W33084275",
+      "title": "PI: a new approach to flexibility in system software",
+      "abstract": "Conventional operating system design makes decisions based on assumptions about applications' usage of hardware and software resources. When the assumptions do not hold, these decisions may create a mismatch between what an application wants and what the implementation provides. This dissertation proposes a design approach called Pi which reduces the potential mismatch by enhancing the flexibility of system software. A system built using the Pi approach allows clients to participate in implementation decisions at run-time through dual interfaces; the first one for using the basic functionality, and the second one for changing the implementation.\r\nThe Pi approach uses a reflective architecture for flexibility. It utilizes a self-representation of a subsystem created using resource objects and contracts, which decide the subsystem's semantics. Contract implementations can be changed by clients through the second interface. The visibility of a change is restricted to a designated scope using a mechanism called scope-based dispatch.\r\nThe Pi approach has been demonstrated by designing the Pi File System (PFS) architecture and constructing its prototype implementation. The Pi approach has enabled clients to control separate components of the implementation of the file system. For example, naming and caching in the PFS implementation can be tailored by clients to their own needs. The approach has allowed clients to make incremental changes to the implementation and has ensured that the effects of changes are limited to a client-specified scope like a process or a file. Also, the overhead of Pi flexibility mechanisms is limited to a few indirections, and hence the performance penalty is small. Experience with the file system shows that it is possible to design flexible system software which meets the threefold requirements of incrementality, scope control and low overhead."
+    }
+  ]
+}

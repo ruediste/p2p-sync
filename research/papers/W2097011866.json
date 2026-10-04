@@ -1,0 +1,116 @@
+{
+  "id": "W2097011866",
+  "title": "Hierarchical Replication Control in a Global File System",
+  "doi": "https://doi.org/10.1109/ccgrid.2007.57",
+  "publication_date": "2007-05-01",
+  "publication_year": 2007,
+  "type": "conference-paper",
+  "cited_by_count": 5,
+  "authors": [
+    "Jiaying Zhang",
+    "Peter Honeyman"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://hdl.handle.net/2027.42/107876",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2097011866.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2097011866.grobid-xml"
+  },
+  "abstract": "We develop a consistent mutable replication extension for NFSv4 tuned to meet the rigorous demands of large-scale data sharing in global collaborations. The system uses a hierarchical replication control protocol that dynamically elects a primary server at various granularities. Experimental evaluation indicates a substantial performance advantage over a single server system. With the introduction of the hierarchical replication control, the overhead of replication is negligible even when applications mostly write and replication servers are widely distributed.",
+  "topics": [
+    "Advanced Data Storage Technologies",
+    "Distributed systems and fault tolerance",
+    "Caching and Content Delivery"
+  ],
+  "references": [
+    "https://openalex.org/W74428446",
+    "https://openalex.org/W156881701",
+    "https://openalex.org/W274549089",
+    "https://openalex.org/W1524103123",
+    "https://openalex.org/W1526649648",
+    "https://openalex.org/W1527148394",
+    "https://openalex.org/W1552521662",
+    "https://openalex.org/W1578833196",
+    "https://openalex.org/W1600328410",
+    "https://openalex.org/W1632629122",
+    "https://openalex.org/W1782125413",
+    "https://openalex.org/W1964075623",
+    "https://openalex.org/W1968526517",
+    "https://openalex.org/W1970019308",
+    "https://openalex.org/W1971013508",
+    "https://openalex.org/W1984674591",
+    "https://openalex.org/W2002195182",
+    "https://openalex.org/W2003214215",
+    "https://openalex.org/W2035362408",
+    "https://openalex.org/W2050774583",
+    "https://openalex.org/W2057552436",
+    "https://openalex.org/W2070343246",
+    "https://openalex.org/W2071958655",
+    "https://openalex.org/W2075854425",
+    "https://openalex.org/W2088221489",
+    "https://openalex.org/W2089138728",
+    "https://openalex.org/W2091257550",
+    "https://openalex.org/W2097011866",
+    "https://openalex.org/W2102226439",
+    "https://openalex.org/W2102526983",
+    "https://openalex.org/W2103166562",
+    "https://openalex.org/W2107571548",
+    "https://openalex.org/W2111223826",
+    "https://openalex.org/W2115457697",
+    "https://openalex.org/W2116142433",
+    "https://openalex.org/W2117780839",
+    "https://openalex.org/W2121133177",
+    "https://openalex.org/W2125264097",
+    "https://openalex.org/W2127771326",
+    "https://openalex.org/W2128258320",
+    "https://openalex.org/W2133943294",
+    "https://openalex.org/W2144566188",
+    "https://openalex.org/W2144910430",
+    "https://openalex.org/W2146176543",
+    "https://openalex.org/W2155463028",
+    "https://openalex.org/W2162522793",
+    "https://openalex.org/W3100217861",
+    "https://openalex.org/W3110378792",
+    "https://openalex.org/W4236096494",
+    "https://openalex.org/W4250601703",
+    "https://openalex.org/W4253455208",
+    "https://openalex.org/W4254263397",
+    "https://openalex.org/W6610079421",
+    "https://openalex.org/W6636287911",
+    "https://openalex.org/W6636957219",
+    "https://openalex.org/W6677557503",
+    "https://openalex.org/W6678390694",
+    "https://openalex.org/W6682895396"
+  ],
+  "cited_by": [
+    {
+      "id": "W4240263508",
+      "title": "A replicated file system for Grid computing"
+    },
+    {
+      "id": "W4250857235",
+      "title": "Fault tolerant and prioritized scheduling in OGSA\u2010based mobile Grids"
+    },
+    {
+      "id": "W2150420897",
+      "title": "Performance and Availability Tradeoffs in Replicated File Systems"
+    },
+    {
+      "id": "W2097011866",
+      "title": "Hierarchical Replication Control in a Global File System"
+    },
+    {
+      "id": "W1508498835",
+      "title": "CPI: A Novel Three-Phase Algorithm for QoS-Aware Replica Placement Problem"
+    }
+  ]
+}

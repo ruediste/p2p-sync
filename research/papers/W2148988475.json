@@ -1,0 +1,49 @@
+{
+  "id": "W2148988475",
+  "title": "ACHIEVING STRONG CONSISTENCY IN A REPLICATED FILE SYSTEM",
+  "doi": null,
+  "publication_date": "1993-01-01",
+  "publication_year": 1993,
+  "type": "article",
+  "cited_by_count": 0,
+  "authors": [
+    "Carl Neilson"
+  ],
+  "venue": "Summit (Simon Fraser University)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://summit.sfu.ca/_flysystem/fedora/sfu_migrate/5625/b15198832.pdf",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2148988475.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2148988475.grobid-xml"
+  },
+  "abstract": "Replicated file systems help to provide fault tolerance in distributed computing environments.Many existing replicated file systems sacrifice strong se~nantics to achieve efficiency and have costly failure handling and recovery algorithms.This thesis puts forward a replicated file system protocol that enforces strong consistency semantics while achieving more efficient failure handling and recovery.Although the protocol pays a performance cost in order to ensure the stricter semantics, this cost is reduced through the use of a non-centralized protocol in which all of the replicas are peers.This decentralization of the protocol avoids the bottleneck problem noticed in primary-copy systems, facilitates load balancing, lets clients choose physically close servers and allows for the reduction of work required during failure handling and recovery.Instead of optimizing each operation type on its own, file system activity was viewed on the level of a file session and the costs of individual operations were able to be spread over the life of a file session.The performance of a prototype of the protocol is compared to both NFS and a non-replicated version of the protocol that also achieves strong consistency semantics.Through these comparisons the cost of replication and the cost of enforcing the strong consistency semantics are shown.Qualitative comparisons of this protocol to other replicated protocols are also provided.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Data Storage Technologies",
+    "Caching and Content Delivery"
+  ],
+  "references": [
+    "https://openalex.org/W1525865893",
+    "https://openalex.org/W1539861357",
+    "https://openalex.org/W1545155892",
+    "https://openalex.org/W1915606614",
+    "https://openalex.org/W1988549102",
+    "https://openalex.org/W2007415020",
+    "https://openalex.org/W2081325462",
+    "https://openalex.org/W2088221489",
+    "https://openalex.org/W2110861182",
+    "https://openalex.org/W2116142433",
+    "https://openalex.org/W2142849519",
+    "https://openalex.org/W2154685263",
+    "https://openalex.org/W2166656739"
+  ],
+  "cited_by": []
+}

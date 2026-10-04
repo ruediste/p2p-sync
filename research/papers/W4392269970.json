@@ -1,0 +1,41 @@
+{
+  "id": "W4392269970",
+  "title": "Assurance de disponibilit\u00e9 et coh\u00e9rence dirigeante dans syst\u00e8mes de fichiers g\u00e9o-reproduits",
+  "doi": null,
+  "publication_date": "2017-12-08",
+  "publication_year": 2017,
+  "type": "dissertation",
+  "cited_by_count": 1,
+  "authors": [
+    "Vinh Tao Thanh"
+  ],
+  "venue": "HAL (Le Centre pour la Communication Scientifique Directe)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://theses.hal.science/tel-01673030v2/file/2017PA066521.pdf",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4392269970.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4392269970.grobid-xml"
+  },
+  "abstract": "Geo-distributed file systems suffer from high latency and network partitions. Because of this, and to ensure high availability, such systems typically commit updates locally, with no latency, and propagate them in the background. Such optimistic replication faces two major challenges: (i) detecting conflicts between concurrent updates and resolving them in a way meaningful for users, while maintaining system integrity invariants; and (ii) supporting legacy applications that are not prepared to deal with concurrency anomalies. Existing optimistic geo-distributed file systems fall short of addressing the challenges. For instance, Dropbox does not support hard links; Andrew File System fails on some concurrent renaming of directories; and all existing systems use automatic conflict resolution that violates the legacy POSIX semantics. We present our solution to the above problems in the design and implementation of a prototype geo-distributed file system, named Tofu. Its design includes a new session abstraction to support the legacy API, while allowing optimistic updates. Unlike previous approaches, our solution is based on a formal model covering all aspects of a Unix-like file system, including directories, inodes, hard links, etc. It is able to detect all conflicts on those data structures, and resolves them in a way that we believe users will find generally reasonable. Experiments show that Tofu is highly scalable, and incurs linear overhead, improving over existing academic and industrial systems.",
+  "topics": [
+    "Advanced Data Storage Technologies",
+    "Distributed and Parallel Computing Systems",
+    "Distributed systems and fault tolerance"
+  ],
+  "references": [],
+  "cited_by": [
+    {
+      "id": "W3184631214",
+      "title": "CRDTs for truly concurrent file systems",
+      "abstract": "Building scalable and highly available geo-replicated file systems is hard. These systems need to resolve conflicts that emerge in concurrent operations in a way that maintains file system invariants, is meaningful to the user, and does not depart from the traditional file system interface. Conflict resolution in existing systems often leads to unexpected or inconsistent results. This paper introduces ElmerFS, a geo-replicated, truly concurrent file system designed with the aim of addressing these challenges. ElmerFS is based on two key ideas: (1) the use of Conflict-Free Replicated Data Types (CRDTs) for representing file system structures, which ensures that replicas converge to a correct state, and (2) conflict resolution rules, which are determined by the choice of CRDT types and their composition, are designed with the principle of being intuitive to the user. We argue that if the state of the file system after resolving a conflict conveys to the user the resolved conflict in an intuitive way, the user can complement or reverse it using traditional file system operations. We discuss the challenges in the design of geo-replicated weakly consistent file systems, and present the design of ElmerFS."
+    }
+  ]
+}

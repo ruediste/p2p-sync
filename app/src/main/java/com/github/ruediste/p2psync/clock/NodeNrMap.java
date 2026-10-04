@@ -28,7 +28,7 @@ public final class NodeNrMap {
     private int nextNodeNr;
 
     public NodeNrMap() {
-        this(new HashMap<>(), VectorClock.empty(), 0);
+        this(new HashMap<>(), new VectorClock(), 0);
     }
 
     /**

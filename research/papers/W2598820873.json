@@ -1,0 +1,103 @@
+{
+  "id": "W2598820873",
+  "title": "Techniques for epicardial mapping and ablation with a miniature robotic walker",
+  "doi": "https://doi.org/10.2147/rsrr.s127047",
+  "publication_date": "2017-03-01",
+  "publication_year": 2017,
+  "type": "article",
+  "cited_by_count": 6,
+  "authors": [
+    "Dwight Meglan",
+    "Wener Lv",
+    "Richard J. Cohen",
+    "Cameron N. Riviere"
+  ],
+  "venue": "Robotic Surgery Research and Reviews",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "diamond",
+    "oa_url": "https://www.dovepress.com/getfile.php?fileID=35635",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2598820873.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2598820873.grobid-xml"
+  },
+  "abstract": "BACKGROUND: Present treatments for ventricular tachycardia have significant drawbacks. To ameliorate these drawbacks, it may be advantageous to employ an epicardial robotic walker that performs mapping and ablation with precise control of needle insertion depth. This paper examines the feasibility of such a system. METHODS: This paper describes techniques for epicardial mapping and depth-controlled ablation with the robotic walker. The mapping technique developed for the current form of the system uses a single equivalent moving dipole model combined with the navigation capability of the walker. The intervention technique provides saline-enhanced radio frequency ablation, with sensing of needle penetration depth. The mapping technique was demonstrated in an artificial heart model with a simulated arrhythmia focus, followed by preliminary testing in the porcine model in vivo. The ablation technique was demonstrated in an artificial tissue model, and then in chicken breast tissue ex vivo. RESULTS: The walker located targets to within 2 mm using the SEMDM technique. No epicardial damage was found subsequent to the porcine trial in vivo. Needle insertion for ablation was controlled to within 2 mm of the target depth. Lesion size was repeatable, with diameter varying consistently in proportion to volume of saline injected. CONCLUSIONS: The experiments demonstrated the general feasibility of the techniques for mapping and depth-controlled ablation with the robotic walker.",
+  "topics": [
+    "Cardiac Arrhythmias and Treatments",
+    "Soft Robotics and Applications",
+    "Cardiac electrophysiology and arrhythmias"
+  ],
+  "references": [
+    "https://openalex.org/W128726806",
+    "https://openalex.org/W1565041255",
+    "https://openalex.org/W1601929881",
+    "https://openalex.org/W1933180963",
+    "https://openalex.org/W1974643180",
+    "https://openalex.org/W1983124480",
+    "https://openalex.org/W1987922905",
+    "https://openalex.org/W2000325901",
+    "https://openalex.org/W2036287524",
+    "https://openalex.org/W2037729303",
+    "https://openalex.org/W2060587048",
+    "https://openalex.org/W2100892191",
+    "https://openalex.org/W2103845516",
+    "https://openalex.org/W2115128908",
+    "https://openalex.org/W2124688202",
+    "https://openalex.org/W2124912072",
+    "https://openalex.org/W2125745910",
+    "https://openalex.org/W2125807539",
+    "https://openalex.org/W2128358693",
+    "https://openalex.org/W2138919554",
+    "https://openalex.org/W2142305166",
+    "https://openalex.org/W2154538805",
+    "https://openalex.org/W2162106558",
+    "https://openalex.org/W2175533614",
+    "https://openalex.org/W2231882326",
+    "https://openalex.org/W2345318354",
+    "https://openalex.org/W2345572214",
+    "https://openalex.org/W2624567655",
+    "https://openalex.org/W2955504961",
+    "https://openalex.org/W3030153550",
+    "https://openalex.org/W3035105286",
+    "https://openalex.org/W4254137688",
+    "https://openalex.org/W4367011168"
+  ],
+  "cited_by": [
+    {
+      "id": "W4409018912",
+      "title": "Epicardial ventricular arrhythmia ablation: a clinical consensus statement of the European Heart Rhythm Association of the European Society of Cardiology and the Heart Rhythm Society, the Asian Pacific Heart Rhythm Society, the Latin American Heart Rhythm Society, and the Canadian Heart Rhythm Society",
+      "abstract": "Epicardial access during electrophysiology procedures offers valuable insights and therapeutic options for managing ventricular arrhythmias (VAs). The current clinical consensus statement on epicardial VA ablation aims to provide clinicians with a comprehensive understanding of this complex clinical scenario. It offers structured advice and a systematic approach to patient management. Specific sections are devoted to anatomical considerations, criteria for epicardial access and mapping evaluation, methods of epicardial access, management of complications, training, and institutional requirements for epicardial VA ablation. This consensus is a joint effort of collaborating cardiac electrophysiology societies, including the European Heart Rhythm Association, the Heart Rhythm Society, the Asia Pacific Heart Rhythm Society, the Latin American Heart Rhythm Society, and the Canadian Heart Rhythm Society."
+    },
+    {
+      "id": "W4386944104",
+      "title": "Current and novel percutaneous epicardial access techniques for electrophysiological interventions: A comparison of procedural success and safety",
+      "abstract": "Accessing the pericardial space safely and efficiently is an important skill for interventional cardiac electrophysiologist. With the increased recognition of the complexity of the 3-dimensional arrhythmogenic substrate due to advances in imaging and mapping technologies there has been an expansion of epicardial procedures in recent years. Equally, minimally invasive implantation of epicardial pacing, cardiac resynchronization, or defibrillation leads is expanding in specific patients where transvenous systems are contraindicated or their long term sequelae should be ideally avoided. Selective delivery of intrapericardial pharmacological antiarrhythmic therapy is yet another potential indication, albeit still investigational. The expanding indications for percutaneous epicardial procedures is contrasted by the still substantial risk and challenges associated with accessing the pericardial space. Myocardial perforation, coronary artery laceration, and damage to the surrounding organs are all recognized and feared complications. A number of innovative epicardial access techniques have been proposed to overcome the difficulties and risks of traditional dry subxiphoid punctures and may allow for more widespread use of epicardial access in the future. We review 10 different established and novel subxiphoidal epicardial access techniques describing procedural success rates, safety profile and overall experience. The technical aspects as well as access times and costs for extra equipment will be reviewed. Finally, an outlook of reported preclinical techniques awaiting in-human feasibility studies is provided."
+    },
+    {
+      "id": "W2790599466",
+      "title": "Beating\u2010heart registration for organ\u2010mounted robots",
+      "abstract": "BACKGROUND: Organ-mounted robots address the problem of beating-heart surgery by adhering to the heart, passively providing a platform that approaches zero relative motion. Because of the quasi-periodic deformation of the heart due to heartbeat and respiration, registration must address not only spatial registration but also temporal registration. METHODS: Motion data were collected in the porcine model in vivo (N = 6). Fourier series models of heart motion were developed. By comparing registrations generated using an iterative closest-point approach at different phases of respiration, the phase corresponding to minimum registration distance is identified. RESULTS: The spatiotemporal registration technique presented here reduces registration error by an average of 4.2 mm over the 6 trials, in comparison with a more simplistic static registration that merely averages out the physiological motion. CONCLUSIONS: An empirical metric for spatiotemporal registration of organ-mounted robots is defined and demonstrated using data from animal models in vivo."
+    },
+    {
+      "id": "W3165286117",
+      "title": "Coronary vessel detection methods for organ\u2010mounted robots",
+      "abstract": "BACKGROUND: HeartLander is a tethered robot walker that utilizes suction to adhere to the beating heart. HeartLander can be used for minimally invasive administration of cardiac medications or ablation of tissue. In order to administer injections safely, HeartLander must avoid coronary vasculature. METHODS: Doppler ultrasound signals were recorded using a custom-made cardiac phantom and used to classify different coronary vessel properties. The classification was performed by two machine learning algorithms, the support vector machines and a deep convolutional neural network. These algorithms were then validated in animal trials. RESULTS: Accuracy of identifying vessels above turbulent flow reached greater than 92% in phantom trials and greater than 98% in animal trials. CONCLUSIONS: Through the use of two machine learning algorithms, HeartLander has shown the ability to identify different sized vasculature proximally above turbulent flow. These results indicate that it is feasible to use Doppler ultrasound to identify and avoid coronary vasculature during cardiac interventions using HeartLander."
+    },
+    {
+      "id": "W2624567655",
+      "title": "Techniques for Avoidance of Coronary Vasculature during Epicardial Needle Insertions with a Miniature Robotic Walker",
+      "abstract": "This paper presents early results of investigation of techniques for detection and avoidance of coronary vessels to be used by a miniature epicardial robotic walker during needle insertion for ablation or injection. Detection of blood vessels was investigated using both near-infrared spectroscopy and Doppler flow ultrasound. Near-infrared spectroscopy was tested on the skin of the human hand in vivo, both with and without overlaying additional layers of animal muscle and fat tissue. Doppler flow ultrasound was tested in an artificial ultrasound flow phantom, and on the skin of the human hand in vivo."
+    },
+    {
+      "id": "W4402330635",
+      "title": "Abla\u00e7\u00e3o rob\u00f3tica para taquicardia: an\u00e1lise \u00e0 luz da literatura",
+      "abstract": "Taquicardia ventricular (TV) \u00e9 uma arritmia causada por doen\u00e7as card\u00edacas estruturais, seja de origem isqu\u00eamica ou n\u00e3o isqu\u00eamica, que est\u00e1 associada a um risco elevado de morte s\u00fabita. A principal causa de TV \u00e9 um evento isqu\u00eamico anterior, que leva \u00e0 forma\u00e7\u00e3o de uma cicatriz irrevers\u00edvel no ventr\u00edculo, alterando substancialmente a fun\u00e7\u00e3o el\u00e9trica do mioc\u00e1rdio ventricular e remodelando suas vias de condu\u00e7\u00e3o. Dependendo das condi\u00e7\u00f5es cl\u00ednicas do paciente, diferentes abordagens terap\u00eauticas podem ser adotadas para tratar TVs. Entre as diversas op\u00e7\u00f5es de tratamento dispon\u00edveis, a abla\u00e7\u00e3o por cateter \u00e9 considerada uma estrat\u00e9gia eficaz para o manejo de diferentes formas de TV, especialmente aquelas associadas a cicatrizes. No entanto, \u00e9 comum que mais de um procedimento seja necess\u00e1rio para alcan\u00e7ar o sucesso completo do tratamento. Dessa forma realizou-se uma revis\u00e3o sistem\u00e1tica de literatura por meio da plataforma pubmed, com sele\u00e7\u00e3o e an\u00e1lise criteriosa dos artigos, a fim de elucidar os aspectos da abla\u00e7\u00e3o rob\u00f3tica no contexto da taquicardia. Nesta revis\u00e3o, foi identificado pontos positivos, onde o uso de navega\u00e7\u00e3o magn\u00e9tica rob\u00f3tica (RMN) para abla\u00e7\u00e3o \u00e9 eficaz e segura para diversas arritmias, oferecendo controle preciso e reduzindo a exposi\u00e7\u00e3o \u00e0 radia\u00e7\u00e3o. Adiante, sistemas de mapeamento avan\u00e7ados permitem reconstru\u00e7\u00f5es 3D da anatomia card\u00edaca, reduzindo a necessidade de fluoroscopia e otimizando a identifica\u00e7\u00e3o de substratos, aumentando a precis\u00e3o das interven\u00e7\u00f5es. Em contrapartida, a escolha da t\u00e9cnica de mapeamento e abla\u00e7\u00e3o depende da complexidade anat\u00f4mica, estabilidade hemodin\u00e2mica, e caracter\u00edsticas individuais da TV, assim, sendo um desafio nas considera\u00e7\u00f5es cl\u00ednicas"
+    }
+  ]
+}

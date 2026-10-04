@@ -1,0 +1,194 @@
+{
+  "id": "W2565376601",
+  "title": "GlobalFS: A Strongly Consistent Multi-site File System",
+  "doi": "https://doi.org/10.1109/srds.2016.027",
+  "publication_date": "2016-09-01",
+  "publication_year": 2016,
+  "type": "conference-paper",
+  "cited_by_count": 15,
+  "authors": [
+    "Leandro Pacheco de Sousa",
+    "Raluca Halalai",
+    "Valerio Schiavoni",
+    "Fernando Pedone",
+    "\u00c9tienne Rivi\u00e8re",
+    "Pascal A. Felber"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "http://hdl.handle.net/2078.1/213812",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": false,
+    "grobid_xml": false
+  },
+  "content_urls": null,
+  "abstract": "This paper introduces GlobalFS, a POSIX-compliant geographically distributed file system. GlobalFS builds on two fundamental building blocks, an atomic multicast group communication abstraction and multiple instances of a single-site data store. We define four execution modes and show how all file system operations can be implemented with these modes while ensuring strong consistency and tolerating failures. We describe the GlobalFS prototype in detail and report on an extensive performance assessment. We have deployed GlobalFS across all EC2 regions and show that the system scales geographically, providing performance comparable to other state-of-the-art distributed file systems for local commands and allowing for strongly consistent operations over the whole system. The code of GlobalFS is available as open source.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Data Storage Technologies",
+    "Cloud Computing and Resource Management"
+  ],
+  "references": [
+    "https://openalex.org/W12688243",
+    "https://openalex.org/W26797728",
+    "https://openalex.org/W192446467",
+    "https://openalex.org/W1480180755",
+    "https://openalex.org/W1526359699",
+    "https://openalex.org/W1531707100",
+    "https://openalex.org/W1534481387",
+    "https://openalex.org/W1534546243",
+    "https://openalex.org/W1540879848",
+    "https://openalex.org/W1751683294",
+    "https://openalex.org/W1822146434",
+    "https://openalex.org/W1973943007",
+    "https://openalex.org/W1993534464",
+    "https://openalex.org/W1993629015",
+    "https://openalex.org/W1999984505",
+    "https://openalex.org/W2000997934",
+    "https://openalex.org/W2003214215",
+    "https://openalex.org/W2004958263",
+    "https://openalex.org/W2014171825",
+    "https://openalex.org/W2050731094",
+    "https://openalex.org/W2054584570",
+    "https://openalex.org/W2060440895",
+    "https://openalex.org/W2071958655",
+    "https://openalex.org/W2075854425",
+    "https://openalex.org/W2078775767",
+    "https://openalex.org/W2080628151",
+    "https://openalex.org/W2087946700",
+    "https://openalex.org/W2104210894",
+    "https://openalex.org/W2109706326",
+    "https://openalex.org/W2110298485",
+    "https://openalex.org/W2116142433",
+    "https://openalex.org/W2116746874",
+    "https://openalex.org/W2118428193",
+    "https://openalex.org/W2119565742",
+    "https://openalex.org/W2119738171",
+    "https://openalex.org/W2123820820",
+    "https://openalex.org/W2127872526",
+    "https://openalex.org/W2151227991",
+    "https://openalex.org/W2152465173",
+    "https://openalex.org/W2153704625",
+    "https://openalex.org/W2155070484",
+    "https://openalex.org/W2156580773",
+    "https://openalex.org/W2159876753",
+    "https://openalex.org/W2161730338",
+    "https://openalex.org/W2167100431",
+    "https://openalex.org/W2167898414",
+    "https://openalex.org/W2171321454",
+    "https://openalex.org/W2269136322",
+    "https://openalex.org/W2319310062",
+    "https://openalex.org/W2610284734",
+    "https://openalex.org/W2913877777",
+    "https://openalex.org/W3000300501",
+    "https://openalex.org/W3100217861",
+    "https://openalex.org/W3137220996",
+    "https://openalex.org/W4236601696",
+    "https://openalex.org/W4239670432",
+    "https://openalex.org/W4243601725",
+    "https://openalex.org/W4251986490",
+    "https://openalex.org/W4252279099",
+    "https://openalex.org/W4253233651",
+    "https://openalex.org/W4253455208",
+    "https://openalex.org/W4254857363",
+    "https://openalex.org/W4285719527",
+    "https://openalex.org/W6600505298",
+    "https://openalex.org/W6607881844",
+    "https://openalex.org/W6631711565",
+    "https://openalex.org/W6632020668",
+    "https://openalex.org/W6632178088",
+    "https://openalex.org/W6637567937",
+    "https://openalex.org/W6638473344",
+    "https://openalex.org/W6650418438",
+    "https://openalex.org/W6676560735",
+    "https://openalex.org/W6677300047",
+    "https://openalex.org/W6678934490",
+    "https://openalex.org/W6682904396",
+    "https://openalex.org/W6683859357",
+    "https://openalex.org/W6684443295",
+    "https://openalex.org/W6684507281",
+    "https://openalex.org/W6699821053",
+    "https://openalex.org/W6758543619"
+  ],
+  "cited_by": [
+    {
+      "id": "W4214919759",
+      "title": "Survey of Distributed File System Design Choices",
+      "abstract": "Decades of research on distributed file systems and storage systems exists. New researchers and engineers have a lot of literature to study, but only a comparatively small number of high-level design choices are available when creating a distributed file system. And within each aspect of the system, typically several common approaches are used. So, rather than surveying distributed file systems, this article presents a survey of important design decisions and, within those decisions, the most commonly used options. It also presents a qualitative exploration of their tradeoffs. We include several relatively recent designs and their variations that illustrate other tradeoff choices in the design space, despite being underexplored. In doing so, we provide a primer on distributed file systems, and we also show areas that are overexplored and underexplored, in the hopes of inspiring new research."
+    },
+    {
+      "id": "W4372258399",
+      "title": "CFS: Scaling Metadata Service for Distributed File System via Pruned Scope of Critical Sections",
+      "abstract": "There is a fundamental tension between metadata scalability and POSIX semantics within distributed file systems. The bottleneck lies in the coordination, mainly locking, used for ensuring strong metadata consistency, namely, atomicity and isolation. CFS is a scalable, fully POSIX-compliant distributed file system that eliminates the metadata management bottleneck via pruning the scope of critical sections for reduced locking overhead. First, CFS adopts a tiered metadata organization to scale file attributes and the remaining namespace hierarchies independently with appropriate partitioning and indexing methods, eliminating cross-shard distributed coordination. Second, it further scales up the single metadata shard performance by single-shard atomic primitives, shortening the metadata requests' lifespan and removing spurious conflicts. Third, CFS drops the metadata proxy layer but employs the light-weight, scalable client-side metadata resolving. CFS has been running in the production environment of Baidu AI Cloud for three years. Our evaluation with a 50-node cluster and microbenchmarks shows that CFS simultaneously improves the throughput of baselines like HopsFS and InfiniFS by 1.76--75.82\u00d7 and 1.22--4.10\u00d7, and reduces their average latency by up to 91.71% and 54.54%, respectively. Under cases with higher contention and larger directories, CFS' throughput benefits expand by one order of magnitude. For three real-world workloads with data accesses, CFS introduces 1.62--2.55\u00d7 end-to-end throughput speedups and 35.06--62.47% tail latency reductions over InfiniFS."
+    },
+    {
+      "id": "W3179061146",
+      "title": "New approach to global data access in computational infrastructures",
+      "abstract": null
+    },
+    {
+      "id": "W3038519967",
+      "title": "Towards Unaligned Writes Optimization in Cloud Storage With High-Performance SSDs",
+      "abstract": "NVMe SSDs provide extremely high performance and have been widely deployed in distributed object storage systems in data centers. However, we observe that there are still severe performance degradation and write amplification under the unaligned writes scenario with high-performance SSDs. In this article, we identify that the RMW sequence which is used to handle the unaligned writes incurs severe overhead in the data path. Besides, unaligned writes incur additional metadata management overhead in the block map table. To address these problems, we propose an object-based device system named NVStore to optimize the unaligned writes in cloud storage with NVMe SSDs. NVStore provides a Flexible Cache Management to reduce the RMW operations while supporting lazy page sync and ensuring data consistency. To optimize the metadata management, NVStore proposes a KV Affinity Metadata Management which co-designs the block map and key-value store to provides a flattened and decoupled metadata management. Evaluations show that NVStore provides at most 6.11\u00d7 bandwidth of BlueStore in the cluster. Besides, NVStore can reduce at most 94.7 percent of the write traffic from metadata under unaligned writes compared to BlueStore and achieves smaller data write traffic which is about 50 percent of BlueStore and 65.7 percent of FileStore."
+    },
+    {
+      "id": "W2791823139",
+      "title": "Consistency Models for Global Scalable Data Access Services",
+      "abstract": null
+    },
+    {
+      "id": "W3106835863",
+      "title": "A Fog Storage Software Architecture for the Internet of Things",
+      "abstract": "International audience"
+    },
+    {
+      "id": "W4388989573",
+      "title": "PrimCast",
+      "abstract": "Atomic multicast is a communication abstraction that allows for messages to be addressed to and reliably delivered by multiple process groups, while ensuring a partial order on delivered messages. Strong ordering guarantees can greatly simplify the design and implementation of distributed applications. One critical property for the performance and scalability of an atomic multicast protocol is that of genuineness: a protocol is said to be genuine if only the sender and destinations of a message are involved in ordering the message. This paper presents PrimCast, the first genuine atomic multicast protocol able to deliver messages at every destination in three communication steps. PrimCast uses a primary-based consensus protocol for deciding on message timestamps at each group. Differently from previous work, it does not rely on consensus for advancing and maintaining logical clocks. PrimCast introduces a novel approach, relying on simple quorum intersection, to decide when a multicast message can be delivered. We also show how loosely synchronized clocks can be used to reduce the convoy effect that delays messages under high system load. We present the complete algorithm for PrimCast and evaluate its performance under various scenarios. Our results show that PrimCast achieves lower latency than state-of-the-art approaches while providing higher or comparable throughput."
+    },
+    {
+      "id": "W2804619641",
+      "title": "TOWARDS TRANSPARENT DATA ACCESS WITH CONTEXT AWARENESS",
+      "abstract": "Applying the principles of open research data is an important factor accelerating the production, analysis of scientific results and worldwide collaboration. However, still very little data is being shared. The aim of this article is analysis of existing data access solutions in order to identify reasons for such situation. After analysis of existing solutions and data access stakeholders needs, the authors propose own vision of data access model evolution."
+    },
+    {
+      "id": "W2887204290",
+      "title": "H2Cloud",
+      "abstract": "Object storage clouds (e.g., Amazon S3) have become extremely popular due to their highly usable interface and cost-effectiveness. They are, therefore, widely used by various applications (e.g., Dropbox) to host user data. However, because object storage clouds are flat and lack the concept of a directory, it becomes necessary to maintain file meta-data and directory structure in a separate index cloud. This paper investigates the possibility of using a single object storage cloud to efficiently host the whole filesystem for users, including both the file content and directories, while avoiding meta-data loss caused by index cloud failures. We design a novel data structure, Hierarchical Hash (or H2), to natively enable the efficient mapping from filesystem operations to object-level operations. Based on H2, we implement a prototype system, H2Cloud, that can maintain large filesystems of users in an object storage cloud and support fast directory operations. Both theoretical analysis and real-world experiments confirm the efficacy of our solution: H2Cloud achieves faster directory operations than OpenStack Swift by orders of magnitude, and has similar performance to Dropbox but yet does not need a separate index cloud."
+    },
+    {
+      "id": "W2610362744",
+      "title": "A General-Purpose Architecture for Replicated Metadata Services in Distributed File Systems",
+      "abstract": "A large class of modern distributed file systems treat metadata services as an independent system component, separately from data servers. The availability of the metadata service is key to the availability of the overall system. Given the high rates of failures observed in large-scale data centers, distributed file systems usually incorporate high-availability (HA) features. A typical approach in the development of distributed file systems is to design and develop metadata services from the ground up, at significant cost in terms of complexity and time, often leading to functional shortcomings. Our motivation in this paper was to improve on this state of things by defining a general-purpose architecture for HA metadata services (which we call RMS) that can be easily incorporated and reused in new or existing file systems, reducing development time. Taking two prominent distributed file systems as case studies, PVFS and HDFS, we developed RMS variants that improve on functional shortcomings of the original HA solutions, while being easy to build and test. Our extensive evaluation of the RMS variant of HDFS shows that it does not incur an overall performance or availability penalty compared to the original implementation."
+    },
+    {
+      "id": "W2945708033",
+      "title": "A Cache-Based Data Movement Infrastructure for On-demand Scientific Cloud Computing",
+      "abstract": "As cloud computing has become the de facto standard for big data processing, there is interest in using a multi-cloud environment that combines public cloud resources with private on-premise infrastructure. However, by decentralizing the infrastructure, a uniform storage solution is required to provide data movement between different clouds to assist on-demand computing. This paper presents a solution based on our earlier work, the MeDiCI (Metropolitan Data Caching Infrastructure) architecture. Specially, we extend MeDiCI to simplify the movement of data between different clouds and a centralized storage site. It uses a hierarchical caching system and supports most popular infrastructure-as-a-service (IaaS) interfaces, including Amazon AWS and OpenStack. As a result, our system allows the existing parallel data intensive application to be offloaded into IaaS clouds directly. The solution is illustrated using a large bioinformatics application, a Genome Wide Association Study (GWAS), with Amazons AWS, HUAWEI Cloud, and a private centralized storage system. The system is evaluated on Amazon AWS and the Australian national cloud."
+    },
+    {
+      "id": "W3122239336",
+      "title": "On the Importance of Infrastructure-Awareness in Large-Scale Distributed Storage Systems",
+      "abstract": "Big data applications put significant latency and throughput demands on distributed storage systems. Meeting these demands requires storage systems to use a significant amount of infrastructure resources, such as network capacity and storage devices. Resource demands largely depend on the workloads and can vary significantly over time. Moreover, demand hotspots can move rapidly between different infrastructure locations. \\n \\nExisting storage systems are largely infrastructure-oblivious as they are designed to support a broad range of hardware and deployment scenarios. Most only use basic configuration information about the infrastructure to make important placement and routing decisions. In the case of cloud-based storage systems, cloud services have their own infrastructure-specific limitations, such as minimum request sizes and maximum number of concurrent requests. By ignoring infrastructure-specific details, these storage systems are unable to react to resource demand changes and may have additional inefficiencies from performing redundant network operations. As a result, provisioning enough resources for these systems to address all possible workloads and scenarios would be cost prohibitive. \\n \\nThis thesis studies the performance problems in commonly used distributed storage systems and introduces novel infrastructure-aware design methods to improve their performance. First, it addresses the problem of slow reads due to network congestion that is induced by disjoint replica and path selection. Selecting a read replica separately from the network path can perform poorly if all paths to the pre-selected endpoints are congested. Second, this thesis looks at scalability limitations of consensus protocols that are commonly used in geo-distributed key value stores and distributed ledgers. Due to their network-oblivious designs, existing protocols redundantly communicate over highly oversubscribed WAN links, which poorly utilize network resources and limits consistent replication at large scale. Finally, this thesis addresses the need for a cloud-specific realtime storage system for capital market use cases. Public cloud infrastructures provide feature-rich and cost-effective storage services. However, existing realtime timeseries databases are not built to take advantage of cloud storage services. Therefore, they do not effectively utilize cloud services to provide high performance while minimizing deployment cost. \\n \\nThis thesis presents three systems that address these problems by using infrastructure-aware design methods. Our performance evaluation of these systems shows that infrastructure-aware design is highly effective in improving the performance of large scale distributed storage systems."
+    },
+    {
+      "id": "W7148322475",
+      "title": "Conception d'un syst\u00e8me de partage de donn\u00e9es adapt\u00e9 \u00e0 un environnement de Fog Computing",
+      "abstract": "L\u2019informatique utilitaire a \u00e9volu\u00e9 au fil des ann\u00e9es pour aboutir \u00e0 ce que nous appelons aujourd\u2019hui le Cloud Computing. Pourtant, ces infrastructures ne sont pas adapt\u00e9es pour r\u00e9pondre aux besoins de l\u2019Internet des Objets ayant des besoins de calculs \u00e0 faible latence malgr\u00e9 des ressources limit\u00e9es. C\u2019est pourquoi, en 2012, Cisco a propos\u00e9 le paradigme de Fog Computing, consistant \u00e0 r\u00e9partir des serveurs sur de nombreux sites plac\u00e9s pr\u00e8s des utilisateurs. Dans cette th\u00e8se, nous cherchons \u00e0 cr\u00e9er une solution de stockage unifi\u00e9e entre les diff\u00e9rents sites de Fog. Notre premi\u00e8re contribution consiste \u00e0 \u00e9valuer si les solutions de stockage existantes peuvent \u00eatre utilis\u00e9es dans un tel environnement. Nous montrons que la solution de stockage InterPlanetary FileSystem (IPFS) reposant sur un protocole similaire \u00e0 BitTorrent et une table de hachage distribu\u00e9e (DHT) pour localiser les donn\u00e9es est la plus prometteuse. Toutefois, le trafic r\u00e9seau inter-sites g\u00e9n\u00e9r\u00e9 impacte n\u00e9gativement les temps de lecture. Notre seconde contribution consiste \u00e0 coupler IPFS au syst\u00e8me de fichiers distribu\u00e9 RozoFS pour limiter ces \u00e9changes inter-sites dans le cas d\u2019acc\u00e8s \u00e0 des donn\u00e9es stock\u00e9es sur le site local. Enfin, notre dernier axe de recherche vise \u00e0 localiser les donn\u00e9es gr\u00e2ce \u00e0 un protocole reposant sur un arbre des plus courts chemins, de fa\u00e7on \u00e0 confiner le trafic r\u00e9seau et \u00e0 privil\u00e9gier les n\u0153uds atteignables avec une faible latence. Gr\u00e2ce \u00e0 de nombreuses exp\u00e9rimentations sur la plateforme Grid\u20195000, nous montrons que le couplage \u00e0 un syst\u00e8me de fichiers r\u00e9duit en moyenne de 34% les temps d\u2019acc\u00e8s et que notre protocole de localisation permet un gain de 20% du temps de localisation des donn\u00e9es."
+    },
+    {
+      "id": "W3034669736",
+      "title": "Distributed File System for an Edge-Based Environment",
+      "abstract": "Recent developments in the industry of personal computing led to a greater number of the so-called edge devices. Such devices typically do not collaborate or foresee the possibility of collaboration to offer aggregated storage and computing capabilities. The concept of distributed file system (DFS) is not new to the field of distributed systems, in fact, it is widely used in dedicated infrastructures, for example, in cloud computing applications. In this work, we discuss reasonable assumptions for an environment composed of edge devices, the main design issues and implementation challenges of a DFS in the given environment and how they would impact this application. Thereafter we define a system model for an environment composed of edge devices while taking into consideration their high mobility and common cases of network partitioning. Next, we describe an architecture for a DFS that withstands the proposed system model while offering most capabilities that a DFS at a dedicated infrastructure would. We conclude that the development of a distributed file system is a very complex task and, given the broad assumptions of the system model, also hard to verify. Some important aspects of the development lie as future work, but we believe that the developed DFS can be used not only as a tool on it's own, but also as a reference for further development of distributed file systems and, specially, of systems for infrastructures composed of edge devices."
+    },
+    {
+      "id": "W7148346884",
+      "title": "Ensuring availability and managing consistency in geo-replicated file systems",
+      "abstract": "Assurance de disponibilit\u00e9 et coh\u00e9rence dirigeante dans syst\u00e8mes de fichiers g\u00e9o-reproduits Les syst\u00e8mes de fichiers g\u00e9o-distribu\u00e9s souffrent de latences \u00e9lev\u00e9es et de partitions r\u00e9seau. \u00c0 cause de cela, et pour assurer une haute disponibilit\u00e9, de tels syst\u00e8mes effectuent g\u00e9n\u00e9ralement des mises \u00e0 jour localement, sans latence, et les propagent ensuite en arri\u00e8re-plan. Cette r\u00e9plication optimiste est confront\u00e9e \u00e0 deux d\u00e9fis majeurs : (i) d\u00e9tecter les conflits entre les mises \u00e0 jour simultan\u00e9es et les r\u00e9soudre d'une mani\u00e8re significative pour les utilisateurs, tout en maintenant les invariants d'int\u00e9grit\u00e9 du syst\u00e8me; et (ii) la prise en charge d'applications qui n'ont pas \u00e9t\u00e9 con\u00e7ues pour g\u00e9rer les anomalies de concurrence. Les syst\u00e8mes de fichiers g\u00e9o-distribu\u00e9s optimistes existants ne permettent pas de relever ces d\u00e9fis. Par exemple, Dropbox ne supporte pas les liens mat\u00e9riels. Le syst\u00e8me de fichiers AndrewFS \u00e9choue sur certains changements de noms de r\u00e9pertoires; et tous les syst\u00e8mes existants utilisent la r\u00e9solution automatique des conflits qui viole la s\u00e9mantique POSIX. Nous pr\u00e9sentons notre solution aux probl\u00e8mes pos\u00e9s ci-dessus dans la conception et la mise en \u0153uvre d'un prototype de syst\u00e8me de fichiers g\u00e9o-distribu\u00e9, nomm\u00e9 Tofu. Sa conception inclut une nouvelle abstraction de session pour prendre en charge l'API, tout en permettant des mises \u00e0 jour optimistes. Il est capable de d\u00e9tecter tous les conflits sur ces structures de donn\u00e9es et de les r\u00e9soudre d'une fa\u00e7on que nous pensons que les utilisateurs trouveront raisonnable. Les exp\u00e9riences montrent que Tofu est hautement \u00e9volutif et qu'il entra\u00eene des surco\u00fbts lin\u00e9aires, am\u00e9liorant ainsi les syst\u00e8mes acad\u00e9miques et industriels existants."
+    }
+  ]
+}

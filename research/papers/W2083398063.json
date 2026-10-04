@@ -1,0 +1,314 @@
+{
+  "id": "W2083398063",
+  "title": "Bayou",
+  "doi": "https://doi.org/10.1145/504450.504497",
+  "publication_date": "1996-09-09",
+  "publication_year": 1996,
+  "type": "conference-paper",
+  "cited_by_count": 65,
+  "authors": [
+    "Karin Petersen",
+    "Mike J. Spreitzer",
+    "Douglas B. Terry",
+    "Marvin M. Theimer"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/504450.504497",
+    "any_repository_has_fulltext": null
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2083398063.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2083398063.grobid-xml"
+  },
+  "abstract": "The Bayou architecture provides scalability, availability, extensibility, and adaptability features that address database storage needs of world-wide applications. In addition to discussing these features, this paper presents Bayou's mechanisms for permitting the replicas of a database to vary dynamically without global coordination. Key is the use of weak consistency replication among autonomous machines and strict adherence to the tenet that no operation should involve more than two machines.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Database Systems and Queries",
+    "Data Quality and Management"
+  ],
+  "references": [
+    "https://openalex.org/W182346126",
+    "https://openalex.org/W1525865893",
+    "https://openalex.org/W1535062612",
+    "https://openalex.org/W1561364657",
+    "https://openalex.org/W2038562061",
+    "https://openalex.org/W2043671329",
+    "https://openalex.org/W2059432328",
+    "https://openalex.org/W2078775767",
+    "https://openalex.org/W2117260615",
+    "https://openalex.org/W2118828464",
+    "https://openalex.org/W2119636671",
+    "https://openalex.org/W2125930899",
+    "https://openalex.org/W2156027558",
+    "https://openalex.org/W4236601696"
+  ],
+  "cited_by": [
+    {
+      "id": "W2030565040",
+      "title": "Toward a Unified Ontology of Cloud Computing"
+    },
+    {
+      "id": "W2101505570",
+      "title": "A self-organized, fault-tolerant and scalable replication scheme for cloud storage"
+    },
+    {
+      "id": "W2476146301",
+      "title": "Cure: Strong Semantics Meets High Availability and Low Latency"
+    },
+    {
+      "id": "W2119164809",
+      "title": "Tolerating byzantine faults in transaction processing systems using commit barrier scheduling"
+    },
+    {
+      "id": "W2158978506",
+      "title": "Decentralized access control in distributed file systems"
+    },
+    {
+      "id": "W2109820865",
+      "title": "Interval Tree Clocks"
+    },
+    {
+      "id": "W2154033609",
+      "title": "Scalability for Virtual Worlds"
+    },
+    {
+      "id": "W2101028480",
+      "title": "Cluster-based Replication for Large-scale Mobile Ad-hoc Networks"
+    },
+    {
+      "id": "W62416763",
+      "title": "Improvement of Human-Plant Interactivity via Industrial Cloud-Based Supervisory Control and Data Acquisition System"
+    },
+    {
+      "id": "W2134018097",
+      "title": "Dynamic cost-efficient replication in data clouds"
+    },
+    {
+      "id": "W1994311659",
+      "title": "An Anomaly Detection Approach for Scale-Out Storage Systems"
+    },
+    {
+      "id": "W3004843803",
+      "title": "Tolerating byzantine faults in transaction processing systems using commit barrier scheduling"
+    },
+    {
+      "id": "W1488732870",
+      "title": "Wayfinder: Navigating and Sharing Information in a Decentralized World"
+    },
+    {
+      "id": "W1926957540",
+      "title": "Cegor: an adaptive distributed file system for heterogeneous network environments"
+    },
+    {
+      "id": "W3015885472",
+      "title": "Optimal State Replication in Stateful Data Planes"
+    },
+    {
+      "id": "W2166672644",
+      "title": "GUESSTIMATE"
+    },
+    {
+      "id": "W1496748351",
+      "title": "Secure and Flexible Global File Sharing"
+    },
+    {
+      "id": "W2195213533",
+      "title": "Tejo: A Supervised Anomaly Detection Scheme for NewSQL Databases"
+    },
+    {
+      "id": "W2263463942",
+      "title": "Interdroid Versioned Databases: Decentralized Collaborative Authoring of Arbitrary Relational Data for Android Powered Mobile Devices"
+    },
+    {
+      "id": "W2488558332",
+      "title": "A scalable middleware solution for advanced wide-area Web services"
+    },
+    {
+      "id": "W2096866619",
+      "title": "Long-lived Rambo: Trading knowledge for communication"
+    },
+    {
+      "id": "W2109201575",
+      "title": "System support for transparency and network-aware adaptation in mobile environments"
+    },
+    {
+      "id": "W2105506150",
+      "title": "History-based access control for XML documents"
+    },
+    {
+      "id": "W2133891547",
+      "title": "On consistency maintenance in service discovery"
+    },
+    {
+      "id": "W176221282",
+      "title": "Information sharing in mobile networks: a survey on replication strategies"
+    },
+    {
+      "id": "W2886565278",
+      "title": "Session guarantees with raft and hybrid logical clocks"
+    },
+    {
+      "id": "W2137510754",
+      "title": "Restoring Consistency after Network Partitions"
+    },
+    {
+      "id": "W2169904168",
+      "title": "A data synchronization service for ad hoc groups"
+    },
+    {
+      "id": "W2739688933",
+      "title": "On consistency maintenance in service discovery"
+    },
+    {
+      "id": "W4240907591",
+      "title": "Middleware extensions that trade consistency for availability"
+    },
+    {
+      "id": "W4242748030",
+      "title": "Cegor: an adaptive distributed file system for heterogeneous network environments"
+    },
+    {
+      "id": "W1964102942",
+      "title": "Supporting nomadic agent-based applications in the FIPA agent architecture"
+    },
+    {
+      "id": "W1596546631",
+      "title": "At Home in Service Discovery"
+    },
+    {
+      "id": "W2109125413",
+      "title": "GRACE: Enabling collaborations in wide-area distributed systems"
+    },
+    {
+      "id": "W2116894174",
+      "title": "Disconnected Discoveries: Availability Studies in Partitioned Networks"
+    },
+    {
+      "id": "W2044601433",
+      "title": "A Scalable Middleware Solution for Advanced Wide-Area Web Services"
+    },
+    {
+      "id": "W2018504944",
+      "title": "Architectures and algorithms for scalable wide-area information systems"
+    },
+    {
+      "id": "W2142491386",
+      "title": "Detecting and tolerating byzantine faults in database systems"
+    },
+    {
+      "id": "W2163365811",
+      "title": "Spaces-A Replication Scheme for Sharing Tagged Files in Hybrid Wireless Networks"
+    },
+    {
+      "id": "W2176216463",
+      "title": "Long-Lived Rambo: Trading Knowledge for Communication"
+    },
+    {
+      "id": "W1588760231",
+      "title": "Latency-driven replication for globally distributed systems"
+    },
+    {
+      "id": "W2098505434",
+      "title": "Advanced Semantic Management of Digital Resources"
+    },
+    {
+      "id": "W85091716",
+      "title": "Cycle-cut decomposition and Log-based reconciliation"
+    },
+    {
+      "id": "W1517533727",
+      "title": "Smartphones: A Platform For Disaster Management"
+    },
+    {
+      "id": "W2120016842",
+      "title": "Dissemination asynchrone d'information en mode peer-to-peer dans les r\u00e9seaux ad-hoc"
+    },
+    {
+      "id": "W2473459685",
+      "title": "Moving into the Cloud"
+    },
+    {
+      "id": "W2115654891",
+      "title": "Optimistic Replication in Weakly Connected Resource-Constrained Environments"
+    },
+    {
+      "id": "W1777278019",
+      "title": "Linear Scalability of Distributed Applications"
+    },
+    {
+      "id": "W2296945144",
+      "title": "Topic-Based Transparent Replication of Digital Assets"
+    },
+    {
+      "id": "W1565396003",
+      "title": "WAN Data Replication"
+    },
+    {
+      "id": "W16278051",
+      "title": "Decentralized Access Control in Networked File Systems"
+    },
+    {
+      "id": "W2088963532",
+      "title": "Consistency guarantees for recovery of service-oriented distributed processing"
+    },
+    {
+      "id": "W2182793689",
+      "title": "Evolution Towards Cloud: Overview of Next Generation Computing Architecture"
+    },
+    {
+      "id": "W2184907938",
+      "title": "Efficient and Protected AOMDV Routing Protocol using Dual Clusters through Replication for Wireless Sensor Networks"
+    },
+    {
+      "id": "W2268805436",
+      "title": "Wayfinder"
+    },
+    {
+      "id": "W2481614823",
+      "title": "Data Replication Support for Collaboration in Mobile and Ubiquitous Computing Environments"
+    },
+    {
+      "id": "W2491840458",
+      "title": "Dynamic Negotiation Mechanism for Improving Service Quality for Replicas in Data Grids"
+    },
+    {
+      "id": "W2559815895",
+      "title": "Haddock-FS A Distributed File System for Mobile Ad-hoc Networks"
+    },
+    {
+      "id": "W2784470827",
+      "title": "ARA : A user-centric mirror locating service for the World Wide Web"
+    },
+    {
+      "id": "W2795822684",
+      "title": "Scaling Out Acid Applications with Operation Partitioning"
+    },
+    {
+      "id": "W2918771084",
+      "title": "WAN Data Replication"
+    },
+    {
+      "id": "W4241805383",
+      "title": "GUESSTIMATE"
+    },
+    {
+      "id": "W637299216",
+      "title": "Conflict Detection in DeeDS"
+    },
+    {
+      "id": "W75945529",
+      "title": "Research on the Architecture of Cloud Computing"
+    },
+    {
+      "id": "W793144505",
+      "title": "Scalability in coordinated transaction management"
+    }
+  ]
+}

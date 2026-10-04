@@ -1,0 +1,35 @@
+{
+  "id": "W3012498862",
+  "title": "Conflict-Free Replicated Data Types in Dynamic Environments",
+  "doi": null,
+  "publication_date": "2019-12-01",
+  "publication_year": 2019,
+  "type": "dissertation",
+  "cited_by_count": 0,
+  "authors": [
+    "Ant\u00f3nio Jos\u00e9 S\u00e1 Barreto"
+  ],
+  "venue": "New University of Lisbon's Repository (New University of Lisbon)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "http://hdl.handle.net/10362/93770",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W3012498862.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W3012498862.grobid-xml"
+  },
+  "abstract": "Over the years, mobile devices have become increasingly popular and gained improved computation capabilities allowing them to perform more complex tasks such as collaborative applications. Given the weak characteristic properties of mobile networks, which represent highly dynamic environments where users may experience regular involuntary disconnection periods, the big question arises of how to maintain data consistency. This issue is most pronounced in collaborative environments where multiple users interact with each other, sharing a replicated state that may diverge due to concurrency conflicts and loss of updates. To maintain consistency, one of today\u2019s best solutions is Conflict-Free Replicated Data Types (CRDTs), which ensure low latency values and automatic conflict resolution, guaranteeing eventual consistency of the shared data. However, a limitation often found on CRDTs and the systems that employ them is the need for the knowledge of the replicas whom the state changes must be disseminated to. This constitutes a problem since it is inconceivable to maintain said knowledge in an environment where clients may leave and join at any given time and consequently get disconnected due to mobile network communications unreliability. In this thesis, we present the study and extension of the CRDT concept to dynamic environments by introducing the developed P/S-CRDTs model, where CRDTs are coupled with the publisher/subscriber interaction scheme and additional mechanisms to ensure users are able to cooperate and maintain consistency whilst accounting for the consequent volatile behaviors of mobile networks. The experimental results show that in volatile scenarios of disconnection, mobile users in collaborative activity maintain consistency among themselves and when compared to other available CRDT models, the P/S-CRDTs model is able to decouple the required knowledge of whom the updates must be disseminated to, while ensuring appropriate network traffic values.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Distributed and Parallel Computing Systems",
+    "Advanced Database Systems and Queries"
+  ],
+  "references": [],
+  "cited_by": []
+}

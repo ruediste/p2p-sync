@@ -1,0 +1,52 @@
+{
+  "id": "W4310881360",
+  "title": "Collabs: A Flexible and Performant CRDT Collaboration Framework",
+  "doi": "https://doi.org/10.48550/arxiv.2212.02618",
+  "publication_date": "2022-12-05",
+  "publication_year": 2022,
+  "type": "preprint",
+  "cited_by_count": 2,
+  "authors": [
+    "Matthew Weidner",
+    "Huairui Qi",
+    "Maxime Kjaer",
+    "Ria Pradeep",
+    "Benito Geordie",
+    "Zhang, Yicheng",
+    "Schare, Gregory",
+    "Tang, Xuan",
+    "Xing, Sicheng",
+    "Miller, Heather"
+  ],
+  "venue": "arXiv (Cornell University)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://arxiv.org/pdf/2212.02618",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": false,
+    "grobid_xml": false
+  },
+  "content_urls": null,
+  "abstract": "A collaboration framework is a distributed system that serves as the data layer for a collaborative app. Conflict-free Replicated Data Types (CRDTs) are a promising theoretical technique for implementing collaboration frameworks. However, existing frameworks are inflexible: they are often one-off implementations of research papers or only permit a restricted set of CRDT semantics, and they do not allow app-specific optimizations. Until now, there was no general framework that lets programmers mix, match, and modify CRDTs. We solve this with Collabs, a CRDT-based collaboration framework that lets programmers implement their own CRDTs, either from-scratch or by composing existing building blocks. Collabs prioritizes both semantic flexibility and performance flexibility: it allows arbitrary app-specific CRDT behaviors and optimizations, while still providing strong eventual consistency. We demonstrate Collabs's capabilities and programming model with example apps and CRDT implementations. We then show that a collaborative rich-text editor using Collabs's built-in CRDTs can scale to over 100 simultaneous users, unlike existing CRDT frameworks and Google Docs. Collabs also has lower end-to-end latency and server CPU usage than a popular Operational Transformation framework, with acceptable CRDT metadata overhead.",
+  "topics": [
+    "Peer-to-Peer Network Technologies",
+    "Scientific Computing and Data Management",
+    "Distributed systems and fault tolerance"
+  ],
+  "references": [],
+  "cited_by": [
+    {
+      "id": "W4389245905",
+      "title": "LoRe: A Programming Model for Verifiably Safe Local-first Software",
+      "abstract": "Local-first software manages and processes private data locally while still enabling collaboration between multiple parties connected via partially unreliable networks. Such software typically involves interactions with users and the execution environment (the outside world). The unpredictability of such interactions paired with their decentralized nature make reasoning about the correctness of local-first software a challenging endeavor. Yet, existing solutions to develop local-first software do not provide support for automated safety guarantees and instead expect developers to reason about concurrent interactions in an environment with unreliable network conditions. We propose LoRe , a programming model and compiler that automatically verifies developer-supplied safety properties for local-first applications. LoRe combines the declarative data flow of reactive programming with static analysis and verification techniques to precisely determine concurrent interactions that violate safety invariants and to selectively employ strong consistency through coordination where required. We propose a formalized proof principle and demonstrate how to automate the process in a prototype implementation that outputs verified executable code. Our evaluation shows that LoRe simplifies the development of safe local-first software when compared to state-of-the-art approaches and that verification times are acceptable."
+    },
+    {
+      "id": "W4394865968",
+      "title": "Logical Clocks and Monotonicity for Byzantine-Tolerant Replicated Data Types",
+      "abstract": "Replicated event logbooks are ubiquitous in decentralized systems designed to cope with Byzantine-faulty replicas. Recently, there is a growing subclass that only partially orders its logbooks by hash-linking inscribed events to their causal past. Thereby, these approaches forgo coordination and consensus to gain scalability and availability under partition. We investigate these approaches to explicate their underlying construction by connecting their design to the concept of logical monotonicity and by providing an abstraction as a delta-state conflict-free replicated data type. In particular, we analyze what makes a clock Byzantine-tolerant, and show that these hash-linked causal logbooks represent Byzantine-tolerant clocks. Based on these insight, we model real-world group communication systems as Byzantine monotonic compositions, and analyze their monotonicity properties to understand the guarantees they provide to the application layer."
+    }
+  ]
+}

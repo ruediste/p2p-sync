@@ -1,0 +1,66 @@
+{
+  "id": "W4292974104",
+  "title": "An Efficient Approach to Move Elements in a Distributed Geo-Replicated Tree",
+  "doi": "https://doi.org/10.1109/cloud55607.2022.00071",
+  "publication_date": "2022-07-01",
+  "publication_year": 2022,
+  "type": "conference-paper",
+  "cited_by_count": 0,
+  "authors": [
+    "Parwat Singh Anjana",
+    "Adithya Rajesh Chandrassery",
+    "Sathya Peri"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": false,
+    "oa_status": "closed",
+    "oa_url": null,
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "grobid_xml": false,
+    "pdf": false
+  },
+  "content_urls": null,
+  "abstract": "Replicated tree data structures are extensively used in collaborative applications and distributed file systems, where clients often perform move operations. Local move operations at different replicas may be safe. However, remote move operations may not be safe. When clients perform arbitrary move operations concurrently on different replicas, it could result in various bugs, making this operation challenging to implement. Previous work has revealed bugs such as data duplication and cycling in replicated trees. In this paper, we present an efficient algorithm to perform move operations on the distributed replicated tree while ensuring eventual consistency. The proposed technique is primarily concerned with resolving conflicts efficiently, requires no interaction between replicas, and works well with network partitions. We use the last write win semantics for conflict resolution based on globally unique timestamps of operations. The proposed solution requires only one compensation operation to avoid cycles being formed when move operations are applied. The proposed approach achieves an effective speedup of 14.6\u00d7 to 68.19\u00d7 over the state-of-the-art approach in a geo-replicated setting.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Advanced Data Storage Technologies",
+    "Distributed and Parallel Computing Systems"
+  ],
+  "references": [
+    "https://openalex.org/W1489177980",
+    "https://openalex.org/W1516319412",
+    "https://openalex.org/W1689093460",
+    "https://openalex.org/W1989814541",
+    "https://openalex.org/W1997864675",
+    "https://openalex.org/W2013451019",
+    "https://openalex.org/W2015055913",
+    "https://openalex.org/W2046654145",
+    "https://openalex.org/W2061940402",
+    "https://openalex.org/W2172038085",
+    "https://openalex.org/W2274037101",
+    "https://openalex.org/W2295541535",
+    "https://openalex.org/W2341655714",
+    "https://openalex.org/W2510332240",
+    "https://openalex.org/W2766827230",
+    "https://openalex.org/W2775924136",
+    "https://openalex.org/W2810578094",
+    "https://openalex.org/W2960796285",
+    "https://openalex.org/W2999181646",
+    "https://openalex.org/W3083050090",
+    "https://openalex.org/W3098667566",
+    "https://openalex.org/W3103287347",
+    "https://openalex.org/W3132251169",
+    "https://openalex.org/W3137220996",
+    "https://openalex.org/W3206444683",
+    "https://openalex.org/W4236824789",
+    "https://openalex.org/W6637396797",
+    "https://openalex.org/W6723307503",
+    "https://openalex.org/W6791191651",
+    "https://openalex.org/W6803212251",
+    "https://openalex.org/W7147545955"
+  ],
+  "cited_by": []
+}

@@ -1,0 +1,297 @@
+{
+  "id": "W2032000688",
+  "title": "Distributed directory service in the Farsite file system",
+  "doi": "https://doi.org/10.5555/1298455.1298486",
+  "publication_date": "2006-11-06",
+  "publication_year": 2006,
+  "type": "article",
+  "cited_by_count": 45,
+  "authors": [
+    "John R. Douceur",
+    "Jon Howell"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": false,
+    "oa_status": "closed",
+    "oa_url": null,
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "pdf": false,
+    "grobid_xml": false
+  },
+  "content_urls": null,
+  "abstract": "We present the design, implementation, and evaluation of a fully distributed directory service for Farsite, a logically centralized file system that is physically implemented on a loosely coupled network of desktop computers. Prior to this work, the Farsite system included distributed mechanisms for file content but centralized mechanisms for file metadata. Our distributed directory service introduces tree-structured file identifiers that support dynamically partitioning metadata at arbitrary granularity, recursive path leases for scalably maintaining name-space consistency, and a protocol for consistently performing operations on files managed by separate machines. It also mitigates metadata hotspots via file-field leases and the new mechanism of disjunctive leases. We experimentally show that Farsite can dynamically partition file-system metadata while maintaining full file-system semantics. 1",
+  "topics": [
+    "Advanced Data Storage Technologies",
+    "Caching and Content Delivery",
+    "Distributed systems and fault tolerance"
+  ],
+  "references": [
+    "https://openalex.org/W40081039",
+    "https://openalex.org/W85353521",
+    "https://openalex.org/W93677332",
+    "https://openalex.org/W96691224",
+    "https://openalex.org/W1500951737",
+    "https://openalex.org/W1535343266",
+    "https://openalex.org/W1542889322",
+    "https://openalex.org/W1569079901",
+    "https://openalex.org/W1636826090",
+    "https://openalex.org/W1881553382",
+    "https://openalex.org/W1972234887",
+    "https://openalex.org/W2005373714",
+    "https://openalex.org/W2007415020",
+    "https://openalex.org/W2012426216",
+    "https://openalex.org/W2012481411",
+    "https://openalex.org/W2025413686",
+    "https://openalex.org/W2070834743",
+    "https://openalex.org/W2075854425",
+    "https://openalex.org/W2080291901",
+    "https://openalex.org/W2111223826",
+    "https://openalex.org/W2115457697",
+    "https://openalex.org/W2115599946",
+    "https://openalex.org/W2119565742",
+    "https://openalex.org/W2121133177",
+    "https://openalex.org/W2121654675",
+    "https://openalex.org/W2123820820",
+    "https://openalex.org/W2124074197",
+    "https://openalex.org/W2124288146",
+    "https://openalex.org/W2126087831",
+    "https://openalex.org/W2128777897",
+    "https://openalex.org/W2131645490",
+    "https://openalex.org/W2138509363",
+    "https://openalex.org/W2150676586",
+    "https://openalex.org/W2158049821",
+    "https://openalex.org/W2166667085",
+    "https://openalex.org/W2167898414",
+    "https://openalex.org/W2171796885"
+  ],
+  "cited_by": [
+    {
+      "id": "W2013409485",
+      "title": "Spanner: Google's globally-distributed database",
+      "abstract": "Spanner is Google\u2019s scalable, multi-version, globallydistributed, and synchronously-replicated database. It is the first system to distribute data at global scale and support externally-consistent distributed transactions. This paper describes how Spanner is structured, its feature set, the rationale underlying various design decisions, and a novel time API that exposes clock uncertainty. This API and its implementation are critical to supporting external consistency and a variety of powerful features: nonblocking reads in the past, lock-free read-only transactions, and atomic schema changes, across all of Spanner. 1"
+    },
+    {
+      "id": "W3137759927",
+      "title": "Spanner",
+      "abstract": "Spanner is Google\u2019s scalable, multiversion, globally distributed, and synchronously replicated database. It is the first system to distribute data at global scale and support externally-consistent distributed transactions. This article describes how Spanner is structured, its feature set, the rationale underlying various design decisions, and a novel time API that exposes clock uncertainty. This API and its implementation are critical to supporting external consistency and a variety of powerful features: nonblocking reads in the past, lock-free snapshot transactions, and atomic schema changes, across all of Spanner."
+    },
+    {
+      "id": "W4237774489",
+      "title": "Spanner",
+      "abstract": "Spanner is Google\u2019s scalable, multiversion, globally distributed, and synchronously replicated database. It is the first system to distribute data at global scale and support externally-consistent distributed transactions. This article describes how Spanner is structured, its feature set, the rationale underlying various design decisions, and a novel time API that exposes clock uncertainty. This API and its implementation are critical to supporting external consistency and a variety of powerful features: nonblocking reads in the past, lock-free snapshot transactions, and atomic schema changes, across all of Spanner."
+    },
+    {
+      "id": "W2091776255",
+      "title": "IronFleet",
+      "abstract": "Distributed systems are notorious for harboring subtle bugs. Verification can, in principle, eliminate these bugs a priori, but verification has historically been difficult to apply at full-program scale, much less distributed-system scale."
+    },
+    {
+      "id": "W1534481387",
+      "title": "Scale and concurrency of GIGA+: file system directories with millions of files",
+      "abstract": "Abstract \u2013 We examine the problem of scalable file system directories, motivated by data-intensive applications requiring millions to billions of small files to be ingested in a single directory at rates of hundreds of thousands of file creates every second. We introduce a POSIX-compliant scalable directory design, GIGA+, that distributes directory entries over a cluster of server nodes. For scalability, each server makes only local, independent decisions about migration for load balancing. GIGA+ uses two internal implementation tenets, asynchrony and eventual consistency, to: (1) partition an index among all servers without synchronization or serialization, and (2) gracefully tolerate stale index state at the clients. Applications, however, are provided traditional strong synchronous consistency semantics. We have built and demonstrated that the GIGA+ approach scales better than existing distributed directory implementations, delivers a sustained throughput of more than 98,000 file creates per second on a 32-server cluster, and balances load more efficiently than consistent hashing. 1"
+    },
+    {
+      "id": "W4285137472",
+      "title": "The State of the Art of Metadata Managements in Large-Scale Distributed File Systems \u2014 Scalability, Performance and Availability",
+      "abstract": "File system metadata is the data in charge of maintaining namespace, permission semantics and location of file data blocks. Operations on the metadata can account for up to 80% of total file system operations. As such, the performance of metadata services significantly impacts the overall performance of file systems. A large-scale distributed file system (DFS) is a storage system that is composed of multiple storage devices spreading across different sites to accommodate data files, and in most cases, to provide users with location independent access interfaces. Large-scale DFSs have been widely deployed as a substrate to a plethora of computing systems, and thus their metadata management efficiency is crucial to a massive number of applications, especially with the advent of the Big Data age, which poses tremendous pressure on underlying storage systems. This paper reports the state-of-the-art research on metadata services in large-scale distributed file systems, which is conducted from three indicative perspectives that are always used to characterize DFSs: high-scalability, high-performance, and high-availability, with special focus on their respective major challenges as well as their developed mainstream technologies. Additionally, the paper also identifies and analyzes several existing problems in the research, which could be used as a reference for related studies."
+    },
+    {
+      "id": "W2096272167",
+      "title": "SmartStore",
+      "abstract": "Existing storage systems using hierarchical directory tree do not meet scalability and functionality requirements for exponentially growing datasets and increasingly complex queries in Exabyte-level systems with billions of files. This paper proposes semantic-aware organization, called SmartStore, which exploits metadata semantics of files to judiciously aggregate correlated files into semantica-ware groups by using information retrieval tools. Decentralized design improves system scalability and reduces query latency for complex queries (range and top-k queries), which is conducive to constructing semantic-aware caching, and conventional filename-based query. SmartStore limits search scope of complex query to a single or a minimal number of semantically related groups and avoids or alleviates brute-force search in entire system. Extensive experiments using real-world traces show that SmartStore improves system scalability and reduces query latency over basic database approaches by one thousand times. To the best of our knowledge, this is the first study implementing complex queries in large-scale file systems."
+    },
+    {
+      "id": "W2320955485",
+      "title": "Ceph: reliable, scalable, and high-performance distributed storage",
+      "abstract": "As the size and performance requirements of storage systems have increased, file system designers have looked to new architectures to facilitate system scalability. The emerging object-based storage paradigm diverges from server-based (e. g. NFS) and SAN-based storage systems by coupling processors and memory with disk drives, allowing systems to delegate low-level file system operations (e. g. allocation and scheduling) to object storage devices (OSDs) and decouple I/O (read/write) from metadata (file open/close) operations. Even recent object-based systems inherit a variety of decades-old architectural choices going back to early UNIX file systems, however, limiting their ability to effectively scale. \r\nThis dissertation shows that device intelligence can be leveraged to provide reliable, scalable, and high-performance file service in a dynamic cluster environment. It presents a distributed metadata management architecture that provides excellent performance and scalability by adapting to highly variable system workloads while tolerating arbitrary node crashes. A flexible and robust data distribution function places data objects in a large, dynamic cluster of storage devices, simplifying metadata and facilitating system scalability, while providing a uniform distribution of data, protection from correlated device failure, and efficient data migration. This placement algorithm facilitates the creation of a reliable and scalable object storage service that distributes the complexity of consistent data replication, failure detection, and recovery across a heterogeneous cluster of semi-autonomous devices. \r\nThese architectural components, which have been implemented in the Ceph distributed file system, are evaluated under a variety of workloads that show superior I/O performance, scalable metadata management, and failure recovery."
+    },
+    {
+      "id": "W2000394291",
+      "title": "GIGA+",
+      "abstract": "There is an increasing use of high-performance computing (HPC) clusters with thousands of compute nodes that, with the advent of multi-core CPUs, will impose a significant challenge for storage systems: The ability to scale to handle I/O generated by applications executing in parallel in tens of thousands of threads. One such challenge is building scalable directories for cluster storage - i.e., directories that can store billions to trillions of entries and handle hundreds of thousands of operations per second."
+    },
+    {
+      "id": "W2106168995",
+      "title": "Adaptive and scalable metadata management to support a trillion files",
+      "abstract": "Nowadays more and more applications require file systems to efficiently maintain million or more files. How to provide high access performance with such a huge number of files and such large directories is a big challenge for cluster file systems. Limited by static directory structures, existing file systems will be prohibitively inefficient for this use. To address this problem, we present a scalable and adaptive metadata management system which aims to maintain a trillion files efficiently. Firstly, our system exploits an adaptive two-level directory partitioning based on extendible hashing to manage very large directories. Secondly, our system utilizes fine-grained parallel processing within a directory and greatly improves performance of file creation or deletion. Thirdly, our system uses multiple-layered metadata cache management which improves memory utilization on the servers. And finally, our system uses a dynamic loadbalance mechanism based on consistent hashing which enables our system to scale up and down easily."
+    },
+    {
+      "id": "W2109123667",
+      "title": "The Farsite project",
+      "abstract": "The Farsite file system is a storage service that runs on the desktop computers of a large organization and provides the semantics of a central NTFS file server. The motivation behind the Farsite project was to harness the unused storage and network resources of desktop computers to provide a service that is reliable, available, and secure despite the fact that it runs on machines that are unreliable, often unavailable, and of limited security. A main premise of the project has been that building a scalable system requires more than scalable algorithms: To be scalable in a practical sense, a distributed system targeting 10 5 nodes must tolerate a significant (and never-zero) rate of machine failure, a small number of malicious participants, and a substantial number of opportunistic participants. It also must automatically adapt to the arrival and departure of machines and changes in machine availability, and it must be able to autonomically repartition its data and metadata as necessary to balance load and alleviate hotspots. We describe the history of the project, including its multiple versions of major system components, the unique programming style and software-engineering environment we created to facilitate development, our distributed debugging framework, and our experiences with formal system specification. We also report on the lessons we learned during this development."
+    },
+    {
+      "id": "W1963918257",
+      "title": "ShardFS vs. IndexFS",
+      "abstract": "The rapid growth of cloud storage systems calls for fast and scalable namespace processing. While few commercial file systems offer anything better than federating individually non-scalable namespace servers, a recent academic file system, IndexFS, demonstrates scalable namespace processing based on client caching of directory entries and permissions (directory lookup state) with no per-client state in servers. In this paper we explore explicit replication of directory lookup state in all servers as an alternative to caching this information in all clients. Both eliminate most repeated RPCs to different servers in order to resolve hierarchical permission tests. Our realization for server replicated directory lookup state, ShardFS, employs a novel file system specific hybrid optimistic and pessimistic concurrency control favoring single object transactions over distributed transactions. Our experimentation suggests that if directory lookup state mutation is a fixed fraction of operations (strong scaling for metadata), server replication does not scale as well as client caching, but if directory lookup state mutation is proportional to the number of jobs, not the number of processes per job, (weak scaling for metadata), then server replication can scale more linearly than client caching and provide lower 70 percentile response times as well."
+    },
+    {
+      "id": "W1988909795",
+      "title": "Mantle",
+      "abstract": "Migrating resources is a useful tool for balancing load in a distributed system, but it is difficult to determine when to move resources, where to move resources, and how much of them to move. We look at resource migration for file system metadata and show how CephFS's dynamic subtree partitioning approach can exploit varying degrees of locality and balance because it can partition the namespace into variable sized units. Unfortunately, the current metadata balancer is complicated and difficult to control because it struggles to address many of the general resource migration challenges inherent to the metadata management problem. To help decouple policy from mechanism, we introduce a programmable storage system that lets the designer inject custom balancing logic. We show the flexibility and transparency of this approach by replicating the strategy of a state-of-the-art metadata balancer and conclude by comparing this strategy to other custom balancers on the same system."
+    },
+    {
+      "id": "W2165852049",
+      "title": "Semantic-Aware Metadata Organization Paradigm in Next-Generation File Systems",
+      "abstract": "Existing data storage systems based on the hierarchical directory-tree organization do not meet the scalability and functionality requirements for exponentially growing data sets and increasingly complex metadata queries in large-scale, Exabyte-level file systems with billions of files. This paper proposes a novel decentralized semantic-aware metadata organization, called SmartStore, which exploits semantics of files' metadata to judiciously aggregate correlated files into semantic-aware groups by using information retrieval tools. The key idea of SmartStore is to limit the search scope of a complex metadata query to a single or a minimal number of semantically correlated groups and avoid or alleviate brute-force search in the entire system. The decentralized design of SmartStore can improve system scalability and reduce query latency for complex queries (including range and top-k queries). Moreover, it is also conducive to constructing semantic-aware caching, and conventional filename-based point query. We have implemented a prototype of SmartStore and extensive experiments based on real-world traces show that SmartStore significantly improves system scalability and reduces query latency over database approaches. To the best of our knowledge, this is the first study on the implementation of complex queries in large-scale file systems."
+    },
+    {
+      "id": "W1807463620",
+      "title": "Online migration for geo-distributed storage systems",
+      "abstract": "We consider the problem of migrating user data between data centers. We introduce distributed storage overlays, a simple abstraction that represents data as stacked layers in different places. Overlays can be readily used to cache data objects, migrate these caches, and migrate the home of data objects. We implement overlays as part of a key-value object store called Nomad, designed to span many data centers. Using Nomad, we compare overlays against common migration approaches and show that overlays are more flexible and impose less overhead. To drive migration decisions, we propose policies for predicting the location of future accesses, focusing on a web mail application. We evaluate the migration policies using real traces of user activity from Hotmail. 1"
+    },
+    {
+      "id": "W4372258399",
+      "title": "CFS: Scaling Metadata Service for Distributed File System via Pruned Scope of Critical Sections",
+      "abstract": "There is a fundamental tension between metadata scalability and POSIX semantics within distributed file systems. The bottleneck lies in the coordination, mainly locking, used for ensuring strong metadata consistency, namely, atomicity and isolation. CFS is a scalable, fully POSIX-compliant distributed file system that eliminates the metadata management bottleneck via pruning the scope of critical sections for reduced locking overhead. First, CFS adopts a tiered metadata organization to scale file attributes and the remaining namespace hierarchies independently with appropriate partitioning and indexing methods, eliminating cross-shard distributed coordination. Second, it further scales up the single metadata shard performance by single-shard atomic primitives, shortening the metadata requests' lifespan and removing spurious conflicts. Third, CFS drops the metadata proxy layer but employs the light-weight, scalable client-side metadata resolving. CFS has been running in the production environment of Baidu AI Cloud for three years. Our evaluation with a 50-node cluster and microbenchmarks shows that CFS simultaneously improves the throughput of baselines like HopsFS and InfiniFS by 1.76--75.82\u00d7 and 1.22--4.10\u00d7, and reduces their average latency by up to 91.71% and 54.54%, respectively. Under cases with higher contention and larger directories, CFS' throughput benefits expand by one order of magnitude. For three real-world workloads with data accesses, CFS introduces 1.62--2.55\u00d7 end-to-end throughput speedups and 35.06--62.47% tail latency reductions over InfiniFS."
+    },
+    {
+      "id": "W2100329241",
+      "title": "Zzyzx: Scalable fault tolerance through Byzantine locking",
+      "abstract": "Zzyzx is a Byzantine fault-tolerant replicated state machine protocol that outperforms prior approaches and provides near-linear throughput scaling. Using a new technique called Byzantine Locking, Zzyzx allows a client to extract state from an underlying replicated state machine and access it via a second protocol specialized for use by a single client. This second protocol requires just one round-trip and 2 f + 1 responsive servers-compared to Zyzzyva, this results in 39-43% lower response times and a factor of 2.2-2.9\u00d7 higher throughput. Furthermore, the extracted state can be transferred to other servers, allowing non-overlapping sets of servers to manage different state. Thus, Zzyzx allows throughput to be scaled by adding servers when concurrent data sharing is not common. When data sharing is common, performance can match that of the underlying replicated state machine protocol."
+    },
+    {
+      "id": "W2153428489",
+      "title": "MOSAIC",
+      "abstract": "Overlay networks create new networking services across nodes that communicate using pre-existing networks. MOSAIC is a unified declarative platform for constructing new overlay networks from multiple existing overlays, each possessing a subset of the desired new network's characteristics. MOSAIC overlays are specified using Mozlog, a new declarative language for expressing overlay properties independently from their particular implementation or underlying network."
+    },
+    {
+      "id": "W2150441244",
+      "title": "Efficient eventual consistency in Pahoehoe, an erasure-coded key-blob archive",
+      "abstract": "Cloud computing demands cheap, always-on, and reliable storage. We describe Pahoehoe, a key-value cloud storage system we designed to store large objects cost-effectively with high availability. Pahoehoe stores objects across multiple data centers and provides eventual consistency so to be available during network partitions. Pahoehoe uses erasure codes to store objects with high reliability at low cost. Its use of erasure codes distinguishes Pahoehoe from other cloud storage systems, and presents a challenge for efficiently providing eventual consistency. We describe Pahoehoe's put, get, and convergence protocols-convergence being the decentralized protocol that ensures eventual consistency. We use simulated executions of Pahoehoe to evaluate the efficiency of convergence, in terms of message count and message bytes sent, for failure-free and expected failure scenarios (e.g., partitions and server unavailability). We describe and evaluate optimizations to the na\u00efve convergence protocol that reduce the cost of convergence in all scenarios."
+    },
+    {
+      "id": "W1504624836",
+      "title": "A transparently-scalable metadata service for the Ursa Minor storage system",
+      "abstract": "The metadata service of the Ursa Minor distributed storage system scales metadata throughput as metadata servers are added. While doing so, it correctly handles metadata operations that involve items served by different metadata servers, consistently and atomically updating the items. Unlike previous systems, it does so by reusing existing metadata migration functionality to avoid complex distributed transaction protocols. It also assigns item IDs to minimize the occurrence of multiserver operations. Ursa Minor\u2019s approach allows one to implement a desired feature with less complexity than alternative methods and with minimal performance penalty (under 1 % in non-pathological cases). 1"
+    },
+    {
+      "id": "W2146892452",
+      "title": "Surviving congestion in geo-distributed storage systems",
+      "abstract": "Abstract. We present Vivace, a key-value storage system for web applications that span many geographicallydistributed sites. Vivace provides strong consistency and replicates data across sites for access locality and disaster tolerance. Vivace is designed to cope well with network congestion across sites, which occurs because the bandwidth across sites is smaller than within sites. To deal with congestion, Vivace relies on two novel algorithms that prioritize a small amount of critical data to avoid delays due to congestion. We evaluate Vivace to show its feasibility and effectiveness. 1"
+    },
+    {
+      "id": "W2035212183",
+      "title": "Hare",
+      "abstract": "Hare is a new file system that provides a POSIX-like interface on multicore processors without cache coherence. Hare allows applications on different cores to share files, directories, and file descriptors. The challenge in designing Hare is to support the shared abstractions faithfully enough to run applications that run on traditional shared-memory operating systems, with few modifications, and to do so while scaling with an increasing number of cores."
+    },
+    {
+      "id": "W2157937308",
+      "title": "MOSAIC: Declarative platform for dynamic overlay composition",
+      "abstract": null
+    },
+    {
+      "id": "W2215574967",
+      "title": "Flease - Lease Coordination Without a Lock Server",
+      "abstract": "Large-scale distributed systems often require scalable and fault-tolerant mechanisms to coordinate exclusive access to shared resources such as files, replicas or the primary role. The best known algorithms to implement distributed mutual exclusion with leases, such as Multipaxos, are complex, difficult to implement, and rely on stable storage to persist lease information. In this paper we present {\\bf F}LEASE, an algorithm for fault-tolerant lease coordination in distributed systems that is simpler than Multipaxos and does not rely on stable storage. The evaluation shows that {\\bf F}LEASE can be used to implement scalable, decentralized lease coordination that outperforms a central lock service implementation by an order of magnitude."
+    },
+    {
+      "id": "W4285121091",
+      "title": "Hydra: A Decentralized File System for Persistent Memory and RDMA Networks",
+      "abstract": "Emerging byte-addressable persistent memory (PM) has the potential to disrupt the boundary between memory and storage. Combined with high-speed RDMA networks, distributed PM-based storage systems offer the opportunity to provide huge increases in storage performance by closely coupling PM and RDMA features. However, existing distributed file systems adopt the conventional centralized client-server architecture designed for traditional disks, leading to excessive access latency, limited scalability, and high recovery overhead. In this paper, we propose a fully decentralized PM-based file system, Hydra. By exploiting the performance advantages of local PM, Hydra leverages data access locality to achieve high performance. To accelerate file transmission among Hydra nodes, file metadata and data are decoupled and updated differentially through one-sided RDMA reads. Hydra also batches RDMA requests and classifies RPCs into synchronous and asynchronous types to minimize network overhead. Decentralization enables Hydra to tolerate node failures and achieve load balancing. Experimental results show that Hydra outperforms existing distributed file systems by a large margin, and shows good scalability on multi-threaded and parallel workloads."
+    },
+    {
+      "id": "W125511816",
+      "title": "Don't Give Up on Distributed File Systems.",
+      "abstract": "Wide-area distributed applications often reinvent the wheel for their storage needs, each incorporating its own special-purpose storage manager to cope with distribution, intermittent failures, limited bandwidth, and high latencies. This paper argues that a distributed file system could provide a reusable solution to these problems by coupling a standard interface with a design suited to widearea distribution. For concreteness, this paper presents such a file system, called WheelFS, which allows applications to control consistency through the use of semantic cues, and minimizes communication costs by adhering to the slogan read globally, write locally. WheelFS could simplify distributed experiments, CDNs, and Grid applications."
+    },
+    {
+      "id": "W2106367078",
+      "title": "Efficient Byzantine Fault Tolerance for Scalable Storage and Services",
+      "abstract": "Distributed systems experience and should tolerate faults beyond simple component crashes as such systems grow in size and importance. Unfortunately, tolerating arbitrary faults, also known as Byzantine faults, poses several challenges to system designers, often limiting performance, requiring additional hardware, or both. This dissertation presents new protocols that provide substantially better performance than previously demonstrated. The Byzantine fault-tolerant erasure-coded block storage protocol proposed in this thesis provides 40 % higher write throughput than the best prior approach. The Byzantine fault-tolerant replicated state machine provides a factor of 2.2\u20132.9 times"
+    },
+    {
+      "id": "W2653898023",
+      "title": "Scaling distributed file systems in resource-harvesting datacenters",
+      "abstract": "Datacenters can use distributed file systems to store data for batch processing on the same servers that run latency-critical services. Taking advantage of this storage capacity involves minimizing interference with the co-located services, while implementing user-friendly, efficient, and scalable file system access. Unfortunately, current systems fail one or more of these requirements, and must be manually partitioned across independent subclusters. Thus, in this paper, we introduce techniques for automatically and transparently scaling such file systems to entire resource-harvesting datacenters. We create a layer of software in front of the existing metadata managers, assign servers to subclusters to minimize interference and data movement, and smartly migrate data across subclusters in the background. We implement our techniques in HDFS, and evaluate them using simulation of 10 production datacenters and a real 4k-server deployment. Our results show that our techniques produce high file access performance, and high data durability and availability, while migrating a limited amount of data. We recently deployed our system onto 30k servers in Bing's datacenters, and discuss lessons from this deployment."
+    },
+    {
+      "id": "W2417046671",
+      "title": "Replichard",
+      "abstract": "Metadata scalability is critical for distributed systems as the storage scale is growing rapidly. Because of the strict consistency requirement of metadata, many existing metadata services utilize a fundamentally unscalable design for the sake of easy management, while others provide improved scalability but lead to unacceptable latency and management complexity. Without delivering scalable performance, metadata will be the bottleneck of the entire system. Based on the observation that real file dependencies are few, and there are usually more idempotent than non-idempotent operations, we propose a practical strategy, Replichard, allowing a tradeoff between metadata consistency and scalable performance. Replichard provides metadata services through a cluster of metadata servers, in which a flexible consistency scheme is adopted: strict consistency for non-idempotent operations with dynamic write-lock sharding, and relaxed consistency with accuracy estimations of return values where consistency for idempotent requests is relaxed to achieve high throughput. Write-locks are dynamically created at subtree-level and designated to independent metadata servers in an application-oriented manner. A subtree metadata update that occurs on a particular server is replicated to all metadata servers conforming to the application \"start-end\" semantics, resulting in an eventually consistent namespace. An asynchronous notification mechanism is also devised to enable users to deal with potential stale reads from operations of relaxed consistency. A prototype was implemented based on HDFS, and the experimental results show promising scalability and performance for both micro benchmarks and various real-world applications written in Pig, Hive and MapReduce."
+    },
+    {
+      "id": "W2145571887",
+      "title": "Memory Based Metadata Server for Cluster File Systems",
+      "abstract": "In high performance computing environment, the metadata servers of distributed file system become critical to impact overall system performance. An approach of memory based metadata server is proposed, instead of the disk based approach. We present a metadata management system with matrix organization, non-overhead reliable mechanism and static scalability method, which is design to efficiently utilize large memory and provide high performance. We examine and demonstrate the performance, overhead of reliability and scalability in a test bed environment of 28 machines. The result shows that the performance of our system is higher than other traditional distributed file system, the reliability can be achieved with little overhead and the metadata servers can be linear scaling."
+    },
+    {
+      "id": "W2564013045",
+      "title": "HWM: a hybrid workload migration mechanism of metadata server cluster in data center",
+      "abstract": null
+    },
+    {
+      "id": "W2164162827",
+      "title": "Fault-tolerant and Decentralized Lease Coordination in Distributed Systems",
+      "abstract": "Applications which need exclusive access to a shared resource in distributed systems require a fault-tolerant and scalable mechanism to coordinate this exclusive access. Examples of such applications include distributed file systems and master/slave data replication. We present Flease, an algorithm for decentralized and fault-tolerant lease coordination in distributed systems. Our algorithm allows the processes competing for a resource to coordinate exclusive access through leases among themselves without a central component. The resulting system easily scales with an increasing number of nodes and resources. We prove that Flease ensures exclusive access, i.e. guarantees that there is at most one valid lease at any time."
+    },
+    {
+      "id": "W2912682446",
+      "title": "Semantic-Aware Metadata Organization for Exact-Matching Queries",
+      "abstract": null
+    },
+    {
+      "id": "W2027758281",
+      "title": "IndexFS: Scaling File System Metadata Performance with Stateless Caching and Bulk Insertion",
+      "abstract": "The growing size of modern storage systems is expected to exceed billions of objects, making metadata scalability critical to overall performance. Many existing distributed file systems only focus on providing highly parallel fast access to file data, and lack a scalable metadata service. In this paper, we introduce a middleware design called Index FS that adds support to existing file systems such as PVFS, Lustre, and HDFS for scalable high-performance operations on metadata and small files. Index FS uses a table-based architecture that incrementally partitions the namespace on a per-directory basis, preserving server and disk locality for small directories. An optimized log-structured layout is used to store metadata and small files efficiently. We also propose two client-based storm free caching techniques: bulk namespace insertion for creation intensive workloads such as N-N check pointing, and stateless consistent metadata caching for hot spot mitigation. By combining these techniques, we have demonstrated Index FS scaled to 128 metadata servers. Experiments show our out-of-core metadata throughput out-performing existing solutions such as PVFS, Lustre, and HDFS by 50% to two orders of magnitude."
+    },
+    {
+      "id": "W2419218373",
+      "title": "HopsFS: Scaling Hierarchical File System Metadata Using NewSQL Databases",
+      "abstract": null
+    },
+    {
+      "id": "W169731794",
+      "title": "GIGA+ : Scalable Directories for Shared File Systems (CMU-PDL-08-110)",
+      "abstract": "Traditionally file system designs have envisioned directories as a means of organizing files for human viewing; that is, directories typically contain a few tens to thousands of files. Users of large, fast file systems have begun to put millions of files into single directories, for example, as simple databases. Furthermore, large-scale applications running on clusters with tens to hundreds of thousands of cores can burstily create files using all compute cores, amassing bursts of hundreds of thousands of creates or more. In this paper, we revisit data-structures to build large file system directories that contain millions to billions of files and to quickly grow the number of files when many nodes are creating concurrently. We extend classic ideas of efficient resizeable hash-tables and inconsistent client hints to a highly concurrent distributed directory service. Our techniques use a dense bitmap encoding to indicate which of the possibly created hash partitions really exist, to allow all partitions to split independently, and to correct stale client hints with multiple changes per update. We implement our technique, Giga+, using the FUSE user-level file system API layered on Linux ext3. We measured our prototype on a 100-node cluster using the UCAR Metarates benchmark for concurrently creating a total of 12 million files in a single directory. In a configuration of 32 servers, Giga+ delivers scalable throughput with a peak of 8,369 file creates/second, comparable to or better than the best current file system implementations."
+    },
+    {
+      "id": "W2095913054",
+      "title": "Scale and Concurrency of Massive File System Directories",
+      "abstract": "File systems store data in files and organize these files in directories. Over decades, file systems have evolved to handle increasingly large files: they distribute files across a cluster of machines, they parallelize access to these files, they decouple data access from metadata access, and hence they provide scalable file access for high-performance applications. Sadly, most cluster-wide file systems lack any sophisticated support for large directories. In fact, most cluster file systems continue to use directories that were designed for humans, not for large-scale applications. The former use-case typically involves hundreds of files and infrequent concurrent mutations in each directory, while the latter use-case consists of tens of thousands of concurrent threads that simultaneously create large numbers of small files in a single directory at very high speeds. As a result, most cluster file systems exhibit very poor file create rate in a directory either due to limited scalability from using a single centralized directory server or due to reduced concurrency from using a system-wide synchronization mechanism. This dissertation proposes a directory architecture called GIGA+ that enables a directory in a cluster file system to store millions of files and sustain hundreds of thousands of concurrent file creations every second. GIGA+ makes two indexing technique to scale out a growing directory on many servers and an efficient layered design to scale up performance. GIGA+ uses a hash-based, incremental partitioning algorithm that enables highly concurrent directory indexing through asynchrony and eventual consistency of the internal indexing state (while providing strong consistency guarantees to the application data). This dissertation analyzes several trade-offs between data migration overhead, load balancing effectiveness, directory scan performance, and entropy of indexing state made by the GIGA+ design, and compares them with policies used in other systems. GIGA+ also demonstrates a modular implementation that separates directory distribution from directory representation. It layers a client-server middleware, which spreads work among many GIGA+ servers, on top of a backend storage system, which manages on-disk directory representation. This dissertation studies how system behavior is tightly dependent on both the indexing scheme and the on-disk implementations, and evaluates how the system performs for different backend configurations including local and shared-disk stores. The GIGA+ prototype delivers highly scalable directory performance (that exceeds the most demanding Petascale-era requirements), provides the traditional UNIX file system interface (that can run applications without any modifications) and offers a new functionality layered on existing cluster file systems (that lack support for distributed directories)contributions: a concurrent"
+    },
+    {
+      "id": "W105389527",
+      "title": "PRS: A Reusable Abstraction for Scaling Out Middle Tiers in the Datacenter",
+      "abstract": "Abstract: Scale-out datacenter applications are of enormous commercial interest, yet they are frustratingly hard to build. A common design pattern is to locate most of the application logic in a middle tier of soft-state servers and to provide storage using a separate backend system. The Partitioning and Recovery Service (PRS) is an infrastructure service that makes it easier to build these middle tier applications: it provides strong consistency on the soft state, supports arbitrary operations, and helps in recovery if state is ever lost. The PRS manages scaling out the middle tier across many machines, and hides the complexities of scale-out through a simple and powerful abstraction. We have built and evaluated the PRS, and other developers have built and deployed four scale-out soft-state datacenter applications using the PRS. Our experience with these applications confirms that the PRS significantly simplifies the construction of scale-out soft-state datacenter applications. 1"
+    },
+    {
+      "id": "W1684009770",
+      "title": "Autonomous storage management for low-end computing environments",
+      "abstract": "To make storage management transparent to users, enterprises rely on expensive storage infrastructure, such as high end storage appliances, tape robots, and offsite storage facilities, maintained by full-time professional system administrators. From the user's perspective access to data is seamless regardless of location, backup requires no periodic, manual action by the user, and help is available to recover from storage problems. The equipment and administrators protect users from the loss of data due to failures, such as device crashes, user errors, or virii, as well as being inconvenienced by the unavailability of critical files. \r\nHome users and small businesses must manage increasing amounts of important data distributed among an increasing number of storage devices. At the same time, expert system administration and specialized backup hardware are rarely available in these environments, due to their high cost. Users must make do with error-prone, manual, and time-consuming ad hoc solutions, such as periodically copying data to an external hard drive. Non-technical users are likely to make mistakes, which could result in the loss of a critical piece of data, such as a tax return, customer database, or an irreplaceable digital photograph. \r\nIn this thesis, we show how to provide transparent storage management for home and small business users We introduce two new systems: The first, PodBase, transparently ensures availability and durability for mobile, personal devices that are mostly disconnected. The second, SLStore, provides enterprise-level data safety (e.g. protection from user error, software faults, or virus infection) without requiring expert administration or expensive hardware. Experimental results show that both systems are feasible, perform well, require minimal user attention, and do not depend on expert administration during disaster-free operation. \r\nPodBase relieves home users of many of the burdens of managing data on their personal devices. In the home environment, users typically have a large number of personal devices, many of them mobile devices, each of which contain storage, and which connect to each other intermittently. Each of these devices contain data that must be made durable, and available on other storage devices. Ensuring durability and availability is difficult and tiresome for non-expert users, as they must keep track of what data is stored on which devices. PodBase transparently ensures the durability of data despite the loss or failure of a subset of devices; at the same time, PodBase aims to make data available on all the devices appropriate for a given data type. PodBase takes advantage of storage resources and network bandwidth between devices that typically goes unused. The system uses an adaptive replication algorithm, which makes replication transparent to the user, even when complex replication strategies are necessary. Results from a prototype deployment in a small community of users show that PodBase can ensure the durability and availability of data stored on personal devices under a wide range of conditions with minimal user attention.\r\nOur second system, SLStore, brings enterprise-level data protection to home office and small business computing. It ensures that data can be recovered despite incidents like accidental data deletion, data corruption resulting from software errors or security breaches, or even catastrophic storage failure. However, unlike enterprise solutions, SLStore does riot require professional system administrators, expensive backup hard- ware, or routine, manual actions on the part of the user. The system relies on storage leases, which ensure that data cannot be overwritten for a pre-determined period, and an adaptive storage management layer which automatically adapts the level of backup to the storage available. We show that this system is both practical, reliable and easy to manage, even in the presence of hardware and software faults."
+    },
+    {
+      "id": "W1737585292",
+      "title": "A Pluggable Framework for Lightweight Task Of\ufb02oading in Parallel and Distributed Computing",
+      "abstract": "Multicore processors have quickly become ubiquitous in supercomputing, cluster computing, datacenter computing, and even personal computing. Software advances, however, continue to lag behind. In the past, software designers could simply rely on clock-speed increases to improve the performance of their software. With clock speeds now stagnant, software designers need to tap into the increased horsepower of multiple cores in a processor by creating software artifacts that support parallelism. Rather than forcing designers to write such software artifacts from scratch, we propose a pluggable framework that designers can reuse for lightweight task of\ufb02oading in a parallel computing environment of multiple cores, whether those cores be colocated on a processor within a compute node, between compute nodes in a tightly-coupled system like a supercomputer, or between compute nodes in a loosely-coupled one like a cloud computer. To demonstrate the ef\ufb01cacy of our framework, we use the framework to implement lightweight task of\ufb02oading (or software acceleration) for a popular parallel sequence-search application called mpiBLAST. Our experimental results on a 9-node, 36-core AMD Opteron cluster show that using mpiBLAST with our pluggable framework results in a 205% speed-up."
+    },
+    {
+      "id": "W2129084606",
+      "title": "Reusing migration to simply and efficiently implement multi-server operations in transparently scalable storage systems",
+      "abstract": "Distributed file systems that scale by partitioning files and directories among a collection of servers inevitably encounter multi-server operations. A common example is a RENAME that moves a file from a directory managed by one server to a directory managed by another. Transparently scalable systems (those that provide the same semantics for multi-server operations as they do for single-server operations) traditionally implement dedicated protocols for these rare operations. This thesis explores an alternate approach, with simplicity as a goal, that exploits the existence of migration functionality normally used for load balancing. When a client request would involve files on multiple servers, the system can migrate responsibility for those files onto one server and have it service the request. Although migration may be more expensive than a dedicated cross-server protocol, trace analysis of deployed file systems indicates that such operations are extremely rare in file system workloads. A prototype system that uses this approach to supporting multi-server operations scales linearly and performs well even when multi-server operations are 100X more common than the worst-case trace. Thus, when migration functionality exists in the system, multi-server operations can be efficiently handled with very little additional implementation complexity."
+    },
+    {
+      "id": "W2154395011",
+      "title": "Flexible, wide-area storage for distributed systems using semantic cues",
+      "abstract": "Thesis (Ph. D.)--Massachusetts Institute of Technology, Dept. of Electrical Engineering and Computer Science, 2009."
+    },
+    {
+      "id": "W2341043526",
+      "title": "Satisfying strong application requirements in data-intensive cloud computing environments",
+      "abstract": "In today\u2019s data-intensive cloud systems, there is a tension between resource limitations and strict requirements. In an effort to scale up in the cloud, many systems today have unfortunately forced users to relax their requirements. However, users still have to deal with constraints, such as strict time deadlines or limited dollar budgets. Several applications critically rely on strongly consistent access to data hosted in clouds. Jobs that are time-critical must receive priority when they are submitted to shared cloud computing resources. This thesis presents systems that satisfy strong application requirements, such as consistency, dollar budgets, and real-time deadlines, for data-intensive cloud computing environments, in spite of resource limitations, such as bandwidth, congestion, and resource costs, while optimizing system metrics, such as throughput and latency. Our systems cover a wide range of environments, each with their own strict requirements. Pandora gives cloud users with deadline or budget constraints the optimal solution for transferring bulk data within these constraints. Vivace provides applications with a strongly consistent"
+    },
+    {
+      "id": "W836711441",
+      "title": "File system metadata virtualization",
+      "abstract": "The advance of computing systems has brought new ways to use and access the stored data that push the architecture of traditional file systems to its limits, making them inadequate to handle the new needs. Current challenges affect both the performance of high-end computing systems and its usability from the applications perspective. On one side, high-performance computing equipment is rapidly developing into large-scale aggregations of computing elements in the form of clusters, grids or clouds. On the other side, there is a widening range of scientific and commercial applications that seek to exploit these new computing facilities. The requirements of such applications are also heterogeneous, leading to dissimilar patterns of use of the underlying file systems. Data centres have tried to compensate this situation by providing several file systems to fulfil distinct requirements. Typically, the different file systems are mounted on different branches of a directory tree, and the preferred use of each branch is publicised to users. A similar approach is being used in personal computing devices. Typically, in a personal computer, there is a visible and clear distinction between the portion of the file system name space dedicated to local storage, the part corresponding to remote file systems and, recently, the areas linked to cloud services as, for example, directories to keep data synchronized across devices, to be shared with other users, or to be remotely backed-up. In practice, this approach compromises the usability of the file systems and the possibility of exploiting all the potential benefits. We consider that this burden can be alleviated by determining applicable features on a per-file basis, and not associating them to the location in a static, rigid name space. Moreover, usability would be further increased by providing multiple dynamic name spaces that could be adapted to specific application needs. This thesis contributes to this goal by proposing a mechanism to decouple the user view of the storage from its underlying structure. The mechanism consists in the virtualization of file system metadata (including both the name space and the object attributes) and the interposition of a sensible layer to take decisions on where and how the files should be stored in order to benefit from the underlying file system features, without incurring on usability or performance penalties due to inadequate usage. This technique allows to present multiple, simultaneous virtual views of the name space and the file system object attributes that can be adapted to specific application needs without altering the underlying storage configuration. The first contribution of the thesis introduces the design of a metadata virtualization framework that makes possible the above-mentioned decoupling; the second contribution consists in a method to improve file system performance in large-scale systems by using such metadata virtualization framework; finally, the third contribution consists in a technique to improve the usability of cloud-based storage systems in personal computing devices."
+    },
+    {
+      "id": "W99445218",
+      "title": "A unified data-centric approach towards an extensible internet architecture",
+      "abstract": "The Internet's role is changing dramatically, from a means of connecting together PCs and servers to a ubiquitous communications medium interconnecting mobile personal devices, environmental sensors, and Web services. As new services (voice, video, emergency response, etc.) are being deployed on the infrastructure, there have been increased demands on extending the existing Internet architecture for new capabilities, such as efficient and resilient routing among mobile and wired nodes, location of proximity-based services, and wide-area service discovery and composition. \r\nThis dissertation presents an extensible Internet architecture M OSAIC\u2014based on declarative languages and composable views over router, network and host state at different layers\u2014to meet the demand of the emerging network services. The proposed architecture explicitly separates logical state representation and acquisition from physical implementation, to enable more extensible and adaptive protocols and distributed systems, because programmers can focus on high-level logical operations whose implementations may be separately and transparently optimized. \r\nThe main contributions made by this dissertation are: (1) a unified network architecture (MOSAIC) under which new networks can be developed, deployed, selected, and dynamically composed according application and administrator needs; (2) a declarative programming language (Mozlog) to concisely specify high-level network protocol specifications; (3) a runtime system prototype that can translate Mozlog specifications into efficient implementations. \r\nTo validate the approach, we evaluate the work in the context of a heterogeneous, dynamic Internet environment where end hosts are connected via both wired and wireless media and have diverse application requirements. We demonstrate that in MOSAIC, new network services can be readily introduced by either concisely specifying protocols in Mozlog or dynamically selecting and composing existing network services at low overheads."
+    }
+  ]
+}

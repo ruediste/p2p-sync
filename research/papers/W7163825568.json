@@ -1,0 +1,37 @@
+{
+  "id": "W7163825568",
+  "title": "Design and Implementation of a Real-Time Collaborative Code Editor with Containerized Remote Execution Environments",
+  "doi": "https://doi.org/10.64751/ynjkm627",
+  "publication_date": "2026-06-06",
+  "publication_year": 2026,
+  "type": "article",
+  "cited_by_count": 0,
+  "authors": [
+    "Manoj Samal",
+    "Rudra Prakash Mallick",
+    "Asst. Prof. Piyush Kumar Sarangi"
+  ],
+  "venue": "International Journal of Economic Social Science and Management LAW",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "hybrid",
+    "oa_url": "https://ijeml.com/journal/index.php/ijeml/article/download/524/492",
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W7163825568.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W7163825568.grobid-xml"
+  },
+  "abstract": "Modern software engineering workflowsincreasingly depend on distributed systems and remote teamwork configurations, making real-time collaborative development platforms indispensable. This paper presents the end-toend architecture, implementation matrix, and testing results of a high-performance web-based collaborative code editor featuring secure containerized code execution. The system resolves key constraints associated with version fragmentation and workflow latency found in asynchronous tools like local IDE configurations and standard source control pipelines. Built using a decoupled client-server architecture pattern, the frontend is driven by React.js unified with Microsoft\u2019s Monaco Editor to handle code rendering, IntelliSense suggestions, and localized virtual DOM diff computation. Real-time character synchronization, session multiplexing, and collaborative cursor mapping across dynamic workspaces are executed through fully persistent, bidirectional Socket.IO layer protocols over active TCP pathways. To execute user-written scripts safely, the system utilizes a Docker engine sandbox architecture that intercepts raw script strings, writes temporary short-lived filesystem targets, and enforces explicit resource control masks (0.5 CPU core allocations and 100 MB hardware memories) over isolated Node.js and Python runtime environments. Comprehensive performance evaluations prove sub-100 ms UI rendering synchronization delays alongside robust fault insulation properties on the sandbox host system, establishing the framework as a production-capable platform for distributed programming practice, academic environments, and tech interviews.",
+  "topics": [
+    "Cloud Computing and Remote Desktop Technologies",
+    "Security and Verification in Computing",
+    "Logic, programming, and type systems"
+  ],
+  "references": [],
+  "cited_by": []
+}

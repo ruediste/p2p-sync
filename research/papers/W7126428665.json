@@ -1,0 +1,33 @@
+{
+  "id": "W7126428665",
+  "title": "automerge: R Bindings for 'Automerge' 'CRDT' Library",
+  "doi": "https://doi.org/10.32614/cran.package.automerge",
+  "publication_date": "2026-01-31",
+  "publication_year": 2026,
+  "type": "dataset",
+  "cited_by_count": 0,
+  "authors": [
+    "Charlie Gao"
+  ],
+  "venue": null,
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "gold",
+    "oa_url": "https://cran.r-project.org/web/packages/automerge/automerge.pdf",
+    "any_repository_has_fulltext": null
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W7126428665.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W7126428665.grobid-xml"
+  },
+  "abstract": "Provides R bindings to the 'Automerge' Conflict-free Replicated Data Type ('CRDT') library. 'Automerge' enables automatic merging of concurrent changes without conflicts, making it ideal for distributed systems, collaborative applications, and offline-first architectures. The approach of local-first software was proposed in Kleppmann, M., Wiggins, A., van Hardenberg, P., McGranaghan, M. (2019) <doi:10.1145/3359591.3359737>. This package supports all 'Automerge' data types (maps, lists, text, counters) and provides both low-level and high-level synchronization protocols for seamless interoperability with 'JavaScript' and other 'Automerge' implementations.",
+  "topics": [],
+  "references": [
+    "https://openalex.org/W2979846168"
+  ],
+  "cited_by": []
+}

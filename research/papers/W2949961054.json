@@ -1,0 +1,35 @@
+{
+  "id": "W2949961054",
+  "title": "ORLease: Optimistically Replicated Lease Using Lease Version Vector For Higher Replica Consistency in Optimistic Replication Systems",
+  "doi": null,
+  "publication_date": "2019-01-01",
+  "publication_year": 2019,
+  "type": "dissertation",
+  "cited_by_count": 0,
+  "authors": [
+    "Diaa Fathalla"
+  ],
+  "venue": "NSUWorks (Nova Southeastern University)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://nsuworks.nova.edu/gscis_etd/1080",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2949961054.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2949961054.grobid-xml"
+  },
+  "abstract": "There is a tradeoff between the availability and consistency properties of any distributed replication system. Optimistic replication favors high availability over strong consistency so that the replication system can support disconnected replicas as well as high network latency between replicas. Optimistic replication improves the availability of these systems by allowing data updates to be committed at their originating replicas first before they are asynchronously replicated out and committed later at the rest of the replicas. This leads the whole system to suffer from a relaxed data consistency. This is due to the lack of any locking mechanism to synchronize access to the replicated data resources in order to mutually exclude one another. When consistency is relaxed, there is a potential of reading from stale data as well as introducing data conflicts due to the concurrent data updates that might have been introduced at different replicas. These issues could be ameliorated if the optimistic replication system is aggressively propagating the data updates at times of good network connectivity between replicas. However, aggressive propagation for data updates does not scale well in write intensive environments and leads to communication overhead in order to keep all replicas in sync. In pursuance of a solution to mitigate the relaxed consistency drawback, a new technique has been developed that improves the consistency of optimistic replication systems without sacrificing its availability and with minimal communication overhead. This new methodology is based on applying the concurrency control technique of leasing in an optimistic way. The optimistic lease technique is built on top of a replication framework that prioritizes metadata replication over data replication. The framework treats the lease requests as replication metadata updates and replicates them aggressively in order to optimistically acquire leases on replicated data resources. The technique is demonstrating a best effort semi-locking semantics that improves the overall system consistency while avoiding any locking issues that could arise in optimistic replication systems.",
+  "topics": [
+    "Distributed and Parallel Computing Systems",
+    "Distributed systems and fault tolerance",
+    "Software Testing and Debugging Techniques"
+  ],
+  "references": [],
+  "cited_by": []
+}

@@ -1,0 +1,776 @@
+{
+  "id": "W2613324619",
+  "title": "The Zebra striped network file system",
+  "doi": "https://doi.org/10.1145/210126.210131",
+  "publication_date": "1995-08-01",
+  "publication_year": 1995,
+  "type": "article",
+  "cited_by_count": 174,
+  "authors": [
+    "John H. Hartman",
+    "John K. Ousterhout"
+  ],
+  "venue": "ACM Transactions on Computer Systems",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "bronze",
+    "oa_url": "https://dl.acm.org/doi/pdf/10.1145/210126.210131",
+    "any_repository_has_fulltext": false
+  },
+  "has_content": {
+    "grobid_xml": true,
+    "pdf": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W2613324619.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W2613324619.grobid-xml"
+  },
+  "abstract": "Zebra is a network file system that increases throughput by striping the file data across multiple servers. Rather than striping each file separately, Zebra forms all the new data from each client into a single stream, which it then stripes using an approach similar to a log-structured file system. This provides high performance for writes of small files as well as for reads and writes of large files. Zebra also writes parity information in each stripe in the style of RAID disk arrays; this increases storage costs slightly, but allows the system to continue operation while a single storage server is unavailable. A prototype implementation of Zebra, built in the Sprite operating system, provides 4\u20135 times the throughput of the standard Sprite file system or NFS for large files and a 15\u2013300% improvement for writing small files.",
+  "topics": [
+    "Advanced Data Storage Technologies",
+    "Distributed systems and fault tolerance",
+    "Caching and Content Delivery"
+  ],
+  "references": [
+    "https://openalex.org/W8329419",
+    "https://openalex.org/W62809833",
+    "https://openalex.org/W67232494",
+    "https://openalex.org/W177406453",
+    "https://openalex.org/W201248661",
+    "https://openalex.org/W1525865893",
+    "https://openalex.org/W1538319448",
+    "https://openalex.org/W1550599556",
+    "https://openalex.org/W1595924276",
+    "https://openalex.org/W1834679979",
+    "https://openalex.org/W1915606614",
+    "https://openalex.org/W1993505169",
+    "https://openalex.org/W1998626871",
+    "https://openalex.org/W2005373714",
+    "https://openalex.org/W2007415020",
+    "https://openalex.org/W2012426216",
+    "https://openalex.org/W2043671329",
+    "https://openalex.org/W2078775767",
+    "https://openalex.org/W2087000303",
+    "https://openalex.org/W2088221489",
+    "https://openalex.org/W2107460938",
+    "https://openalex.org/W2114167330",
+    "https://openalex.org/W2115600841",
+    "https://openalex.org/W2115834257",
+    "https://openalex.org/W2116142433",
+    "https://openalex.org/W2123829659",
+    "https://openalex.org/W2124213351",
+    "https://openalex.org/W2135131646",
+    "https://openalex.org/W2141430922",
+    "https://openalex.org/W2147504831",
+    "https://openalex.org/W2149609142",
+    "https://openalex.org/W2154685263",
+    "https://openalex.org/W2158695815",
+    "https://openalex.org/W2205436351",
+    "https://openalex.org/W3015166094",
+    "https://openalex.org/W4251281064",
+    "https://openalex.org/W6633084138",
+    "https://openalex.org/W6813512438"
+  ],
+  "cited_by": [
+    {
+      "id": "W2124288146",
+      "title": "Petal"
+    },
+    {
+      "id": "W1974401809",
+      "title": "A tutorial on Reed\u2013Solomon coding for fault\u2010tolerance in RAID-like systems"
+    },
+    {
+      "id": "W2115457697",
+      "title": "Frangipani"
+    },
+    {
+      "id": "W2071958655",
+      "title": "Ivy"
+    },
+    {
+      "id": "W2163775180",
+      "title": "STAR : An Efficient Coding Scheme for Correcting Triple Storage Node Failures"
+    },
+    {
+      "id": "W2091389843",
+      "title": "Tango"
+    },
+    {
+      "id": "W2249200448",
+      "title": "Paxos replicated state machines as the basis of a high-performance data store"
+    },
+    {
+      "id": "W1546816891",
+      "title": "CORFU: A Shared Log Design for Flash Clusters"
+    },
+    {
+      "id": "W1605552180",
+      "title": "Parity logging with reserved space: towards efficient updates and recovery in erasure-coded clustered storage"
+    },
+    {
+      "id": "W2932966482",
+      "title": "URSA"
+    },
+    {
+      "id": "W2038523137",
+      "title": "Online reorganization of databases"
+    },
+    {
+      "id": "W2025413686",
+      "title": "Serverless network file systems"
+    },
+    {
+      "id": "W2039573521",
+      "title": "Serverless network file systems"
+    },
+    {
+      "id": "W2161995137",
+      "title": "Automatic I/O hint generation through speculative execution"
+    },
+    {
+      "id": "W2115837944",
+      "title": "Metadata Efficiency in Versioning File Systems"
+    },
+    {
+      "id": "W2025371316",
+      "title": "Improving the performance of log-structured file systems with adaptive methods"
+    },
+    {
+      "id": "W2104942083",
+      "title": "Low-overhead byzantine fault-tolerant storage"
+    },
+    {
+      "id": "W2090125639",
+      "title": "A survey of confidential data storage and deletion methods"
+    },
+    {
+      "id": "W2052211129",
+      "title": "hatS: A Heterogeneity-Aware Tiered Storage for Hadoop"
+    },
+    {
+      "id": "W2165440220",
+      "title": "The Swarm scalable storage system"
+    },
+    {
+      "id": "W2074586513",
+      "title": "CORFU"
+    },
+    {
+      "id": "W2997666247",
+      "title": "Harmonia"
+    },
+    {
+      "id": "W3138508557",
+      "title": "STAR: an efficient coding scheme for correcting triple storage node failures"
+    },
+    {
+      "id": "W1988161332",
+      "title": "R-ADMAD"
+    },
+    {
+      "id": "W201983520",
+      "title": "Blizzard: Fast, Cloud-scale Block Storage for Cloud-oblivious Applications"
+    },
+    {
+      "id": "W1511168026",
+      "title": "Derived Virtual Devices: A Secure Distributed File System Mechanism"
+    },
+    {
+      "id": "W2145038813",
+      "title": "A Novel Weighted-Graph-Based Grouping Algorithm for Metadata Prefetching"
+    },
+    {
+      "id": "W1467363873",
+      "title": "Gecko: contention-oblivious disk arrays for cloud storage"
+    },
+    {
+      "id": "W2155204045",
+      "title": "Experience of adaptive replication in distributed file systems"
+    },
+    {
+      "id": "W4410601015",
+      "title": "Lustre Unveiled: Evolution, Design, Advancements, and Current Trends"
+    },
+    {
+      "id": "W2150199386",
+      "title": "Interposed request routing for scalable network storage"
+    },
+    {
+      "id": "W1547372502",
+      "title": "Applied techniques for high bandwidth data transfers across wide area networks"
+    },
+    {
+      "id": "W1592162257",
+      "title": "AFRAID: a frequently redundant array of independent disks"
+    },
+    {
+      "id": "W2101871993",
+      "title": "OBFS: A File System for Object-based Storage Devices"
+    },
+    {
+      "id": "W2118146766",
+      "title": "RAID-x: a new distributed disk array for I/O-centric cluster computing"
+    },
+    {
+      "id": "W2122447165",
+      "title": "Myriad: cost-effective disaster tolerance"
+    },
+    {
+      "id": "W2026951814",
+      "title": "Large files, small writes, and pNFS"
+    },
+    {
+      "id": "W2124937058",
+      "title": "Nexus: a novel weighted-graph-based prefetching algorithm for metadata servers in petabyte-scale storage systems"
+    },
+    {
+      "id": "W4243345641",
+      "title": "Low-overhead byzantine fault-tolerant storage"
+    },
+    {
+      "id": "W2016589762",
+      "title": "Wukong: A cloud-oriented file service for mobile Internet devices"
+    },
+    {
+      "id": "W2074417445",
+      "title": "AMP: An Affinity-Based Metadata Prefetching Scheme in Large-Scale Distributed Storage Systems"
+    },
+    {
+      "id": "W185056006",
+      "title": "Smoke and mirrors: reflecting files at a geographically remote location without loss of performance"
+    },
+    {
+      "id": "W2909206894",
+      "title": "Lustre: The intergalactic file system"
+    },
+    {
+      "id": "W1993629015",
+      "title": "Building global and scalable systems with atomic multicast"
+    },
+    {
+      "id": "W2811427771",
+      "title": "Block Placement in Distributed File Systems Based on Block Access Frequency"
+    },
+    {
+      "id": "W2997188720",
+      "title": "Leveraging Glocality for Fast Failure Recovery in Distributed RAM Storage"
+    },
+    {
+      "id": "W2587487636",
+      "title": "A high-performance and scalable distributed storage and computing system for IMS services"
+    },
+    {
+      "id": "W2115799914",
+      "title": "Computing in the RAIN: a reliable array of independent nodes"
+    },
+    {
+      "id": "W2122492666",
+      "title": "A Self-Organizing Storage Cluster for Parallel Data-Intensive Applications"
+    },
+    {
+      "id": "W2074184402",
+      "title": "Recovery in the Calypso file system"
+    },
+    {
+      "id": "W4243824332",
+      "title": "Frangipani"
+    },
+    {
+      "id": "W2033422105",
+      "title": "Constructing collaborative desktop storage caches for large scientific datasets"
+    },
+    {
+      "id": "W2048701774",
+      "title": "Taking advantage of heterogeneity in disk arrays"
+    },
+    {
+      "id": "W1671630573",
+      "title": "Informed Prefetching for Distributed Multi-Level Storage Systems"
+    },
+    {
+      "id": "W2286596378",
+      "title": "A Survey on Distributed File System Technology"
+    },
+    {
+      "id": "W4256133925",
+      "title": "Petal"
+    },
+    {
+      "id": "W2078375990",
+      "title": "From paxos to CORFU"
+    },
+    {
+      "id": "W2063958980",
+      "title": "Wukong: Toward a Cloud-Oriented File Service for Mobile Devices"
+    },
+    {
+      "id": "W2144185214",
+      "title": "LH*g: a high-availability scalable distributed data structure by record grouping"
+    },
+    {
+      "id": "W2126556050",
+      "title": "An Efficient Data Location Protocol for Self.organizing Storage Clusters"
+    },
+    {
+      "id": "W4230828661",
+      "title": "Petal"
+    },
+    {
+      "id": "W4237996787",
+      "title": "Improving the performance of log-structured file systems with adaptive methods"
+    },
+    {
+      "id": "W2159040831",
+      "title": "A brief survey of current work on network attached peripherals (extended abstract)"
+    },
+    {
+      "id": "W2030090538",
+      "title": "Hydra"
+    },
+    {
+      "id": "W1512122621",
+      "title": "Extending Heterogeneity to RAID Level 5"
+    },
+    {
+      "id": "W2165387461",
+      "title": "CEFT: A cost-effective, fault-tolerant parallel virtual file system"
+    },
+    {
+      "id": "W2137683679",
+      "title": "ZettaDS: A Light-weight Distributed Storage System for Cluster"
+    },
+    {
+      "id": "W2307033657",
+      "title": "The design and implementation of the Warp Transactional Filesystem"
+    },
+    {
+      "id": "W2106367078",
+      "title": "Efficient Byzantine Fault Tolerance for Scalable Storage and Services"
+    },
+    {
+      "id": "W2555900494",
+      "title": "Experiences on File Systems: Which is the best file system for you?"
+    },
+    {
+      "id": "W1932647220",
+      "title": "BPS: A Balanced Partial Stripe Write Scheme to Improve the Write Performance of RAID-6"
+    },
+    {
+      "id": "W4309562627",
+      "title": "Oasis : Controlling Data Migration in Expansion of Object-based Storage Systems"
+    },
+    {
+      "id": "W2528109701",
+      "title": "An Overview of the Sirocco Parallel Storage System"
+    },
+    {
+      "id": "W7117555287",
+      "title": "NatSep: Little-to-No Overhead Data Separation for Log-Structured Storage Using Native Information"
+    },
+    {
+      "id": "W2113537180",
+      "title": "A scalable architecture for clustered network attached storage"
+    },
+    {
+      "id": "W113253687",
+      "title": "Parallel computing on the berkeley now"
+    },
+    {
+      "id": "W1547423527",
+      "title": "An Analysis of Error Behaviour in a Large Storage System"
+    },
+    {
+      "id": "W2162390879",
+      "title": "LH*s: a high-availability and high-security scalable distributed data structure"
+    },
+    {
+      "id": "W2063771953",
+      "title": "A Demand Adaptive and Locality Aware (DALA) streaming media server cluster architecture"
+    },
+    {
+      "id": "W2113645935",
+      "title": "Adaptive disk striping for parallel input/output"
+    },
+    {
+      "id": "W2119633387",
+      "title": "Design, implementation and performance evaluation of a cost-effective, fault-tolerant parallel virtual file system"
+    },
+    {
+      "id": "W2026763984",
+      "title": "PI/OT: Parallel I/O templates"
+    },
+    {
+      "id": "W2210183522",
+      "title": "Introduction to Multiprocessor I/O Architecture"
+    },
+    {
+      "id": "W2157507438",
+      "title": "Striping and buffer caching for software RAID file systems in workstation clusters"
+    },
+    {
+      "id": "W92072699",
+      "title": "RobuSTore: Robust Performance for Distributed Storage Systems"
+    },
+    {
+      "id": "W2027057880",
+      "title": "Cluster file systems: a case study"
+    },
+    {
+      "id": "W2187627623",
+      "title": "Understanding and coping with failures in large-scale storage systems"
+    },
+    {
+      "id": "W2104581382",
+      "title": "A Study on Data Placement of Extensible Parallel Storage System"
+    },
+    {
+      "id": "W2169192442",
+      "title": "TLDFS: A Distributed File System based on the Layered Structure"
+    },
+    {
+      "id": "W1603849372",
+      "title": "Scalable Storage for Digital Libraries"
+    },
+    {
+      "id": "W2053272668",
+      "title": "Design and analysis of a demand adaptive and locality aware streaming media server cluster"
+    },
+    {
+      "id": "W2119267410",
+      "title": "Making the best of a bad situation: Prioritized storage management in GEMS"
+    },
+    {
+      "id": "W2134422612",
+      "title": "A decentralized storage cluster with high reliability and flexibility"
+    },
+    {
+      "id": "W2163943534",
+      "title": "An efficient caching scheme for software RAID file systems in workstation clusters"
+    },
+    {
+      "id": "W2187600181",
+      "title": "Notes on Operating Systems"
+    },
+    {
+      "id": "W2537859722",
+      "title": "Storage management in large distributed object-based storage systems"
+    },
+    {
+      "id": "W2896999628",
+      "title": "RoVEr: Robust and Verifiable Erasure Code for Hadoop Distributed File Systems"
+    },
+    {
+      "id": "W1601541240",
+      "title": "Minimizing Metadata Access Latency in Wide Area Networked File Systems"
+    },
+    {
+      "id": "W1778282005",
+      "title": "Building access oblivious storage cloud for enterprise"
+    },
+    {
+      "id": "W50778986",
+      "title": "Software RAID Technology for cluster environments"
+    },
+    {
+      "id": "W2127326752",
+      "title": "A Cluster File System for High Data Availability Using Locality-Aware Partial Replication"
+    },
+    {
+      "id": "W2152027418",
+      "title": "A Complete Bibliography of ACM Transactions on Computer Systems"
+    },
+    {
+      "id": "W299056967",
+      "title": "Efficient Consistency for Erasure-coded Data via Versioning Servers (CMU-CS-03-127)"
+    },
+    {
+      "id": "W2765880527",
+      "title": "ZX: A network file system for high\u2010latency networks"
+    },
+    {
+      "id": "W3216730646",
+      "title": "Toward Uncensorable, Anonymous and Private Access Over Satoshi Blockchains"
+    },
+    {
+      "id": "W2913465514",
+      "title": "Proceedings of the Twenty-Fourth ACM Symposium on Operating Systems Principles"
+    },
+    {
+      "id": "W1583574052",
+      "title": "Metadata Efficiency in a Comprehensive Versioning File System"
+    },
+    {
+      "id": "W2089649367",
+      "title": "Characteristics of File System Workloads"
+    },
+    {
+      "id": "W2185792076",
+      "title": "Chariots: A Scalable Shared Log for Data Management in Multi-Datacenter Cloud Environments"
+    },
+    {
+      "id": "W2152634560",
+      "title": "ENWRICH"
+    },
+    {
+      "id": "W222729537",
+      "title": "Scheduling for Improved Write Performance in a Cost- Effective, Fault-Tolerant Parallel Virtual File System (CEFT-PVFS)"
+    },
+    {
+      "id": "W1486865156",
+      "title": "Decentralized Storage Consistency via Versioning Servers"
+    },
+    {
+      "id": "W2166783568",
+      "title": "CSAR: cluster storage with adaptive redundancy"
+    },
+    {
+      "id": "W2029552730",
+      "title": "A high performance redundancy scheme for cluster file systems"
+    },
+    {
+      "id": "W2096290645",
+      "title": "A Comparison of Two Distributed Disk Systems"
+    },
+    {
+      "id": "W150388362",
+      "title": "An Architecture for Scalable and Manageable File Services"
+    },
+    {
+      "id": "W1548525228",
+      "title": "Efficient Consistency for Erasure-Coded Data via Versioning Servers"
+    },
+    {
+      "id": "W1518775047",
+      "title": "A framework for adaptive storage input/output on computational grids"
+    },
+    {
+      "id": "W2142962888",
+      "title": "A high performance redundancy scheme for cluster file systems"
+    },
+    {
+      "id": "W1549157835",
+      "title": "Cooperative caching and prefetching in parallel/distributed file systems"
+    },
+    {
+      "id": "W2936836152",
+      "title": "Harmonia: Near-Linear Scalability for Replicated Storage with In-Network Conflict Detection"
+    },
+    {
+      "id": "W37708922",
+      "title": "Performance and Reliability of Secondary Storage Systems"
+    },
+    {
+      "id": "W1596198244",
+      "title": "A serverless, wide-area version control system"
+    },
+    {
+      "id": "W184466170",
+      "title": "Using Versioning to Simplify the Implementation of a Highly-Available File System"
+    },
+    {
+      "id": "W2126666837",
+      "title": "Beyond block I/O"
+    },
+    {
+      "id": "W2163764374",
+      "title": "Improving file system performance with adaptive methods"
+    },
+    {
+      "id": "W165738118",
+      "title": "The Design of Large-Scale, Do-It-Yourself RAIDs"
+    },
+    {
+      "id": "W1704177668",
+      "title": "Swarm: a log-structured storage system for Linux"
+    },
+    {
+      "id": "W1819000047",
+      "title": "Policy driven replication"
+    },
+    {
+      "id": "W1876360099",
+      "title": "HAMFS file system"
+    },
+    {
+      "id": "W2057840203",
+      "title": "Studies on striping and buffer caching issues for the software RAID file system"
+    },
+    {
+      "id": "W2120034920",
+      "title": "Server recovery using naturally replicated state: a case study"
+    },
+    {
+      "id": "W2136118196",
+      "title": "Parity-distribution: a shortcut to reliable cluster computing system"
+    },
+    {
+      "id": "W2184434347",
+      "title": "Exploiting direct-access networking in network-attached storage systems"
+    },
+    {
+      "id": "W613409586",
+      "title": "Metadata Efficiency in a Comprehensive Versioning File System (CMU-CS-02-145)"
+    },
+    {
+      "id": "W113155572",
+      "title": "Fault-Tolerance Issues of Local Area Multiprocessor (LAMP) Storage Subsystem"
+    },
+    {
+      "id": "W1488859919",
+      "title": "File Declustering for Efficient Parallel I/O on Networks of Workstations"
+    },
+    {
+      "id": "W1567005367",
+      "title": "A Cluster LVM for SAN Environments"
+    },
+    {
+      "id": "W1971767025",
+      "title": "Distributed file systems and distributed memory"
+    },
+    {
+      "id": "W2084704055",
+      "title": "Research and design of a self-managing storage cluster"
+    },
+    {
+      "id": "W2146520711",
+      "title": "Design of a media service provider architecture for the Internet"
+    },
+    {
+      "id": "W2155199867",
+      "title": "A Reliable Data Management Method for Parallel File System"
+    },
+    {
+      "id": "W2162165301",
+      "title": "RAAC: an architecture for scalable, reliable storage in clusters"
+    },
+    {
+      "id": "W2381192654",
+      "title": "INTRODUCTION TO MULTIPROCESSOR I/O"
+    },
+    {
+      "id": "W339912396",
+      "title": "Decentralized Storage Consistency via Versioning Servers (CMU-CS-02-180)"
+    },
+    {
+      "id": "W1013715066",
+      "title": "Estudo de sistemas de arquivos estruturados em IOG e uma proposta de implementa\u00e7\u00e3o para o ambiente LINUX"
+    },
+    {
+      "id": "W1470514",
+      "title": "Expandable NAS (X-NAS) and Its Autonomic File Redistribution Policy"
+    },
+    {
+      "id": "W1531735242",
+      "title": "Hyfs: design and implementation of a reliable file system"
+    },
+    {
+      "id": "W1822920286",
+      "title": "SARCNFS: Self-Adaptive Redundancy Clustered NAS File System"
+    },
+    {
+      "id": "W187516552",
+      "title": "Failure Characteristics and Soft Error Behavior in a Large Storage System"
+    },
+    {
+      "id": "W1968580011",
+      "title": "Reference implementation of scalable I/O low-level API on Intel Paragon"
+    },
+    {
+      "id": "W1983178400",
+      "title": "TOFF-2: A high-performance fault-tolerant file service"
+    },
+    {
+      "id": "W2047218210",
+      "title": "A Multistriped Checkpointing Scheme for the Fault-tolerant Cluster Computers"
+    },
+    {
+      "id": "W2107818226",
+      "title": "Application-controllable policies in the NSM distributed mass storage system"
+    },
+    {
+      "id": "W210833304",
+      "title": "Examining Semantics In Multi-Protocol Network File Systems (CMU-CS-02-103)"
+    },
+    {
+      "id": "W2114245323",
+      "title": "Software RAID Technology for cluster environments Yoshitake Shinkai, Tetsutaro Maruyama, Naomi Yoshizawa"
+    },
+    {
+      "id": "W2123084459",
+      "title": "Ess: A New Storage Architecture for Mid/Large Raid"
+    },
+    {
+      "id": "W2137378350",
+      "title": "A self-adaptation, high availability cluster file system for network applications"
+    },
+    {
+      "id": "W2148498187",
+      "title": "The Design and Implementation of the Wave Transactional Filesystem"
+    },
+    {
+      "id": "W2157239760",
+      "title": "Phaeton: a log-based architecture for high performance file server design"
+    },
+    {
+      "id": "W2159993880",
+      "title": "Customizing the swarm storage system using agents"
+    },
+    {
+      "id": "W2170215875",
+      "title": "High Reliability and Flexibility Storage Cluster in Decentralized Organization"
+    },
+    {
+      "id": "W2180554526",
+      "title": "RALD: Reliable Transactional Software Controller for Redundancy Array of Log Structured Disks"
+    },
+    {
+      "id": "W2232095774",
+      "title": "Exploiting Heterogeneity in Distributed Software Frameworks"
+    },
+    {
+      "id": "W2246755268",
+      "title": "Consistency of Replicated Log for Service Recovery"
+    },
+    {
+      "id": "W2268316875",
+      "title": "Optimizations for Energy-Aware, High-Performance and Reliable Distributed Storage Systems"
+    },
+    {
+      "id": "W2418910760",
+      "title": "Distributed access to parallel file systems."
+    },
+    {
+      "id": "W2535194862",
+      "title": "Using PI/OT to support complex parallel I/O"
+    },
+    {
+      "id": "W30503022",
+      "title": "HA-PVFS : A PVFS File System supporting High Data Availability Adaptive to Temporal Locality"
+    },
+    {
+      "id": "W3206842558",
+      "title": "Toward Uncensorable, Anonymous and Private Access Over Satoshi Blockchains"
+    },
+    {
+      "id": "W4205417764",
+      "title": "Redundant Arrays of Independent Disks - RAID"
+    },
+    {
+      "id": "W4205833466",
+      "title": "Bibliography"
+    },
+    {
+      "id": "W4211018903",
+      "title": "Storage Systems*"
+    },
+    {
+      "id": "W7214222216",
+      "title": "Interposed request routing for scalable network storage"
+    },
+    {
+      "id": "W771661658",
+      "title": "Analysis and optimization of question answering systems"
+    }
+  ]
+}

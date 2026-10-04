@@ -1,0 +1,37 @@
+{
+  "id": "W4221140037",
+  "title": "An Efficient Approach to Move Elements in a Distributed Geo-Replicated Tree",
+  "doi": "https://doi.org/10.48550/arxiv.2203.10285",
+  "publication_date": "2022-03-19",
+  "publication_year": 2022,
+  "type": "conference-paper",
+  "cited_by_count": 0,
+  "authors": [
+    "Parwat Singh Anjana",
+    "Adithya Rajesh Chandrassery",
+    "Sathya Peri"
+  ],
+  "venue": "Research Archive of Indian Institute of Technology Hyderabad (Indian Institute of Technology Hyderabad)",
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "green",
+    "oa_url": "https://arxiv.org/pdf/2203.10285",
+    "any_repository_has_fulltext": true
+  },
+  "has_content": {
+    "pdf": true,
+    "grobid_xml": true
+  },
+  "content_urls": {
+    "pdf": "https://content.openalex.org/works/W4221140037.pdf",
+    "grobid_xml": "https://content.openalex.org/works/W4221140037.grobid-xml"
+  },
+  "abstract": "Replicated tree data structures are extensively used in collaborative applications and distributed file systems, where clients often perform move operations. Local move operations at different replicas may be safe. However, remote move operations may not be safe. When clients perform arbitrary move operations concurrently on different replicas, it could result in various bugs, making this operation challenging to implement. Previous work has revealed bugs such as data duplication and cycling in replicated trees. In this paper, we present an efficient algorithm to perform move operations on the distributed replicated tree while ensuring eventual consistency. The proposed technique is primarily concerned with resolving conflicts efficiently, requires no interaction between replicas, and works well with network partitions. We use the last write win semantics for conflict resolution based on globally unique timestamps of operations. The proposed solution requires only one compensation operation to avoid cycles being formed when move operations are applied. The proposed approach achieves an effective speedup of 68.19$\\times$ over the state-of-the-art approach in a geo-replicated setting on Microsoft Azure standard instances at three different continents.",
+  "topics": [
+    "Distributed systems and fault tolerance",
+    "Distributed and Parallel Computing Systems",
+    "Advanced Data Storage Technologies"
+  ],
+  "references": [],
+  "cited_by": []
+}
