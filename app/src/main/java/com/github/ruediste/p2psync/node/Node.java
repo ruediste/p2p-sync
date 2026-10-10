@@ -71,7 +71,7 @@ public class Node {
 
         var data = new NodeUserData();
 
-        data.localClock = new LocalClock(nr, VectorClock.empty());
+        data.localClock = new LocalClock(nr, new VectorClock());
         data.localClock.prepareModify();
 
         data.userKey = Ed25519PrivateKey.generateKeyPair();

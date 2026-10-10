@@ -11,54 +11,33 @@ import com.github.ruediste.p2psync.proto.Sync;
 public final class VectorClock {
     private static final AtomicLong nextTag = new AtomicLong();
 
-    public static class ClockValue {
-        public long value;
-        public long tag;
 
-        public ClockValue() {
-            this.value = 0L;
-            this.tag = nextTag.getAndIncrement();
-        }
-
-        @Override
-        public String toString() {
-            return value + "@" + tag;
-        }
-    }
-
-    private Map<Integer, ClockValue> values;
+    private Map<Integer, Long> values;
 
     public VectorClock() {
         this.values = new TreeMap<>();
     }
 
+    public static VectorClock empty() {
+        return new VectorClock();
+    }
+    
     private VectorClock(VectorClock other) {
         this.values = new TreeMap<>(other.values);
     }
 
     /** Counter of the given {@code nodeNr}, 0 if absent. */
-    public Optional<ClockValue> get(int nr) {
-        return Optional.ofNullable(values.get(nr));
+    public long get(int nr) {
+        return Optional.ofNullable(values.get(nr)).orElse(0L);
     }
 
-    public void resetTag(int nr) {
-        var clockValue = values.get(nr);
-        if (clockValue != null) {
-            clockValue.tag = nextTag.getAndIncrement();
-            clockValue.value = 0;
-        }
+    public void reset(int nr) {
+        values.put(nr, 0L);
     }
 
     /** Returns a clock with the counter of {@code nr} incremented by one. */
     public void increment(int nr) {
-        values.merge(nr, new ClockValue() {
-            {
-                value = 1L;
-            }
-        }, (old, increment) -> {
-            old.value += increment.value;
-            return old;
-        });
+        values.merge(nr, 1L, Long::sum);
     }
 
     /**
@@ -72,12 +51,7 @@ public final class VectorClock {
                     if (ownClock == null) {
                         values.put(otherKey, otherClock);
                     } else {
-                        if (ownClock.tag != otherClock.tag) {
-                            ownClock.tag = nextTag.getAndIncrement();
-                            ownClock.value = 0;
-                        } else {
-                            ownClock.value = Math.max(ownClock.value, otherClock.value);
-                        }
+                        values.put(otherKey, Math.max(ownClock, otherClock));
                     }
                 });
     }
@@ -100,8 +74,8 @@ public final class VectorClock {
             int ownKey = ownEntry != null ? ownEntry.getKey() : Integer.MAX_VALUE;
             int otherKey = otherEntry != null ? otherEntry.getKey() : Integer.MAX_VALUE;
 
-            ClockValue ownValue = null;
-            ClockValue otherValue = null;
+            Long ownValue = null;
+            Long otherValue = null;
 
             if (otherEntry == null || (ownEntry != null && ownKey < otherKey)) {
                 ownValue = ownEntry.getValue();
@@ -121,13 +95,9 @@ public final class VectorClock {
             if (ownValue != null && otherValue == null) {
                 anyGreater = true;
             } else {
-                if (ownValue.tag != otherValue.tag) {
-                    return ClockRelation.CONCURRENT;
-                }
-
-                if (ownValue.value < otherValue.value)
+                if (ownValue < otherValue)
                     anyLess = true;
-                if (ownValue.value > otherValue.value)
+                if (ownValue > otherValue)
                     anyGreater = true;
             }
 
@@ -165,7 +135,7 @@ public final class VectorClock {
      * {@code mapping.get(nr)}; entries without a mapping are left unchanged.
      */
     public void remap(Map<Integer, Integer> mapping) {
-        var newValues = new TreeMap<Integer, ClockValue>();
+        var newValues = new TreeMap<Integer, Long>();
         values.entrySet().forEach(x -> newValues.put(mapping.getOrDefault(x.getKey(), x.getKey()), x.getValue()));
         this.values = newValues;
     }
