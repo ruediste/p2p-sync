@@ -1,4 +1,4 @@
-package com.github.ruediste.p2psync.atomicSpace;
+package com.github.ruediste.p2psync.storage;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Random;
 
 import org.junit.After;
@@ -199,6 +200,121 @@ public class AtomicSpaceTest {
         space.writeDirect(data, 4096);
 
         assertArrayEquals(data, space.read(4096, data.length));
+    }
+
+    @Test
+    public void writeFillingWalCapacitySucceeds() throws IOException {
+        space.open(path);
+
+        // 14 full blocks fit within the 16-block WAL area
+        byte[] data = generate(14 * AtomicSpace.WAL_BLOCK_SIZE, 81);
+        space.write(data, 0);
+        space.commit();
+
+        assertArrayEquals(data, space.read(0, data.length));
+    }
+
+    @Test
+    public void walOverflowFails() throws IOException {
+        space.open(path);
+
+        byte[] committed = generate(1000, 71);
+        space.write(committed, 0);
+        space.commit();
+
+        // fill the WAL beyond its capacity without committing
+        byte[] overflow = generate(17 * AtomicSpace.WAL_BLOCK_SIZE, 72);
+        try {
+            space.write(overflow, 1000);
+            fail("expected exception");
+        } catch (Exception e) {
+            // expected: WAL overflow detected
+        }
+
+        // reopen: committed data is preserved, uncommitted overflow is discarded
+        space = new AtomicSpace();
+        space.open(path);
+        assertArrayEquals(committed, space.read(0, committed.length));
+
+        // and the space is usable again
+        byte[] committed2 = generate(1000, 73);
+        space.write(committed2, 0);
+        space.commit();
+        assertArrayEquals(committed2, space.read(0, committed2.length));
+    }
+
+    @Test
+    public void rollbackDiscardsUncommittedWrites() throws IOException {
+        space.open(path);
+
+        byte[] original = generate(4096, 91);
+        space.writeDirect(original, 0);
+        space.commit();
+
+        // uncommitted writes, large enough to spill into multiple WAL blocks
+        byte[] uncommitted = generate(2 * AtomicSpace.WAL_BLOCK_SIZE, 92);
+        space.write(uncommitted, 0);
+
+        space.rollback();
+
+        // data area is unchanged after rollback
+        assertArrayEquals(original, space.read(0, original.length));
+
+        // rollback is durable: a reopen still shows the old content
+        space = new AtomicSpace();
+        space.open(path);
+        assertArrayEquals(original, space.read(0, original.length));
+
+        // and the space is usable again
+        byte[] committed = generate(1000, 93);
+        space.write(committed, 0);
+        space.commit();
+        assertArrayEquals(committed, space.read(0, committed.length));
+    }
+
+    @Test
+    public void readSeesUncommittedWrites() throws IOException {
+        space.open(path);
+
+        byte[] committed = generate(4096, 101);
+        space.writeDirect(committed, 0);
+        space.commit();
+
+        byte[] uncommitted = generate(1000, 102);
+        space.write(uncommitted, 500);
+
+        // read sees the uncommitted write instead of the committed content
+        assertArrayEquals(uncommitted, space.read(500, uncommitted.length));
+
+        // reads overlapping the uncommitted write mix both states
+        assertArrayEquals(Arrays.copyOf(committed, 500), space.read(0, 500));
+        assertArrayEquals(uncommitted, space.read(500, 1000));
+        assertArrayEquals(Arrays.copyOfRange(committed, 1500, 4096), space.read(1500, 2596));
+
+        // partial overlap in the middle of the write
+        byte[] middle = space.read(600, 300);
+        assertArrayEquals(Arrays.copyOfRange(uncommitted, 100, 400), middle);
+
+        // after commit, the data area reflects the write
+        space.commit();
+        assertArrayEquals(uncommitted, space.read(500, uncommitted.length));
+    }
+
+    @Test
+    public void uncommittedWritesApplyInWriteOrder() throws IOException {
+        space.open(path);
+
+        byte[] first = generate(1000, 111);
+        space.write(first, 0);
+        byte[] second = generate(1000, 112);
+        space.write(second, 0);
+
+        // the later write wins in the overlay
+        assertArrayEquals(second, space.read(0, 1000));
+
+        space.rollback();
+        // after rollback the writes are gone
+        assertArrayEquals(new byte[1000], space.read(0, 1000));
     }
 
     @Test

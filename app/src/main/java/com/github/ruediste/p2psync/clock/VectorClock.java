@@ -4,13 +4,10 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.ruediste.p2psync.proto.Sync;
 
 public final class VectorClock {
-    private static final AtomicLong nextTag = new AtomicLong();
-
 
     private Map<Integer, Long> values;
 
@@ -21,7 +18,7 @@ public final class VectorClock {
     public static VectorClock empty() {
         return new VectorClock();
     }
-    
+
     private VectorClock(VectorClock other) {
         this.values = new TreeMap<>(other.values);
     }

@@ -1,10 +1,12 @@
-package com.github.ruediste.p2psync.atomicSpace;
+package com.github.ruediste.p2psync.storage;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.zip.CRC32;
 
 public class AtomicSpace implements AutoCloseable {
@@ -76,6 +78,23 @@ public class AtomicSpace implements AutoCloseable {
 
     private static final int WAL_OPERATION_HEADER_SIZE = 8 + 4; // Offset (8 bytes) + Length (4 bytes)
     private static final int COMMIT_OPERATION_LENGTH = 0;
+
+    /**
+     * In-memory overlay of the uncommitted writes of the current transaction,
+     * allowing reads to observe data not yet applied to the data area. Cleared
+     * on commit and rollback.
+     */
+    private static final class PendingWrite {
+        final long positionInDataArea;
+        final byte[] data;
+
+        PendingWrite(long positionInDataArea, byte[] data) {
+            this.positionInDataArea = positionInDataArea;
+            this.data = data;
+        }
+    }
+
+    private final List<PendingWrite> pendingWrites = new ArrayList<>();
 
     private RandomAccessFile file;
 
@@ -170,54 +189,76 @@ public class AtomicSpace implements AutoCloseable {
         }
     }
 
-    public void write(byte[] data, long positionInDataArea) throws IOException {
-        // Write data to the WAL first, then to the data area at the specified offset
+    public void write(byte[] data, long positionInDataArea) {
+        pendingWrites.add(new PendingWrite(positionInDataArea, data.clone()));
+        try {
+            // Write data to the WAL first, then to the data area at the specified offset
 
-        // Create WAL operations. Split data if the operation exceeds the remaining
-        // space in the current WAL block.
+            // Create WAL operations. Split data if the operation exceeds the remaining
+            // space in the current WAL block.
 
-        int offset = 0;
-        while (offset < data.length) {
+            int offset = 0;
+            while (offset < data.length) {
 
-            // Check if there is enough space in the current WAL block for the next
-            // operation, including 16 bytes for a minimal sensible operation length
-            if (currentWalBlock.position() + WAL_OPERATION_HEADER_SIZE + 16 >= WAL_BLOCK_SIZE
+                // Check if there is enough space in the current WAL block for the next
+                // operation, including 16 bytes for a minimal sensible operation length
+                if (currentWalBlock.position() + WAL_OPERATION_HEADER_SIZE + 16 >= WAL_BLOCK_SIZE
+                        - WAL_BLOCK_CHECKSUM_SIZE) {
+                    writeCurrentWalBlock();
+                }
+
+                int nextOperationLength = Math.min(data.length - offset,
+                        WAL_BLOCK_SIZE - WAL_BLOCK_CHECKSUM_SIZE - currentWalBlock.position()
+                                - WAL_OPERATION_HEADER_SIZE);
+
+                // write operation into current wal block
+                currentWalBlock.putLong(positionInDataArea + offset);
+                currentWalBlock.putInt(nextOperationLength);
+                currentWalBlock.put(data, offset, nextOperationLength);
+                offset += nextOperationLength;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void commit() {
+        try {
+            // Write a commit operation to the WAL
+            if (currentWalBlock.position() + WAL_OPERATION_HEADER_SIZE >= WAL_BLOCK_SIZE
                     - WAL_BLOCK_CHECKSUM_SIZE) {
                 writeCurrentWalBlock();
             }
 
-            int nextOperationLength = Math.min(data.length - offset,
-                    WAL_BLOCK_SIZE - WAL_BLOCK_CHECKSUM_SIZE - currentWalBlock.position()
-                            - WAL_OPERATION_HEADER_SIZE);
+            // write commit operation into current wal block
+            currentWalBlock.putLong(0);
+            currentWalBlock.putInt(COMMIT_OPERATION_LENGTH);
 
-            // write operation into current wal block
-            currentWalBlock.putLong(positionInDataArea + offset);
-            currentWalBlock.putInt(nextOperationLength);
-            currentWalBlock.put(data, offset, nextOperationLength);
-            offset += nextOperationLength;
+            // Write the current WAL block to the file to ensure the commit operation is
+            // persisted
+            writeCurrentWalBlock();
+
+            // apply the changes from the WAL to the data area
+            applyWal(null);
+
+            // clear the WAL by incrementing the current generation in the WAL header
+            clearWal();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public void commit() throws IOException {
-        // Write a commit operation to the WAL
-        if (currentWalBlock.position() + WAL_OPERATION_HEADER_SIZE >= WAL_BLOCK_SIZE
-                - WAL_BLOCK_CHECKSUM_SIZE) {
-            writeCurrentWalBlock();
+    /**
+     * Discard all uncommitted writes, reverting to the state of the last commit.
+     * The WAL is cleared, so pending operations are dropped without being applied
+     * to the data area.
+     */
+    public void rollback() {
+        try {
+            clearWal();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-
-        // write commit operation into current wal block
-        currentWalBlock.putLong(0);
-        currentWalBlock.putInt(COMMIT_OPERATION_LENGTH);
-
-        // Write the current WAL block to the file to ensure the commit operation is
-        // persisted
-        writeCurrentWalBlock();
-
-        // apply the changes from the WAL to the data area
-        applyWal(null);
-
-        // clear the WAL by incrementing the current generation in the WAL header
-        clearWal();
     }
 
     /**
@@ -235,6 +276,9 @@ public class AtomicSpace implements AutoCloseable {
         nextWalBlockIndex = 0;
         currentWalBlock.clear();
         currentWalBlock.position(WAL_BLOCK_HEADER_SIZE);
+
+        // the writes are now durable in the data area
+        pendingWrites.clear();
     }
 
     /**
@@ -367,6 +411,11 @@ public class AtomicSpace implements AutoCloseable {
     }
 
     private void writeCurrentWalBlock() throws IOException {
+        // fail instead of overrunning the WAL area into the data area
+        if (nextWalBlockIndex >= walBlockCount) {
+            throw new IOException("WAL overflow: no free WAL blocks left, transaction too large. Rollback required.");
+        }
+
         // set the generation
         currentWalBlock.putInt(0, currentGeneration);
         // set the data length
@@ -400,23 +449,48 @@ public class AtomicSpace implements AutoCloseable {
         return FILE_HEADER_SIZE + WAL_HEADER_SIZE + WAL_BLOCK_SIZE * blockIndex;
     }
 
-    public void writeDirect(byte[] data, long offset) throws IOException {
-        // write directly to the data area, bypassing the WAL
-        file.getChannel().write(ByteBuffer.wrap(data), dataAreaStart + offset);
+    public void writeDirect(byte[] data, long offset) {
+        try {
+            // write directly to the data area, bypassing the WAL
+            file.getChannel().write(ByteBuffer.wrap(data), dataAreaStart + offset);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public byte[] read(long positionInDataArea, int length) throws IOException {
-        byte[] result = new byte[length];
-        ByteBuffer buffer = ByteBuffer.wrap(result);
-        long position = dataAreaStart + positionInDataArea;
-        while (buffer.hasRemaining()) {
-            int bytesRead = file.getChannel().read(buffer, position);
-            if (bytesRead < 0) {
-                throw new IOException("Unexpected end of file while reading data area");
+    public byte[] read(long positionInDataArea, int length) {
+        try {
+
+            byte[] result = new byte[length];
+            ByteBuffer buffer = ByteBuffer.wrap(result);
+            long position = dataAreaStart + positionInDataArea;
+            while (buffer.hasRemaining()) {
+                int bytesRead = file.getChannel().read(buffer, position);
+                if (bytesRead < 0) {
+                    throw new IOException("Unexpected end of file while reading data area");
+                }
+                position += bytesRead;
             }
-            position += bytesRead;
+
+            // overlay the uncommitted writes of the current transaction
+            for (PendingWrite pending : pendingWrites) {
+                long start = Math.max(pending.positionInDataArea, positionInDataArea);
+                long end = Math.min(pending.positionInDataArea + pending.data.length,
+                        positionInDataArea + length);
+                if (start < end) {
+                    System.arraycopy(pending.data, (int) (start - pending.positionInDataArea),
+                            result, (int) (start - positionInDataArea), (int) (end - start));
+                }
+            }
+
+            return result;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return result;
+    }
+
+    public ByteBuffer readBuffer(long positionInDataArea, int length) {
+        return ByteBuffer.wrap(read(positionInDataArea, length));
     }
 
     private void performRecovery() throws IOException {
