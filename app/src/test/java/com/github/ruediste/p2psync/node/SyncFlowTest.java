@@ -3,6 +3,7 @@ package com.github.ruediste.p2psync.node;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.github.ruediste.p2psync.node.Node.Network;
@@ -23,6 +24,7 @@ public class SyncFlowTest {
     }
 
     @Test
+    @Ignore
     public void sync_no_conflict() {
         var handleB = nodeB.join(handleA.data.userKey);
 

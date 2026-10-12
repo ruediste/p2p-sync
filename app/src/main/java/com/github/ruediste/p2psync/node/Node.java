@@ -2,13 +2,9 @@ package com.github.ruediste.p2psync.node;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.github.ruediste.p2psync.clock.LocalClock;
-import com.github.ruediste.p2psync.clock.NodeNrMap;
-import com.github.ruediste.p2psync.clock.VectorClock;
 import com.github.ruediste.p2psync.libp2p.core.PeerId;
 import com.github.ruediste.p2psync.libp2p.crypto.PrivKey;
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
@@ -54,7 +50,6 @@ public class Node {
     }
 
     public static class NodeUserData {
-        public LocalClock localClock;
         public BlockId rootId;
         public JoinId joinId;
         public PrivKey userKey;
@@ -65,32 +60,18 @@ public class Node {
     }
 
     public NodeUserHandle createNewUser() {
-        var map = new NodeNrMap();
-        var joinId = map.join(peerId);
-        var nr = map.getNr(joinId).get();
 
         var data = new NodeUserData();
-
-        data.localClock = new LocalClock(nr, new VectorClock());
-        data.localClock.prepareModify();
 
         data.userKey = Ed25519PrivateKey.generateKeyPair();
         users.put(data.userId(), data);
         var handle = new NodeUserHandle(this, data);
 
-        var rootDir = DirectoryHandle.empty(handle, Optional.empty());
-
         var root = new DataUserRoot();
-        root.rootDirectoryId = storage.store(rootDir.toProto());
         root.userStatusMessage = "initial";
 
         var storageRoot = new StorageUserRoot();
-        storageRoot.clock = data.localClock.getAndClear();
         storageRoot.shardListId = new BlockId(new byte[] {});
-        storageRoot.dataRootBlockId = storage.store(root.toProto());
-        storageRoot.nodeNrMapId = storage.store(map.toProto());
-
-        data.rootId = storage.store(storageRoot.toProto());
         return handle;
     }
 
@@ -100,11 +81,6 @@ public class Node {
         var root = network.getStorageUserRoot(peer, userId);
 
         var data = new NodeUserData();
-        var map = NodeNrMap.from(network.getBlock(root.nodeNrMapId));
-        var joinId = map.join(peerId);
-        var nr = map.getNr(joinId).get();
-
-        data.localClock = new LocalClock(nr, root.clock);
         data.userKey = userKey;
         data.rootId = storage.store(root.toProto());
         users.put(userId, data);
