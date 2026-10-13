@@ -1,2 +1,6 @@
+/target/
 /upstream/
-research/openalex_api_key.txt
+/.settings/
+/.classpath
+/.project
+/bin/
