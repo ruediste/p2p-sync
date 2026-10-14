@@ -1,8 +1,8 @@
 package com.github.ruediste.p2psync.libp2p.core.multiaddr;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class VarintTest {
 
@@ -37,7 +37,8 @@ public class VarintTest {
 
     @Test
     public void matchesKnownEncodingOf300() {
-        // 300 = 0b1_0010_1100 -> low 7 bits 0101100 with continuation bit, then remaining bits
+        // 300 = 0b1_0010_1100 -> low 7 bits 0101100 with continuation bit, then
+        // remaining bits
         ByteBuf buf = ByteBuf.buffer();
         Varint.writeUvarint(buf, 300);
         assertEquals(2, buf.readableBytes());

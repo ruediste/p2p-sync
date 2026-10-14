@@ -3,8 +3,13 @@ package com.github.ruediste.p2psync.storage;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Service for managing B-Trees within the data storage system. The tree
@@ -21,31 +26,38 @@ import java.util.function.BiConsumer;
  * <p>
  * Modifications never overwrite existing tree blocks. Instead the affected path
  * is copied, old blocks are released and new blocks are allocated through the
- * {@link DataStorage}. A {@link Tree} therefore references the root of a
+ * {@link DataStorage}. A {@link BTree} therefore references the root of a
  * particular version of the tree; the caller is responsible for persisting the
  * root offset.
  */
-public class BTreeService {
+public class BTree implements Iterable<BTree.Entry> {
 
     private static final int HEADER_SIZE = 5; // nritems (4) + level (1)
     private static final int NODE_PTR_EXTRA = 8; // blockptr (8)
 
-    private final DataStorage dataStorage;
-
-    public BTreeService(DataStorage dataStorage) {
-        this.dataStorage = dataStorage;
+    /**
+     * Callback for decrementing the reference count of a block.
+     */
+    public static Consumer<Long> decrementRefCount(DataStorage dataStorage) {
+        return (offset) -> {
+            throw new UnsupportedOperationException("decrementRefCount not implemented");
+        };
     }
 
-    /** Root node type discriminator: level 0 is a leaf, level > 0 a node. */
-    public static class Tree {
-        public final DataStorage.BlockArea kind;
-        public final int keySize;
-        public long rootOffset;
+    private final DataStorage dataStorage;
+    public final DataStorage.Area kind;
+    public final int keySize;
+    public long rootOffset;
 
-        public Tree(DataStorage.BlockArea kind, int keySize) {
-            this.kind = kind;
-            this.keySize = keySize;
-        }
+    public BTree(DataStorage dataStorage, DataStorage.Area kind, int keySize) {
+        this(dataStorage, kind, keySize, 0);
+    }
+
+    public BTree(DataStorage dataStorage, DataStorage.Area kind, int keySize, long rootOffset) {
+        this.dataStorage = dataStorage;
+        this.kind = kind;
+        this.keySize = keySize;
+        this.rootOffset = rootOffset;
     }
 
     public static class Entry {
@@ -58,36 +70,30 @@ public class BTreeService {
         }
     }
 
-    public Tree createTree(DataStorage.BlockArea kind, int keySize) {
-        Tree tree = new Tree(kind, keySize);
-        tree.rootOffset = 0;
-        return tree;
-    }
-
     // ------------------------------------------------------------------
     // Lookup
     // ------------------------------------------------------------------
 
     /** Returns the value associated with {@code key}, or {@code null}. */
-    public byte[] get(Tree tree, byte[] key) {
-        checkKey(tree, key);
-        long off = tree.rootOffset;
+    public byte[] get(byte[] key) {
+        checkKey(key);
+        long off = rootOffset;
         while (off != 0) {
-            byte[] block = dataStorage.readBlock(off, tree.kind);
+            byte[] block = dataStorage.readBlock(off, kind);
             if (level(block) == 0) {
-                int idx = leafSearch(block, tree.keySize, key);
+                int idx = leafSearch(block, keySize, key);
                 if (idx < 0)
                     return null;
-                return leafValue(block, tree.keySize, idx);
+                return leafValue(block, keySize, idx);
             }
-            List<Ptr> ptrs = parseNode(block, tree.keySize);
+            List<Ptr> ptrs = parseNode(block, keySize);
             off = ptrs.get(findChild(ptrs, key)).blockptr;
         }
         return null;
     }
 
-    public boolean contains(Tree tree, byte[] key) {
-        return get(tree, key) != null;
+    public boolean contains(byte[] key) {
+        return get(key) != null;
     }
 
     // ------------------------------------------------------------------
@@ -98,22 +104,22 @@ public class BTreeService {
      * Insert or replace the value for {@code key}. The tree's root offset is
      * updated in place.
      */
-    public void put(Tree tree, byte[] key, byte[] value) {
-        checkKey(tree, key);
-        if (tree.rootOffset == 0) {
+    public void put(byte[] key, byte[] value) {
+        checkKey(key);
+        if (rootOffset == 0) {
             List<Entry> entries = new ArrayList<>();
             entries.add(new Entry(key.clone(), value.clone()));
-            tree.rootOffset = writeNewLeaf(tree, entries);
+            rootOffset = writeNewLeaf(entries);
             return;
         }
-        Result res = insertInto(tree, tree.rootOffset, key, value);
+        Result res = insertInto(rootOffset, key, value);
         if (res.splitOffset != 0) {
             List<Ptr> ptrs = new ArrayList<>();
             ptrs.add(new Ptr(res.firstKey, res.newOffset));
             ptrs.add(new Ptr(res.splitKey, res.splitOffset));
-            tree.rootOffset = writeNewNode(tree, ptrs, 1);
+            rootOffset = writeNewNode(ptrs, 1);
         } else {
-            tree.rootOffset = res.newOffset;
+            rootOffset = res.newOffset;
         }
     }
 
@@ -124,11 +130,11 @@ public class BTreeService {
         byte[] splitKey;
     }
 
-    private Result insertInto(Tree tree, long offset, byte[] key, byte[] value) {
-        byte[] block = dataStorage.readBlock(offset, tree.kind);
+    private Result insertInto(long offset, byte[] key, byte[] value) {
+        byte[] block = dataStorage.readBlock(offset, kind);
         Result res = new Result();
         if (level(block) == 0) {
-            List<Entry> entries = parseLeaf(block, tree.keySize);
+            List<Entry> entries = parseLeaf(block, keySize);
             int idx = searchEntries(entries, key);
             if (idx >= 0) {
                 entries.set(idx, new Entry(entries.get(idx).key, value.clone()));
@@ -137,25 +143,25 @@ public class BTreeService {
                 entries.add(ins, new Entry(key.clone(), value.clone()));
             }
 
-            if (fitsLeaf(tree, entries)) {
-                res.newOffset = writeNewLeaf(tree, entries);
+            if (fitsLeaf(entries)) {
+                res.newOffset = writeNewLeaf(entries);
                 res.firstKey = entries.get(0).key;
             } else {
-                int k = chooseLeafSplit(tree, entries);
+                int k = chooseLeafSplit(entries);
                 List<Entry> left = new ArrayList<>(entries.subList(0, k));
                 List<Entry> right = new ArrayList<>(entries.subList(k, entries.size()));
-                res.newOffset = writeNewLeaf(tree, left);
-                res.splitOffset = writeNewLeaf(tree, right);
+                res.newOffset = writeNewLeaf(left);
+                res.splitOffset = writeNewLeaf(right);
                 res.firstKey = left.get(0).key;
                 res.splitKey = right.get(0).key;
             }
-            dataStorage.freeBlock(offset, tree.kind);
+            dataStorage.freeBlock(offset, kind);
             return res;
         }
 
-        List<Ptr> ptrs = parseNode(block, tree.keySize);
+        List<Ptr> ptrs = parseNode(block, keySize);
         int child = findChild(ptrs, key);
-        Result childRes = insertInto(tree, ptrs.get(child).blockptr, key, value);
+        Result childRes = insertInto(ptrs.get(child).blockptr, key, value);
         ptrs.get(child).blockptr = childRes.newOffset;
         ptrs.get(child).key = childRes.firstKey;
         if (childRes.splitOffset != 0) {
@@ -163,19 +169,19 @@ public class BTreeService {
                     new Ptr(childRes.splitKey, childRes.splitOffset));
         }
 
-        if (fitsNode(tree, ptrs)) {
-            res.newOffset = writeNewNode(tree, ptrs, level(block));
+        if (fitsNode(ptrs)) {
+            res.newOffset = writeNewNode(ptrs, level(block));
             res.firstKey = ptrs.get(0).key;
         } else {
             int mid = ptrs.size() / 2;
             List<Ptr> left = new ArrayList<>(ptrs.subList(0, mid));
             List<Ptr> right = new ArrayList<>(ptrs.subList(mid, ptrs.size()));
-            res.newOffset = writeNewNode(tree, left, level(block));
-            res.splitOffset = writeNewNode(tree, right, level(block));
+            res.newOffset = writeNewNode(left, level(block));
+            res.splitOffset = writeNewNode(right, level(block));
             res.firstKey = left.get(0).key;
             res.splitKey = right.get(0).key;
         }
-        dataStorage.freeBlock(offset, tree.kind);
+        dataStorage.freeBlock(offset, kind);
         return res;
     }
 
@@ -184,53 +190,71 @@ public class BTreeService {
     // ------------------------------------------------------------------
 
     /** Remove {@code key} if present. Returns true if an entry was removed. */
-    public boolean remove(Tree tree, byte[] key) {
-        checkKey(tree, key);
-        if (tree.rootOffset == 0)
+    public boolean remove(byte[] key) {
+        checkKey(key);
+        if (rootOffset == 0)
             return false;
-        Result res = removeFrom(tree, tree.rootOffset, key);
+        Result res = removeFrom(rootOffset, key);
         if (res == null)
             return false;
-        tree.rootOffset = res.newOffset;
+        rootOffset = res.newOffset;
 
         // Collapse a root node that is left with a single child.
-        while (tree.rootOffset != 0) {
-            byte[] block = dataStorage.readBlock(tree.rootOffset, tree.kind);
+        while (rootOffset != 0) {
+            byte[] block = dataStorage.readBlock(rootOffset, kind);
             if (level(block) == 0)
                 break;
-            List<Ptr> ptrs = parseNode(block, tree.keySize);
+            List<Ptr> ptrs = parseNode(block, keySize);
             if (ptrs.size() != 1)
                 break;
             long child = ptrs.get(0).blockptr;
-            dataStorage.freeBlock(tree.rootOffset, tree.kind);
-            tree.rootOffset = child;
+            dataStorage.freeBlock(rootOffset, kind);
+            rootOffset = child;
         }
         return true;
     }
 
-    private Result removeFrom(Tree tree, long offset, byte[] key) {
-        byte[] block = dataStorage.readBlock(offset, tree.kind);
+    /**
+     * Remove and return the first entry if present. Returns an empty Optional if
+     * the tree is empty.
+     */
+    public Optional<Entry> removeFirst() {
+        Iterator<Entry> iterator = iterator();
+        if (!iterator.hasNext())
+            return Optional.empty();
+        Entry first = iterator.next();
+        remove(first.key);
+        return Optional.of(first);
+    }
+
+    /**
+     * Removes {@code key} from the subtree rooted at {@code offset} using
+     * copy-on-write. Returns {@code null} if the key is absent; otherwise returns
+     * the replacement subtree root and its first key.
+     */
+    private Result removeFrom(long offset, byte[] key) {
+        byte[] block = dataStorage.readBlock(offset, kind);
         Result res = new Result();
         if (level(block) == 0) {
-            List<Entry> entries = parseLeaf(block, tree.keySize);
+            List<Entry> entries = parseLeaf(block, keySize);
             int idx = searchEntries(entries, key);
             if (idx < 0)
                 return null;
             entries.remove(idx);
             if (entries.isEmpty()) {
-                dataStorage.freeBlock(offset, tree.kind);
+                dataStorage.freeBlock(offset, kind);
                 res.newOffset = 0;
                 return res;
             }
-            res.newOffset = writeNewLeaf(tree, entries);
+            res.newOffset = writeNewLeaf(entries);
             res.firstKey = entries.get(0).key;
-            dataStorage.freeBlock(offset, tree.kind);
+            dataStorage.freeBlock(offset, kind);
             return res;
         }
 
-        List<Ptr> ptrs = parseNode(block, tree.keySize);
+        List<Ptr> ptrs = parseNode(block, keySize);
         int child = findChild(ptrs, key);
-        Result childRes = removeFrom(tree, ptrs.get(child).blockptr, key);
+        Result childRes = removeFrom(ptrs.get(child).blockptr, key);
         if (childRes == null)
             return null;
         if (childRes.newOffset == 0) {
@@ -240,13 +264,13 @@ public class BTreeService {
             ptrs.get(child).key = childRes.firstKey;
         }
         if (ptrs.isEmpty()) {
-            dataStorage.freeBlock(offset, tree.kind);
+            dataStorage.freeBlock(offset, kind);
             res.newOffset = 0;
             return res;
         }
-        res.newOffset = writeNewNode(tree, ptrs, level(block));
+        res.newOffset = writeNewNode(ptrs, level(block));
         res.firstKey = ptrs.get(0).key;
-        dataStorage.freeBlock(offset, tree.kind);
+        dataStorage.freeBlock(offset, kind);
         return res;
     }
 
@@ -254,39 +278,183 @@ public class BTreeService {
     // Iteration
     // ------------------------------------------------------------------
 
-    public void forEach(Tree tree, BiConsumer<byte[], byte[]> consumer) {
-        if (tree.rootOffset != 0)
-            walk(tree, tree.rootOffset, consumer);
+    public void forEach(BiConsumer<byte[], byte[]> consumer) {
+        if (rootOffset != 0)
+            walk(rootOffset, consumer);
+    }
+
+    @Override
+    public Iterator<Entry> iterator() {
+        if (rootOffset == 0)
+            return Collections.emptyIterator();
+
+        List<Frame> path = new ArrayList<>();
+        long offset = rootOffset;
+        byte[] block = dataStorage.readBlock(offset, kind);
+        while (level(block) != 0) {
+            List<Ptr> ptrs = parseNode(block, keySize);
+            path.add(new Frame(ptrs, 0));
+            offset = ptrs.get(0).blockptr;
+            block = dataStorage.readBlock(offset, kind);
+        }
+
+        return new BTreeIterator(new Position(path, parseLeaf(block, keySize), 0));
     }
 
     /**
      * Invoke {@code consumer} for the offset of every block (nodes and leaves)
      * that makes up the given tree.
      */
-    public void collectBlocks(Tree tree, java.util.function.LongConsumer consumer) {
-        if (tree.rootOffset != 0)
-            collectBlocks(tree, tree.rootOffset, consumer);
+    public void collectBlocks(java.util.function.LongConsumer consumer) {
+        if (rootOffset != 0)
+            collectBlocks(rootOffset, consumer);
     }
 
-    private void collectBlocks(Tree tree, long offset, java.util.function.LongConsumer consumer) {
+    private void collectBlocks(long offset, java.util.function.LongConsumer consumer) {
         consumer.accept(offset);
-        byte[] block = dataStorage.readBlock(offset, tree.kind);
+        byte[] block = dataStorage.readBlock(offset, kind);
         if (level(block) == 0)
             return;
-        for (Ptr p : parseNode(block, tree.keySize))
-            collectBlocks(tree, p.blockptr, consumer);
+        for (Ptr p : parseNode(block, keySize))
+            collectBlocks(p.blockptr, consumer);
     }
 
-    private void walk(Tree tree, long offset, BiConsumer<byte[], byte[]> consumer) {
-        byte[] block = dataStorage.readBlock(offset, tree.kind);
+    private void walk(long offset, BiConsumer<byte[], byte[]> consumer) {
+        byte[] block = dataStorage.readBlock(offset, kind);
         if (level(block) == 0) {
-            List<Entry> entries = parseLeaf(block, tree.keySize);
+            List<Entry> entries = parseLeaf(block, keySize);
             for (Entry e : entries)
                 consumer.accept(e.key, e.value);
             return;
         }
-        for (Ptr p : parseNode(block, tree.keySize))
-            walk(tree, p.blockptr, consumer);
+        for (Ptr p : parseNode(block, keySize))
+            walk(p.blockptr, consumer);
+    }
+
+    /**
+     * Returns an iterator whose first entry has the greatest key less than or
+     * equal to {@code key}, followed by all entries with greater keys in
+     * ascending unsigned lexicographic order. If no
+     * stored key is less than or equal to {@code key}, the iterator starts at the
+     * lowest key.
+     *
+     * @param key key to find the floor of; must have length {@link #keySize}
+     * @return the floor entry and all subsequent entries, or an empty iterator
+     */
+    public Iterator<Entry> floorOrLowestIterator(byte[] key) {
+        return floorIterator(key, true);
+    }
+
+    /**
+     * Returns an iterator whose first entry has the greatest key less than or
+     * equal to {@code key}, followed by all entries with greater keys in
+     * ascending unsigned lexicographic order. Returns an empty iterator if no
+     * stored key is less than or equal to {@code key}.
+     *
+     * @param key key to find the floor of; must have length {@link #keySize}
+     * @return the floor entry and all subsequent entries, or an empty iterator
+     */
+    public Iterator<Entry> floorIterator(byte[] key) {
+        return floorIterator(key, false);
+    }
+
+    private Iterator<Entry> floorIterator(byte[] key, boolean returnLowestIfNotFound) {
+        checkKey(key);
+        if (rootOffset == 0)
+            return Collections.emptyIterator();
+
+        List<Frame> path = new ArrayList<>();
+        long offset = rootOffset;
+        byte[] block = dataStorage.readBlock(offset, kind);
+        while (level(block) != 0) {
+            List<Ptr> ptrs = parseNode(block, keySize);
+            int childIndex = findChild(ptrs, key);
+            path.add(new Frame(ptrs, childIndex));
+            offset = ptrs.get(childIndex).blockptr;
+            block = dataStorage.readBlock(offset, kind);
+        }
+
+        List<Entry> entries = parseLeaf(block, keySize);
+        int search = searchEntries(entries, key);
+        int entryIndex = search >= 0 ? search : -search - 2;
+        if (entryIndex < 0)
+            if (returnLowestIfNotFound) {
+                entryIndex = 0;
+            } else {
+                return Collections.emptyIterator();
+            }
+        return new BTreeIterator(new Position(path, entries, entryIndex));
+    }
+
+    private static class Frame {
+        final List<Ptr> ptrs;
+        int childIndex;
+
+        Frame(List<Ptr> ptrs, int childIndex) {
+            this.ptrs = ptrs;
+            this.childIndex = childIndex;
+        }
+    }
+
+    private static class Position {
+        final List<Frame> path;
+        final List<Entry> entries;
+        final int entryIndex;
+
+        Position(List<Frame> path, List<Entry> entries, int entryIndex) {
+            this.path = path;
+            this.entries = entries;
+            this.entryIndex = entryIndex;
+        }
+    }
+
+    private class BTreeIterator implements Iterator<Entry> {
+        private Position position;
+
+        BTreeIterator(Position position) {
+            this.position = position;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return position != null;
+        }
+
+        @Override
+        public Entry next() {
+            if (position == null)
+                throw new NoSuchElementException();
+            Entry result = position.entries.get(position.entryIndex);
+            position = nextPosition(position);
+            return result;
+        }
+    }
+
+    private Position nextPosition(Position position) {
+        if (position.entryIndex + 1 < position.entries.size())
+            return new Position(position.path, position.entries, position.entryIndex + 1);
+
+        List<Frame> path = position.path;
+        for (int i = path.size() - 1; i >= 0; i--) {
+            Frame frame = path.get(i);
+            if (frame.childIndex + 1 >= frame.ptrs.size())
+                continue;
+
+            frame.childIndex++;
+            while (path.size() > i + 1)
+                path.remove(path.size() - 1);
+            long offset = frame.ptrs.get(frame.childIndex).blockptr;
+            byte[] block = dataStorage.readBlock(offset, kind);
+            while (level(block) != 0) {
+                List<Ptr> ptrs = parseNode(block, keySize);
+                path.add(new Frame(ptrs, 0));
+                offset = ptrs.get(0).blockptr;
+                block = dataStorage.readBlock(offset, kind);
+            }
+            return new Position(path, parseLeaf(block, keySize), 0);
+        }
+
+        return null;
     }
 
     // ------------------------------------------------------------------
@@ -306,25 +474,25 @@ public class BTreeService {
         return block[4] & 0xff;
     }
 
-    private boolean fitsLeaf(Tree tree, List<Entry> entries) {
-        long used = (long) entries.size() * (tree.keySize + 8);
+    private boolean fitsLeaf(List<Entry> entries) {
+        long used = (long) entries.size() * (keySize + 8);
         for (Entry e : entries)
             used += e.value.length;
-        return used <= dataStorage.blockSize(tree.kind) - HEADER_SIZE;
+        return used <= dataStorage.blockSize(kind) - HEADER_SIZE;
     }
 
-    private boolean fitsNode(Tree tree, List<Ptr> ptrs) {
-        return (long) ptrs.size() * (tree.keySize + NODE_PTR_EXTRA) <= dataStorage.blockSize(tree.kind) - HEADER_SIZE;
+    private boolean fitsNode(List<Ptr> ptrs) {
+        return (long) ptrs.size() * (keySize + NODE_PTR_EXTRA) <= dataStorage.blockSize(kind) - HEADER_SIZE;
     }
 
-    private int chooseLeafSplit(Tree tree, List<Entry> entries) {
-        int capacity = dataStorage.blockSize(tree.kind) - HEADER_SIZE;
+    private int chooseLeafSplit(List<Entry> entries) {
+        int capacity = dataStorage.blockSize(kind) - HEADER_SIZE;
         int n = entries.size();
         // Find the smallest index so that the right half still fits; then check the
         // left half fits too, otherwise increase.
         long[] suffix = new long[n + 1];
         for (int i = n - 1; i >= 0; i--)
-            suffix[i] = suffix[i + 1] + entries.get(i).value.length + tree.keySize + 8;
+            suffix[i] = suffix[i + 1] + entries.get(i).value.length + keySize + 8;
         int k = 1;
         while (k < n && suffix[k] > capacity)
             k++;
@@ -336,49 +504,49 @@ public class BTreeService {
         return k;
     }
 
-    private byte[] serializeLeaf(Tree tree, List<Entry> entries) {
-        int blockSize = dataStorage.blockSize(tree.kind);
+    private byte[] serializeLeaf(List<Entry> entries) {
+        int blockSize = dataStorage.blockSize(kind);
         byte[] buf = new byte[blockSize];
         ByteBuffer bb = wrap(buf);
         writeHeader(bb, entries.size(), 0);
-        int itemSize = tree.keySize + 8;
+        int itemSize = keySize + 8;
         int dataEnd = blockSize;
         for (int i = entries.size() - 1; i >= 0; i--) {
             Entry e = entries.get(i);
             dataEnd -= e.value.length;
             System.arraycopy(e.value, 0, buf, dataEnd, e.value.length);
             int itemOff = HEADER_SIZE + i * itemSize;
-            System.arraycopy(e.key, 0, buf, itemOff, tree.keySize);
-            bb.putInt(itemOff + tree.keySize, dataEnd);
-            bb.putInt(itemOff + tree.keySize + 4, e.value.length);
+            System.arraycopy(e.key, 0, buf, itemOff, keySize);
+            bb.putInt(itemOff + keySize, dataEnd);
+            bb.putInt(itemOff + keySize + 4, e.value.length);
         }
         return buf;
     }
 
-    private byte[] serializeNode(Tree tree, List<Ptr> ptrs, int level) {
-        int blockSize = dataStorage.blockSize(tree.kind);
+    private byte[] serializeNode(List<Ptr> ptrs, int level) {
+        int blockSize = dataStorage.blockSize(kind);
         byte[] buf = new byte[blockSize];
         ByteBuffer bb = wrap(buf);
         writeHeader(bb, ptrs.size(), level);
-        int ptrSize = tree.keySize + NODE_PTR_EXTRA;
+        int ptrSize = keySize + NODE_PTR_EXTRA;
         for (int i = 0; i < ptrs.size(); i++) {
             Ptr p = ptrs.get(i);
             int off = HEADER_SIZE + i * ptrSize;
-            System.arraycopy(p.key, 0, buf, off, tree.keySize);
-            bb.putLong(off + tree.keySize, p.blockptr);
+            System.arraycopy(p.key, 0, buf, off, keySize);
+            bb.putLong(off + keySize, p.blockptr);
         }
         return buf;
     }
 
-    private long writeNewLeaf(Tree tree, List<Entry> entries) {
-        long off = dataStorage.allocateBlock(tree.kind);
-        dataStorage.writeBlock(off, tree.kind, serializeLeaf(tree, entries));
+    private long writeNewLeaf(List<Entry> entries) {
+        long off = dataStorage.allocateBlock(kind);
+        dataStorage.writeBlock(off, kind, serializeLeaf(entries));
         return off;
     }
 
-    private long writeNewNode(Tree tree, List<Ptr> ptrs, int level) {
-        long off = dataStorage.allocateBlock(tree.kind);
-        dataStorage.writeBlock(off, tree.kind, serializeNode(tree, ptrs, level));
+    private long writeNewNode(List<Ptr> ptrs, int level) {
+        long off = dataStorage.allocateBlock(kind);
+        dataStorage.writeBlock(off, kind, serializeNode(ptrs, level));
         return off;
     }
 
@@ -461,6 +629,11 @@ public class BTreeService {
         return -(low + 1);
     }
 
+    /**
+     * Searches the key-sorted entries for {@code key} using unsigned
+     * lexicographic ordering. Returns its index if found, or
+     * {@code -(insertion point) - 1} if absent.
+     */
     private int searchEntries(List<Entry> entries, byte[] key) {
         int low = 0;
         int high = entries.size() - 1;
@@ -477,6 +650,14 @@ public class BTreeService {
         return -(low + 1);
     }
 
+    /**
+     * Returns the child whose lower-bound key is the greatest one not greater
+     * than {@code key}, or the first child if {@code key} precedes all bounds.
+     * 
+     * @param ptrs the list of child pointers
+     * @param key  the key to search for
+     * @return the index of the child to follow
+     */
     private int findChild(List<Ptr> ptrs, byte[] key) {
         int low = 0;
         int high = ptrs.size() - 1;
@@ -512,13 +693,14 @@ public class BTreeService {
         return compare(a, 0, b, 0, Math.min(a.length, b.length));
     }
 
-    private void checkKey(Tree tree, byte[] key) {
-        if (key.length != tree.keySize)
+    private void checkKey(byte[] key) {
+        if (key.length != keySize)
             throw new IllegalArgumentException(
-                    "key must be " + tree.keySize + " bytes, got " + key.length);
+                    "key must be " + keySize + " bytes, got " + key.length);
     }
 
     private static ByteBuffer wrap(byte[] buf) {
         return ByteBuffer.wrap(buf).order(ByteOrder.LITTLE_ENDIAN);
     }
+
 }

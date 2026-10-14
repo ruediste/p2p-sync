@@ -2,7 +2,7 @@ This is a p2p file storage and synchronization project. It is based on IPFS, but
 
 The project documentation lives in `doc`.
 
-Read `ImplementationPlan.md` if the user seems to reference to it, for example for implementation of a milestone.
+Read `ImplementationPlan.md` if the user seems to reference to it (it might not exist), for example for implementation of a milestone.
 
 If there is an issue with generating the protobuf java files, a `mvn clean` sometimes helps.
 
@@ -13,7 +13,10 @@ If there is an issue with generating the protobuf java files, a `mvn clean` some
 - When changing test wiring, verify both: `mvn test` and `mvn test -Pit`.
 
 ## Initial Exploration of the Code Base
-
-When starting a new task, avoid inspecting the whole codebase. Use a focused exploration instead. Do NOT instruct a sub agent to explore all files (or all java files). Use `AiOverview.md` to get an overview of the project. After performing changes, make sure to update `AiOverview.md` as well.
-
+When starting a new task, avoid inspecting the whole codebase. Use a focused exploration instead. Do NOT instruct a sub agent to explore all files (or all java files).
 Never scan the whole local maven repository for file contents. Searching just for `.jar`s matching a certain name is ok.
+
+Do not explore the git history unless explicitly instructed to do so. Also do not look at staged changes. The current working directory contains the relevant information. Required information is typically given. Do not explore the `/bin/` directory either, unless there is a specific reason to do so.
+
+## Asking Questions
+This is not an automated test. It is fine to ask the user questions.

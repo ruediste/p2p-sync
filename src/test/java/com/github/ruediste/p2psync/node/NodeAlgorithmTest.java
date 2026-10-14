@@ -1,10 +1,10 @@
 package com.github.ruediste.p2psync.node;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +17,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * In-memory mock of the node algorithm described in the wiki: active node set
@@ -775,10 +775,10 @@ public class NodeAlgorithmTest {
             leaves += counts[2];
             syncs += counts[3];
         }
-        assertTrue("expected operations to be created", operations > 0);
-        assertTrue("expected nodes to join", joins > 0);
-        assertTrue("expected nodes to leave", leaves > 0);
-        assertTrue("expected nodes to sync", syncs > 0);
+        assertTrue(operations > 0, "expected operations to be created");
+        assertTrue(joins > 0, "expected nodes to join");
+        assertTrue(leaves > 0, "expected nodes to leave");
+        assertTrue(syncs > 0, "expected nodes to sync");
     }
 
     /** Returns counts of [operations, joins, leaves, syncs]. */
@@ -919,13 +919,12 @@ public class NodeAlgorithmTest {
         if (live.size() < 2)
             return;
         var reference = live.get(0);
-        assertNull("leaving process must be completed after settling",
-                reference.activeNodeSet.leavingProcess);
+        assertNull(reference.activeNodeSet.leavingProcess, "leaving process must be completed after settling");
         var referenceNodes = new TreeSet<>(reference.activeNodeSet.nodes);
         var referenceOperations = operationMap(reference);
         for (MockNode node : live) {
-            assertEquals("active node sets must converge", referenceNodes, node.activeNodeSet.nodes);
-            assertEquals("operations must converge", referenceOperations, operationMap(node));
+            assertEquals(referenceNodes, node.activeNodeSet.nodes, "active node sets must converge");
+            assertEquals(referenceOperations, operationMap(node), "operations must converge");
         }
     }
 

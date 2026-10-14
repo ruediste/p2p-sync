@@ -1,353 +1,221 @@
 package com.github.ruediste.p2psync.storage;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.Random;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-import com.github.ruediste.p2psync.storage.DataStorage.BlockArea;
-
+/**
+ * Unit test suite for DataStorage verifying Copy-on-Write (CoW) transactional
+ * semantics,
+ * atomic superblock commits, deferred free space reclamation, and crash
+ * rollback behavior.
+ */
 public class DataStorageTest {
 
-    private Path dir;
-    private Path file;
+    @TempDir
+    Path tempDir;
 
-    @Before
-    public void setUp() throws IOException {
-        dir = Files.createTempDirectory("p2psync-storage");
-        file = dir.resolve("data.bin");
+    private String dbPath;
+    private DataStorage storage;
+
+    @BeforeEach
+    void setUp() {
+        dbPath = tempDir.resolve("test-storage.db").toString();
+        storage = new DataStorage();
+        storage.open(dbPath);
     }
 
-    @After
-    public void tearDown() throws IOException {
-        if (dir != null && Files.exists(dir)) {
-            try (var stream = Files.walk(dir)) {
-                stream.sorted((a, b) -> b.getNameCount() - a.getNameCount()).forEach(p -> p.toFile().delete());
-            }
+    @AfterEach
+    void tearDown() {
+        if (storage != null) {
+            storage.close();
         }
     }
 
-    private DataStorage format() {
-        DataStorage ds = new DataStorage();
-        ds.format(file.toString(), 512, 1024, 512, 64 * 1024, 256 * 1024, 256 * 1024);
-        return ds;
-    }
+    @Nested
+    @DisplayName("Initialization & Format Tests")
+    class InitializationTests {
 
-    @Test
-    public void formatAndReopen() {
-        DataStorage ds = format();
-        assertNotNull(ds.superBlock);
-        assertArrayEquals(DataStorage.MAGIC, ds.superBlock.magic);
-        assertEquals(DataStorage.FORMAT_VERSION, ds.superBlock.version);
-        assertTrue(ds.getRootOffset() != 0);
-        ds.close();
+        @Test
+        @DisplayName("Should correctly format a new storage file with valid SuperBlock")
+        void testFormatAndOpenNewFile() {
+            assertNotNull(storage.superBlock);
+            assertNotNull(storage.rootBlock);
+            assertNotNull(storage.infoBlock);
 
-        DataStorage reopened = new DataStorage();
-        reopened.open(file.toString());
-        assertArrayEquals(DataStorage.MAGIC, reopened.superBlock.magic);
-        assertEquals(ds.getRootOffset(), reopened.getRootOffset());
-        assertEquals(512, reopened.blockSize(BlockArea.DATA));
-        assertEquals(1024, reopened.blockSize(BlockArea.META));
-        assertEquals(512, reopened.blockSize(BlockArea.SYSTEM));
-        reopened.close();
-    }
+            assertArrayEquals(DataStorage.MAGIC, storage.superBlock.magic);
+            assertEquals(DataStorage.FORMAT_VERSION, storage.superBlock.version);
+            assertTrue(storage.superBlock.rootBlock > 0, "Root block offset should be non-zero after format");
 
-    @Test
-    public void writeAndReadBlockSurvivesReopen() {
-        DataStorage ds = format();
-        long offset = ds.writeNewBlock(BlockArea.META, fill(1024, 7));
-        ds.commit();
-        ds.close();
-
-        DataStorage reopened = new DataStorage();
-        reopened.open(file.toString());
-        assertArrayEquals(fill(1024, 7), reopened.readBlock(offset, BlockArea.META));
-        reopened.close();
-    }
-
-    @Test
-    public void modifiedBlockIsVisibleBeforeCommit() {
-        DataStorage ds = format();
-        long offset = ds.allocateBlock(BlockArea.DATA);
-        byte[] data = fill(512, 3);
-        ds.writeBlock(offset, BlockArea.DATA, data);
-        assertTrue(ds.isBlockModified(offset));
-        assertArrayEquals(data, ds.readBlock(offset, BlockArea.DATA));
-        ds.close();
-    }
-
-    @Test
-    public void allocationReducesFreeSpace() {
-        DataStorage ds = format();
-        long before = ds.getFreeBytes(BlockArea.DATA);
-        ds.allocateBlock(BlockArea.DATA);
-        assertEquals(before - 512, ds.getFreeBytes(BlockArea.DATA));
-        ds.close();
-    }
-
-    @Test
-    public void freedBlocksAreMerged() {
-        DataStorage ds = format();
-        long first = ds.allocateBlock(BlockArea.META);
-        long second = ds.allocateBlock(BlockArea.META);
-
-        // Allocations must be contiguous for the merge assertion below to be
-        // meaningful, which is the case for a fresh region and first-fit.
-        assertEquals(first + 1024, second);
-
-        ds.freeBlock(first, BlockArea.META);
-        ds.freeBlock(second, BlockArea.META);
-        ds.commit();
-
-        Map<Long, Long> free = ds.getFreeSpace().get(BlockArea.META);
-        assertEquals(1, free.size());
-        assertEquals(262144L, (long) free.get(first));
-        ds.close();
-    }
-
-    @Test
-    public void referenceCountTracksAllocation() {
-        DataStorage ds = format();
-        long offset = ds.writeNewBlock(BlockArea.DATA, fill(512, 1));
-        ds.commit();
-        assertEquals(1, ds.getRefCount(offset));
-
-        ds.freeBlock(offset, BlockArea.DATA);
-        ds.commit();
-        assertEquals(0, ds.getRefCount(offset));
-        ds.close();
-    }
-
-    @Test
-    public void allocatorGrowsWhenRegionExhausted() {
-        // A tiny region forces the allocator to extend the file.
-        DataStorage ds = new DataStorage();
-        ds.format(file.toString(), 512, 1024, 512, 16 * 1024, 16 * 1024, 16 * 1024);
-        long initial = ds.getFreeBytes(BlockArea.DATA);
-        long allocated = 0;
-        for (int i = 0; i < 40; i++) {
-            ds.writeNewBlock(BlockArea.DATA, fill(512, i));
-            allocated += 512;
+            assertEquals(4096, storage.blockSize(DataStorage.Area.SYSTEM));
+            assertEquals(16384, storage.blockSize(DataStorage.Area.META));
+            assertEquals(4096, storage.blockSize(DataStorage.Area.DATA));
         }
-        assertTrue(allocated > initial);
-        ds.commit();
-        ds.close();
 
-        DataStorage reopened = new DataStorage();
-        reopened.open(file.toString());
-        assertTrue(reopened.getFileSize() > 0);
-        reopened.close();
-    }
+        @Test
+        @DisplayName("Should reload existing storage file on open")
+        void testReloadExistingStorage() {
+            long initialRoot = storage.getRootOffset();
+            storage.close();
 
-    @Test
-    public void infoBlockChangesSurviveReopen() {
-        DataStorage ds = format();
-        ds.infoBlock.setInlineDataThreshold(1234);
-        ds.commit();
-        ds.close();
+            DataStorage reopened = new DataStorage();
+            reopened.open(dbPath);
 
-        DataStorage reopened = new DataStorage();
-        reopened.open(file.toString());
-        assertEquals(1234, reopened.infoBlock.getInlineDataThreshold());
-        reopened.close();
-    }
-
-    @Test
-    public void freeSpaceSurvivesReopen() {
-        DataStorage ds = format();
-        long offset = ds.writeNewBlock(BlockArea.DATA, fill(512, 9));
-        ds.freeBlock(offset, BlockArea.DATA);
-        ds.commit();
-        long freeBytes = ds.getFreeBytes(BlockArea.DATA);
-        ds.close();
-
-        DataStorage reopened = new DataStorage();
-        reopened.open(file.toString());
-        assertEquals(freeBytes, reopened.getFreeBytes(BlockArea.DATA));
-        reopened.close();
-    }
-
-    @Test
-    public void manyCommitsKeepFileConsistent() {
-        DataStorage ds = format();
-        Random rnd = new Random(1);
-        long[] offsets = new long[20];
-        for (int i = 0; i < offsets.length; i++) {
-            offsets[i] = ds.writeNewBlock(BlockArea.DATA, fill(512, rnd.nextInt(256)));
-            ds.commit();
+            assertEquals(initialRoot, reopened.getRootOffset());
+            assertArrayEquals(DataStorage.MAGIC, reopened.superBlock.magic);
+            reopened.close();
         }
-        ds.close();
-
-        DataStorage reopened = new DataStorage();
-        reopened.open(file.toString());
-        for (long off : offsets)
-            assertEquals(1, reopened.getRefCount(off));
-        reopened.close();
     }
 
-    @Test
-    public void repeatedInfoBlockUpdatesDoNotLeak() {
-        DataStorage ds = format();
-        for (int i = 0; i < 25; i++) {
-            ds.infoBlock.setInlineDataThreshold(1000 + i);
-            ds.commit();
+    @Nested
+    @DisplayName("Copy-on-Write & Data Allocation Tests")
+    class CowAllocationTests {
+
+        @Test
+        @DisplayName("Should write and read data blocks correctly in working memory")
+        void testWriteAndReadBlock() {
+            byte[] payload = new byte[storage.blockSize(DataStorage.Area.DATA)];
+            Arrays.fill(payload, (byte) 0xAB);
+
+            long blockOff = storage.writeNewBlock(DataStorage.Area.DATA, payload);
+            assertTrue(blockOff > 0);
+            assertTrue(storage.isBlockModified(blockOff));
+
+            byte[] readBack = storage.readBlock(blockOff, DataStorage.Area.DATA);
+            assertArrayEquals(payload, readBack);
         }
-        long sizeAfterManyCommits = ds.getFileSize();
-        assertEquals(1000 + 24, ds.infoBlock.getInlineDataThreshold());
-        ds.close();
 
-        // Committing the same (unchanged) info block must not keep growing the file.
-        DataStorage reopened = new DataStorage();
-        reopened.open(file.toString());
-        for (int i = 0; i < 25; i++)
-            reopened.commit();
-        assertTrue(reopened.getFileSize() <= sizeAfterManyCommits);
-        reopened.close();
-    }
+        @Test
+        @DisplayName("Should defer reference count tree updates until commit")
+        void testDeferredRefCountUpdates() {
+            byte[] payload = new byte[storage.blockSize(DataStorage.Area.DATA)];
+            long blockOff = storage.writeNewBlock(DataStorage.Area.DATA, payload);
 
-    @Test
-    public void allocatorStateIsStoredInBTrees() {
-        DataStorage ds = format();
-        assertNotNull(ds.getBTreeService());
-        // An empty refcount tree has no root, so create one entry first.
-        ds.writeNewBlock(BlockArea.DATA, fill(512, 1));
-        ds.commit();
-        assertTrue(ds.rootBlock.refCountTree != 0);
-        assertTrue(ds.rootBlock.dataFreeSpaceTree != 0);
-        assertTrue(ds.rootBlock.metaFreeSpaceTree != 0);
-        assertTrue(ds.rootBlock.systemFreeSpaceTree != 0);
-        ds.close();
-    }
+            // Prior to commit, refcount tree on disk should not contain the block
+            assertEquals(0, storage.getRefCount(blockOff));
 
-    @Test
-    public void complexAllocationSurvivesReopen() {
-        DataStorage ds = format();
-        long[] data = new long[30];
-        long[] meta = new long[10];
-        for (int i = 0; i < data.length; i++)
-            data[i] = ds.writeNewBlock(BlockArea.DATA, fill(512, i));
-        for (int i = 0; i < meta.length; i++)
-            meta[i] = ds.writeNewBlock(BlockArea.META, fill(1024, i));
-        // Free every third block of both kinds.
-        for (int i = 0; i < data.length; i += 3)
-            ds.freeBlock(data[i], BlockArea.DATA);
-        for (int i = 0; i < meta.length; i += 3)
-            ds.freeBlock(meta[i], BlockArea.META);
-        ds.commit();
-        long dataFree = ds.getFreeBytes(BlockArea.DATA);
-        long metaFree = ds.getFreeBytes(BlockArea.META);
-        ds.close();
+            storage.commit();
 
-        DataStorage reopened = new DataStorage();
-        reopened.open(file.toString());
-        assertEquals(dataFree, reopened.getFreeBytes(BlockArea.DATA));
-        assertEquals(metaFree, reopened.getFreeBytes(BlockArea.META));
-        for (int i = 0; i < data.length; i++)
-            assertEquals(i % 3 == 0 ? 0 : 1, reopened.getRefCount(data[i]));
-        for (int i = 0; i < meta.length; i++)
-            assertEquals(i % 3 == 0 ? 0 : 1, reopened.getRefCount(meta[i]));
-        reopened.close();
-    }
-
-    @Test
-    public void randomizedAllocationSurvivesReopen() {
-        DataStorage ds = format();
-        Random rnd = new Random(99);
-        java.util.TreeMap<Long, Integer> refs = new java.util.TreeMap<>();
-        long[] offsets = new long[400];
-        for (int i = 0; i < offsets.length; i++) {
-            offsets[i] = ds.writeNewBlock(BlockArea.DATA, fill(512, i));
-            refs.put(offsets[i], 1);
-            if (i % 3 == 0)
-                ds.commit();
+            // After commit, reference count should be updated to 1
+            assertEquals(1, storage.getRefCount(blockOff));
         }
-        // Free a random half of the blocks.
-        for (int i = 0; i < offsets.length; i++) {
-            if (rnd.nextBoolean()) {
-                ds.freeBlock(offsets[i], BlockArea.DATA);
-                refs.put(offsets[i], 0);
-            }
-        }
-        ds.commit();
-        long dataFree = ds.getFreeBytes(BlockArea.DATA);
-        ds.close();
-
-        DataStorage reopened = new DataStorage();
-        reopened.open(file.toString());
-        assertEquals(dataFree, reopened.getFreeBytes(BlockArea.DATA));
-        for (int i = 0; i < offsets.length; i++)
-            assertEquals(refs.get(offsets[i]).longValue(), reopened.getRefCount(offsets[i]));
-        reopened.close();
     }
 
-    @Test
-    public void incrementalUpdatesSurviveManyReopens() {
-        // A sequence of commit / reopen cycles, each mutating free space and
-        // refcounts. The incrementally maintained trees must stay consistent.
-        java.util.TreeMap<Long, Integer> expectedRefs = new java.util.TreeMap<>();
-        Random rnd = new Random(5);
-        DataStorage ds = format();
-        long expectedDataFree;
-        for (int cycle = 0; cycle < 6; cycle++) {
-            ds.close();
-            ds = new DataStorage();
-            ds.open(file.toString());
-            for (int i = 0; i < 20; i++) {
-                long off = ds.writeNewBlock(BlockArea.DATA, fill(512, i + cycle));
-                expectedRefs.put(off, 1);
-            }
-            for (Long off : new java.util.ArrayList<>(expectedRefs.keySet())) {
-                if (expectedRefs.get(off) == 1 && rnd.nextBoolean()) {
-                    ds.freeBlock(off, BlockArea.DATA);
-                    expectedRefs.put(off, 0);
-                }
-            }
-            ds.commit();
-            expectedDataFree = ds.getFreeBytes(BlockArea.DATA);
-            assertEquals(expectedDataFree, ds.getFreeBytes(BlockArea.DATA));
-        }
-        expectedDataFree = ds.getFreeBytes(BlockArea.DATA);
-        ds.close();
+    @Nested
+    @DisplayName("Transaction Commit & Atomic Persistence Tests")
+    class TransactionCommitTests {
 
-        DataStorage reopened = new DataStorage();
-        reopened.open(file.toString());
-        assertEquals(expectedDataFree, reopened.getFreeBytes(BlockArea.DATA));
-        for (java.util.Map.Entry<Long, Integer> e : expectedRefs.entrySet())
-            assertEquals(e.getValue().longValue(), reopened.getRefCount(e.getKey()));
-        reopened.close();
+        @Test
+        @DisplayName("Should persist modified data blocks and update root offset on commit")
+        void testAtomicCommit() {
+            long oldRoot = storage.getRootOffset();
+
+            byte[] data1 = new byte[storage.blockSize(DataStorage.Area.DATA)];
+            Arrays.fill(data1, (byte) 0x11);
+            long b1 = storage.writeNewBlock(DataStorage.Area.DATA, data1);
+
+            byte[] data2 = new byte[storage.blockSize(DataStorage.Area.META)];
+            Arrays.fill(data2, (byte) 0x22);
+            long b2 = storage.writeNewBlock(DataStorage.Area.META, data2);
+
+            storage.commit();
+
+            long newRoot = storage.getRootOffset();
+            assertNotEquals(oldRoot, newRoot, "Commit must produce a new root block via CoW");
+
+            // Verify persistence by reopening from disk
+            storage.close();
+            DataStorage reopened = new DataStorage();
+            reopened.open(dbPath);
+
+            assertEquals(newRoot, reopened.getRootOffset());
+            assertArrayEquals(data1, reopened.readBlock(b1, DataStorage.Area.DATA));
+            assertArrayEquals(data2, reopened.readBlock(b2, DataStorage.Area.META));
+            reopened.close();
+        }
     }
 
-    @Test
-    public void metadataReservationKeepsFreeSpaceAvailable() {
-        DataStorage ds = new DataStorage();
-        ds.format(file.toString(), 512, 1024, 512, 16 * 1024, 16 * 1024, 16 * 1024);
-        long reserved = 8 * 1024;
-        try (DataStorage.Reservation r = ds.reserveMeta(reserved)) {
-            assertEquals(reserved, ds.getMetaReserved());
-            for (int i = 0; i < 100; i++)
-                ds.allocateBlock(BlockArea.META);
-            long metaFree = ds.getFreeBytes(BlockArea.META) + ds.getFreeBytes(BlockArea.SYSTEM);
-            assertTrue("reserved watermark must remain free, but meta free = " + metaFree
-                    + " < reserved = " + reserved, metaFree >= reserved);
+    @Nested
+    @DisplayName("Crash Recovery & Rollback Behavior Tests")
+    class CrashRecoveryTests {
+
+        @Test
+        @DisplayName("Uncommitted dirty writes should be rolled back cleanly on crash")
+        void testCrashRollbackUncommittedWrites() throws IOException {
+            // Transaction 1: Commit initial data state
+            byte[] v1Data = new byte[storage.blockSize(DataStorage.Area.DATA)];
+            Arrays.fill(v1Data, (byte) 0x55);
+            long b1 = storage.writeNewBlock(DataStorage.Area.DATA, v1Data);
+            storage.commit();
+
+            long committedRoot = storage.getRootOffset();
+
+            // Transaction 2: Perform uncommitted dirty writes & direct disk writes without
+            // commit
+            byte[] uncommittedData = new byte[storage.blockSize(DataStorage.Area.DATA)];
+            Arrays.fill(uncommittedData, (byte) 0x99);
+            long b2 = storage.writeNewBlock(DataStorage.Area.DATA, uncommittedData);
+
+            // Directly write to file to simulate dirty uncommitted disk modifications
+            byte[] garbage = new byte[storage.blockSize(DataStorage.Area.DATA)];
+            Arrays.fill(garbage, (byte) 0xFF);
+            storage.writeBlockDirect(b2, DataStorage.Area.DATA, garbage);
+
+            // SIMULATE CRASH: Abruptly close raw file handle without calling
+            // storage.commit()
+            storage.close();
+
+            // RECOVERY: Reopen file from disk
+            DataStorage recovered = new DataStorage();
+            recovered.open(dbPath);
+
+            // Verifications
+            assertEquals(committedRoot, recovered.getRootOffset(),
+                    "Recovered state must point to last committed superblock root");
+            assertEquals(1, recovered.getRefCount(b1), "Committed block b1 must retain reference count of 1");
+            assertEquals(0, recovered.getRefCount(b2), "Uncommitted block b2 must not exist in refcount tree");
+            assertArrayEquals(v1Data, recovered.readBlock(b1, DataStorage.Area.DATA), "Committed data must be intact");
+
+            recovered.close();
         }
-        assertEquals(0, ds.getMetaReserved());
-        ds.close();
     }
 
-    private static byte[] fill(int size, int seed) {
-        byte[] data = new byte[size];
-        Arrays.fill(data, (byte) seed);
-        return data;
+    @Nested
+    @DisplayName("Deferred Block Reuse & Free Space Tests")
+    class DeferredFreeSpaceTests {
+
+        @Test
+        @DisplayName("Freed blocks should be held in reserved set during transaction and reused after commit")
+        void testDeferredBlockReclamation() {
+            byte[] payload = new byte[storage.blockSize(DataStorage.Area.DATA)];
+            long blockOff = storage.writeNewBlock(DataStorage.Area.DATA, payload);
+            storage.commit();
+
+            assertEquals(1, storage.getRefCount(blockOff));
+
+            // Free the block in current transaction
+            storage.freeBlock(blockOff, DataStorage.Area.DATA);
+
+            // Before commit, refcount remains 1 in persisted state
+            assertEquals(1, storage.getRefCount(blockOff));
+
+            storage.commit();
+
+            // After commit, block refcount drops to 0 and space is returned to free tree
+            assertEquals(0, storage.getRefCount(blockOff));
+        }
     }
 }

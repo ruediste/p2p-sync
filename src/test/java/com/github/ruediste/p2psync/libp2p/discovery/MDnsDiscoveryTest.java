@@ -1,8 +1,9 @@
 package com.github.ruediste.p2psync.libp2p.discovery;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.InetAddress;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.github.ruediste.p2psync.libp2p.core.Host;
 import com.github.ruediste.p2psync.libp2p.core.PeerId;
@@ -54,9 +55,9 @@ public class MDnsDiscoveryTest {
         assertEquals(5555, MDnsDiscovery.listenPort(List.of(new Multiaddr("/ip6/::1/tcp/5555"))));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void listenPortThrowsWithoutIpAddress() {
-        MDnsDiscovery.listenPort(List.of());
+        assertThrows(IllegalStateException.class, () -> MDnsDiscovery.listenPort(List.of()));
     }
 
     @Test
@@ -75,9 +76,9 @@ public class MDnsDiscoveryTest {
     public void expandWildcardIp6ListsInterfaceAddresses() {
         MDnsDiscovery d = new MDnsDiscovery(PeerId.random(), List.of());
         List<Multiaddr> out = d.expandWildcardAddresses(new Multiaddr("/ip6/::/tcp/4001"));
-        assertFalse("wildcard should expand to at least one interface address", out.isEmpty());
+        assertFalse(out.isEmpty(), "wildcard should expand to at least one interface address");
         for (Multiaddr m : out) {
-            assertTrue(m.toString(), m.toString().endsWith("/tcp/4001"));
+            assertTrue(m.toString().endsWith("/tcp/4001"), m.toString());
             assertTrue(m.has(Protocol.IP4) || m.has(Protocol.IP6));
         }
     }
@@ -91,12 +92,12 @@ public class MDnsDiscoveryTest {
         InetAddress anyV4 = InetAddress.getByName("0.0.0.0");
         InetAddress anyV6 = InetAddress.getByName("::");
 
-        assertTrue("wildcard v4 covers any v4", MDnsDiscovery.covers(anyV4, v4));
-        assertTrue("wildcard v6 covers any v6", MDnsDiscovery.covers(anyV6, v6));
-        assertFalse("wildcard v4 does not cover v6", MDnsDiscovery.covers(anyV4, v6));
-        assertFalse("wildcard v6 does not cover v4", MDnsDiscovery.covers(anyV6, v4));
-        assertTrue("concrete equals", MDnsDiscovery.covers(v4, v4));
-        assertFalse("concrete differs", MDnsDiscovery.covers(v4, InetAddress.getByName("192.0.2.6")));
+        assertTrue(MDnsDiscovery.covers(anyV4, v4), "wildcard v4 covers any v4");
+        assertTrue(MDnsDiscovery.covers(anyV6, v6), "wildcard v6 covers any v6");
+        assertFalse(MDnsDiscovery.covers(anyV4, v6), "wildcard v4 does not cover v6");
+        assertFalse(MDnsDiscovery.covers(anyV6, v4), "wildcard v6 does not cover v4");
+        assertTrue(MDnsDiscovery.covers(v4, v4), "concrete equals");
+        assertFalse(MDnsDiscovery.covers(v4, InetAddress.getByName("192.0.2.6")), "concrete differs");
     }
 
     @Test
@@ -109,8 +110,7 @@ public class MDnsDiscoveryTest {
             Multiaddr listen = host.network().listenAddresses().get(0);
             InetAddress listenIp = InetAddress.getByName(
                     listen.getFirstComponent(Protocol.IP4).getStringValue());
-            assertTrue("owning interface should carry the listen address",
-                    wanted.containsKey(listenIp));
+            assertTrue(wanted.containsKey(listenIp), "owning interface should carry the listen address");
             assertEquals(Set.of(listen.getFirstComponent(Protocol.TCP).getIntValue()),
                     wanted.get(listenIp));
         } finally {
@@ -128,8 +128,8 @@ public class MDnsDiscoveryTest {
             MDnsDiscovery d = new MDnsDiscovery(host.peerId(), host.network().listenAddresses(),
                     "test.local.", Optional.of(InetAddress.getByName("127.0.0.1")));
             Map<InetAddress, Set<Integer>> wanted = d.computeWanted();
-            assertEquals("restrict pins the managed address",
-                    Map.of(InetAddress.getByName("127.0.0.1"), Set.of(port)), wanted);
+            assertEquals(Map.of(InetAddress.getByName("127.0.0.1"), Set.of(port)), wanted,
+                    "restrict pins the managed address");
         } finally {
             host.stop().get(10, TimeUnit.SECONDS);
         }

@@ -1,16 +1,16 @@
 package com.github.ruediste.p2psync.libp2p;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.github.ruediste.p2psync.libp2p.core.Connection;
 import com.github.ruediste.p2psync.libp2p.core.Host;
@@ -41,7 +41,7 @@ public class EndToEndConnectionTest {
     private Host nodeB;
     private Connection conn;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         connectionsOnA = new CopyOnWriteArrayList<>();
         connectionsOnB = new CopyOnWriteArrayList<>();
@@ -66,7 +66,7 @@ public class EndToEndConnectionTest {
                 .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         nodeA.stop().get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         nodeB.stop().get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -74,13 +74,12 @@ public class EndToEndConnectionTest {
 
     @Test
     public void twoNodesConnectAndExchangeData() throws Exception {
-        assertNotNull("secureSession should be present", conn.secureSession());
-        assertNotNull("muxerSession should be present", conn.muxerSession());
-        assertEquals("remote peer id should match node A",
-                nodeA.peerId(), conn.getRemotePeerId());
+        assertNotNull(conn.secureSession(), "secureSession should be present");
+        assertNotNull(conn.muxerSession(), "muxerSession should be present");
+        assertEquals(nodeA.peerId(), conn.getRemotePeerId(), "remote peer id should match node A");
 
-        assertEquals("nodeA should have 1 connection", 1, connectionsOnA.size());
-        assertEquals("nodeB should have 1 connection", 1, connectionsOnB.size());
+        assertEquals(1, connectionsOnA.size(), "nodeA should have 1 connection");
+        assertEquals(1, connectionsOnB.size(), "nodeB should have 1 connection");
 
         assertEquals(nodeB.peerId(), connectionsOnA.get(0).getRemotePeerId());
         assertEquals(nodeA.peerId(), connectionsOnB.get(0).getRemotePeerId());
@@ -116,7 +115,7 @@ public class EndToEndConnectionTest {
             byte[] received = new byte[sent.length];
             int n = echoes[i].read(received, 0, received.length);
             assertEquals(sent.length, n);
-            assertArrayEquals("echo mismatch on stream " + i, sent, received);
+            assertArrayEquals(sent, received, "echo mismatch on stream " + i);
 
             echoes[i].close();
         }

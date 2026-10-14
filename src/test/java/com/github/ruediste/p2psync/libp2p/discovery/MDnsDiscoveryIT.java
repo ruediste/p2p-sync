@@ -1,8 +1,8 @@
 package com.github.ruediste.p2psync.libp2p.discovery;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -11,8 +11,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 
-import org.junit.Assume;
-import org.junit.Test;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 
 import com.github.ruediste.p2psync.libp2p.core.Host;
 import com.github.ruediste.p2psync.libp2p.core.PeerInfo;
@@ -44,7 +44,7 @@ public class MDnsDiscoveryIT {
                 }
             }).get(10, TimeUnit.SECONDS);
             waitFor(() -> found.get() != null, 15_000);
-            assertNotNull("expected to discover self", found.get());
+            assertNotNull(found.get(), "expected to discover self");
             assertEquals(host.peerId(), found.get().getPeerId());
             assertFalse(found.get().getAddresses().isEmpty());
         } finally {
@@ -77,7 +77,7 @@ public class MDnsDiscoveryIT {
                 }
             }).get(10, TimeUnit.SECONDS);
             waitFor(() -> found.get() != null, 15_000);
-            assertNotNull("expected to discover the other peer", found.get());
+            assertNotNull(found.get(), "expected to discover the other peer");
             assertEquals(other.peerId(), found.get().getPeerId());
             assertFalse(found.get().getAddresses().isEmpty());
         } finally {
@@ -104,7 +104,7 @@ public class MDnsDiscoveryIT {
             ms.joinGroup(new java.net.InetSocketAddress(group, 0), null);
             ms.leaveGroup(new java.net.InetSocketAddress(group, 0), null);
         } catch (Exception e) {
-            Assume.assumeNoException("mDNS multicast not available in this environment", e);
+            Assumptions.assumeTrue(false, "mDNS multicast not available in this environment: " + e);
         }
     }
 }

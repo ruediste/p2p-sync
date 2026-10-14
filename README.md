@@ -1,6 +1,6 @@
 # p2p-sync app
 
-Java implementation of the p2p-sync peer-to-peer file storage and synchronization protocol. It ports parts of jvm-libp2p from Kotlin to Java and extends it with functionality from nabu (reference sources in `../upstream/`). Project documentation lives in `../upstream/p2p-sync.wiki`.
+Java implementation of the p2p-sync peer-to-peer file storage and synchronization protocol. It ports parts of jvm-libp2p from Kotlin to Java and extends it with functionality from nabu (reference sources in `../upstream/`). Project documentation lives in `doc`.
 
 ## Requirements
 

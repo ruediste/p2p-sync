@@ -1,13 +1,13 @@
 package com.github.ruediste.p2psync.libp2p.transport;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.ServerSocket;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.github.ruediste.p2psync.libp2p.core.Connection;
 import com.github.ruediste.p2psync.libp2p.core.RawConnection;

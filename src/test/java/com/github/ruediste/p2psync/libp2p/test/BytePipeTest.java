@@ -1,10 +1,10 @@
 package com.github.ruediste.p2psync.libp2p.test;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
@@ -16,7 +16,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import com.github.ruediste.p2psync.libp2p.core.P2PInputStream;
 import com.github.ruediste.p2psync.libp2p.core.P2POutputStream;
@@ -238,7 +239,8 @@ public class BytePipeTest {
         assertEquals(-1, in.read());
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(value = 5, unit = TimeUnit.SECONDS)
     public void readBlocksUntilDataIsWritten() throws Exception {
         BytePipe pipe = new BytePipe();
         P2PInputStream in = pipe.input();
@@ -256,7 +258,8 @@ public class BytePipeTest {
         }
     }
 
-    @Test(timeout = 5000)
+    @Test
+    @Timeout(value = 5, unit = TimeUnit.SECONDS)
     public void readBlocksUntilCloseSignalsEof() throws Exception {
         BytePipe pipe = new BytePipe();
         P2PInputStream in = pipe.input();
@@ -275,7 +278,8 @@ public class BytePipeTest {
         }
     }
 
-    @Test(timeout = 20000)
+    @Test
+    @Timeout(value = 20, unit = TimeUnit.SECONDS)
     public void concurrentWriterAndReaderConserveData() throws Exception {
         BytePipe pipe = new BytePipe();
         P2POutputStream out = pipe.output();

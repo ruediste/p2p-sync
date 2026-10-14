@@ -1,9 +1,9 @@
 package com.github.ruediste.p2psync.libp2p.security.noise;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.github.ruediste.p2psync.libp2p.core.P2PInputStream;
 import com.github.ruediste.p2psync.libp2p.core.P2POutputStream;
@@ -137,8 +137,8 @@ public class NoiseXXTest {
             Thread.ofVirtual().start(() -> aSession.getStream().getOut().write(aToBData));
             Thread.ofVirtual().start(() -> bSession.getStream().getOut().write(bToAData));
 
-            assertArrayEquals("A->B size " + size, aToBData, readExact(bSession.getStream().getIn(), size));
-            assertArrayEquals("B->A size " + size, bToAData, readExact(aSession.getStream().getIn(), size));
+            assertArrayEquals(aToBData, readExact(bSession.getStream().getIn(), size), "A->B size " + size);
+            assertArrayEquals(bToAData, readExact(aSession.getStream().getIn(), size), "B->A size " + size);
         }
 
         aSession.getStream().close();
@@ -157,7 +157,7 @@ public class NoiseXXTest {
 
         byte[] probe = aTee.probe();
         // first message = 2-byte length prefix (32) + 32-byte ephemeral public key
-        assertTrue("expected a first message on the wire, probe size " + probe.length, probe.length >= 34);
+        assertTrue(probe.length >= 34, "expected a first message on the wire, probe size " + probe.length);
         assertEquals(0, probe[0] & 0xFF);
         assertEquals(NoiseXXHandshake.DH_LENGTH, probe[1] & 0xFF);
     }
@@ -184,8 +184,8 @@ public class NoiseXXTest {
         // leaving the 2-byte length prefix intact. The probe holds every wire
         // frame A sent (msg1, msg3, then the step-1 data frame), so grab the last one.
         byte[] frame = lastFrame(aTee.probe());
-        assertTrue("expected the step-1 data frame, got " + frame.length,
-                frame.length >= 2 + NoiseXXHandshake.TAG_LENGTH);
+        assertTrue(frame.length >= 2 + NoiseXXHandshake.TAG_LENGTH,
+                "expected the step-1 data frame, got " + frame.length);
         int frameLength = ((frame[0] & 0xFF) << 8) | (frame[1] & 0xFF);
         frame[2 + NoiseXXHandshake.TAG_LENGTH] ^= 0x01;
         P2POutputStream direct = pipe.aToB.output();
@@ -295,8 +295,7 @@ public class NoiseXXTest {
         } catch (IllegalStateException expected) {
             // expected
         }
-        assertEquals("Refusal must not consume the counter", 0xFFFFFFFFFFFFFFFFL,
-                nonceField.getLong(cipher));
+        assertEquals(0xFFFFFFFFFFFFFFFFL, nonceField.getLong(cipher), "Refusal must not consume the counter");
 
         try {
             cipher.decryptWithAd(null, new byte[8]);
@@ -304,8 +303,7 @@ public class NoiseXXTest {
         } catch (IllegalStateException expected) {
             // expected
         }
-        assertEquals("Refusal must not consume the counter", 0xFFFFFFFFFFFFFFFFL,
-                nonceField.getLong(cipher));
+        assertEquals(0xFFFFFFFFFFFFFFFFL, nonceField.getLong(cipher), "Refusal must not consume the counter");
     }
 
     @Test
@@ -339,10 +337,9 @@ public class NoiseXXTest {
             executor.shutdownNow();
         }
 
-        assertEquals("each AEAD counter must be used exactly once",
-                threads * perThread, ciphertexts.size());
-        assertEquals("the counter must have advanced exactly once per encryption",
-                threads * perThread, nonceOf(cipher));
+        assertEquals(threads * perThread, ciphertexts.size(), "each AEAD counter must be used exactly once");
+        assertEquals(threads * perThread, nonceOf(cipher),
+                "the counter must have advanced exactly once per encryption");
     }
 
     @Test
@@ -387,7 +384,7 @@ public class NoiseXXTest {
         // on counter/wire desync) if any frame can't be decrypted in order; hence
         // reaching the end proves the ordering guarantee
         byte[] received = readExact(in, total);
-        assertEquals("decrypted byte volume must match what was written", total, received.length);
+        assertEquals(total, received.length, "decrypted byte volume must match what was written");
     }
 
     // ------------------------------------------------------------------

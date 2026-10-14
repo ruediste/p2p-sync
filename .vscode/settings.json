@@ -21,6 +21,7 @@
     "Repr",
     "ruediste",
     "Stringifier",
+    "Unallocating",
     "unlisten",
     "unmarshal",
     "Unmarshals",

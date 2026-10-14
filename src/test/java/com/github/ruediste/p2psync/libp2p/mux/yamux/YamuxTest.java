@@ -1,10 +1,10 @@
 package com.github.ruediste.p2psync.libp2p.mux.yamux;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.github.ruediste.p2psync.libp2p.core.P2PInputStream;
 import com.github.ruediste.p2psync.libp2p.core.P2PStream;
@@ -159,7 +159,7 @@ public class YamuxTest {
             // Read on all streams
             for (int i = 0; i < streamCount; i++) {
                 byte[] received = readExact(streamsB[i].getInputStream(), datas[i].length);
-                assertArrayEquals("Stream " + i, datas[i], received);
+                assertArrayEquals(datas[i], received, "Stream " + i);
             }
         } finally {
             pair.close();

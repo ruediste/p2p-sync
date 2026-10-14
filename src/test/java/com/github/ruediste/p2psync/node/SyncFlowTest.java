@@ -1,10 +1,10 @@
 package com.github.ruediste.p2psync.node;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import com.github.ruediste.p2psync.node.Node.Network;
 
@@ -15,7 +15,7 @@ public class SyncFlowTest {
     private Node nodeB;
     private NodeUserHandle handleA;
 
-    @Before
+    @BeforeEach
     public void before() {
         network = new Network();
         nodeA = new Node(network);
@@ -24,7 +24,7 @@ public class SyncFlowTest {
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void sync_no_conflict() {
         var handleB = nodeB.join(handleA.data.userKey);
 

@@ -1,6 +1,6 @@
 package com.github.ruediste.p2psync.libp2p.host;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -8,8 +8,8 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 
-import org.junit.Assume;
-import org.junit.Test;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 
 import com.github.ruediste.p2psync.libp2p.core.Host;
 import com.github.ruediste.p2psync.libp2p.core.PeerId;
@@ -49,10 +49,8 @@ public class MDnsWireUpIT {
             waitFor(() -> hasAddr(a, b.peerId(), bAddr), TIMEOUT_MILLIS);
             waitFor(() -> hasAddr(b, a.peerId(), aAddr), TIMEOUT_MILLIS);
 
-            assertTrue("host A should have learned host B's address " + bAddr,
-                    hasAddr(a, b.peerId(), bAddr));
-            assertTrue("host B should have learned host A's address " + aAddr,
-                    hasAddr(b, a.peerId(), aAddr));
+            assertTrue(hasAddr(a, b.peerId(), bAddr), "host A should have learned host B's address " + bAddr);
+            assertTrue(hasAddr(b, a.peerId(), aAddr), "host B should have learned host A's address " + aAddr);
         } finally {
             // Do not await graceful mDNS teardown: JmDNS canceling adds several
             // seconds per instance and is irrelevant for the test outcome.
@@ -90,7 +88,7 @@ public class MDnsWireUpIT {
             ms.joinGroup(new java.net.InetSocketAddress(group, 0), null);
             ms.leaveGroup(new java.net.InetSocketAddress(group, 0), null);
         } catch (Exception e) {
-            Assume.assumeNoException("mDNS multicast not available in this environment", e);
+            Assumptions.assumeTrue(false, "mDNS multicast not available in this environment: " + e);
         }
     }
 }

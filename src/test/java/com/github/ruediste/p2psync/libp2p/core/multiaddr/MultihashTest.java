@@ -1,10 +1,11 @@
 package com.github.ruediste.p2psync.libp2p.core.multiaddr;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.security.MessageDigest;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 public class MultihashTest {
 

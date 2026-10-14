@@ -90,15 +90,31 @@ struct FreeSpaceEntry {
 
 When allocating space, the space is allocated from the beginning of the tree. When blocks are freed, neighboring free blocks are merged to form larger contiguous free areas, reducing the number of entries in the free space tree. 
 
-### Free Space Tree Block Allocation
-All free space trees are stored in the meta area. When modifying the meta area free space tree, new blocks from within the meta area are required, which in turn would require modifying the meta area free space tree. To break this cycle, blocks for the meta area free space tree are allocated using "reserved meta blocks". While a transaction is running, this is simply a set of block offsets in RAM. These blocks are always marked as free in the free space tree and never allocated for other purposes. 
+### Transaction and Block Management
+Changes to the data file are managed within transactions. During a transaction, blocks used by the previous transaction are never modified. All changes are written to newly allocated blocks. For efficient and correct block management, a few in-memory structures are maintained:
 
-On commit, the reserved block list is stored as linked list. This happens very late in the transaction process and uses some additional reserved blocks. Before writing the list, it is ensured that there are enough free blocks available to complete the operation (writing the linked list). Otherwise, the meta area is grown before starting to write the list.
+- `ModifiedBlocks`: A hash map keeping track of all blocks modified during the current transaction. The key is the block offset, and the value contains the modified block data. It acts as a write cache which ensures that blocks which are only used temporarily are never written to the disk. 
+- `FreeBlocks`: To enable efficient block allocation, and to avoid repeatedly modifying the free space trees, a set of free blocks is maintained in memory. When the set becomes empty, a new batch of free blocks is fetched from the free space tree.
 
-When the number of reserved blocks reaches a threshold, block allocation switches to a new set of reserved blocks. The old reserved blocks are then removed from the free space tree. (while doing so, the old reserved blocks still count as non-free for allocation purposes)
+  The block offset of the highest fetched block is kept (fetch offset), and block fetching always continues after the fetch offset. As no blocks after the fetch offset can be allocated in a transaction, all blocks in the free tree after the fetch offset are guaranteed to be free. The tree is not modified when fetching the blocks. 
 
-### Freeing Blocks
-When a block is no longer referenced (refcount hits 0), it can be freed. However, care has to be taken not to reuse this block in the current transaction, as the block is still used by the last committed transaction. Therefore, free blocks are tracked in a separate list (persisted on disk). The list is committed as well. When a transaction starts, first all free blocks from the last transaction are added back into the corresponding free tree.
+- `AllocatedBlocks`: When a block is allocated, it is removed from the `FreeBlocks` set and added to the `AllocatedBlocks` set. When a block is no longer needed in a transaction (unallocated), it is removed from the `AllocatedBlocks` set and added back to the `FreeBlocks` set. During commit, the `AllocatedBlocks` are removed from the free space tree.
+
+- `MetaReservedBlocks`: 
+All free space trees are stored in the meta area. When modifying the meta area free space tree, new blocks from within the meta area are required, which in turn would require modifying the meta area free space tree. To break this cycle, blocks for the meta area free space tree are allocated using the `MetaReservedBlocks`. This is a set of reserved blocks is maintained in memory. The blocks are allocated from the `FreeBlocks` set.
+
+  The `MetaReservedBlocks` are kept in memory across transactions commits. This implies that while filling the `FreeBlocks` set from the free blocks tree, the reserved blocks are not considered available for allocation.
+
+  On commit, the reserved block list is stored as linked list. This happens very late in the transaction process and uses some additional reserved blocks. Before writing the list, it is ensured that there are enough free blocks available to complete the operation by growing the meta area.
+
+  When the number of reserved blocks reaches a threshold, block allocation switches to a new set of reserved blocks. The old reserved blocks are then removed from the free space tree. (while doing so, the old reserved blocks still count as non-free for allocation purposes)
+
+  This mechanism is only used for the meta free space tree.
+- `UnallocatedBlocks`: When a block is no longer referenced (refcount hits 0), it can be unallocated. However, care has to be taken not to reuse a block used in the previous transaction in the current transaction, as the block is still used by the last committed transaction. 
+
+  Therefore, unallocated blocks are tracked in a separate list (persisted on disk). The list is committed as well. When a transaction starts, first all unallocated blocks from the last transaction are added back into the corresponding free tree.
+
+To ensure correctness of all of these structures and operations, it is helpful to note that when adding blocks form the free space tree to the `FreeBlocks`, they are "pending". These blocks can then be passed on to the `AllocatedBlocks` or the `ReservedBlocks` as needed. It has to be ensured, that before definitely using these "pending" blocks, they are properly removed from the free space tree.
 
 ### Reference Count Tree
 The reference count tree simply keeps track of the reference counts of blocks within the data file. Each entry in the tree corresponds to a block and stores the number of references to that block.
@@ -173,8 +189,7 @@ struct BlobHeader {
 
 The data is stored in `INLINE_DATA` and `EXTENT_DATA` entries.
 
-### Transactions and Storage
-The system groups multiple writes into transactions. During a transaction, modifications of B-tree blocks are kept in-memory. Also, refcount updates are deferred until the transaction is committed. Once the transaction is committed, all changes are flushed to the storage, and the refcount updates are applied atomically.
+
 
 ## Globally Unique Identifiers (GUID)
 When creating a new file or directory a globally unique identifier (GUID) has to be generated. We use the SHA-256 (32 bytes) hash of the public key of the node creating the entity, followed by a per node counter (64 bits, 8 bytes). This is the full GUID, consisting of 40 bytes in total.
