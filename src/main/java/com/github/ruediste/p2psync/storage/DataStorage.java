@@ -148,6 +148,12 @@ public class DataStorage implements Closeable {
             this.area = area;
             this.onDelete = onDelete;
         }
+
+        @Override
+        public String toString() {
+            return adjustment +
+                    "@" + area;
+        }
     }
 
     RandomAccessFile file;
@@ -703,14 +709,7 @@ public class DataStorage implements Closeable {
         int desiredFreeBlocks = 256;
         int blockSize = blockSize(area);
         Long cursor = freeSpaceAllocationOffset.get(area);
-        // TODO: Add file length to root block. Truncate file on open to specified
-        // length.
-        long fileLength;
-        try {
-            fileLength = file.length();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+
         while (blocks.size() < desiredFreeBlocks) {
             var iterator = cursor == null ? tree.iterator() : tree.floorOrLowestIterator(u64(cursor));
             while (iterator.hasNext() && blocks.size() < desiredFreeBlocks) {
@@ -729,7 +728,7 @@ public class DataStorage implements Closeable {
                 } catch (ArithmeticException e) {
                     throw new IllegalStateException("Free extent overflows file offsets", e);
                 }
-                if (extentEnd > fileLength)
+                if (extentEnd > rootBlock.fileLength)
                     throw new IllegalStateException("Free extent exceeds storage file length in " + area + " tree");
 
                 long offset = extentOffset;
@@ -776,12 +775,6 @@ public class DataStorage implements Closeable {
             // we iterated to the end of the current free-space extents without gathering
             // enough free blocks, so we need to extend the storage.
             extend(area);
-
-            try {
-                fileLength = file.length();
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
         }
     }
 
@@ -1123,44 +1116,40 @@ public class DataStorage implements Closeable {
             throw new IllegalStateException("META block is too small for a reserved-block list");
 
         List<Long> listOffsets = new ArrayList<>();
-        Set<Long> entries = new TreeSet<>();
+
         while (true) {
-            for (long blockOffset : metaReservedBlocks) {
-                if (!listOffsets.contains(blockOffset))
-                    entries.add(blockOffset);
-            }
-            int required = (entries.size() + capacity - 1) / capacity;
-            while (listOffsets.size() < required)
-                listOffsets.add(allocateMetaReservedBlock());
-
-            if (!metaReservedBlocks.isEmpty())
-                removeMetaReservedBlocksFromFreeTree();
-            for (long blockOffset : metaReservedBlocks) {
-                if (!listOffsets.contains(blockOffset))
-                    entries.add(blockOffset);
-            }
-            required = (entries.size() + capacity - 1) / capacity;
-            if (metaReservedBlocks.isEmpty() && listOffsets.size() >= required)
+            var requiredListBlocks = metaReservedBlocks.size() / capacity + 1;
+            if (listOffsets.size() >= requiredListBlocks)
                 break;
+            var offset = allocateMetaReservedBlock();
+            modifiedBlocks.put(offset, DIRECT_WRITE_EMPTY_ARRAY);
+            listOffsets.add(offset);
         }
 
-        List<Long> sortedEntries = new ArrayList<>(entries);
         long next = 0;
-        int end = sortedEntries.size();
-        for (int i = listOffsets.size() - 1; i >= 0; i--) {
-            int start = Math.max(0, end - capacity);
-            byte[] bytes = new byte[blockSize(Area.META)];
-            ByteBuffer buffer = wrap(bytes);
-            buffer.putLong(next);
-            buffer.putLong(end - start);
-            for (int j = start; j < end; j++)
-                buffer.putLong(sortedEntries.get(j));
-            modifiedBlocks.put(listOffsets.get(i), bytes);
-            next = listOffsets.get(i);
-            end = start;
+        byte[] bytes = new byte[blockSize(Area.META)];
+        ByteBuffer buffer = wrap(bytes);
+        buffer.position(2 * Long.BYTES);
+        long count = 0;
+        var listOffsetsIterator = listOffsets.iterator();
+
+        for (long blockOffset : metaReservedBlocks) {
+            if (buffer.remaining() < Long.BYTES) {
+                buffer.putLong(0, next);
+                buffer.putLong(Long.BYTES, count);
+                writeBlockDirect(listOffsetsIterator.next(), Area.META, bytes);
+                buffer.clear();
+                buffer.position(2 * Long.BYTES);
+            }
+            buffer.putLong(Long.BYTES, blockOffset);
+            count++;
         }
-        if (end != 0)
-            throw new IllegalStateException("Meta-reserved list does not fit in allocated list blocks");
+        // flush final buffer
+        buffer.putLong(0, next);
+        buffer.putLong(Long.BYTES, count);
+        var head = listOffsetsIterator.next();
+        writeBlockDirect(head, Area.META, bytes);
+
         rootBlock.metaReservedBlockList = next;
     }
 

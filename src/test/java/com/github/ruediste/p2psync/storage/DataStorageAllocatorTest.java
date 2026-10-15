@@ -189,6 +189,10 @@ class DataStorageAllocatorTest {
         }
     }
 
+    /**
+     * Frees one block per area, commits, and reopens the file. Verifies each
+     * deferred-free chain restores its blocks to the matching free-space tree.
+     */
     @Test
     void deferredFreeListsRoundTripForEveryArea() {
         Path path = tempDir.resolve("deferred-free-areas.db");
@@ -212,6 +216,10 @@ class DataStorageAllocatorTest {
         }
     }
 
+    /**
+     * Defers more offsets than fit in one SYSTEM list block, then reopens the
+     * file. Verifies both ends of the linked list are reclaimed into DATA space.
+     */
     @Test
     void deferredFreeListRollsOverAcrossSystemBlocks() {
         Path path = tempDir.resolve("deferred-free-rollover.db");

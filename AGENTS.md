@@ -6,8 +6,10 @@ Read `ImplementationPlan.md` if the user seems to reference to it (it might not 
 
 If there is an issue with generating the protobuf java files, a `mvn clean` sometimes helps.
 
-## Running Tests
+## Tests
+When writing a test, add a short description of the test's purpose and how it verifies the expected behavior.
 
+Running:
 - `mvn test` runs the fast unit tests only. Integration tests (`*IT.java`, currently the slow mDNS loopback tests `MDnsDiscoveryIT` and `MDnsWireUpIT`) are excluded by default.
 - `mvn test -Pit` runs only the integration tests. They require working multicast networking and take several seconds each; they skip automatically (JUnit assumptions) when multicast is unavailable.
 - When changing test wiring, verify both: `mvn test` and `mvn test -Pit`.

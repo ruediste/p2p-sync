@@ -101,14 +101,13 @@ Changes to the data file are managed within transactions. During a transaction, 
 
 - `AllocatedBlocks`: When a block is allocated, it is removed from the `FreeBlocks` set and added to the `AllocatedBlocks` set. When a block is no longer needed in a transaction (unallocated), it is removed from the `AllocatedBlocks` set and added back to the `FreeBlocks` set. During commit, the `AllocatedBlocks` are removed from the free space tree. All `AllocatedBlocks` are in `ModifiedBlocks`.
 
-- `MetaReservedBlocks`: 
-All free space trees are stored in the meta area. When modifying the meta area free space tree, new blocks from within the meta area are required, which in turn would require modifying the meta area free space tree. To break this cycle, blocks for the meta area free space tree are allocated using the `MetaReservedBlocks`. This is a set of reserved blocks is maintained in memory. The blocks are allocated from the `FreeBlocks` set.
+- `MetaReservedBlocks`: All free space trees are stored in the meta area. When modifying the meta area free space tree, new blocks from within the meta area are required, which in turn would require modifying the meta area free space tree. To break this cycle, blocks for the meta area free space tree are allocated using the `MetaReservedBlocks`. This is a set of reserved blocks is maintained in memory. The blocks are allocated from the `FreeBlocks` set.
 
   The `MetaReservedBlocks` are kept in memory across transactions commits. This implies that while filling the `FreeBlocks` set from the free blocks tree, the reserved blocks are not considered available for allocation.
 
   On commit, the reserved block list is stored as linked list. This happens very late in the transaction process and uses some additional reserved blocks. Before writing the list, it is ensured that there are enough free blocks available to complete the operation by growing the meta area.
-
-    When the number of reserved blocks reaches a threshold, block allocation switches to a new set of reserved blocks. The old reserved blocks are then removed from the free space tree or added to the `DeferredFreeBlocks`. While doing so, the old reserved blocks still count as non-free for allocation purposes.
+  
+  When the number of reserved blocks reaches a threshold, block allocation switches to a new set of reserved blocks. The old reserved blocks are then removed from the free space tree. While doing so, the old reserved blocks still count as non-free for allocation purposes.
 
   `MetaReservedBlocks` are in the `ModifiedBlocks` if they have been reserved during the current transaction. Blocks that were reserved in previous transactions are not in the `ModifiedBlocks`.
   
@@ -121,6 +120,13 @@ All free space trees are stored in the meta area. When modifying the meta area f
     Note that once a block is added to the `DeferredFreeBlocks` list, it cannot be removed from the list again during the transaction. 
 
 To ensure correctness of all of these structures and operations, it is helpful to note that when adding blocks form the free space tree to the `FreeBlocks`, they are "pending". These blocks can then be passed on to the `AllocatedBlocks` or the `ReservedBlocks` as needed. It has to be ensured, that before definitely using these "pending" blocks, they are properly removed from the free space tree.
+
+Invariants:
+- `DeferredFreeBlocks` are not in the free tree
+- Blocks in the following set are always in the free tree:
+  - `FreeBlocks` 
+  - `AllocatedBlocks` 
+  - `MetaReservedBlocks` 
 
 ### Reference Count Tree
 The reference count tree simply keeps track of the reference counts of blocks within the data file. Each entry in the tree corresponds to a block and stores the number of references to that block.
