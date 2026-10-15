@@ -24,9 +24,9 @@ import java.util.function.Consumer;
  * reachable in the child's subtree.
  *
  * <p>
- * Modifications never overwrite existing tree blocks. Instead the affected path
- * is copied, old blocks are released and new blocks are allocated through the
- * {@link DataStorage}. A {@link BTree} therefore references the root of a
+ * Modifications copy existing tree blocks, but may overwrite blocks modified in
+ * the current transaction. Blocks are managed through {@link Storage}.
+ * A {@link BTree} therefore references the root of a
  * particular version of the tree; the caller is responsible for persisting the
  * root offset.
  */
@@ -36,27 +36,72 @@ public class BTree implements Iterable<BTree.Entry> {
     private static final int NODE_PTR_EXTRA = 8; // blockptr (8)
 
     /**
-     * Callback for decrementing the reference count of a block.
+    * Create a block-deletion callback that releases all child references.
+    * The storage invokes this only when the block's reference count reaches zero.
      */
-    public static Consumer<Long> decrementRefCount(DataStorage dataStorage) {
-        return (offset) -> {
-            throw new UnsupportedOperationException("decrementRefCount not implemented");
+    public static Consumer<Long> decrementRefCount(Storage storage, int keySize) {
+        return offset -> {
+            byte[] block = storage.readBlock(offset);
+            if (level(block) == 0)
+                return;
+            ByteBuffer buffer = wrap(block);
+            for (int index = 0; index < nritems(block); index++) {
+                long child = buffer.getLong(HEADER_SIZE + index * (keySize + NODE_PTR_EXTRA) + keySize);
+                storage.decrementRefCount(child, decrementRefCount(storage, keySize));
+            }
         };
     }
 
-    private final DataStorage dataStorage;
-    public final DataStorage.Area kind;
+    private final Storage storage;
+    private final BiConsumer<byte[], byte[]> onEntryDelete;
     public final int keySize;
     public long rootOffset;
 
-    public BTree(DataStorage dataStorage, DataStorage.Area kind, int keySize) {
-        this(dataStorage, kind, keySize, 0);
+    public interface Storage {
+        int blockSize();
+
+        byte[] readBlock(long blockOffset);
+
+        /**
+         * Check if this block has been modified in the current transaction, and can
+         * therefore be modified directly.
+         */
+        boolean isBlockModified(long blockOffset);
+
+        /** Write a block which has already been modified in the current transaction. */
+        void writeBlock(long blockOffset, byte[] data);
+
+        /** Allocate and write a new block with one owned reference. */
+        long writeNewBlock(byte[] data);
+
+        void incrementRefCount(long blockOffset);
+
+        /**
+         * Release one reference, invoking {@code onDelete} at zero while the block
+         * can still be read.
+         */
+        void decrementRefCount(long blockOffset, Consumer<Long> onDelete);
     }
 
-    public BTree(DataStorage dataStorage, DataStorage.Area kind, int keySize, long rootOffset) {
-        this.dataStorage = dataStorage;
-        this.kind = kind;
+    /**
+    * Constructs a new empty BTree.
+    *
+    * @param onEntryDelete callback for entries removed or replaced, or null
+     */
+    public BTree(Storage storage, int keySize, BiConsumer<byte[], byte[]> onEntryDelete) {
+        this(storage, keySize, onEntryDelete, 0);
+    }
+
+    /**
+     * Constructs a new BTree for an existing tree. If the rootOffset is zero, the
+    * tree is considered empty. The tree takes ownership of one root reference.
+    *
+    * @param onEntryDelete callback for entries removed or replaced, or null
+     */
+    public BTree(Storage storage, int keySize, BiConsumer<byte[], byte[]> onEntryDelete, long rootOffset) {
+        this.storage = storage;
         this.keySize = keySize;
+        this.onEntryDelete = onEntryDelete;
         this.rootOffset = rootOffset;
     }
 
@@ -79,7 +124,7 @@ public class BTree implements Iterable<BTree.Entry> {
         checkKey(key);
         long off = rootOffset;
         while (off != 0) {
-            byte[] block = dataStorage.readBlock(off, kind);
+            byte[] block = storage.readBlock(off);
             if (level(block) == 0) {
                 int idx = leafSearch(block, keySize, key);
                 if (idx < 0)
@@ -112,12 +157,13 @@ public class BTree implements Iterable<BTree.Entry> {
             rootOffset = writeNewLeaf(entries);
             return;
         }
+        int rootLevel = level(storage.readBlock(rootOffset));
         Result res = insertInto(rootOffset, key, value);
         if (res.splitOffset != 0) {
             List<Ptr> ptrs = new ArrayList<>();
             ptrs.add(new Ptr(res.firstKey, res.newOffset));
             ptrs.add(new Ptr(res.splitKey, res.splitOffset));
-            rootOffset = writeNewNode(ptrs, 1);
+            rootOffset = writeNewNode(ptrs, rootLevel + 1);
         } else {
             rootOffset = res.newOffset;
         }
@@ -131,12 +177,13 @@ public class BTree implements Iterable<BTree.Entry> {
     }
 
     private Result insertInto(long offset, byte[] key, byte[] value) {
-        byte[] block = dataStorage.readBlock(offset, kind);
+        byte[] block = storage.readBlock(offset);
         Result res = new Result();
         if (level(block) == 0) {
             List<Entry> entries = parseLeaf(block, keySize);
             int idx = searchEntries(entries, key);
             if (idx >= 0) {
+                entryDeleted(entries.get(idx));
                 entries.set(idx, new Entry(entries.get(idx).key, value.clone()));
             } else {
                 int ins = -(idx + 1);
@@ -144,22 +191,22 @@ public class BTree implements Iterable<BTree.Entry> {
             }
 
             if (fitsLeaf(entries)) {
-                res.newOffset = writeNewLeaf(entries);
+                res.newOffset = writeLeaf(offset, entries);
                 res.firstKey = entries.get(0).key;
             } else {
                 int k = chooseLeafSplit(entries);
                 List<Entry> left = new ArrayList<>(entries.subList(0, k));
                 List<Entry> right = new ArrayList<>(entries.subList(k, entries.size()));
-                res.newOffset = writeNewLeaf(left);
+                res.newOffset = writeLeaf(offset, left);
                 res.splitOffset = writeNewLeaf(right);
                 res.firstKey = left.get(0).key;
                 res.splitKey = right.get(0).key;
             }
-            dataStorage.freeBlock(offset, kind);
             return res;
         }
 
         List<Ptr> ptrs = parseNode(block, keySize);
+        retainChildren(offset, ptrs);
         int child = findChild(ptrs, key);
         Result childRes = insertInto(ptrs.get(child).blockptr, key, value);
         ptrs.get(child).blockptr = childRes.newOffset;
@@ -170,18 +217,17 @@ public class BTree implements Iterable<BTree.Entry> {
         }
 
         if (fitsNode(ptrs)) {
-            res.newOffset = writeNewNode(ptrs, level(block));
+            res.newOffset = writeNode(offset, ptrs, level(block));
             res.firstKey = ptrs.get(0).key;
         } else {
             int mid = ptrs.size() / 2;
             List<Ptr> left = new ArrayList<>(ptrs.subList(0, mid));
             List<Ptr> right = new ArrayList<>(ptrs.subList(mid, ptrs.size()));
-            res.newOffset = writeNewNode(left, level(block));
+            res.newOffset = writeNode(offset, left, level(block));
             res.splitOffset = writeNewNode(right, level(block));
             res.firstKey = left.get(0).key;
             res.splitKey = right.get(0).key;
         }
-        dataStorage.freeBlock(offset, kind);
         return res;
     }
 
@@ -201,14 +247,15 @@ public class BTree implements Iterable<BTree.Entry> {
 
         // Collapse a root node that is left with a single child.
         while (rootOffset != 0) {
-            byte[] block = dataStorage.readBlock(rootOffset, kind);
+            byte[] block = storage.readBlock(rootOffset);
             if (level(block) == 0)
                 break;
             List<Ptr> ptrs = parseNode(block, keySize);
             if (ptrs.size() != 1)
                 break;
             long child = ptrs.get(0).blockptr;
-            dataStorage.freeBlock(rootOffset, kind);
+            storage.incrementRefCount(child);
+            releaseBlock(rootOffset);
             rootOffset = child;
         }
         return true;
@@ -233,27 +280,29 @@ public class BTree implements Iterable<BTree.Entry> {
      * the replacement subtree root and its first key.
      */
     private Result removeFrom(long offset, byte[] key) {
-        byte[] block = dataStorage.readBlock(offset, kind);
+        byte[] block = storage.readBlock(offset);
         Result res = new Result();
         if (level(block) == 0) {
             List<Entry> entries = parseLeaf(block, keySize);
             int idx = searchEntries(entries, key);
             if (idx < 0)
                 return null;
-            entries.remove(idx);
+            entryDeleted(entries.remove(idx));
             if (entries.isEmpty()) {
-                dataStorage.freeBlock(offset, kind);
+                releaseBlock(offset);
                 res.newOffset = 0;
                 return res;
             }
-            res.newOffset = writeNewLeaf(entries);
+            res.newOffset = writeLeaf(offset, entries);
             res.firstKey = entries.get(0).key;
-            dataStorage.freeBlock(offset, kind);
             return res;
         }
 
         List<Ptr> ptrs = parseNode(block, keySize);
         int child = findChild(ptrs, key);
+        if (!containsInSubtree(ptrs.get(child).blockptr, key))
+            return null;
+        retainChildren(offset, ptrs);
         Result childRes = removeFrom(ptrs.get(child).blockptr, key);
         if (childRes == null)
             return null;
@@ -264,13 +313,14 @@ public class BTree implements Iterable<BTree.Entry> {
             ptrs.get(child).key = childRes.firstKey;
         }
         if (ptrs.isEmpty()) {
-            dataStorage.freeBlock(offset, kind);
+            if (storage.isBlockModified(offset))
+                storage.writeBlock(offset, serializeNode(ptrs, level(block)));
+            releaseBlock(offset);
             res.newOffset = 0;
             return res;
         }
-        res.newOffset = writeNewNode(ptrs, level(block));
+        res.newOffset = writeNode(offset, ptrs, level(block));
         res.firstKey = ptrs.get(0).key;
-        dataStorage.freeBlock(offset, kind);
         return res;
     }
 
@@ -290,12 +340,12 @@ public class BTree implements Iterable<BTree.Entry> {
 
         List<Frame> path = new ArrayList<>();
         long offset = rootOffset;
-        byte[] block = dataStorage.readBlock(offset, kind);
+        byte[] block = storage.readBlock(offset);
         while (level(block) != 0) {
             List<Ptr> ptrs = parseNode(block, keySize);
             path.add(new Frame(ptrs, 0));
             offset = ptrs.get(0).blockptr;
-            block = dataStorage.readBlock(offset, kind);
+            block = storage.readBlock(offset);
         }
 
         return new BTreeIterator(new Position(path, parseLeaf(block, keySize), 0));
@@ -312,7 +362,7 @@ public class BTree implements Iterable<BTree.Entry> {
 
     private void collectBlocks(long offset, java.util.function.LongConsumer consumer) {
         consumer.accept(offset);
-        byte[] block = dataStorage.readBlock(offset, kind);
+        byte[] block = storage.readBlock(offset);
         if (level(block) == 0)
             return;
         for (Ptr p : parseNode(block, keySize))
@@ -320,7 +370,7 @@ public class BTree implements Iterable<BTree.Entry> {
     }
 
     private void walk(long offset, BiConsumer<byte[], byte[]> consumer) {
-        byte[] block = dataStorage.readBlock(offset, kind);
+        byte[] block = storage.readBlock(offset);
         if (level(block) == 0) {
             List<Entry> entries = parseLeaf(block, keySize);
             for (Entry e : entries)
@@ -365,13 +415,13 @@ public class BTree implements Iterable<BTree.Entry> {
 
         List<Frame> path = new ArrayList<>();
         long offset = rootOffset;
-        byte[] block = dataStorage.readBlock(offset, kind);
+        byte[] block = storage.readBlock(offset);
         while (level(block) != 0) {
             List<Ptr> ptrs = parseNode(block, keySize);
             int childIndex = findChild(ptrs, key);
             path.add(new Frame(ptrs, childIndex));
             offset = ptrs.get(childIndex).blockptr;
-            block = dataStorage.readBlock(offset, kind);
+            block = storage.readBlock(offset);
         }
 
         List<Entry> entries = parseLeaf(block, keySize);
@@ -444,12 +494,12 @@ public class BTree implements Iterable<BTree.Entry> {
             while (path.size() > i + 1)
                 path.remove(path.size() - 1);
             long offset = frame.ptrs.get(frame.childIndex).blockptr;
-            byte[] block = dataStorage.readBlock(offset, kind);
+            byte[] block = storage.readBlock(offset);
             while (level(block) != 0) {
                 List<Ptr> ptrs = parseNode(block, keySize);
                 path.add(new Frame(ptrs, 0));
                 offset = ptrs.get(0).blockptr;
-                block = dataStorage.readBlock(offset, kind);
+                block = storage.readBlock(offset);
             }
             return new Position(path, parseLeaf(block, keySize), 0);
         }
@@ -478,15 +528,15 @@ public class BTree implements Iterable<BTree.Entry> {
         long used = (long) entries.size() * (keySize + 8);
         for (Entry e : entries)
             used += e.value.length;
-        return used <= dataStorage.blockSize(kind) - HEADER_SIZE;
+        return used <= storage.blockSize() - HEADER_SIZE;
     }
 
     private boolean fitsNode(List<Ptr> ptrs) {
-        return (long) ptrs.size() * (keySize + NODE_PTR_EXTRA) <= dataStorage.blockSize(kind) - HEADER_SIZE;
+        return (long) ptrs.size() * (keySize + NODE_PTR_EXTRA) <= storage.blockSize() - HEADER_SIZE;
     }
 
     private int chooseLeafSplit(List<Entry> entries) {
-        int capacity = dataStorage.blockSize(kind) - HEADER_SIZE;
+        int capacity = storage.blockSize() - HEADER_SIZE;
         int n = entries.size();
         // Find the smallest index so that the right half still fits; then check the
         // left half fits too, otherwise increase.
@@ -505,7 +555,7 @@ public class BTree implements Iterable<BTree.Entry> {
     }
 
     private byte[] serializeLeaf(List<Entry> entries) {
-        int blockSize = dataStorage.blockSize(kind);
+        int blockSize = storage.blockSize();
         byte[] buf = new byte[blockSize];
         ByteBuffer bb = wrap(buf);
         writeHeader(bb, entries.size(), 0);
@@ -524,7 +574,7 @@ public class BTree implements Iterable<BTree.Entry> {
     }
 
     private byte[] serializeNode(List<Ptr> ptrs, int level) {
-        int blockSize = dataStorage.blockSize(kind);
+        int blockSize = storage.blockSize();
         byte[] buf = new byte[blockSize];
         ByteBuffer bb = wrap(buf);
         writeHeader(bb, ptrs.size(), level);
@@ -539,15 +589,53 @@ public class BTree implements Iterable<BTree.Entry> {
     }
 
     private long writeNewLeaf(List<Entry> entries) {
-        long off = dataStorage.allocateBlock(kind);
-        dataStorage.writeBlock(off, kind, serializeLeaf(entries));
-        return off;
+        return storage.writeNewBlock(serializeLeaf(entries));
     }
 
     private long writeNewNode(List<Ptr> ptrs, int level) {
-        long off = dataStorage.allocateBlock(kind);
-        dataStorage.writeBlock(off, kind, serializeNode(ptrs, level));
-        return off;
+        return storage.writeNewBlock(serializeNode(ptrs, level));
+    }
+
+    private long writeLeaf(long offset, List<Entry> entries) {
+        return replaceBlock(offset, serializeLeaf(entries));
+    }
+
+    private long writeNode(long offset, List<Ptr> ptrs, int level) {
+        return replaceBlock(offset, serializeNode(ptrs, level));
+    }
+
+    private long replaceBlock(long offset, byte[] data) {
+        if (storage.isBlockModified(offset)) {
+            storage.writeBlock(offset, data);
+            return offset;
+        }
+        long replacement = storage.writeNewBlock(data);
+        releaseBlock(offset);
+        return replacement;
+    }
+
+    private void retainChildren(long offset, List<Ptr> ptrs) {
+        if (!storage.isBlockModified(offset))
+            for (Ptr pointer : ptrs)
+                storage.incrementRefCount(pointer.blockptr);
+    }
+
+    private void releaseBlock(long offset) {
+        storage.decrementRefCount(offset, decrementRefCount(storage, keySize));
+    }
+
+    private void entryDeleted(Entry entry) {
+        if (onEntryDelete != null)
+            onEntryDelete.accept(entry.key, entry.value);
+    }
+
+    private boolean containsInSubtree(long offset, byte[] key) {
+        byte[] block = storage.readBlock(offset);
+        while (level(block) != 0) {
+            List<Ptr> pointers = parseNode(block, keySize);
+            block = storage.readBlock(pointers.get(findChild(pointers, key)).blockptr);
+        }
+        return leafSearch(block, keySize, key) >= 0;
     }
 
     // ------------------------------------------------------------------

@@ -51,7 +51,7 @@ public class BTreeTest {
     }
 
     private BTree newTree() {
-        return new BTree(storage, DataStorage.Area.META, 8);
+        return new BTree(storage.btreeStorage(DataStorage.Area.META), 8, null);
     }
 
     @Test
@@ -246,7 +246,7 @@ public class BTreeTest {
             tree.put(key(i), bytes("value-" + String.format("%04d", i)));
         assertEquals(1000, count(tree));
         storage.commit();
-        assertTrue(storage.getRefCountEntryCount() > 1);
+        assertTrue(storage.refCountAdjustments.size() > 1);
     }
 
     private int count(BTree tree) {

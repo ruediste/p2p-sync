@@ -68,13 +68,13 @@ public class DataStorageTest {
         @Test
         @DisplayName("Should reload existing storage file on open")
         void testReloadExistingStorage() {
-            long initialRoot = storage.getRootOffset();
+            long initialRoot = storage.superBlock.rootBlock;
             storage.close();
 
             DataStorage reopened = new DataStorage();
             reopened.open(dbPath);
 
-            assertEquals(initialRoot, reopened.getRootOffset());
+            assertEquals(initialRoot, reopened.superBlock.rootBlock);
             assertArrayEquals(DataStorage.MAGIC, reopened.superBlock.magic);
             reopened.close();
         }
@@ -121,7 +121,7 @@ public class DataStorageTest {
         @Test
         @DisplayName("Should persist modified data blocks and update root offset on commit")
         void testAtomicCommit() {
-            long oldRoot = storage.getRootOffset();
+            long oldRoot = storage.superBlock.rootBlock;
 
             byte[] data1 = new byte[storage.blockSize(DataStorage.Area.DATA)];
             Arrays.fill(data1, (byte) 0x11);
@@ -133,7 +133,7 @@ public class DataStorageTest {
 
             storage.commit();
 
-            long newRoot = storage.getRootOffset();
+            long newRoot = storage.superBlock.rootBlock;
             assertNotEquals(oldRoot, newRoot, "Commit must produce a new root block via CoW");
 
             // Verify persistence by reopening from disk
@@ -141,7 +141,7 @@ public class DataStorageTest {
             DataStorage reopened = new DataStorage();
             reopened.open(dbPath);
 
-            assertEquals(newRoot, reopened.getRootOffset());
+            assertEquals(newRoot, reopened.superBlock.rootBlock);
             assertArrayEquals(data1, reopened.readBlock(b1, DataStorage.Area.DATA));
             assertArrayEquals(data2, reopened.readBlock(b2, DataStorage.Area.META));
             reopened.close();
@@ -161,7 +161,7 @@ public class DataStorageTest {
             long b1 = storage.writeNewBlock(DataStorage.Area.DATA, v1Data);
             storage.commit();
 
-            long committedRoot = storage.getRootOffset();
+            long committedRoot = storage.superBlock.rootBlock;
 
             // Transaction 2: Perform uncommitted dirty writes & direct disk writes without
             // commit
@@ -183,7 +183,7 @@ public class DataStorageTest {
             recovered.open(dbPath);
 
             // Verifications
-            assertEquals(committedRoot, recovered.getRootOffset(),
+            assertEquals(committedRoot, recovered.superBlock.rootBlock,
                     "Recovered state must point to last committed superblock root");
             assertEquals(1, recovered.getRefCount(b1), "Committed block b1 must retain reference count of 1");
             assertEquals(0, recovered.getRefCount(b2), "Uncommitted block b2 must not exist in refcount tree");
@@ -207,7 +207,7 @@ public class DataStorageTest {
             assertEquals(1, storage.getRefCount(blockOff));
 
             // Free the block in current transaction
-            storage.freeBlock(blockOff, DataStorage.Area.DATA);
+            storage.addToDeferredFreeBlocks(blockOff, DataStorage.Area.DATA);
 
             // Before commit, refcount remains 1 in persisted state
             assertEquals(1, storage.getRefCount(blockOff));

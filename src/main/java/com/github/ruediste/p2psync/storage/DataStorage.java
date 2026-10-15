@@ -6,13 +6,15 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 
 /**
@@ -54,28 +56,41 @@ public class DataStorage implements Closeable {
 
     public static final long FORMAT_VERSION = 1;
     public static final int SUPERBLOCK_SIZE = 4096;
-    private static final int BLOCK_OFFSET_SIZE = 8; // uint64_t
+    private static final int BLOCK_OFFSET_SIZE = Long.BYTES;
+
+    private final byte[] DIRECT_WRITE_EMPTY_ARRAY = new byte[0];
+
+    public enum Area {
+        SYSTEM,
+        META,
+        DATA
+    }
 
     public static class SuperBlock {
         byte[] magic = new byte[MAGIC.length];
         long version;
         long rootBlock;
-        int dataBlockSize;
-        int metaBlockSize;
-        int systemBlockSize;
+
+        // block sizes have to be here in order to load the root block
+        public int dataBlockSize;
+        public int metaBlockSize;
+        public int systemBlockSize;
     }
 
+    /**
+     * The root block itself is not ref counted. Before writing a new root block to
+     * disk,
+     * the ref count of all referenced blocks is decremented.
+     */
     public static class RootBlock {
         public long dataFreeSpaceTree;
         public long metaFreeSpaceTree;
         public long systemFreeSpaceTree;
 
-        /**
-         * Reference to the list of blocks allocated in the last transaction and freed
-         * in the current transaction. They will
-         * be added to the free space tree at the start of the next transaction.
-         */
-        public long freedBlockList;
+        /** Heads of the deferred-free chains */
+        public long systemDeferredFreeBlockList;
+        public long metaDeferredFreeBlockList;
+        public long dataDeferredFreeBlockList;
 
         /**
          * Reference to the list of meta blocks currently reserved. They are used for to
@@ -96,22 +111,13 @@ public class DataStorage implements Closeable {
         public long fileSystemTree;
         public long operationTree;
         public long snapshotTree;
-    }
-
-    public enum Area {
-        SYSTEM,
-        META,
-        DATA
+        public long fileLength;
     }
 
     public static class InfoBlock {
         boolean dirty;
-        private int dataBlockSize;
-        private int metaBlockSize;
-        private int systemBlockSize;
 
         private int inlineDataThreshold;
-        private int maxExtentDataBlockSize;
 
         public boolean isDirty() {
             return dirty;
@@ -119,33 +125,6 @@ public class DataStorage implements Closeable {
 
         public void clearDirty() {
             this.dirty = false;
-        }
-
-        public int getDataBlockSize() {
-            return dataBlockSize;
-        }
-
-        public void setDataBlockSize(int dataBlockSize) {
-            this.dirty |= this.dataBlockSize != dataBlockSize;
-            this.dataBlockSize = dataBlockSize;
-        }
-
-        public int getMetaBlockSize() {
-            return metaBlockSize;
-        }
-
-        public void setMetaBlockSize(int metaBlockSize) {
-            this.dirty |= this.metaBlockSize != metaBlockSize;
-            this.metaBlockSize = metaBlockSize;
-        }
-
-        public int getSystemBlockSize() {
-            return systemBlockSize;
-        }
-
-        public void setSystemBlockSize(int systemBlockSize) {
-            this.dirty |= this.systemBlockSize != systemBlockSize;
-            this.systemBlockSize = systemBlockSize;
         }
 
         public int getInlineDataThreshold() {
@@ -157,36 +136,9 @@ public class DataStorage implements Closeable {
             this.inlineDataThreshold = inlineDataThreshold;
         }
 
-        public int getMaxExtentDataBlockSize() {
-            return maxExtentDataBlockSize;
-        }
-
-        public void setMaxExtentDataBlockSize(int maxExtentDataBlockSize) {
-            this.dirty |= this.maxExtentDataBlockSize != maxExtentDataBlockSize;
-            this.maxExtentDataBlockSize = maxExtentDataBlockSize;
-        }
     }
 
-    public SuperBlock superBlock;
-    public RootBlock rootBlock;
-    public InfoBlock infoBlock;
-
-    private RandomAccessFile file;
-
-    // Persistent B-trees for free space and refcounts
-    private final EnumMap<Area, BTree> freeSpaceTrees = new EnumMap<>(Area.class);
-
-    /**
-     * Persistent B-tree for reference counts of blocks.
-     * Key: block offset (uint64)
-     * Value: reference count (uint64)
-     */
-    private BTree refCountTree;
-
-    // In-memory modified blocks (offset -> data). Direct writes store null value.
-    private final HashMap<Long, byte[]> modifiedBlocks = new HashMap<>();
-
-    private static class RefCountAdjustment {
+    static class RefCountAdjustment {
         int adjustment;
         Optional<Runnable> onDelete = Optional.empty();
         Area area;
@@ -198,53 +150,205 @@ public class DataStorage implements Closeable {
         }
     }
 
-    private HashMap<Long, RefCountAdjustment> refCountAdjustments = new HashMap<>();
+    RandomAccessFile file;
+
+    SuperBlock superBlock;
+    RootBlock rootBlock;
+    InfoBlock infoBlock;
+
+    /**
+     * The unallocated blocks store all blocks which are not used anymore, but have
+     * been
+     * used in the last transaction. They are persisted to disk and added back to
+     * the
+     * free space tree at the beginning of the next transaction.
+     * 
+     * The blocks in the list have the following:
+     * <ul>
+     * <li>uint64_t: offset of the next unallocated block list block, 0 for end of
+     * list</li>
+     * <li>uint64_t: number of unallocated blocks in this block (could be a
+     * uint16_t, but
+     * using uint64_t for alignment)</li>
+     * <li>uint64_t[]: array of unallocated block offsets</li>
+     * </ul>
+     * 
+     * The lists are stored in system space.
+     */
+    EnumMap<Area, ByteBuffer> deferredFreeBlocks = new EnumMap<>(Area.class);
+
+    private void initializeDeferredFreeBlocks() {
+        deferredFreeBlocks.clear();
+        for (Area area : Area.values()) {
+            ByteBuffer block = ByteBuffer.allocate(superBlock.systemBlockSize);
+            block.putLong(0); // offset of the next unallocated block list block, 0 for end of list
+            block.putLong(0); // skip number of unallocated blocks in this block (will be updated later)
+            deferredFreeBlocks.put(area, block);
+        }
+    }
+
+    EnumMap<Area, TreeSet<Long>> freeBlocks = new EnumMap<>(Area.class);
+    {
+        for (Area area : Area.values()) {
+            freeBlocks.put(area, new TreeSet<>());
+        }
+    }
+    EnumMap<Area, HashSet<Long>> allocatedBlocks = new EnumMap<>(Area.class);
+    {
+        for (Area area : Area.values()) {
+            allocatedBlocks.put(area, new HashSet<>());
+        }
+    }
+
+    // Persistent B-trees for free space
+    final EnumMap<Area, BTree> freeSpaceTrees = new EnumMap<>(Area.class);
+
+    /**
+     * Offset of the last block that has been added to the {@link #freeBlocks}. Null
+     * if no block has been added yet.
+     */
+    final EnumMap<Area, Long> freeSpaceAllocationOffset = new EnumMap<>(Area.class);
+
+    /**
+     * Persistent B-tree for reference counts of blocks.
+     * Key: block offset (uint64)
+     * Value: reference count (uint64)
+     */
+    BTree refCountTree;
+
+    /**
+     * In-memory modified blocks (offset -> data). Direct writes store
+     * {@link #DIRECT_WRITE_EMPTY_ARRAY}.
+     */
+    final HashMap<Long, byte[]> modifiedBlocks = new HashMap<>();
+
+    HashMap<Long, RefCountAdjustment> refCountAdjustments = new HashMap<>();
+
+    // reserved blocks in the meta area
+    Set<Long> metaReservedBlocks = new HashSet<>();
+    Set<Long> oldReservedMetaBlocks = new HashSet<>();
+
+    private void resetInMemoryState() {
+        superBlock = null;
+        rootBlock = null;
+        infoBlock = null;
+        deferredFreeBlocks.clear();
+        for (Area area : Area.values()) {
+            freeBlocks.get(area).clear();
+            allocatedBlocks.get(area).clear();
+        }
+        freeSpaceTrees.clear();
+        freeSpaceAllocationOffset.clear();
+        modifiedBlocks.clear();
+        refCountAdjustments.clear();
+        metaReservedBlocks.clear();
+        oldReservedMetaBlocks.clear();
+        refCountTree = null;
+    }
+
+    private static void validateFormatArguments(long systemBytes, long metaBytes, long dataBytes,
+            int dataBlockSize, int metaBlockSize, int systemBlockSize) {
+        if (systemBytes <= 0 || metaBytes <= 0 || dataBytes <= 0)
+            throw new IllegalArgumentException("Area sizes must be positive");
+        if (dataBlockSize <= 0 || metaBlockSize <= 0 || systemBlockSize < 19 * Long.BYTES)
+            throw new IllegalArgumentException("Invalid block sizes");
+        if (systemBytes % systemBlockSize != 0 || metaBytes % metaBlockSize != 0 || dataBytes % dataBlockSize != 0)
+            throw new IllegalArgumentException("Area sizes must be multiples of their block sizes");
+    }
+
+    private void validateBlockOffset(long offset, int blockSize, String description) {
+        long fileLength;
+        try {
+            fileLength = file.length();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        if (offset < SUPERBLOCK_SIZE || offset > fileLength - blockSize)
+            throw new UncheckedIOException(new IOException("Invalid " + description + " offset: " + offset));
+    }
 
     public void incrementRefCount(long blockOffset, Area area) {
         var adjustment = refCountAdjustments.computeIfAbsent(blockOffset,
                 k -> new RefCountAdjustment(0, area, Optional.empty()));
         adjustment.adjustment++;
-        // onDelete is only relevant when the adjustment is negative
-        if (adjustment.adjustment == 0)
-            adjustment.onDelete = Optional.empty();
+
+        if (adjustment.adjustment <= 0) {
+            throw new IllegalStateException("Always increment ref count before decrementing");
+        }
     }
 
     public void decrementRefCount(long blockOffset, Area area, Consumer<Long> onDelete) {
+        if (blockOffset == 0)
+            return;
+
         var adjustment = refCountAdjustments.computeIfAbsent(blockOffset,
                 k -> new RefCountAdjustment(0, area, Optional.empty()));
         adjustment.adjustment--;
         if (adjustment.adjustment == 0) {
             // check if this is a block that was newly allocated in this transaction. If so,
             // remove it.
-            if (modifiedBlocks.remove(blockOffset) != null) {
-                refCountAdjustments.remove(blockOffset);
+            if (modifiedBlocks.containsKey(blockOffset)) {
+                // this block has been modified in this transaction, return it to the free
+                // blocks
+                onDelete.accept(blockOffset);
 
-                // TODO: add block back to the free tree
-
+                modifiedBlocks.remove(blockOffset);
+                freeBlocks.get(area).add(blockOffset);
+                var wasInAllocatedBlocks = allocatedBlocks.get(area).remove(blockOffset);
+                if (area == Area.META) {
+                    var wasInMetaReservedBlocks = metaReservedBlocks.remove(blockOffset)
+                            || oldReservedMetaBlocks.remove(blockOffset);
+                    if ((wasInMetaReservedBlocks) && wasInAllocatedBlocks) {
+                        throw new IllegalStateException("Block was in both meta reserved and allocated blocks");
+                    }
+                    if (!wasInMetaReservedBlocks && !wasInAllocatedBlocks) {
+                        throw new IllegalStateException("Block was in neither meta reserved nor allocated blocks");
+                    }
+                } else if (!wasInAllocatedBlocks) {
+                    throw new IllegalStateException("Block was not in allocated blocks");
+                }
+            } else {
+                // TODO: Add to unallocated block list for this area
+                addToDeferredFreeBlocks(blockOffset, area);
             }
 
-        } else if (adjustment.adjustment == -1)
+            // remove the ref count adjustment for this block, as it has reached zero and
+            // thus has no effect
+            refCountAdjustments.remove(blockOffset);
+        } else if (adjustment.adjustment == -1) {
+            // only keep the onDelete callback when the adjustment becomes negative for the
+            // first time.
             adjustment.onDelete = Optional.ofNullable(onDelete).map(c -> () -> c.accept(blockOffset));
+        }
     }
 
-    // reserved blocks for meta area
-    private final Set<Long> metaReservedBlocks = new HashSet<>();
-
     public void open(String path) {
+        close();
+        resetInMemoryState();
         File f = new File(path);
-        boolean exists = f.exists() && f.length() >= SUPERBLOCK_SIZE;
-        if (!exists) {
+        if (!f.exists() || f.length() == 0) {
             format(path);
-        } else {
-            try {
-                file = new RandomAccessFile(path, "rw");
-                readSuperBlock();
-                readRootBlock();
-                readInfoBlock();
-                loadSystemTrees();
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
+            return;
+        }
+        if (f.length() < SUPERBLOCK_SIZE)
+            throw new UncheckedIOException(new IOException("Truncated data storage superblock"));
+        try {
+            file = new RandomAccessFile(path, "rw");
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        try {
+            readSuperBlock();
+            readRootBlock();
+            truncateToRootFileLength();
+            readInfoBlock();
+            loadSystemTrees();
+            loadMetaReservedBlocks();
+            addDeferredFreeBlocksToFreeTree();
+        } catch (RuntimeException e) {
+            close();
+            resetInMemoryState();
+            throw e;
         }
     }
 
@@ -258,9 +362,12 @@ public class DataStorage implements Closeable {
 
     public void format(String path, long systemBytes, long metaBytes, long dataBytes,
             int dataBlockSize, int metaBlockSize, int systemBlockSize) {
+        validateFormatArguments(systemBytes, metaBytes, dataBytes, dataBlockSize, metaBlockSize, systemBlockSize);
+        close();
+        resetInMemoryState();
         try {
-            new File(path).delete();
             file = new RandomAccessFile(path, "rw");
+            file.setLength(0);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -272,37 +379,92 @@ public class DataStorage implements Closeable {
         superBlock.metaBlockSize = metaBlockSize;
         superBlock.systemBlockSize = systemBlockSize;
         superBlock.rootBlock = 0;
+        initializeDeferredFreeBlocks();
 
         infoBlock = new InfoBlock();
-        infoBlock.dataBlockSize = dataBlockSize;
-        infoBlock.metaBlockSize = metaBlockSize;
-        infoBlock.systemBlockSize = systemBlockSize;
         infoBlock.inlineDataThreshold = 16384;
-        infoBlock.maxExtentDataBlockSize = dataBlockSize;
 
         rootBlock = new RootBlock();
 
-        // TODO: Initialize the storage layout and free space maps for system, meta, and
-        // data areas.
+        // define file layout
+        long systemStart;
+        long metaStart;
+        long dataStart;
+        {
+            systemStart = alignUp(SUPERBLOCK_SIZE, systemBlockSize);
+            metaStart = alignUp(Math.addExact(systemStart, systemBytes), metaBlockSize);
+            dataStart = alignUp(Math.addExact(metaStart, metaBytes), dataBlockSize);
+        }
+        try {
+            rootBlock.fileLength = Math.addExact(dataStart, dataBytes);
+            file.setLength(rootBlock.fileLength);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (ArithmeticException e) {
+            throw new IllegalArgumentException("Formatted area layout exceeds supported file size", e);
+        }
 
+        // Seed a bounded META bootstrap pool; the rest of the area is fetched from its
+        // tree.
+        long bootstrapBlocks = Math.min(256, metaBytes / metaBlockSize);
+        long bootstrapEnd = Math.addExact(metaStart, Math.multiplyExact(bootstrapBlocks, (long) metaBlockSize));
+        for (var offset = metaStart; offset < bootstrapEnd; offset += metaBlockSize)
+            freeBlocks.get(Area.META).add(offset);
+        if (bootstrapBlocks > 0)
+            freeSpaceAllocationOffset.put(Area.META, bootstrapEnd - metaBlockSize);
+
+        // initialize the free space trees
+        {
+            var tree = new BTree(btreeStorage(Area.META), BLOCK_OFFSET_SIZE, (key, value) -> {
+            });
+            tree.put(u64(systemStart), u64(systemBytes));
+            freeSpaceTrees.put(Area.SYSTEM, tree);
+        }
+        {
+            var tree = new BTree(metaReservedBTreeStorage(), BLOCK_OFFSET_SIZE, (key, value) -> {
+            });
+            tree.put(u64(metaStart), u64(metaBytes));
+            freeSpaceTrees.put(Area.META, tree);
+        }
+        {
+            var tree = new BTree(btreeStorage(Area.META), BLOCK_OFFSET_SIZE, (key, value) -> {
+            });
+            tree.put(u64(dataStart), u64(dataBytes));
+            freeSpaceTrees.put(Area.DATA, tree);
+        }
+
+        refCountTree = new BTree(btreeStorage(Area.SYSTEM), BLOCK_OFFSET_SIZE, null);
         commit();
+
     }
 
-    private void readSuperBlock() throws IOException {
+    private void readSuperBlock() {
         byte[] buf = new byte[SUPERBLOCK_SIZE];
-        file.seek(0);
-        file.readFully(buf);
+        try {
+            file.seek(0);
+            file.readFully(buf);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
         ByteBuffer bb = wrap(buf);
         superBlock = new SuperBlock();
         bb.get(superBlock.magic);
         if (!java.util.Arrays.equals(superBlock.magic, MAGIC)) {
-            throw new IOException("Not a p2p-sync data file (bad magic)");
+            throw new UncheckedIOException(new IOException("Not a p2p-sync data file (bad magic)"));
         }
         superBlock.version = bb.getLong();
         superBlock.rootBlock = bb.getLong();
         superBlock.dataBlockSize = bb.getInt();
         superBlock.metaBlockSize = bb.getInt();
         superBlock.systemBlockSize = bb.getInt();
+        if (superBlock.version != FORMAT_VERSION)
+            throw new UncheckedIOException(
+                    new IOException("Unsupported data storage format version: " + superBlock.version));
+        if (superBlock.dataBlockSize <= 0 || superBlock.metaBlockSize <= 0
+                || superBlock.systemBlockSize < 19 * Long.BYTES)
+            throw new UncheckedIOException(new IOException("Invalid data storage block sizes"));
+        validateBlockOffset(superBlock.rootBlock, superBlock.systemBlockSize, "root block");
+        initializeDeferredFreeBlocks();
     }
 
     private void writeSuperBlock() {
@@ -322,8 +484,8 @@ public class DataStorage implements Closeable {
         }
     }
 
-    private void readRootBlock() throws IOException {
-        byte[] buf = readFromDisk(superBlock.rootBlock, superBlock.systemBlockSize);
+    private void readRootBlock() {
+        byte[] buf = readBlock(superBlock.rootBlock, Area.SYSTEM);
         rootBlock = deserializeRootBlock(buf);
     }
 
@@ -344,6 +506,11 @@ public class DataStorage implements Closeable {
         r.fileSystemTree = bb.getLong();
         r.operationTree = bb.getLong();
         r.snapshotTree = bb.getLong();
+        r.fileLength = bb.getLong();
+        r.systemDeferredFreeBlockList = bb.getLong();
+        r.metaDeferredFreeBlockList = bb.getLong();
+        r.dataDeferredFreeBlockList = bb.getLong();
+        r.metaReservedBlockList = bb.getLong();
         return r;
     }
 
@@ -364,48 +531,263 @@ public class DataStorage implements Closeable {
         bb.putLong(r.fileSystemTree);
         bb.putLong(r.operationTree);
         bb.putLong(r.snapshotTree);
+        bb.putLong(r.fileLength);
+        bb.putLong(r.systemDeferredFreeBlockList);
+        bb.putLong(r.metaDeferredFreeBlockList);
+        bb.putLong(r.dataDeferredFreeBlockList);
+        bb.putLong(r.metaReservedBlockList);
         return buf;
     }
 
-    private void readInfoBlock() {
-        byte[] buf = readFromDisk(rootBlock.infoBlock, superBlock.systemBlockSize);
-        infoBlock = deserializeInfoBlock(buf);
+    private void truncateToRootFileLength() {
+        long actualLength = getFileLength();
+        if (rootBlock.fileLength < SUPERBLOCK_SIZE || rootBlock.fileLength > actualLength)
+            throw new UncheckedIOException(new IOException("Invalid committed file length: " + rootBlock.fileLength));
+        if (superBlock.rootBlock > rootBlock.fileLength - blockSize(Area.SYSTEM))
+            throw new UncheckedIOException(new IOException("Committed file length does not contain its root block"));
+
+        try {
+            file.setLength(rootBlock.fileLength);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
-    private void writeInfoBlock() {
-        decrementRefCount(rootBlock.infoBlock, Area.SYSTEM, null);
-        rootBlock.infoBlock = writeNewBlock(Area.SYSTEM, serializeInfoBlock(infoBlock));
-        infoBlock.dirty = false;
+    private long getFileLength() {
+        try {
+            return file.length();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private void readInfoBlock() {
+        validateBlockOffset(rootBlock.infoBlock, blockSize(Area.SYSTEM), "info block");
+        byte[] buf = readBlock(rootBlock.infoBlock, Area.SYSTEM);
+        infoBlock = deserializeInfoBlock(buf);
     }
 
     private InfoBlock deserializeInfoBlock(byte[] buf) {
         ByteBuffer bb = wrap(buf);
         var infoBlock = new InfoBlock();
-        infoBlock.dataBlockSize = bb.getInt();
-        infoBlock.metaBlockSize = bb.getInt();
-        infoBlock.systemBlockSize = bb.getInt();
         infoBlock.inlineDataThreshold = bb.getInt();
-        infoBlock.maxExtentDataBlockSize = bb.getInt();
         return infoBlock;
     }
 
     private byte[] serializeInfoBlock(InfoBlock infoBlock) {
         byte[] buf = new byte[blockSize(Area.SYSTEM)];
         ByteBuffer bb = wrap(buf);
-        bb.putInt(infoBlock.dataBlockSize);
-        bb.putInt(infoBlock.metaBlockSize);
-        bb.putInt(infoBlock.systemBlockSize);
         bb.putInt(infoBlock.inlineDataThreshold);
-        bb.putInt(infoBlock.maxExtentDataBlockSize);
         return buf;
     }
 
     private void loadSystemTrees() {
         for (Area area : Area.values()) {
-            BTree tree = new BTree(this, Area.SYSTEM, BLOCK_OFFSET_SIZE, getFreeTreeRoot(area));
+            BTree.Storage storage = area == Area.META ? metaReservedBTreeStorage() : btreeStorage(Area.META);
+            BTree tree = new BTree(storage, BLOCK_OFFSET_SIZE, null, getFreeTreeRoot(area));
             freeSpaceTrees.put(area, tree);
         }
-        refCountTree = new BTree(this, Area.SYSTEM, BLOCK_OFFSET_SIZE, rootBlock.refCountTree);
+        refCountTree = new BTree(btreeStorage(Area.SYSTEM), BLOCK_OFFSET_SIZE, null, rootBlock.refCountTree);
+    }
+
+    public BTree.Storage btreeStorage(Area area) {
+        return new BTree.Storage() {
+            @Override
+            public int blockSize() {
+                return DataStorage.this.blockSize(area);
+            }
+
+            @Override
+            public byte[] readBlock(long blockOffset) {
+                return DataStorage.this.readBlock(blockOffset, area);
+            }
+
+            @Override
+            public boolean isBlockModified(long blockOffset) {
+                return DataStorage.this.isBlockModified(blockOffset);
+            }
+
+            @Override
+            public void writeBlock(long blockOffset, byte[] data) {
+                DataStorage.this.writeBlock(blockOffset, area, data);
+            }
+
+            @Override
+            public long writeNewBlock(byte[] data) {
+                long offset = DataStorage.this.writeNewBlock(area, data);
+                return offset;
+            }
+
+            @Override
+            public void incrementRefCount(long blockOffset) {
+                DataStorage.this.incrementRefCount(blockOffset, area);
+            }
+
+            @Override
+            public void decrementRefCount(long blockOffset, Consumer<Long> onDelete) {
+                DataStorage.this.decrementRefCount(blockOffset, area, onDelete);
+            }
+        };
+    }
+
+    public BTree.Storage metaReservedBTreeStorage() {
+        return new BTree.Storage() {
+            @Override
+            public int blockSize() {
+                return DataStorage.this.blockSize(Area.META);
+            }
+
+            @Override
+            public byte[] readBlock(long blockOffset) {
+                return DataStorage.this.readBlock(blockOffset, Area.META);
+            }
+
+            @Override
+            public boolean isBlockModified(long blockOffset) {
+                return DataStorage.this.isBlockModified(blockOffset);
+            }
+
+            @Override
+            public void writeBlock(long blockOffset, byte[] data) {
+                DataStorage.this.writeBlock(blockOffset, Area.META, data);
+            }
+
+            @Override
+            public long writeNewBlock(byte[] data) {
+                long offset = allocateMetaReservedBlock();
+                modifiedBlocks.put(offset, data.clone());
+                return offset;
+            }
+
+            @Override
+            public void incrementRefCount(long blockOffset) {
+                DataStorage.this.incrementRefCount(blockOffset, Area.META);
+            }
+
+            @Override
+            public void decrementRefCount(long blockOffset, Consumer<Long> onDelete) {
+                DataStorage.this.decrementRefCount(blockOffset, Area.META, onDelete);
+            }
+        };
+    }
+
+    private long takeFreeBlock(Area area, boolean metaReserved) {
+        var blocks = freeBlocks.get(area);
+        if (blocks.isEmpty())
+            refillFreeBlocks(area);
+        var offset = blocks.isEmpty() ? null : blocks.first();
+        if (offset == null)
+            throw new IllegalStateException("No free " + area + " blocks available after refill");
+        if (metaReserved && area != Area.META)
+            throw new IllegalArgumentException("Only META blocks can be added to metaReservedBlocks");
+        if (allocatedBlocks.get(area).contains(offset) || metaReservedBlocks.contains(offset))
+            throw new IllegalStateException("Block is already allocated or reserved: " + offset);
+        if (refCountAdjustments.containsKey(offset))
+            throw new IllegalStateException("Block already has a refcount adjustment: " + offset);
+        blocks.remove(offset);
+        if (metaReserved) {
+            metaReservedBlocks.add(offset);
+        } else {
+            allocatedBlocks.get(area).add(offset);
+        }
+        refCountAdjustments.put(offset, new RefCountAdjustment(1, area, Optional.empty()));
+        return offset;
+    }
+
+    private void refillFreeBlocks(Area area) {
+        var blocks = freeBlocks.get(area);
+        BTree tree = freeSpaceTrees.get(area);
+        if (tree == null)
+            throw new IllegalStateException("Free-space tree is not initialized for " + area);
+
+        int desiredFreeBlocks = 256;
+        int blockSize = blockSize(area);
+        Long cursor = freeSpaceAllocationOffset.get(area);
+        // TODO: Add file length to root block. Truncate file on open to specified
+        // length.
+        long fileLength;
+        try {
+            fileLength = file.length();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        while (blocks.size() < desiredFreeBlocks) {
+            var iterator = cursor == null ? tree.iterator() : tree.floorOrLowestIterator(u64(cursor));
+            while (iterator.hasNext() && blocks.size() < desiredFreeBlocks) {
+                // read the next free-space tree entry
+                var entry = iterator.next();
+                if (entry.key.length != Long.BYTES || entry.value.length != Long.BYTES)
+                    throw new IllegalStateException("Invalid free-space tree entry size for " + area);
+                long extentOffset = toLong(entry.key);
+                long extentSize = toLong(entry.value);
+                if (extentOffset < SUPERBLOCK_SIZE || extentSize <= 0
+                        || extentOffset % blockSize != 0 || extentSize % blockSize != 0)
+                    throw new IllegalStateException("Misaligned or empty free extent in " + area + " tree");
+                long extentEnd;
+                try {
+                    extentEnd = Math.addExact(extentOffset, extentSize);
+                } catch (ArithmeticException e) {
+                    throw new IllegalStateException("Free extent overflows file offsets", e);
+                }
+                if (extentEnd > fileLength)
+                    throw new IllegalStateException("Free extent exceeds storage file length in " + area + " tree");
+
+                long offset = extentOffset;
+                // Skip blocks that are before the cursor
+                if (cursor != null) {
+                    // the cursor is not in this extent, skip to the next one
+                    if (extentEnd <= cursor)
+                        continue;
+
+                    if (offset <= cursor) {
+                        try {
+                            offset = Math.addExact(cursor, blockSize);
+                        } catch (ArithmeticException e) {
+                            throw new IllegalStateException("Free-space cursor overflows file offsets", e);
+                        }
+                    }
+                }
+
+                // iterate over the blocks within the current free-space extent and add them to
+                // the free block list
+                for (; offset < extentEnd
+                        && blocks.size() < desiredFreeBlocks; offset += blockSize) {
+                    // Skip reserved meta blocks
+                    if (area == Area.META
+                            && (oldReservedMetaBlocks.contains(offset) || metaReservedBlocks.contains(offset))) {
+                        cursor = offset;
+                        continue;
+                    }
+                    if (allocatedBlocks.get(area).contains(offset))
+                        throw new IllegalStateException("Free extent overlaps allocated block " + offset);
+                    if (!blocks.add(offset))
+                        throw new IllegalStateException("Free extent returned a duplicate block " + offset);
+                    cursor = offset;
+                }
+            }
+
+            // If we have gathered enough free blocks, update the allocation offset and
+            // return.
+            if (blocks.size() >= desiredFreeBlocks) {
+                freeSpaceAllocationOffset.put(area, cursor);
+                return;
+            }
+
+            // we iterated to the end of the current free-space extents without gathering
+            // enough free blocks, so we need to extend the storage.
+            extend(area);
+
+            try {
+                fileLength = file.length();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+    }
+
+    private static long alignUp(long value, int alignment) {
+        long remainder = value % alignment;
+        return remainder == 0 ? value : Math.addExact(value, alignment - remainder);
     }
 
     private long getFreeTreeRoot(Area area) {
@@ -434,12 +816,12 @@ public class DataStorage implements Closeable {
 
     public byte[] readBlock(long blockOffset, Area area) {
         byte[] mod = modifiedBlocks.get(blockOffset);
-        if (mod != null) {
+        if (mod != null && mod != DIRECT_WRITE_EMPTY_ARRAY) {
             return mod.clone();
         }
 
-        // either there was a direct write (null value stored in map), or the block was
-        // not modified
+        // Either there was a direct write, or the block was
+        // not modified. Read it from the disk.
         return readFromDisk(blockOffset, blockSize(area));
     }
 
@@ -464,7 +846,7 @@ public class DataStorage implements Closeable {
             throw new IllegalStateException("Block " + blockOffset + " has not been modified in this transaction");
 
         // clear existing cached value if present
-        modifiedBlocks.put(blockOffset, null);
+        modifiedBlocks.put(blockOffset, DIRECT_WRITE_EMPTY_ARRAY);
 
         writeToDisk(blockOffset, data);
     }
@@ -477,234 +859,387 @@ public class DataStorage implements Closeable {
 
     public long writeNewBlockDirect(Area area, byte[] data) {
         long off = allocateBlock(area);
-        modifiedBlocks.put(off, null);
+        modifiedBlocks.put(off, DIRECT_WRITE_EMPTY_ARRAY);
         writeToDisk(off, data);
         return off;
     }
 
-    public long allocateBlock(Area area) {
-        int bs = blockSize(area);
-        var freeTree = freeSpaceTrees.get(area);
-
-        var firstFree = freeTree.removeFirst();
-
-        // If there is no more free space, extend the storage
-        if (firstFree.isEmpty()) {
-            extend(area);
-            firstFree = freeTree.removeFirst();
-        }
-
-        var offset = toLong(firstFree.get().key);
-        var size = toLong(firstFree.get().value);
-        if (size > bs) {
-            freeTree.put(u64(offset + bs), u64(size - bs));
-        }
+    private long allocateMetaReservedBlock() {
+        long offset = takeFreeBlock(Area.META, true);
         return offset;
     }
 
-    /**
-     * Head of the freed block list. Format:
-     * <ul>
-     * <li>uint64_t: offset of the next freed block list block, 0 for end of
-     * list</li>
-     * <li>uint64_t: number of freed blocks in this block (could be a uint16_t, but
-     * using uint64_t for alignment)</li>
-     * <li>uint64_t[]: array of freed block offsets</li>
-     * </ul>
-     * 
-     * The list is stored in system space. The position of the buffer is kept at the
-     * next block to add.
-     */
-    private ByteBuffer freedBlocks = ByteBuffer.allocate(infoBlock.systemBlockSize); // TODO: proper initialization
+    long allocateBlock(Area area) {
+        return takeFreeBlock(area, false);
+    }
 
-    public void freeBlock(long blockOffset, Area kind) {
-        if (modifiedBlocks.containsKey(blockOffset)) {
-            // this block has been modified in this transaction, return it to the free tree
-            // make sure to merge with adjacent free blocks if possible
-            var tree = freeSpaceTrees.get(kind);
-            var it = tree.floorOrLowestIterator(u64(blockOffset));
-            long mergedOffset = blockOffset;
-            long mergedSize = blockSize(kind);
-            byte[] successorKey = null;
-            for (int inspected = 0; inspected < 2 && it.hasNext(); inspected++) {
-                var entry = it.next();
-                var offset = toLong(entry.key);
-                var size = toLong(entry.value);
+    public void addToDeferredFreeBlocks(long blockOffset, Area area) {
+        // this block has been modified in a previous transaction
+        var list = deferredFreeBlocks.get(area);
+        if (list.remaining() == 0) {
+            // the current freed block list block is full, allocate a new one
 
-                if (offset < blockOffset) {
-                    if (offset + size == blockOffset) {
-                        mergedOffset = offset;
-                        mergedSize += size;
-                    }
-                } else {
-                    if (offset == blockOffset + blockSize(kind)) {
-                        mergedSize += size;
-                        successorKey = entry.key;
-                    }
-                    break;
+            // first, write the current block
+            list.putLong(8, (list.position() / 8) - 2); // subtract 2 for the first two
+                                                        // uint64_t
+            // fields
+            var newBlock = writeNewBlock(Area.SYSTEM, list.array());
+
+            list.clear(); // reset the buffer for the new block
+            list.putLong(newBlock); // write the offset of the new freed block list block
+            list.putLong(0); // skip the number of freed blocks field for now
+        }
+
+        list.putLong(blockOffset);
+    }
+
+    private void persistDeferredFreeBlockHeads() {
+        int headerSize = 2 * Long.BYTES;
+        int capacity = (blockSize(Area.SYSTEM) - headerSize) / Long.BYTES;
+        for (Area area : Area.values()) {
+            ByteBuffer list = deferredFreeBlocks.get(area);
+            long head = list.getLong(0);
+            if (list.position() > headerSize) {
+                int count = (list.position() - headerSize) / Long.BYTES;
+                if (count > capacity)
+                    throw new IllegalStateException("Deferred-free list buffer exceeds block capacity");
+                list.putLong(Long.BYTES, count);
+                head = writeNewBlock(Area.SYSTEM, list.array());
+            }
+            setDeferredFreeListHead(area, head);
+            list.clear();
+            list.putLong(0);
+            list.putLong(0);
+        }
+    }
+
+    private void addBlockToFreeTree(long blockOffset, Area kind) {
+        var tree = freeSpaceTrees.get(kind);
+        var it = tree.floorOrLowestIterator(u64(blockOffset));
+        long mergedOffset = blockOffset;
+        long mergedSize = blockSize(kind);
+        byte[] successorKey = null;
+        for (int inspected = 0; inspected < 2 && it.hasNext(); inspected++) {
+            var entry = it.next();
+            var offset = toLong(entry.key);
+            var size = toLong(entry.value);
+
+            if (offset < blockOffset) {
+                if (offset + size == blockOffset) {
+                    mergedOffset = offset;
+                    mergedSize += size;
                 }
+            } else {
+                if (offset == blockOffset + blockSize(kind)) {
+                    mergedSize += size;
+                    successorKey = entry.key;
+                }
+                break;
             }
-            if (successorKey != null)
-                tree.remove(successorKey);
-            tree.put(u64(mergedOffset), u64(mergedSize));
-        } else {
-            // this block has been modified in a previous transaction, add it to the freed
-            // list
-            if (freedBlocks.remaining() == 0) {
-                // the current freed block list block is full, allocate a new one
+        }
+        if (successorKey != null)
+            tree.remove(successorKey);
+        tree.put(u64(mergedOffset), u64(mergedSize));
+    }
 
-                // first, write the current block
-                freedBlocks.putLong(8, (freedBlocks.position() / 8) - 2); // subtract 2 for the first two uint64_t
-                                                                          // fields
-                var newBlock = writeNewBlock(Area.SYSTEM, freedBlocks.array());
+    private long getDeferredFreeListHead(Area area) {
+        return switch (area) {
+            case SYSTEM -> rootBlock.systemDeferredFreeBlockList;
+            case META -> rootBlock.metaDeferredFreeBlockList;
+            case DATA -> rootBlock.dataDeferredFreeBlockList;
+        };
+    }
 
-                freedBlocks.clear(); // reset the buffer for the new block
-                freedBlocks.putLong(newBlock); // write the offset of the new freed block list block
-                freedBlocks.putLong(0); // skip the number of freed blocks field for now
+    private void setDeferredFreeListHead(Area area, long head) {
+        switch (area) {
+            case SYSTEM -> rootBlock.systemDeferredFreeBlockList = head;
+            case META -> rootBlock.metaDeferredFreeBlockList = head;
+            case DATA -> rootBlock.dataDeferredFreeBlockList = head;
+        }
+    }
+
+    private void addDeferredFreeBlocksToFreeTree() {
+        int capacity = (blockSize(Area.SYSTEM) - 2 * Long.BYTES) / Long.BYTES;
+        for (Area area : Area.values()) {
+            long offset = getDeferredFreeListHead(area);
+            setDeferredFreeListHead(area, 0);
+            Set<Long> visited = new HashSet<>();
+            while (offset != 0) {
+                validateBlockOffset(offset, blockSize(Area.SYSTEM), "deferred-free list block");
+                if (!visited.add(offset))
+                    throw new IllegalStateException("Cycle in deferred-free list for " + area);
+                ByteBuffer buffer = wrap(readBlock(offset, Area.SYSTEM));
+                long next = buffer.getLong();
+                long count = buffer.getLong();
+                if (count < 0 || count > capacity)
+                    throw new IllegalStateException("Invalid deferred-free list count: " + count);
+                for (int i = 0; i < count; i++) {
+                    long freed = buffer.getLong();
+                    validateBlockOffset(freed, blockSize(area), "deferred-free block");
+                    addBlockToFreeTree(freed, area);
+                }
+                offset = next;
             }
+        }
+    }
 
-            freedBlocks.putLong(blockOffset);
+    private void loadMetaReservedBlocks() {
+        metaReservedBlocks.clear();
+        oldReservedMetaBlocks.clear();
+        int capacity = (blockSize(Area.META) - 2 * Long.BYTES) / Long.BYTES;
+        long offset = rootBlock.metaReservedBlockList;
+        rootBlock.metaReservedBlockList = 0;
+        Set<Long> visited = new HashSet<>();
+        while (offset != 0) {
+            validateBlockOffset(offset, blockSize(Area.META), "meta-reserved list block");
+            if (!visited.add(offset))
+                throw new IllegalStateException("Cycle in meta-reserved list");
+            MetaReservedListBlock block = MetaReservedListBlock.deserialize(
+                    readBlock(offset, Area.META), capacity);
+            for (long reserved : block.reservedBlocks) {
+                validateBlockOffset(reserved, blockSize(Area.META), "meta-reserved block");
+                if (!metaReservedBlocks.add(reserved))
+                    throw new IllegalStateException("Duplicate meta-reserved block: " + reserved);
+            }
+            offset = block.next;
         }
     }
 
     private void extend(Area kind) {
+        BTree tree = freeSpaceTrees.get(kind);
+        if (tree == null)
+            throw new IllegalStateException("Free-space tree is not initialized for " + kind);
+        int blockSize = blockSize(kind);
         try {
-            long end = file.length();
-            long grow = 1 << 20;
-            file.setLength(end + grow);
-            var key = new byte[8];
-            ByteBuffer.wrap(key).putLong(end);
-
-            var value = new byte[8];
-            ByteBuffer.wrap(value).putLong(grow);
-
-            freeSpaceTrees.get(kind).put(key, value);
+            long start = alignUp(file.length(), blockSize);
+            long minimumGrowth = Math.multiplyExact((long) blockSize, 256);
+            long growth = alignUp(Math.max(1L << 20, minimumGrowth), blockSize);
+            long end = Math.addExact(start, growth);
+            file.setLength(end);
+            rootBlock.fileLength = end;
+            tree.put(u64(start), u64(growth));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        } catch (ArithmeticException e) {
+            throw new IllegalStateException("Storage extension overflows file offsets", e);
         }
+    }
+
+    void removeAllocatedBlocksFromFreeTrees() {
+        for (Area area : Area.values()) {
+            var blocks = new HashSet<>(allocatedBlocks.get(area));
+            allocatedBlocks.get(area).clear();
+            for (long blockOffset : blocks) {
+                removeBlockFromFreeTree(area, blockOffset);
+            }
+        }
+    }
+
+    private void removeBlockFromFreeTree(Area area, long blockOffset) {
+        BTree tree = freeSpaceTrees.get(area);
+        var iterator = tree.floorOrLowestIterator(u64(blockOffset));
+        if (!iterator.hasNext())
+            throw new IllegalStateException(
+                    "Allocated block is missing from " + area + " free-space tree: " + blockOffset);
+
+        var entry = iterator.next();
+        long extentOffset = toLong(entry.key);
+        long extentSize = toLong(entry.value);
+        long extentEnd;
+        long blockEnd;
+        try {
+            extentEnd = Math.addExact(extentOffset, extentSize);
+            blockEnd = Math.addExact(blockOffset, blockSize(area));
+        } catch (ArithmeticException e) {
+            throw new IllegalStateException("Free-space range overflows file offsets", e);
+        }
+        if (blockOffset < extentOffset || blockEnd > extentEnd)
+            throw new IllegalStateException(
+                    "Allocated block is not contained in " + area + " free extent: " + blockOffset);
+
+        tree.remove(entry.key);
+        if (blockOffset > extentOffset)
+            tree.put(u64(extentOffset), u64(blockOffset - extentOffset));
+        if (blockEnd < extentEnd)
+            tree.put(u64(blockEnd), u64(extentEnd - blockEnd));
+    }
+
+    void removeMetaReservedBlocksFromFreeTree() {
+        oldReservedMetaBlocks = metaReservedBlocks;
+        metaReservedBlocks = new HashSet<>();
+        for (long blockOffset : oldReservedMetaBlocks) {
+            removeBlockFromFreeTree(Area.META, blockOffset);
+        }
+        oldReservedMetaBlocks.clear();
     }
 
     private void applyRefCountDeltas() {
-        for (var e : refCountAdjustments.entrySet()) {
-            long blockOffset = e.getKey();
-            var delta = e.getValue();
+        while (!refCountAdjustments.isEmpty()) {
+            var batch = refCountAdjustments;
+            refCountAdjustments = new HashMap<>();
+            for (var e : batch.entrySet()) {
+                long blockOffset = e.getKey();
+                var delta = e.getValue();
 
-            var count = toLong(refCountTree.get(u64(blockOffset)));
-            count += delta.adjustment;
-            if (count == 0) {
-                refCountTree.remove(u64(blockOffset));
-                freeBlock(blockOffset, delta.area);
-                delta.onDelete.get().run();
-            } else if (count < 0) {
-                throw new IllegalStateException("Reference count for block " + blockOffset + " went negative");
-            } else {
-                refCountTree.put(u64(blockOffset), u64(count));
+                var existingCount = refCountTree.get(u64(blockOffset));
+                var count = existingCount == null ? 0 : toLong(existingCount);
+                count += delta.adjustment;
+                if (count == 0) {
+                    refCountTree.remove(u64(blockOffset));
+                    addToDeferredFreeBlocks(blockOffset, delta.area);
+                    delta.onDelete.get().run();
+                } else if (count < 0) {
+                    throw new IllegalStateException("Reference count for block " + blockOffset + " went negative");
+                } else {
+                    refCountTree.put(u64(blockOffset), u64(count));
+                }
             }
         }
-        refCountAdjustments.clear();
     }
 
-    private Consumer<Long> decrementListRefCount() {
+    private static class MetaReservedListBlock {
+        public long next;
+        public long numReservedBlocks;
+        public List<Long> reservedBlocks;
 
+        public static MetaReservedListBlock deserialize(byte[] bytes, int capacity) {
+            MetaReservedListBlock block = new MetaReservedListBlock();
+            ByteBuffer buffer = ByteBuffer.wrap(bytes);
+            block.next = buffer.getLong();
+            block.numReservedBlocks = buffer.getLong();
+            if (block.numReservedBlocks < 0 || block.numReservedBlocks > capacity)
+                throw new IllegalStateException("Invalid meta-reserved list count: " + block.numReservedBlocks);
+            block.reservedBlocks = new ArrayList<>();
+            for (int i = 0; i < block.numReservedBlocks; i++) {
+                block.reservedBlocks.add(buffer.getLong());
+            }
+            return block;
+        }
+    }
+
+    private void persistMetaReservedBlockList() {
+        int capacity = (blockSize(Area.META) - 2 * Long.BYTES) / Long.BYTES;
+        if (capacity <= 0)
+            throw new IllegalStateException("META block is too small for a reserved-block list");
+
+        List<Long> listOffsets = new ArrayList<>();
+        Set<Long> entries = new TreeSet<>();
+        while (true) {
+            for (long blockOffset : metaReservedBlocks) {
+                if (!listOffsets.contains(blockOffset))
+                    entries.add(blockOffset);
+            }
+            int required = (entries.size() + capacity - 1) / capacity;
+            while (listOffsets.size() < required)
+                listOffsets.add(allocateMetaReservedBlock());
+
+            if (!metaReservedBlocks.isEmpty())
+                removeMetaReservedBlocksFromFreeTree();
+            for (long blockOffset : metaReservedBlocks) {
+                if (!listOffsets.contains(blockOffset))
+                    entries.add(blockOffset);
+            }
+            required = (entries.size() + capacity - 1) / capacity;
+            if (metaReservedBlocks.isEmpty() && listOffsets.size() >= required)
+                break;
+        }
+
+        List<Long> sortedEntries = new ArrayList<>(entries);
+        long next = 0;
+        int end = sortedEntries.size();
+        for (int i = listOffsets.size() - 1; i >= 0; i--) {
+            int start = Math.max(0, end - capacity);
+            byte[] bytes = new byte[blockSize(Area.META)];
+            ByteBuffer buffer = wrap(bytes);
+            buffer.putLong(next);
+            buffer.putLong(end - start);
+            for (int j = start; j < end; j++)
+                buffer.putLong(sortedEntries.get(j));
+            modifiedBlocks.put(listOffsets.get(i), bytes);
+            next = listOffsets.get(i);
+            end = start;
+        }
+        if (end != 0)
+            throw new IllegalStateException("Meta-reserved list does not fit in allocated list blocks");
+        rootBlock.metaReservedBlockList = next;
+    }
+
+    private Consumer<Long> decrementMetaReservedListBlock;
+    {
+        decrementMetaReservedListBlock = (offset) -> {
+            MetaReservedListBlock block = MetaReservedListBlock.deserialize(
+                    readBlock(offset, Area.META), (blockSize(Area.META) - 2 * Long.BYTES) / Long.BYTES);
+            if (block.next != 0)
+                decrementRefCount(block.next, Area.META, decrementMetaReservedListBlock);
+            block.reservedBlocks.forEach(o -> decrementRefCount(o, Area.META, null)); // TODO
+        };
     }
 
     public void commit() {
-        if (infoBlock.dirty) {
-            writeInfoBlock();
+        removeMetaReservedBlocksFromFreeTree();
+
+        if (infoBlock.dirty || rootBlock.infoBlock == 0) {
+            decrementRefCount(rootBlock.infoBlock, Area.SYSTEM, null);
+            rootBlock.infoBlock = writeNewBlock(Area.SYSTEM, serializeInfoBlock(infoBlock));
+            infoBlock.dirty = false;
         }
+
+        // allocate the root block
+        superBlock.rootBlock = allocateBlock(Area.SYSTEM);
+        modifiedBlocks.put(superBlock.rootBlock, new byte[blockSize(Area.SYSTEM)]);
+
         applyRefCountDeltas();
+        removeAllocatedBlocksFromFreeTrees();
+        persistDeferredFreeBlockHeads();
+        removeAllocatedBlocksFromFreeTrees();
+        persistMetaReservedBlockList();
+        for (Area area : Area.values())
+            setFreeTreeRoot(area, freeSpaceTrees.get(area).rootOffset);
+        rootBlock.refCountTree = refCountTree.rootOffset;
 
-        decrementRefCount(superBlock.rootBlock, Area.SYSTEM, (offset) -> {
-            var s = deserializeRootBlock(readBlock(offset, Area.SYSTEM));
+        writeBlock(superBlock.rootBlock, Area.SYSTEM, serializeRootBlock(rootBlock));
 
-            /*
-             * public long dataFreeSpaceTree;
-             * public long metaFreeSpaceTree;
-             * public long systemFreeSpaceTree;
-             * public long freedBlockList;
-             * public long metaReservedBlockList;
-             * 
-             * public long systemKvTree;
-             * public long refCountTree;
-             * public long infoBlock;
-             * 
-             * public long nextGuidCounter;
-             * public long guidMappingTree;
-             * public long distributedClock;
-             * public long operationStagingTree;
-             * public long operationRetrievalTree;
-             * public long fileSystemTree;
-             * public long operationTree;
-             * public long snapshotTree;
-             */
-
-            decrementRefCount(s.dataFreeSpaceTree, Area.SYSTEM, BTree.decrementRefCount(this));
-            decrementRefCount(s.metaFreeSpaceTree, Area.SYSTEM, BTree.decrementRefCount(this));
-            decrementRefCount(s.systemFreeSpaceTree, Area.SYSTEM, BTree.decrementRefCount(this));
-            decrementRefCount(s.freedBlockList, Area.SYSTEM, BTree.decrementRefCount(this));
-            decrementRefCount(s.refCountTree, Area.SYSTEM, BTree.decrementRefCount(this));
-        });
-
+        // perform the commit
         flushModified();
-
-        boolean keepInfo = infoOffset != 0 && !infoBlock.isDirty();
-
-        // 2. Structural tree writes execute in allocator mode
-        allocatorTreeMode = true;
-        try {
-            // Free prior allocator blocks into reserved set
-            Set<Long> toFree = new HashSet<>(allocatorBlocks);
-            if (keepInfo)
-                toFree.remove(infoOffset);
-            reserved.addAll(toFree);
-            for (long b : toFree)
-                freeRaw(b, Area.SYSTEM);
-            allocatorBlocks.clear();
-            if (keepInfo)
-                allocatorBlocks.add(infoOffset);
-
-            // 3. Process deferred refcount deltas
-            applyRefCountDeltas();
-            rootBlock.refCountTree = refCountTree.rootOffset;
-
-            // 4. Info block update
-            if (!keepInfo) {
-                infoOffset = allocateRawBlock(Area.SYSTEM);
-                allocatorBlocks.add(infoOffset);
-                writeInfoBlock();
-            }
-            rootBlock.infoBlock = infoOffset;
-
-            // 5. Reserve root block offset
-            rootOffset = allocateRawBlock(Area.SYSTEM);
-            allocatorBlocks.add(rootOffset);
-
-            // 6. Build persistent free space B-trees
-            for (Area kind : Area.values()) {
-                BTree tree = new BTree(this, Area.SYSTEM, BLOCK_OFFSET_SIZE);
-                for (Map.Entry<Long, Long> e : new TreeMap<>(freeSpace.get(kind)).entrySet()) {
-                    tree.put(u64(e.getKey()), u64(e.getValue()));
-                }
-                freeSpaceTrees.put(kind, tree);
-                setFreeTreeRoot(kind, tree.rootOffset);
-            }
-
-            // 7. Write root block
-            writeBlock(rootOffset, Area.SYSTEM, serializeRootBlock(rootBlock));
-        } finally {
-            allocatorTreeMode = false;
-        }
-
-        // 8. Flush structural writes
-        flushModified();
-
-        // 9. Atomic commit step: publish root pointer via superblock
-        superBlock.rootBlock = rootOffset;
         writeSuperBlock();
 
-        // 10. Clean up state
-        reserved.clear();
-        infoBlock.clearDirty();
+        for (Area area : Area.values())
+            allocatedBlocks.get(area).clear();
+
+        // prepare next transaction
+
+        loadMetaReservedBlocks();
+        addDeferredFreeBlocksToFreeTree();
+    }
+
+    private void decrementRootBlockRefCounts(long dataFreeSpaceTree, long metaFreeSpaceTree,
+            long systemFreeSpaceTree, long oldRefCountTree) {
+        /*
+         * public long dataFreeSpaceTree;
+         * public long metaFreeSpaceTree;
+         * public long systemFreeSpaceTree;
+         * public long freedBlockList;
+         * public long metaReservedBlockList;
+         * 
+         * public long systemKvTree;
+         * public long refCountTree;
+         * public long infoBlock;
+         * 
+         * public long nextGuidCounter;
+         * public long guidMappingTree;
+         * public long distributedClock;
+         * public long operationStagingTree;
+         * public long operationRetrievalTree;
+         * public long fileSystemTree;
+         * public long operationTree;
+         * public long snapshotTree;
+         */
+
+        var deleteTree = BTree.decrementRefCount(btreeStorage(Area.SYSTEM), BLOCK_OFFSET_SIZE);
+        decrementRefCount(dataFreeSpaceTree, Area.SYSTEM, deleteTree);
+        decrementRefCount(metaFreeSpaceTree, Area.SYSTEM, deleteTree);
+        decrementRefCount(systemFreeSpaceTree, Area.SYSTEM, deleteTree);
+        decrementRefCount(oldRefCountTree, Area.SYSTEM, deleteTree);
     }
 
     private void flushModified() {
@@ -759,38 +1294,8 @@ public class DataStorage implements Closeable {
         }
     }
 
-    public Map<Area, TreeMap<Long, Long>> getFreeSpace() {
-        return freeSpace;
-    }
-
-    public long getRefCount(long offset) {
-        return refCounts.getOrDefault(offset, 0L);
-    }
-
-    public int getRefCountEntryCount() {
-        return refCounts.size();
-    }
-
-    public long getRootOffset() {
-        return rootOffset;
-    }
-
-    public long getInfoOffset() {
-        return infoOffset;
-    }
-
-    public long getFreeBytes(Area kind) {
-        long total = 0;
-        for (long size : freeSpace.get(kind).values())
-            total += size;
-        return total;
-    }
-
-    public long getFileSize() {
-        try {
-            return file.length();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+    public long getRefCount(long blockOffset) {
+        var value = refCountTree.get(u64(blockOffset));
+        return value == null ? 0 : toLong(value);
     }
 }
