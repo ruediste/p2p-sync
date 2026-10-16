@@ -17,6 +17,8 @@
     "Muxer",
     "muxers",
     "p2psync",
+    "Persistor",
+    "persistors",
     "rawtypes",
     "Repr",
     "ruediste",

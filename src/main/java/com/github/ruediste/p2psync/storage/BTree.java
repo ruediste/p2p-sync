@@ -35,27 +35,16 @@ public class BTree implements Iterable<BTree.Entry> {
     private static final int HEADER_SIZE = 5; // nritems (4) + level (1)
     private static final int NODE_PTR_EXTRA = 8; // blockptr (8)
 
-    /**
-    * Create a block-deletion callback that releases all child references.
-    * The storage invokes this only when the block's reference count reaches zero.
-     */
-    public static Consumer<Long> decrementRefCount(Storage storage, int keySize) {
-        return offset -> {
-            byte[] block = storage.readBlock(offset);
-            if (level(block) == 0)
-                return;
-            ByteBuffer buffer = wrap(block);
-            for (int index = 0; index < nritems(block); index++) {
-                long child = buffer.getLong(HEADER_SIZE + index * (keySize + NODE_PTR_EXTRA) + keySize);
-                storage.decrementRefCount(child, decrementRefCount(storage, keySize));
-            }
-        };
-    }
-
     private final Storage storage;
     private final BiConsumer<byte[], byte[]> onEntryDelete;
     public final int keySize;
     public long rootOffset;
+
+    /**
+     * Create a block-deletion callback that releases all child references.
+     * The storage invokes this only when the block's reference count reaches zero.
+     */
+    public Consumer<Long> decrementRefCount;
 
     public interface Storage {
         int blockSize();
@@ -84,9 +73,9 @@ public class BTree implements Iterable<BTree.Entry> {
     }
 
     /**
-    * Constructs a new empty BTree.
-    *
-    * @param onEntryDelete callback for entries removed or replaced, or null
+     * Constructs a new empty BTree.
+     *
+     * @param onEntryDelete callback for entries removed or replaced, or null
      */
     public BTree(Storage storage, int keySize, BiConsumer<byte[], byte[]> onEntryDelete) {
         this(storage, keySize, onEntryDelete, 0);
@@ -94,15 +83,25 @@ public class BTree implements Iterable<BTree.Entry> {
 
     /**
      * Constructs a new BTree for an existing tree. If the rootOffset is zero, the
-    * tree is considered empty. The tree takes ownership of one root reference.
-    *
-    * @param onEntryDelete callback for entries removed or replaced, or null
+     * tree is considered empty. The tree takes ownership of one root reference.
+     *
+     * @param onEntryDelete callback for entries removed or replaced, or null
      */
     public BTree(Storage storage, int keySize, BiConsumer<byte[], byte[]> onEntryDelete, long rootOffset) {
         this.storage = storage;
         this.keySize = keySize;
         this.onEntryDelete = onEntryDelete;
         this.rootOffset = rootOffset;
+        this.decrementRefCount = offset -> {
+            byte[] block = storage.readBlock(offset);
+            if (level(block) == 0)
+                return;
+            ByteBuffer buffer = wrap(block);
+            for (int index = 0; index < nritems(block); index++) {
+                long child = buffer.getLong(HEADER_SIZE + index * (keySize + NODE_PTR_EXTRA) + keySize);
+                storage.decrementRefCount(child, decrementRefCount);
+            }
+        };
     }
 
     public static class Entry {
@@ -621,7 +620,7 @@ public class BTree implements Iterable<BTree.Entry> {
     }
 
     private void releaseBlock(long offset) {
-        storage.decrementRefCount(offset, decrementRefCount(storage, keySize));
+        storage.decrementRefCount(offset, decrementRefCount);
     }
 
     private void entryDeleted(Entry entry) {

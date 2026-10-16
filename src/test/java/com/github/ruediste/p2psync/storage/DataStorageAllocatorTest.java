@@ -38,7 +38,7 @@ class DataStorageAllocatorTest {
 
                 Set<Long> allocated = new HashSet<>();
                 for (int index = 0; index < 300; index++) {
-                    long offset = storage.allocateBlock(area);
+                    long offset = storage.takeFreeBlock(area);
                     assertEquals(start + index * (long) blockSize, offset);
                     assertTrue(allocated.add(offset));
                     assertTrue(storage.allocatedBlocks.get(area).contains(offset));
@@ -60,11 +60,11 @@ class DataStorageAllocatorTest {
             storage.freeSpaceTrees.put(DataStorage.Area.DATA,
                     tree(blockSize, Map.of(firstStart, 2L * blockSize, secondStart, 3L * blockSize)));
 
-            assertEquals(firstStart, storage.allocateBlock(DataStorage.Area.DATA));
-            assertEquals(firstStart + blockSize, storage.allocateBlock(DataStorage.Area.DATA));
-            assertEquals(secondStart, storage.allocateBlock(DataStorage.Area.DATA));
-            assertEquals(secondStart + blockSize, storage.allocateBlock(DataStorage.Area.DATA));
-            assertEquals(secondStart + 2L * blockSize, storage.allocateBlock(DataStorage.Area.DATA));
+            assertEquals(firstStart, storage.takeFreeBlock(DataStorage.Area.DATA));
+            assertEquals(firstStart + blockSize, storage.takeFreeBlock(DataStorage.Area.DATA));
+            assertEquals(secondStart, storage.takeFreeBlock(DataStorage.Area.DATA));
+            assertEquals(secondStart + blockSize, storage.takeFreeBlock(DataStorage.Area.DATA));
+            assertEquals(secondStart + 2L * blockSize, storage.takeFreeBlock(DataStorage.Area.DATA));
         }
     }
 
@@ -79,7 +79,7 @@ class DataStorageAllocatorTest {
         storage.freeSpaceTrees.put(DataStorage.Area.DATA, tree(3000, Map.of()));
 
         try (storage) {
-            long allocated = storage.allocateBlock(DataStorage.Area.DATA);
+            long allocated = storage.takeFreeBlock(DataStorage.Area.DATA);
 
             assertEquals(6000, allocated);
             assertEquals(1_056_000, fileLength(storage));
@@ -97,7 +97,7 @@ class DataStorageAllocatorTest {
             storage.freeSpaceTrees.put(DataStorage.Area.DATA,
                     tree(4096, Map.of(8192L, 4097L)));
 
-            assertThrows(IllegalStateException.class, () -> storage.allocateBlock(DataStorage.Area.DATA));
+            assertThrows(IllegalStateException.class, () -> storage.takeFreeBlock(DataStorage.Area.DATA));
         }
     }
 
@@ -112,12 +112,13 @@ class DataStorageAllocatorTest {
             storage.freeSpaceTrees.put(DataStorage.Area.META,
                     tree(storage.blockSize(DataStorage.Area.META), Map.of(start, 4L * 16384)));
 
-            long reserved = storage.metaReservedBTreeStorage().writeNewBlock(new byte[16384]);
+            long reserved = storage.new BTreeStorage(DataStorage.Area.META).deferred()
+                    .writeNewBlock(new byte[16384]);
 
-            assertTrue(storage.metaReservedBlocks.contains(reserved));
+            assertTrue(storage.deferredMetaFreeTreeRemoveBlocks.contains(reserved));
             assertFalse(storage.allocatedBlocks.get(DataStorage.Area.META).contains(reserved));
             assertFalse(storage.freeBlocks.get(DataStorage.Area.META).contains(reserved));
-            assertEquals(1, storage.refCountAdjustments.get(reserved).adjustment);
+            assertEquals(1, storage.refCountAdjustments.get(reserved).adjustment());
         }
     }
 
@@ -144,10 +145,10 @@ class DataStorageAllocatorTest {
             storage.freeSpaceTrees.put(DataStorage.Area.META,
                     tree(metaBlockSize, Map.of(metaStart, 5L * metaBlockSize)));
             storage.allocatedBlocks.get(DataStorage.Area.DATA).add(dataAllocation);
-            storage.metaReservedBlocks.add(metaAllocation);
+            storage.deferredMetaFreeTreeRemoveBlocks.add(metaAllocation);
 
             storage.removeAllocatedBlocksFromFreeTrees();
-            storage.removeMetaReservedBlocksFromFreeTree();
+            storage.removeDeferredMetaBlocksFromFreeTree();
 
             assertEquals(2L * dataBlockSize,
                     toLong(storage.freeSpaceTrees.get(DataStorage.Area.DATA).get(u64(dataStart))));
@@ -159,7 +160,7 @@ class DataStorageAllocatorTest {
                     toLong(storage.freeSpaceTrees.get(DataStorage.Area.META).get(u64(metaAllocation + metaBlockSize))));
 
             storage.allocatedBlocks.get(DataStorage.Area.DATA).clear();
-            storage.oldReservedMetaBlocks.add(metaAllocation);
+            storage.oldDeferredMetaFreeTreeRemoveBlocks.add(metaAllocation);
             storage.removeAllocatedBlocksFromFreeTrees();
         }
     }
@@ -177,13 +178,13 @@ class DataStorageAllocatorTest {
         try (var storage = newStorage("old-meta-reserved.db", start + 5L * blockSize)) {
             storage.freeSpaceTrees.put(DataStorage.Area.META,
                     tree(blockSize, Map.of(start, 5L * blockSize)));
-            storage.metaReservedBlocks.add(reserved);
-            storage.oldReservedMetaBlocks.add(reserved);
+            storage.deferredMetaFreeTreeRemoveBlocks.add(reserved);
+            storage.oldDeferredMetaFreeTreeRemoveBlocks.add(reserved);
 
-            assertEquals(start, storage.allocateBlock(DataStorage.Area.META));
-            assertEquals(start + blockSize, storage.allocateBlock(DataStorage.Area.META));
+            assertEquals(start, storage.takeFreeBlock(DataStorage.Area.META));
+            assertEquals(start + blockSize, storage.takeFreeBlock(DataStorage.Area.META));
             // Skip the reserved block
-            assertEquals(start + 3L * blockSize, storage.allocateBlock(DataStorage.Area.META));
+            assertEquals(start + 3L * blockSize, storage.takeFreeBlock(DataStorage.Area.META));
 
             assertFalse(storage.freeBlocks.get(DataStorage.Area.META).contains(reserved));
         }
@@ -227,7 +228,7 @@ class DataStorageAllocatorTest {
         long[] offsets = new long[blockCount];
         try (var storage = newPersistentStorage(path, 256)) {
             for (int i = 0; i < blockCount; i++)
-                offsets[i] = storage.allocateBlock(DataStorage.Area.DATA);
+                offsets[i] = storage.takeFreeBlock(DataStorage.Area.DATA);
             storage.commit();
 
             for (long offset : offsets)

@@ -1,75 +1,66 @@
-# DataStorage Implementation Plan
+# Data Storage Implementation Plan
 
-## Goal and Current State
+Scope: the B+ tree and single-file storage engine in `storage/BTree.java` and `storage/DataStorage.java`, compared with the **Data Storage** sections of `doc/storage-sync.md`. Blob storage and higher-level synchronization structures are consumers of this layer and are out of scope here.
 
-Complete `storage.DataStorage` to meet the storage and transaction guarantees in `doc/storage-sync.md`: a single-file, copy-on-write store with distinct SYSTEM, META, and DATA areas; persistent free-space and reference-count trees; safe deferred reuse; and a superblock update as the commit point.
+## Comparison
 
-The current implementation is an incomplete prototype. The focused `DataStorageTest` suite currently has seven failing cases: construction throws a `NullPointerException` because unallocated-list buffers read `superBlock.systemBlockSize` before `superBlock` is initialized. Other major gaps include the unimplemented free-tree allocator, missing transaction recovery and persistence for allocator state, incomplete reference-count handling, and a commit path that publishes the superblock without flushing modified blocks.
+- **B+ tree:** Core copy-on-write tree behavior, variable-sized values, iteration, and reference callbacks are implemented. A tree root can represent a snapshot, but the storage API does not yet define snapshot lifetime or reader ownership.
+- **File format:** Formatting, opening, validation of basic header fields, root serialization, committed file length, and tail truncation are implemented. Documentation does not match the current encoding: block sizes live in the superblock; `InfoBlock` currently stores `inlineDataThreshold`; and the serialized root has subsystem pointers, file length, and deferred-list heads not shown in the documented structure.
+- **Free-space allocation:** Three area trees, batched allocation, a cursor, extent splitting/coalescing, META reservations, and file extension are implemented. The documentation's simpler “allocate from the beginning” description misses the actual cursor/batch behavior and reservation lifecycle.
+- **Reference counts and deferred freeing:** The basic adjustment flow and per-area deferred-free lists are implemented. Deferred reference-count recovery is unfinished: `loadDeferredRefCountAdjustmentList()` is a stub; the persistence routine currently iterates the META reserved-block set instead of the adjustment records; and deferred reserved-list deletion contains a null callback TODO.
+- **Commit safety:** The implementation writes updated blocks and then overwrites the superblock root pointer in place. Tests cover rollback of uncommitted writes, but not interruption during commit, torn root publication, or durable write ordering. This does not yet establish the documented atomic-commit guarantee, especially for power loss.
+- **Concurrency:** The documentation promises a single writer and multiple readers, but `DataStorage` has no reader snapshot API or writer coordination.
+- **Implementation comments:** The `DataStorage` class comment describes `allocatorTreeMode` and `freeSpace` maps that do not exist in the current implementation; update it along with the design documentation.
 
-Implement the milestones in order. Keep each milestone independently testable and preserve the on-disk format version unless a deliberate format change is required.
+## Plan
 
-## Milestones
+### 1. Align The Format Contract
 
-### 1. Establish valid construction, format, and reopen behavior
+- Document the exact current superblock, root-block, and info-block fields in serialization order, including block sizes, file length, and deferred-list pointers.
+- Describe current allocation behavior and transaction-local sets accurately: refill batch and cursor, ordinary allocated blocks, current/old META reservations, modified blocks, and deferred frees.
+- State invariants separately for transaction-local and committed state. In particular, specify when reserved META blocks are still represented in a free extent and when they must be removed.
+- Remove stale allocator descriptions from `DataStorage` comments. Do not change the on-disk encoding as part of documentation cleanup.
 
-- Remove field-initialization dependence on `superBlock`; initialize per-area transaction buffers after the block sizes are known.
-- Make `format` initialize every in-memory structure consistently, including the initial free extents, free-space tree roots, reference-count tree, and transaction state.
-- Make `open` reconstruct all persistent and in-memory allocator state from the selected root, and validate magic, version, block sizes, and root offsets before using them.
-- Ensure repeated `open`/`format` use does not retain stale maps, trees, buffers, or adjustments from an earlier file.
+**Complete when:** every serialized field and allocator invariant has one unambiguous description matching the implementation.
 
-**Exit checks:** `DataStorageTest` initialization/format and reopen cases pass; malformed or unsupported superblocks fail clearly rather than being interpreted as valid storage.
+### 2. Finish Deferred Ref-Count Persistence
 
-### 2. Implement area-aware allocation and extension
+- Specify a restart-safe record format for each deferred adjustment. Persist only durable data; do not attempt to serialize Java callbacks. Define how the area and deferred deletion action are restored or derived.
+- Implement list loading with range/count checks, duplicate detection, cycle detection, and validation of record contents.
+- Fix persistence to serialize the adjustment map (not `deferredMetaFreeTreeRemoveBlocks`) and size/roll over blocks based on the actual record format.
+- Complete deletion of old deferred lists and their referenced blocks with valid ownership/deletion behavior.
+- Define publication and retirement order so a crash cannot lose, replay twice, or prematurely reclaim adjustments.
 
-- Define and enforce the allocator states from the documentation: fetched/pending free blocks, allocated blocks, and meta-reserved blocks. No block may be simultaneously available in incompatible states.
-- Implement deterministic free-space-tree iteration from the per-area fetch offset. Refill the in-memory batch from extents, respecting each area's block size and advancing the cursor without revisiting prior extents.
-- On exhaustion, extend the file on an area/block-size boundary and add the new extent to that area's free-space tree; then allocate from it.
-- Track every normal allocation in `allocatedBlocks` and every meta-tree allocation in `metaReservedBlocks`. Ensure meta-reserved allocations are removed from the ordinary free-block pool and cannot be returned twice.
-- Before a fetched block is committed as allocated, remove it from the persistent free-space tree. Coalesce adjacent extents when returning blocks, without merging across area boundaries.
-- Reject invalid area sizes, misaligned extents, exhausted/invalid tree state, and arithmetic overflow rather than returning overlapping or out-of-range blocks.
+**Complete when:** tests cover empty, one-record, exact-capacity, multi-block, reopen/replay, malformed, and retired lists; repeated commits neither lose nor double-apply adjustments.
 
-**Exit checks:** tests prove allocations are unique and correctly aligned in all areas, cross the batch boundary, extend storage when exhausted, and are not reused before their allocation is persisted.
+### 3. Validate Allocator And Ref-Count Invariants
 
-### 3. Complete deferred free and crash-recovery state
+- Add transaction-level tests for allocate/cancel, free/reallocate across commits, adjacent extent merge, reserved META rotation, and deferred-free rollover in each area.
+- Verify each allocation is removed exactly once from its persistent extent and that no block is simultaneously free, allocated, reserved, or deferred-free.
+- Add small-model randomized operation sequences, reopening at commit boundaries and comparing free extents and reference counts with the model.
+- Validate all persisted offsets, ranges, alignments, and counts before reading or changing referenced blocks; reject malformed files deterministically.
 
-- Persist all root fields required to find the deferred-freed list and meta-reserved list; the current root serialization omits `unallocatedBlockList` and `metaReservedBlockList`.
-- Define the linked-list encoding and ownership for blocks freed during a transaction, including count bounds, buffer rollover, area identity, and empty-list representation.
-- At transaction start/open, reclaim only blocks recorded by the previously committed transaction into the correct free-space trees, then reset that prior list. Blocks freed during the current transaction remain unavailable until a later transaction, as required by the design.
-- Persist and reload the meta-reserved block list. Preserve reserved blocks across commits, and implement the documented reserve-set rollover/threshold behavior without exposing old reserved blocks early.
+**Complete when:** focused storage tests and model-based sequences pass through repeated commit/reopen cycles, including forced rollover and small block sizes.
 
-**Exit checks:** reopen tests verify allocator state survives restart; blocks freed in transaction N are unavailable through its commit and become reusable only at the documented later boundary; list rollover and multiple areas round-trip correctly.
+### 4. Establish And Test Commit Recovery
 
-### 4. Make reference counting complete and transaction-safe
+- Define whether commit guarantees process-crash consistency only or power-loss durability as well.
+- Make the protocol meet that guarantee. In-place superblock replacement alone does not prove atomic publication; use a recoverable publication scheme (such as redundant validated superblocks or a journal) if required, with explicit write ordering and synchronization.
+- Add fault injection around block/tree writes, deferred-list writes, root serialization, and superblock publication. Reopen after every injected failure and verify recovery selects a complete committed state and does not reuse reachable blocks.
+- If the encoding must change, increment `FORMAT_VERSION` and define compatibility behavior for existing files.
 
-- Specify ownership for every persisted root pointer and tree child. Increment/decrement references consistently when roots or tree nodes are copied, replaced, removed, and retired; do not leave subsystem roots outside the ownership rules.
-- Validate area consistency for each block's adjustments and handle increments/decrements that net to zero, newly allocated blocks freed in the same transaction, and last-reference deletion.
-- Process refcount changes without mutating the map being iterated. Tree updates and delete callbacks can themselves allocate, free, and enqueue adjustments, so drain work in a controlled fixed-point loop or equivalent staged process.
-- Keep the refcount tree's own storage and free-space-tree metadata from causing unbounded recursive refcount updates. Implement the structural-block recovery/accounting strategy explicitly and make it consistent on both format and open.
-- Ensure freeing a B-tree node recursively releases child references exactly once; ensure callbacks can read the node before its storage becomes reusable.
+**Complete when:** every commit interruption point has a recovery test, and the durability claim in `storage-sync.md` matches the actual protocol.
 
-**Exit checks:** tests cover shared references, copy-on-write replacement, recursive B-tree deletion, zero/net-zero deltas, newly allocated then discarded blocks, and reopened refcounts.
+### 5. Define Reader Snapshots And Writer Ownership
 
-### 5. Implement a durable atomic commit boundary
+- Provide a read-only snapshot handle that captures a committed B-tree/root state and defines how its references are retained and released.
+- Enforce one writer and prevent readers from observing mutable transaction-local state. Decide whether writer exclusion must cover multiple processes as well as threads.
+- Test that readers retain their original view across writer commits and that blocks are reclaimed only after the last reader releases its snapshot.
 
-- Rework `commit` into explicit stages: finalize pending frees and allocations; update allocator/refcount metadata; serialize all required list and root state; write all dirty data and metadata blocks; flush them to durable storage; write the new root block; then publish and flush the superblock pointer last.
-- Do not clear modified-block state or make freed blocks reusable until the new superblock is durably published. `flushModified` currently is not called, and writing a root pointer before its referenced blocks reach disk violates the documented commit guarantee.
-- Ensure failures before superblock publication leave the previous root authoritative. Treat failures during/after publication consistently and avoid mutating the live in-memory transaction into an ambiguous half-committed state.
-- After a successful commit, establish a clean next-transaction state from the new root while retaining only the documented meta reservations and deferred frees.
+**Complete when:** the single-writer/multiple-reader contract is an explicit API guarantee with overlapping-reader/commit tests.
 
-**Exit checks:** reopen after a successful commit sees every referenced block; injected failures at each write/flush stage reopen to either the old complete root or the new complete root, never a mixed state.
+## Validation Gates
 
-### 6. Align tests and expose storage invariants
-
-- Extend `DataStorageTest` in place with focused cases for allocation, free-space coalescing, deferred reuse, list persistence, reference counts, and crash recovery; keep tests small and deterministic.
-- Add package-private invariant checks or test helpers only where needed to assert that free, pending, allocated, reserved, and referenced sets do not overlap illegally.
-- Correct tests to exercise the documented API semantics: freeing should flow through reference-count changes, and persistence assertions should reopen the file rather than inspect only in-memory tree state.
-- Cover boundary sizes and custom block sizes, including list capacity rollover and area extension. Keep format compatibility tests for the current version.
-
-**Completion criteria:** `mvn test` passes, storage recovery/atomicity tests pass against reopened files, and each invariant above has a targeted regression test. Run `mvn test -Pit` only if the storage changes affect shared test wiring or integration behavior.
-
-## Key Risks and Decisions
-
-- The source comment describes an `allocatorTreeMode`, but no such mode currently exists. Choose and document the actual strategy for allocator metadata/refcount recursion before implementing milestone 4; do not rely on comments as proof that structural blocks are recoverable.
-- The documentation describes list and ownership semantics more completely than the current on-disk structures. Lock down exact encodings and commit/recovery ordering before changing serialization. If persisted layout changes, decide whether to bump `FORMAT_VERSION` or add an explicit migration path.
-- `unallocateBlock` currently writes freed offsets into buffers, but no demonstrated commit/reopen path connects those buffers to `RootBlock.freedBlockList`. Tests must verify actual on-disk recovery, not just the in-memory call.
-- The minimum useful first slice is milestone 1 followed by the allocator tests in milestone 2. Do not build higher-level filesystem/synchronization features on this storage layer until allocation, refcounts, and crash recovery satisfy their exit checks.
+- Run focused `BTree` and `DataStorage` tests after each phase, then `mvn test` before considering the storage layer complete.
+- Keep format validation, allocator/reference-count invariants, and crash recovery as distinct test groups so failures identify the broken contract.
+- Update `doc/storage-sync.md` in the same change as each storage behavior; keep higher-level blob and synchronization formats marked as consumers/design until separately implemented.

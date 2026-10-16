@@ -90,44 +90,6 @@ struct FreeSpaceEntry {
 
 When allocating space, the space is allocated from the beginning of the tree. When blocks are freed, neighboring free blocks are merged to form larger contiguous free areas, reducing the number of entries in the free space tree. 
 
-### Transaction and Block Management
-Changes to the data file are managed within transactions. During a transaction, blocks used by the previous transaction are never modified. All changes are written to newly allocated blocks. For efficient and correct block management, a few in-memory structures are maintained:
-
-- `ModifiedBlocks`: A hash map keeping track of all blocks modified during the current transaction. The key is the block offset, and the value contains the modified block data. It acts as a write cache which ensures that blocks which are only used temporarily are never written to the disk. Note that all `ModifiedBlocks` are either in `AllocatedBlocks` or in `MetaReservedBlocks` (see below).
-
-- `FreeBlocks`: To enable efficient block allocation, and to avoid repeatedly modifying the free space trees, a set of free blocks is maintained in memory. When the set becomes empty, a new batch of free blocks is fetched from the free space tree.
-
-  The block offset of the highest fetched block is kept (fetch offset), and block fetching always continues after the fetch offset. As no blocks after the fetch offset can be allocated in a transaction, all blocks in the free tree after the fetch offset are guaranteed to be free. The tree is not modified when fetching the blocks. 
-
-- `AllocatedBlocks`: When a block is allocated, it is removed from the `FreeBlocks` set and added to the `AllocatedBlocks` set. When a block is no longer needed in a transaction (unallocated), it is removed from the `AllocatedBlocks` set and added back to the `FreeBlocks` set. During commit, the `AllocatedBlocks` are removed from the free space tree. All `AllocatedBlocks` are in `ModifiedBlocks`.
-
-- `MetaReservedBlocks`: All free space trees are stored in the meta area. When modifying the meta area free space tree, new blocks from within the meta area are required, which in turn would require modifying the meta area free space tree. To break this cycle, blocks for the meta area free space tree are allocated using the `MetaReservedBlocks`. This is a set of reserved blocks is maintained in memory. The blocks are allocated from the `FreeBlocks` set.
-
-  The `MetaReservedBlocks` are kept in memory across transactions commits. This implies that while filling the `FreeBlocks` set from the free blocks tree, the reserved blocks are not considered available for allocation.
-
-  On commit, the reserved block list is stored as linked list. This happens very late in the transaction process and uses some additional reserved blocks. Before writing the list, it is ensured that there are enough free blocks available to complete the operation by growing the meta area.
-  
-  When the number of reserved blocks reaches a threshold, block allocation switches to a new set of reserved blocks. The old reserved blocks are then removed from the free space tree. While doing so, the old reserved blocks still count as non-free for allocation purposes.
-
-  `MetaReservedBlocks` are in the `ModifiedBlocks` if they have been reserved during the current transaction. Blocks that were reserved in previous transactions are not in the `ModifiedBlocks`.
-  
-  This mechanism is only used for the meta free space tree.
-
-- `DeferredFreeBlocks`: When a block is no longer referenced (refcount hits 0), it can be unallocated. However, care has to be taken not to reuse a block used in the previous transaction in the current transaction, as the block is still used by the last committed transaction. 
-
-    Therefore, blocks freed during the previous transaction are tracked in linked lists, continuously written to disk. Each area has its own list head in the root block; list blocks are stored in system space and contain the next-list-block offset, a count, and the freed block offsets. When a transaction starts, blocks from the previous transaction's lists are added back into their corresponding free trees and the `DeferredFreeBlocks` lists are reset.
-
-    Note that once a block is added to the `DeferredFreeBlocks` list, it cannot be removed from the list again during the transaction. 
-
-To ensure correctness of all of these structures and operations, it is helpful to note that when adding blocks form the free space tree to the `FreeBlocks`, they are "pending". These blocks can then be passed on to the `AllocatedBlocks` or the `ReservedBlocks` as needed. It has to be ensured, that before definitely using these "pending" blocks, they are properly removed from the free space tree.
-
-Invariants:
-- `DeferredFreeBlocks` are not in the free tree
-- Blocks in the following set are always in the free tree:
-  - `FreeBlocks` 
-  - `AllocatedBlocks` 
-  - `MetaReservedBlocks` 
-
 ### Reference Count Tree
 The reference count tree simply keeps track of the reference counts of blocks within the data file. Each entry in the tree corresponds to a block and stores the number of references to that block.
 ```C
@@ -138,6 +100,59 @@ struct RefCountEntry {
     uint64_t refCount; // reference count of the block
 };
 ```
+
+### Transaction and Block Management
+Changes to the data file are managed within transactions. During a transaction, blocks used by the previous transaction are never modified. All changes are written to newly allocated blocks. For efficient and correct block management, a few in-memory structures are maintained:
+
+- `ModifiedBlocks`: A hash map keeping track of all blocks modified during the current transaction. The key is the block offset, and the value contains the modified block data. It acts as a write cache which ensures that blocks which are only used temporarily are never written to the disk. Note that all `ModifiedBlocks` are either in `AllocatedBlocks` or in `DeferredMetaFreeTreeRemoveBlocks` (see below).
+
+- `FreeBlocks`: To enable efficient block allocation, and to avoid repeatedly modifying the free space trees, a set of free blocks is maintained in memory. When the set becomes empty, a new batch of free blocks is fetched from the free space tree.
+
+  The block offset of the highest fetched block is kept (fetch offset), and block fetching always continues after the fetch offset. As no blocks after the fetch offset can be allocated in a transaction, all blocks in the free tree after the fetch offset are guaranteed to be free. The tree is not modified when fetching the blocks. 
+
+- `AllocatedBlocks`: When a block is allocated, it is removed from the `FreeBlocks` set and added to the `AllocatedBlocks` set. When a block is no longer needed in a transaction (unallocated), it is removed from the `AllocatedBlocks` set and added back to the `FreeBlocks` set. During commit, the `AllocatedBlocks` are removed from the free space tree. All `AllocatedBlocks` are in `ModifiedBlocks`.
+
+- `DeferredMetaFreeTreeRemoveBlocks`: All free space trees are stored in the meta area. When modifying the meta area free space tree, new blocks from within the meta area are required, which in turn would require modifying the meta area free space tree. To break this cycle, blocks for the meta area free space tree are allocated using the `DeferredMetaFreeTreeRemoveBlocks`. During a transaction, this set of blocks is maintained in memory. The blocks are allocated from the `FreeBlocks` set.
+
+  On commit, the reserved block list is stored as linked list. This happens very late in the transaction process and uses some additional deferred blocks. Before writing the list, it is ensured that there are enough free blocks available to complete the operation by growing the meta area.
+
+  The `DeferredMetaFreeTreeRemoveBlocks` are kept in memory across transactions commits (or loaded from disk when opening a data file). This implies that while filling the `FreeBlocks` set from the free blocks tree, the deferred blocks are not considered available for allocation.
+
+  When the number of reserved blocks reaches a threshold, block allocation for the meta free tree switches to a new set of deferred blocks. The old deferred blocks are then removed from the free space tree. While doing so, the old pending blocks still count as non-free when refilling the `FreeBlocks`.
+
+  `DeferredMetaFreeTreeRemoveBlocks` are in the `ModifiedBlocks` if they have been reserved during the current transaction. Blocks that were reserved in previous transactions are not in the `ModifiedBlocks`.
+  
+  This mechanism is only used for the meta free space tree.
+
+- `DeferredRefCountAdjustments`: Copy-on-write changes to the META free-space tree and reference-count tree can themselves create reference-count updates. Those updates are deferred to the next commit to break the recursion; ordinary transaction adjustments and callbacks are applied during the current commit. Deferred records are stored in a linked list of META blocks. Each list block has a `uint64_t` next-block offset and a `uint64_t` record count, followed by fixed-size records:
+
+    ```C
+    struct DeferredRefCountAdjustment {
+            uint64_t blockOffset;
+            int32_t delta;
+            uint8_t area;       // 1 SYSTEM, 2 META, 3 DATA
+            uint8_t onDelete;   // 0 none, 1 META_FREE_SPACE_TREE_BLOCK, 2 REF_COUNT_TREE_BLOCK
+    };
+    ```
+
+    All fields use big-endian encoding. A block holds `floor((metaBlockSize - 16) / 14)` records. Each block offset appears at most once in a list. Negative deltas require an `onDelete` action; only the two existing deferred actions are persisted. Recovery validates the chain and records, then queues its deltas for application during the next commit. The list blocks' own deferred reference increments are included in the list. The old list chain is released while retiring its root block.
+
+- `DeferredFreeBlocks`: When a block is no longer referenced (refcount hits 0), it can be unallocated. However, care has to be taken not to reuse a block used in the previous transaction in the current transaction, as the block is still used by the last committed transaction. 
+
+    Therefore, blocks freed during the previous transaction are tracked in linked lists, continuously written to disk. Each area has its own list head in the root block; list blocks are stored in system space and contain the next-list-block offset, a count, and the freed block offsets. When a transaction starts, blocks from the previous transaction's lists are added back into their corresponding free trees and the `DeferredFreeBlocks` lists are reset.
+
+    Note that once a block is added to the `DeferredFreeBlocks` list, it cannot be removed from the list again during the transaction. 
+
+To ensure correctness of all of these structures and operations, it is helpful to note that when adding blocks form the free space tree to the `FreeBlocks`, they are "pending". These blocks can then be passed on to the `AllocatedBlocks` or the `DeferredMetaFreeTreeRemoveBlocks` as needed. It has to be ensured, that before definitely using these "pending" blocks, they are properly removed from the free space tree.
+
+Invariants:
+- `DeferredFreeBlocks` are not in the free tree
+- Blocks in the following set are always in the free tree:
+  - `FreeBlocks` 
+  - `AllocatedBlocks` 
+  - `DeferredMetaFreeTreeRemoveBlocks` 
+
+
 
 ### Blob Data Storage
 For various purposes, data blobs need to be stored efficiently, either as inlined data for small blobs or in external blocks for larger blobs. This is accomplished by using keys with the following structure

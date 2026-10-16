@@ -51,7 +51,7 @@ public class BTreeTest {
     }
 
     private BTree newTree() {
-        return new BTree(storage.btreeStorage(DataStorage.Area.META), 8, null);
+        return new BTree(storage.new BTreeStorage(DataStorage.Area.META), 8, null);
     }
 
     @Test

@@ -80,6 +80,24 @@ class DataStorageInitializationTest {
     }
 
     /**
+     * Rejects a SYSTEM block too small for the twenty serialized root pointers,
+     * before formatting can fail later with a buffer overflow.
+     */
+    @Test
+    void rejectsSystemBlockTooSmallForRootBlock() {
+        Path path = tempDir.resolve("small-system-block.db");
+
+        try (var storage = new DataStorage()) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> storage.format(path.toString(), 4096, 16384, 4096, 4096, 16384, 19 * Long.BYTES));
+        }
+
+        writeFile(path, superblock(DataStorage.FORMAT_VERSION, 4096, 4096, 16384, 19 * Long.BYTES));
+        var exception = openExpectingFailure(path);
+        assertEquals("Invalid data storage block sizes", exception.getCause().getMessage());
+    }
+
+    /**
      * Points the root at the end of a superblock-only file. The offset is
      * nonzero, but there is no room for a complete SYSTEM root block there.
      */
