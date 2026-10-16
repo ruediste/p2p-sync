@@ -34,13 +34,15 @@ public class DataStorage implements Closeable {
     public static final long FORMAT_VERSION = 1;
     public static final int SUPERBLOCK_SIZE = 4096;
     private static final int BLOCK_OFFSET_SIZE = Long.BYTES;
+    private static final int DEFERRED_REF_COUNT_LIST_HEADER_SIZE = 2 * Long.BYTES;
+    private static final int DEFERRED_REF_COUNT_RECORD_SIZE = Long.BYTES + Integer.BYTES + 2;
 
     private final byte[] DIRECT_WRITE_EMPTY_ARRAY = new byte[0];
 
     final class BTreeStorage implements BTree.Storage {
         private final Area area;
         boolean useDeferredMetaFreeTreeRemoveBlocks;
-        Optional<DeferredOnDelete> useDeferredRefCountUpdate;
+        Optional<DeferredOnDelete> useDeferredRefCountUpdate = Optional.empty();
 
         public BTreeStorage deferred(DeferredOnDelete onDelete) {
             this.useDeferredMetaFreeTreeRemoveBlocks = true;
@@ -179,7 +181,7 @@ public class DataStorage implements Closeable {
     }
 
     enum DeferredOnDelete {
-        META_FREE_SPACE_TREE_BLOCK {
+        META_FREE_SPACE_TREE_BLOCK(1) {
 
             @Override
             public void onDelete(DataStorage storage, long blockOffset) {
@@ -187,12 +189,30 @@ public class DataStorage implements Closeable {
             }
 
         },
-        REF_COUNT_TREE_BLOCK {
+        REF_COUNT_TREE_BLOCK(2) {
             @Override
             public void onDelete(DataStorage storage, long blockOffset) {
                 storage.refCountTree.decrementRefCount.accept(blockOffset);
             }
         };
+
+        private final int code;
+
+        DeferredOnDelete(int code) {
+            this.code = code;
+        }
+
+        int code() {
+            return code;
+        }
+
+        static DeferredOnDelete fromCode(int code) {
+            for (DeferredOnDelete value : values()) {
+                if (value.code == code)
+                    return value;
+            }
+            throw new IllegalStateException("Invalid deferred ref-count delete action: " + code);
+        }
 
         public abstract void onDelete(DataStorage storage, long blockOffset);
     }
@@ -390,45 +410,49 @@ public class DataStorage implements Closeable {
         adjustment.adjust(-1);
         if (deferred.isPresent()) {
             adjustment.makeDeferred();
-
         }
         if (adjustment.adjustment() == 0) {
             // check if this is a block that was newly allocated in this transaction. If so,
             // remove it.
             if (modifiedBlocks.containsKey(blockOffset)) {
-                // this block has been modified in this transaction, return it to the free
-                // blocks
-                onDelete.accept(blockOffset);
-
-                modifiedBlocks.remove(blockOffset);
-                freeBlocks.get(area).add(blockOffset);
-                var wasInAllocatedBlocks = allocatedBlocks.get(area).remove(blockOffset);
-                if (area == Area.META) {
-                    var wasInMetaReservedBlocks = deferredMetaFreeTreeRemoveBlocks.remove(blockOffset)
-                            || oldDeferredMetaFreeTreeRemoveBlocks.remove(blockOffset);
-                    if ((wasInMetaReservedBlocks) && wasInAllocatedBlocks) {
-                        throw new IllegalStateException("Block was in both meta reserved and allocated blocks");
-                    }
-                    if (!wasInMetaReservedBlocks && !wasInAllocatedBlocks) {
-                        throw new IllegalStateException("Block was in neither meta reserved nor allocated blocks");
-                    }
-                } else if (!wasInAllocatedBlocks) {
-                    throw new IllegalStateException("Block was not in allocated blocks");
-                }
+                discardModifiedBlock(blockOffset, area, adjustment);
             }
 
             // remove the ref count adjustment for this block, as it has reached zero and
             // thus has no effect
             refCountAdjustments.remove(blockOffset);
-        } else if (adjustment.adjustment() == -1) {
-            // only keep the onDelete callback when the adjustment becomes negative for the
-            // first time. This saves some GC work.
-            if (deferred.isPresent()) {
+        } else if (deferred.isPresent()) {
+            if (adjustment.deferredAdjustment < 0 && adjustment.deferredOnDelete.isEmpty())
                 adjustment.deferredOnDelete = deferred;
-            } else {
-                adjustment.onDelete = Optional.ofNullable(onDelete);
-            }
+        } else if (adjustment.adjustment < 0 && adjustment.onDelete.isEmpty()) {
+            adjustment.onDelete = Optional.ofNullable(onDelete);
         }
+    }
+
+    private void discardModifiedBlock(long blockOffset, Area area, RefCountAdjustment adjustment) {
+        adjustment.onDelete.ifPresent(callback -> callback.accept(blockOffset));
+        adjustment.deferredOnDelete.ifPresent(action -> action.onDelete(this, blockOffset));
+        modifiedBlocks.remove(blockOffset);
+        freeBlocks.get(area).add(blockOffset);
+        boolean wasAllocated = allocatedBlocks.get(area).remove(blockOffset);
+        if (area == Area.META) {
+            boolean wasReserved = deferredMetaFreeTreeRemoveBlocks.remove(blockOffset)
+                    || oldDeferredMetaFreeTreeRemoveBlocks.remove(blockOffset);
+            if (wasReserved && wasAllocated)
+                throw new IllegalStateException("META block was both allocated and reserved: " + blockOffset);
+            if (!wasReserved && !wasAllocated)
+                addBlockToFreeTree(blockOffset, Area.META);
+        } else if (!wasAllocated) {
+            throw new IllegalStateException("Block was not in allocated blocks");
+        }
+    }
+
+    private void onDeferredRefCountAdjustmentListBlockDelete(long blockOffset) {
+        validateBlockOffset(blockOffset, blockSize(Area.META), "deferred-ref-count-adjustment list block");
+        var buffer = wrap(readBlock(blockOffset, Area.META));
+        long next = buffer.getLong();
+        if (next != 0)
+            decrementRefCount(next, Area.META, this::onDeferredRefCountAdjustmentListBlockDelete);
     }
 
     public void open(String path) {
@@ -454,6 +478,7 @@ public class DataStorage implements Closeable {
             loadSystemTrees();
             loadDeferredMetaFreeTreeRemoveBlocks();
             loadDeferredRefCountAdjustmentList();
+            retainWorkingTreeRoots();
             addDeferredFreeBlocksToFreeTree();
         } catch (RuntimeException e) {
             close();
@@ -574,7 +599,7 @@ public class DataStorage implements Closeable {
             throw new UncheckedIOException(
                     new IOException("Unsupported data storage format version: " + superBlock.version));
         if (superBlock.dataBlockSize <= 0 || superBlock.metaBlockSize <= 0
-            || superBlock.systemBlockSize < 20 * Long.BYTES)
+                || superBlock.systemBlockSize < 20 * Long.BYTES)
             throw new UncheckedIOException(new IOException("Invalid data storage block sizes"));
         validateBlockOffset(superBlock.rootBlock, superBlock.systemBlockSize, "root block");
         initializeDeferredFreeBlocks();
@@ -707,6 +732,19 @@ public class DataStorage implements Closeable {
         refCountTree = new BTree(new BTreeStorage(Area.META).deferred(DeferredOnDelete.REF_COUNT_TREE_BLOCK),
                 BLOCK_OFFSET_SIZE, null,
                 rootBlock.refCountTree);
+    }
+
+    private void retainWorkingTreeRoots() {
+        // TODO: instead of a separate method, construct a new root block for the new
+        // transaction
+        // and properly increment the reference counts for the new root block
+        for (Area area : Area.values()) {
+            long rootOffset = freeSpaceTrees.get(area).rootOffset;
+            if (rootOffset != 0)
+                incrementRefCount(rootOffset, Area.META);
+        }
+        if (refCountTree.rootOffset != 0)
+            incrementRefCount(refCountTree.rootOffset, Area.META);
     }
 
     long takeDeferredMetaFreeTreeRemoveBlock() {
@@ -1031,7 +1069,68 @@ public class DataStorage implements Closeable {
     }
 
     private void loadDeferredRefCountAdjustmentList() {
-        // TODO: implement
+        refCountAdjustments.clear();
+        int capacity = (blockSize(Area.META) - DEFERRED_REF_COUNT_LIST_HEADER_SIZE)
+                / DEFERRED_REF_COUNT_RECORD_SIZE;
+        if (capacity <= 0)
+            throw new IllegalStateException("META block is too small for deferred ref-count records");
+
+        long offset = rootBlock.deferredRefCountAdjustmentList;
+        rootBlock.deferredRefCountAdjustmentList = 0;
+        Set<Long> visited = new HashSet<>();
+        Set<Long> adjustedBlocks = new HashSet<>();
+        while (offset != 0) {
+            validateBlockOffset(offset, blockSize(Area.META), "deferred-ref-count-adjustment list block");
+            if (!visited.add(offset))
+                throw new IllegalStateException("Cycle in deferred ref-count adjustment list");
+
+            ByteBuffer buffer = wrap(readBlock(offset, Area.META));
+            long next = buffer.getLong();
+            long count = buffer.getLong();
+            if (count <= 0 || count > capacity)
+                throw new IllegalStateException("Invalid deferred ref-count adjustment count: " + count);
+
+            for (int index = 0; index < count; index++) {
+                long blockOffset = buffer.getLong();
+                int adjustmentValue = buffer.getInt();
+                Area area = areaFromCode(Byte.toUnsignedInt(buffer.get()));
+                int actionCode = Byte.toUnsignedInt(buffer.get());
+                Optional<DeferredOnDelete> action = actionCode == 0
+                        ? Optional.empty()
+                        : Optional.of(DeferredOnDelete.fromCode(actionCode));
+
+                validateBlockOffset(blockOffset, blockSize(area), "deferred ref-count adjustment block");
+                if (adjustmentValue == 0)
+                    throw new IllegalStateException("Zero deferred ref-count adjustment for block " + blockOffset);
+                if (!adjustedBlocks.add(blockOffset))
+                    throw new IllegalStateException("Duplicate deferred ref-count adjustment for block " + blockOffset);
+                if (adjustmentValue < 0 && action.isEmpty())
+                    throw new IllegalStateException(
+                            "Missing delete action for deferred ref-count adjustment " + blockOffset);
+
+                var adjustment = new RefCountAdjustment(0, area, Optional.empty(), action);
+                adjustment.adjust(adjustmentValue);
+                refCountAdjustments.put(blockOffset, adjustment);
+            }
+            offset = next;
+        }
+    }
+
+    private static int areaCode(Area area) {
+        return switch (area) {
+            case SYSTEM -> 1;
+            case META -> 2;
+            case DATA -> 3;
+        };
+    }
+
+    private static Area areaFromCode(int code) {
+        return switch (code) {
+            case 1 -> Area.SYSTEM;
+            case 2 -> Area.META;
+            case 3 -> Area.DATA;
+            default -> throw new IllegalStateException("Invalid deferred ref-count area: " + code);
+        };
     }
 
     private void extend(Area kind) {
@@ -1103,31 +1202,68 @@ public class DataStorage implements Closeable {
     }
 
     private void applyRefCountAdjustments() {
-        while (!refCountAdjustments.isEmpty()) {
-            var batch = refCountAdjustments;
-            refCountAdjustments = new HashMap<>();
-            for (var e : batch.entrySet()) {
+        while (true) {
+            var batch = refCountAdjustments.entrySet().stream()
+                    .filter(e -> e.getValue().adjustment != 0)
+                    .toList();
+            if (batch.isEmpty())
+                return;
+
+            for (var e : batch) {
                 long blockOffset = e.getKey();
                 var delta = e.getValue();
+                if (refCountAdjustments.get(blockOffset) != delta || delta.adjustment == 0)
+                    continue;
+                int adjustment = delta.adjustment;
+                delta.adjustment = 0;
 
                 var existingCount = refCountTree.get(u64(blockOffset));
                 var count = existingCount == null ? 0 : toLong(existingCount);
-                count += delta.adjustment();
+                count += adjustment;
                 if (count == 0) {
                     refCountTree.remove(u64(blockOffset));
-                    if (delta.onDelete.isEmpty() && delta.deferredOnDelete.isEmpty()) {
-                        throw new IllegalStateException("No onDelete action specified for block " + blockOffset);
+                    if (delta.deferredAdjustment == 0) {
+                        if (modifiedBlocks.containsKey(blockOffset)) {
+                            discardModifiedBlock(blockOffset, delta.area, delta);
+                        } else {
+                            if (delta.onDelete.isEmpty() && delta.deferredOnDelete.isEmpty()) {
+                                throw new IllegalStateException(
+                                        "No onDelete action specified for " + delta.area + " block " + blockOffset);
+                            }
+                            delta.onDelete.ifPresent(c -> c.accept(blockOffset));
+                            delta.deferredOnDelete.ifPresent(x -> x.onDelete(this, blockOffset));
+                            addToDeferredFreeBlocks(blockOffset, delta.area);
+                        }
                     }
-                    delta.onDelete.ifPresent(c -> c.accept(blockOffset));
-                    delta.deferredOnDelete.ifPresent(x -> x.onDelete(this, blockOffset));
-                    if (!modifiedBlocks.containsKey(blockOffset))
-                        addToDeferredFreeBlocks(blockOffset, delta.area);
                 } else if (count < 0) {
-                    throw new IllegalStateException("Reference count for block " + blockOffset + " went negative");
+                    throw new IllegalStateException("Reference count for " + delta.area + " block " + blockOffset
+                            + " went negative: existing=" + (count - adjustment) + ", adjustment=" + adjustment);
                 } else {
                     refCountTree.put(u64(blockOffset), u64(count));
                 }
+
+                if (delta.adjustment == 0 && delta.deferredAdjustment == 0)
+                    refCountAdjustments.remove(blockOffset, delta);
             }
+        }
+    }
+
+    private void applyAndRemoveAllocatedBlocks() {
+        // Applying immediate adjustments can invoke deletion callbacks that enqueue
+        // more adjustments. Removing allocations from free-space trees can also
+        // allocate replacement tree blocks. Repeat until both effects settle;
+        // deferred adjustments are intentionally left for the next transaction.
+        while (true) {
+            applyRefCountAdjustments();
+            removeAllocatedBlocksFromFreeTrees();
+            boolean hasImmediateAdjustments = refCountAdjustments.values().stream()
+                    .anyMatch(adjustment -> adjustment.adjustment != 0);
+            boolean hasAllocatedBlocks = false;
+            for (Area area : Area.values()) {
+                hasAllocatedBlocks |= !allocatedBlocks.get(area).isEmpty();
+            }
+            if (!hasImmediateAdjustments && !hasAllocatedBlocks)
+                return;
         }
     }
 
@@ -1204,15 +1340,19 @@ public class DataStorage implements Closeable {
     }
 
     private DeferredPersistor persistDeferredRefCountAdjustmentList() {
-        int capacity = (blockSize(Area.META) - 2 * Long.BYTES) / (Long.BYTES + 1);
+        int capacity = (blockSize(Area.META) - DEFERRED_REF_COUNT_LIST_HEADER_SIZE)
+                / DEFERRED_REF_COUNT_RECORD_SIZE;
         if (capacity <= 0)
-            throw new IllegalStateException("META block is too small for a reserved-block list");
+            throw new IllegalStateException("META block is too small for deferred ref-count records");
 
         List<Long> listOffsets = new ArrayList<>();
 
         return new DeferredPersistor(
                 () -> {
-                    var requiredListBlocks = refCountAdjustments.size() / capacity + 1;
+                    var deferredCount = (int) refCountAdjustments.values().stream()
+                            .filter(adjustment -> adjustment.deferredAdjustment() != 0)
+                            .count();
+                    var requiredListBlocks = (deferredCount + capacity - 1) / capacity;
                     if (listOffsets.size() >= requiredListBlocks)
                         return true;
                     var offset = takeDeferredMetaFreeTreeRemoveBlock();
@@ -1222,33 +1362,49 @@ public class DataStorage implements Closeable {
                     return false;
                 },
                 () -> {
-                    long next = 0;
-                    byte[] bytes = new byte[blockSize(Area.META)];
-                    ByteBuffer buffer = wrap(bytes);
-                    buffer.position(2 * Long.BYTES);
-                    long count = 0;
-                    var listOffsetsIterator = listOffsets.iterator();
-
-                    for (long blockOffset : deferredMetaFreeTreeRemoveBlocks) {
-                        if (buffer.remaining() < Long.BYTES) {
-                            buffer.putLong(0, next);
-                            buffer.putLong(Long.BYTES, count);
-                            writeBlockDirect(listOffsetsIterator.next(), Area.META, bytes);
-                            buffer.clear();
-                            buffer.position(2 * Long.BYTES);
-                            next = listOffsetsIterator.next();
-                            count = 0;
-                        }
-                        buffer.putLong(blockOffset);
-                        count++;
+                    List<Map.Entry<Long, RefCountAdjustment>> entries = refCountAdjustments.entrySet().stream()
+                            .filter(entry -> entry.getValue().deferredAdjustment() != 0)
+                            .sorted(Map.Entry.comparingByKey())
+                            .toList();
+                    if (entries.isEmpty()) {
+                        rootBlock.deferredRefCountAdjustmentList = 0;
+                        return;
                     }
-                    // flush final buffer
-                    buffer.putLong(0, next);
-                    buffer.putLong(Long.BYTES, count);
-                    var head = listOffsetsIterator.next();
-                    writeBlockDirect(head, Area.META, bytes);
 
-                    rootBlock.deferredRefCountAdjustmentList = next;
+                    int requiredListBlocks = (entries.size() + capacity - 1) / capacity;
+                    if (listOffsets.size() != requiredListBlocks)
+                        throw new IllegalStateException("Deferred ref-count list allocation did not stabilize");
+
+                    int entryIndex = 0;
+                    for (int blockIndex = 0; blockIndex < listOffsets.size(); blockIndex++) {
+                        byte[] bytes = new byte[blockSize(Area.META)];
+                        ByteBuffer buffer = wrap(bytes);
+                        long next = blockIndex + 1 < listOffsets.size() ? listOffsets.get(blockIndex + 1) : 0;
+                        int count = Math.min(capacity, entries.size() - entryIndex);
+                        buffer.putLong(next);
+                        buffer.putLong(count);
+                        for (int index = 0; index < count; index++) {
+                            var entry = entries.get(entryIndex++);
+                            long blockOffset = entry.getKey();
+                            RefCountAdjustment adjustment = entry.getValue();
+                            Optional<DeferredOnDelete> action = adjustment.deferredOnDelete;
+                            int actionCode = action.map(DeferredOnDelete::code).orElse(0);
+                            int deferredAdjustment = adjustment.deferredAdjustment();
+                            if (adjustment.adjustment != 0)
+                                throw new IllegalStateException("Immediate ref-count adjustment was not applied");
+                            if (deferredAdjustment == 0)
+                                throw new IllegalStateException("Cannot persist a zero ref-count adjustment");
+                            if (deferredAdjustment < 0 && action.isEmpty())
+                                throw new IllegalStateException(
+                                        "Missing durable delete action for block " + blockOffset);
+                            buffer.putLong(blockOffset);
+                            buffer.putInt(deferredAdjustment);
+                            buffer.put((byte) areaCode(adjustment.area));
+                            buffer.put((byte) actionCode);
+                        }
+                        writeBlockDirect(listOffsets.get(blockIndex), Area.META, bytes);
+                    }
+                    rootBlock.deferredRefCountAdjustmentList = listOffsets.get(0);
                 });
     }
 
@@ -1259,32 +1415,33 @@ public class DataStorage implements Closeable {
                     readBlock(offset, Area.META), (blockSize(Area.META) - 2 * Long.BYTES) / Long.BYTES);
             if (block.next != 0)
                 decrementRefCount(block.next, Area.META, decrementMetaReservedListBlock);
-            block.blockOffsets.forEach(o -> decrementRefCount(o, Area.META, null)); // TODO
+            block.blockOffsets.forEach(o -> decrementRefCount(o, Area.META,
+                    freeSpaceTrees.get(Area.META).decrementRefCount,
+                    Optional.of(DeferredOnDelete.META_FREE_SPACE_TREE_BLOCK)));
         };
     }
 
     public void commit() {
         // update the info block
         if (infoBlock.dirty || rootBlock.infoBlock == 0) {
-            decrementRefCount(rootBlock.infoBlock, Area.SYSTEM, null);
+            decrementRefCount(rootBlock.infoBlock, Area.SYSTEM, ignored -> {
+            });
             rootBlock.infoBlock = writeNewBlock(Area.SYSTEM, serializeInfoBlock(infoBlock));
             infoBlock.dirty = false;
         }
 
         // Perform the heavy tree updating
         removeDeferredMetaBlocksFromFreeTree();
-        applyRefCountAdjustments();
-        removeAllocatedBlocksFromFreeTrees();
+        applyAndRemoveAllocatedBlocks();
         decrementRefCount(superBlock.rootBlock, Area.SYSTEM, this::onRootBlockDelete);
+        applyAndRemoveAllocatedBlocks();
 
         // allocate the root block
         superBlock.rootBlock = takeFreeBlock(Area.SYSTEM);
         modifiedBlocks.put(superBlock.rootBlock, DIRECT_WRITE_EMPTY_ARRAY);
 
-        // after this, no ref count adjustments may be applied to the ref count tree.
-        // Otherwise blocks might be added to the deferred free block list, and those
-        // would not be accounted for.
         persistDeferredFreeBlockHeads();
+        applyAndRemoveAllocatedBlocks();
 
         // store deferred meta free tree removals and ref count updates
         var persistors = new ArrayList<DeferredPersistor>();
@@ -1320,15 +1477,26 @@ public class DataStorage implements Closeable {
             allocatedBlocks.get(area).clear();
         loadDeferredMetaFreeTreeRemoveBlocks();
         loadDeferredRefCountAdjustmentList();
+        retainWorkingTreeRoots();
         addDeferredFreeBlocksToFreeTree();
     }
 
     private void onRootBlockDelete(long offset) {
         var rootBlock = deserializeRootBlock(readBlock(offset, Area.SYSTEM));
-        decrementRefCount(rootBlock.dataFreeSpaceTree, Area.META, freeSpaceTrees.get(Area.DATA).decrementRefCount);
-        decrementRefCount(rootBlock.metaFreeSpaceTree, Area.META, freeSpaceTrees.get(Area.META).decrementRefCount);
-        decrementRefCount(rootBlock.systemFreeSpaceTree, Area.META, freeSpaceTrees.get(Area.SYSTEM).decrementRefCount);
-        decrementRefCount(rootBlock.refCountTree, Area.SYSTEM, refCountTree.decrementRefCount);
+        decrementRefCount(rootBlock.dataFreeSpaceTree, Area.META,
+                freeSpaceTrees.get(Area.DATA).decrementRefCount);
+        decrementRefCount(rootBlock.metaFreeSpaceTree, Area.META,
+                freeSpaceTrees.get(Area.META).decrementRefCount,
+                Optional.of(DeferredOnDelete.META_FREE_SPACE_TREE_BLOCK));
+        decrementRefCount(rootBlock.systemFreeSpaceTree, Area.META,
+                freeSpaceTrees.get(Area.SYSTEM).decrementRefCount);
+        decrementRefCount(rootBlock.refCountTree, Area.META,
+                refCountTree.decrementRefCount,
+                Optional.of(DeferredOnDelete.REF_COUNT_TREE_BLOCK));
+        decrementRefCount(rootBlock.deferredMetaFreeTreeRemoveList, Area.META,
+                decrementMetaReservedListBlock);
+        decrementRefCount(rootBlock.deferredRefCountAdjustmentList, Area.META,
+                this::onDeferredRefCountAdjustmentListBlockDelete);
     }
 
     private void flushModified() {

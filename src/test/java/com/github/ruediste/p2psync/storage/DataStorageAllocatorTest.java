@@ -112,7 +112,8 @@ class DataStorageAllocatorTest {
             storage.freeSpaceTrees.put(DataStorage.Area.META,
                     tree(storage.blockSize(DataStorage.Area.META), Map.of(start, 4L * 16384)));
 
-            long reserved = storage.new BTreeStorage(DataStorage.Area.META).deferred()
+            long reserved = storage.new BTreeStorage(DataStorage.Area.META)
+                    .deferred(DataStorage.DeferredOnDelete.META_FREE_SPACE_TREE_BLOCK)
                     .writeNewBlock(new byte[16384]);
 
             assertTrue(storage.deferredMetaFreeTreeRemoveBlocks.contains(reserved));
@@ -218,6 +219,127 @@ class DataStorageAllocatorTest {
     }
 
     /**
+     * Verifies that each formatted free-space-tree root is owned by both the
+     * committed root block and the in-memory working transaction.
+     */
+    @Test
+    void formattedRootOwnsItsFreeSpaceTreeRoots() {
+        try (var storage = newPersistentStorage(tempDir.resolve("root-tree-refs.db"))) {
+            assertEffectiveRefCount(storage, storage.rootBlock.dataFreeSpaceTree, 2);
+            assertEffectiveRefCount(storage, storage.rootBlock.metaFreeSpaceTree, 2);
+            assertEffectiveRefCount(storage, storage.rootBlock.systemFreeSpaceTree, 2);
+        }
+    }
+
+    /**
+     * Persists a deferred negative adjustment with an existing delete-action
+     * tag, reopens it, then commits to verify the action is restored and run.
+     */
+    @Test
+    void deferredRefCountDeleteActionRoundTrips() {
+        Path path = tempDir.resolve("deferred-ref-count-action.db");
+        long blockOffset;
+        try (var storage = newPersistentStorage(path)) {
+            blockOffset = storage.writeNewBlock(DataStorage.Area.META,
+                    new byte[storage.blockSize(DataStorage.Area.META)]);
+            storage.commit();
+            assertEquals(1, storage.getRefCount(blockOffset));
+
+            storage.decrementRefCount(blockOffset, DataStorage.Area.META, ignored -> {
+            }, java.util.Optional.of(DataStorage.DeferredOnDelete.META_FREE_SPACE_TREE_BLOCK));
+            storage.commit();
+
+            var adjustment = storage.refCountAdjustments.get(blockOffset);
+            assertEquals(-1, adjustment.adjustment());
+            assertEquals(DataStorage.DeferredOnDelete.META_FREE_SPACE_TREE_BLOCK,
+                    adjustment.deferredOnDelete.orElseThrow());
+        }
+
+        try (var reopened = new DataStorage()) {
+            reopened.open(path.toString());
+            var adjustment = reopened.refCountAdjustments.get(blockOffset);
+            assertEquals(-1, adjustment.adjustment());
+            assertEquals(DataStorage.DeferredOnDelete.META_FREE_SPACE_TREE_BLOCK,
+                    adjustment.deferredOnDelete.orElseThrow());
+
+            reopened.commit();
+
+            assertEquals(0, reopened.getRefCount(blockOffset));
+        }
+    }
+
+    /**
+     * Writes more deferred adjustments than fit in one META list block. After
+     * reopening, the first and last records must both be present.
+     */
+    @Test
+    void deferredRefCountAdjustmentListSpansBlocks() {
+        Path path = tempDir.resolve("deferred-ref-count-rollover.db");
+        int recordCapacity;
+        int adjustmentCount;
+        long firstBlock;
+        long lastBlock;
+        try (var storage = newPersistentStorage(path)) {
+            recordCapacity = (storage.blockSize(DataStorage.Area.META) - 2 * Long.BYTES)
+                    / (Long.BYTES + Integer.BYTES + 2);
+            adjustmentCount = recordCapacity + 16;
+            long dataStart = storage.rootBlock.fileLength - 8L * 1024 * 1024;
+            firstBlock = dataStart;
+            lastBlock = dataStart + (adjustmentCount - 1L) * storage.blockSize(DataStorage.Area.DATA);
+
+            for (int index = 0; index < adjustmentCount; index++)
+                storage.incrementRefCount(dataStart + index * (long) storage.blockSize(DataStorage.Area.DATA),
+                        DataStorage.Area.DATA, true);
+
+            storage.commit();
+
+            assertEquals(1, storage.refCountAdjustments.get(firstBlock).adjustment());
+            assertEquals(1, storage.refCountAdjustments.get(lastBlock).adjustment());
+            assertTrue(storage.refCountAdjustments.size() > recordCapacity);
+        }
+
+        try (var reopened = new DataStorage()) {
+            reopened.open(path.toString());
+
+            assertEquals(1, reopened.refCountAdjustments.get(firstBlock).adjustment());
+            assertEquals(1, reopened.refCountAdjustments.get(lastBlock).adjustment());
+            assertTrue(reopened.refCountAdjustments.size() > recordCapacity);
+        }
+    }
+
+    /**
+     * Corrupts a persisted adjustment-list link into a self-cycle and verifies
+     * that opening the file rejects the malformed chain.
+     */
+    @Test
+    void rejectsCyclicDeferredRefCountAdjustmentList() throws IOException {
+        Path path = tempDir.resolve("deferred-ref-count-cycle.db");
+        long listHead;
+        try (var storage = newPersistentStorage(path)) {
+            long dataStart = storage.rootBlock.fileLength - 8L * 1024 * 1024;
+            storage.incrementRefCount(dataStart, DataStorage.Area.DATA, true);
+            storage.commit();
+
+            byte[] rootBytes = storage.readBlock(storage.superBlock.rootBlock, DataStorage.Area.SYSTEM);
+            listHead = ByteBuffer.wrap(rootBytes).getLong(19 * Long.BYTES);
+            assertTrue(listHead != 0);
+            storage.file.seek(listHead);
+            storage.file.writeLong(listHead);
+        }
+
+        try (var reopened = new DataStorage()) {
+            var exception = assertThrows(IllegalStateException.class, () -> reopened.open(path.toString()));
+            assertEquals("Cycle in deferred ref-count adjustment list", exception.getMessage());
+        }
+    }
+
+    private static void assertEffectiveRefCount(DataStorage storage, long blockOffset, int expected) {
+        var adjustment = storage.refCountAdjustments.get(blockOffset);
+        long pending = adjustment == null ? 0 : adjustment.adjustment();
+        assertEquals(expected, storage.getRefCount(blockOffset) + pending);
+    }
+
+    /**
      * Defers more offsets than fit in one SYSTEM list block, then reopens the
      * file. Verifies both ends of the linked list are reclaimed into DATA space.
      */
@@ -252,6 +374,7 @@ class DataStorageAllocatorTest {
         storage.superBlock.dataBlockSize = 4096;
         storage.rootBlock = new DataStorage.RootBlock();
         storage.file = openFile(tempDir.resolve(fileName), fileLength);
+        storage.rootBlock.fileLength = fileLength;
         return storage;
     }
 
