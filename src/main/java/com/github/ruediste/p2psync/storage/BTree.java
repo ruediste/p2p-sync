@@ -70,6 +70,14 @@ public class BTree implements Iterable<BTree.Entry> {
          * can still be read.
          */
         void decrementRefCount(long blockOffset, Consumer<Long> onDelete);
+
+        /**
+         * Ensure that there is enough free space to write the specified number of
+         * blocks.
+         * Returns true if there was enough space, false if the tree might have
+         * changed.
+         */
+        boolean prepareFreeSpace(int blockCount);
     }
 
     /**
@@ -150,6 +158,9 @@ public class BTree implements Iterable<BTree.Entry> {
      */
     public void put(byte[] key, byte[] value) {
         checkKey(key);
+
+        prepareSpaceForWrite();
+
         if (rootOffset == 0) {
             List<Entry> entries = new ArrayList<>();
             entries.add(new Entry(key.clone(), value.clone()));
@@ -165,6 +176,22 @@ public class BTree implements Iterable<BTree.Entry> {
             rootOffset = writeNewNode(ptrs, rootLevel + 1);
         } else {
             rootOffset = res.newOffset;
+        }
+    }
+
+    private void prepareSpaceForWrite() {
+        while (true) {
+            int required;
+            if (rootOffset == 0)
+                required = 1;
+            else {
+                int h = level(storage.readBlock(rootOffset)) + 1;
+                // worst case: split every block along the path into two blocks, and add a new
+                // root
+                required = 2 * h + 1;
+            }
+            if (storage.prepareFreeSpace(required))
+                break;
         }
     }
 
@@ -239,6 +266,9 @@ public class BTree implements Iterable<BTree.Entry> {
         checkKey(key);
         if (rootOffset == 0)
             return false;
+
+        prepareSpaceForWrite();
+
         Result res = removeFrom(rootOffset, key);
         if (res == null)
             return false;

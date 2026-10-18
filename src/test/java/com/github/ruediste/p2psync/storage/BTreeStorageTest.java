@@ -73,6 +73,11 @@ class BTreeStorageTest {
                 modified.remove(blockOffset);
             }
         }
+
+        @Override
+        public boolean prepareFreeSpace(int blockCount) {
+            return true;
+        }
     }
 
     private static byte[] key(int value) {
@@ -126,7 +131,7 @@ class BTreeStorageTest {
         for (int index = 0; index < 100; index++)
             assertArrayEquals(key(index), snapshot.get(key(index)));
 
-        storage.decrementRefCount(oldRoot, BTree.decrementRefCount(storage, 2));
+        storage.decrementRefCount(oldRoot, snapshot.decrementRefCount);
         assertTrue(storage.blocks.isEmpty());
         assertTrue(storage.references.isEmpty());
     }
@@ -164,7 +169,7 @@ class BTreeStorageTest {
             assertEquals(new ArrayList<>(expected.keySet()), actualKeys);
         }
         if (tree.rootOffset != 0)
-            storage.decrementRefCount(tree.rootOffset, BTree.decrementRefCount(storage, 2));
+            storage.decrementRefCount(tree.rootOffset, tree.decrementRefCount);
         assertTrue(storage.blocks.isEmpty());
     }
 }

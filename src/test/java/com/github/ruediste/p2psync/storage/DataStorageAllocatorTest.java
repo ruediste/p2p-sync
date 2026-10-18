@@ -113,13 +113,13 @@ class DataStorageAllocatorTest {
                     tree(storage.blockSize(DataStorage.Area.META), Map.of(start, 4L * 16384)));
 
             long reserved = storage.new BTreeStorage(DataStorage.Area.META)
-                    .deferred(DataStorage.DeferredOnDelete.META_FREE_SPACE_TREE_BLOCK)
+                    .deferred(DataStorage.PersistableOnDelete.META_FREE_SPACE_TREE_BLOCK)
                     .writeNewBlock(new byte[16384]);
 
             assertTrue(storage.deferredMetaFreeTreeRemoveBlocks.contains(reserved));
             assertFalse(storage.allocatedBlocks.get(DataStorage.Area.META).contains(reserved));
             assertFalse(storage.freeBlocks.get(DataStorage.Area.META).contains(reserved));
-            assertEquals(1, storage.refCountAdjustments.get(reserved).adjustment());
+            assertEquals(1, storage.refCountAdjustments.get(reserved).adjustment);
         }
     }
 
@@ -236,7 +236,7 @@ class DataStorageAllocatorTest {
      * tag, reopens it, then commits to verify the action is restored and run.
      */
     @Test
-    void deferredRefCountDeleteActionRoundTrips() {
+    void persistableDeleteActionIsAppliedWhenRefCountReachesZero() {
         Path path = tempDir.resolve("deferred-ref-count-action.db");
         long blockOffset;
         try (var storage = newPersistentStorage(path)) {
@@ -245,23 +245,15 @@ class DataStorageAllocatorTest {
             storage.commit();
             assertEquals(1, storage.getRefCount(blockOffset));
 
-            storage.decrementRefCount(blockOffset, DataStorage.Area.META, ignored -> {
-            }, java.util.Optional.of(DataStorage.DeferredOnDelete.META_FREE_SPACE_TREE_BLOCK));
+            storage.decrementRefCount(blockOffset, DataStorage.Area.META,
+                    DataStorage.PersistableOnDelete.META_FREE_SPACE_TREE_BLOCK);
             storage.commit();
 
-            var adjustment = storage.refCountAdjustments.get(blockOffset);
-            assertEquals(-1, adjustment.adjustment());
-            assertEquals(DataStorage.DeferredOnDelete.META_FREE_SPACE_TREE_BLOCK,
-                    adjustment.deferredOnDelete.orElseThrow());
+            assertEquals(0, storage.getRefCount(blockOffset));
         }
 
         try (var reopened = new DataStorage()) {
             reopened.open(path.toString());
-            var adjustment = reopened.refCountAdjustments.get(blockOffset);
-            assertEquals(-1, adjustment.adjustment());
-            assertEquals(DataStorage.DeferredOnDelete.META_FREE_SPACE_TREE_BLOCK,
-                    adjustment.deferredOnDelete.orElseThrow());
-
             reopened.commit();
 
             assertEquals(0, reopened.getRefCount(blockOffset));
@@ -269,41 +261,36 @@ class DataStorageAllocatorTest {
     }
 
     /**
-     * Writes more deferred adjustments than fit in one META list block. After
-     * reopening, the first and last records must both be present.
+     * Applies a large batch of ref-count updates. After reopening, the first
+     * and last counts must both be present.
      */
     @Test
-    void deferredRefCountAdjustmentListSpansBlocks() {
+    void refCountUpdatesRoundTripAcrossLargeBatch() {
         Path path = tempDir.resolve("deferred-ref-count-rollover.db");
-        int recordCapacity;
         int adjustmentCount;
         long firstBlock;
         long lastBlock;
         try (var storage = newPersistentStorage(path)) {
-            recordCapacity = (storage.blockSize(DataStorage.Area.META) - 2 * Long.BYTES)
-                    / (Long.BYTES + Integer.BYTES + 2);
-            adjustmentCount = recordCapacity + 16;
+            adjustmentCount = 1200;
             long dataStart = storage.rootBlock.fileLength - 8L * 1024 * 1024;
             firstBlock = dataStart;
             lastBlock = dataStart + (adjustmentCount - 1L) * storage.blockSize(DataStorage.Area.DATA);
 
             for (int index = 0; index < adjustmentCount; index++)
                 storage.incrementRefCount(dataStart + index * (long) storage.blockSize(DataStorage.Area.DATA),
-                        DataStorage.Area.DATA, true);
+                        DataStorage.Area.DATA);
 
             storage.commit();
 
-            assertEquals(1, storage.refCountAdjustments.get(firstBlock).adjustment());
-            assertEquals(1, storage.refCountAdjustments.get(lastBlock).adjustment());
-            assertTrue(storage.refCountAdjustments.size() > recordCapacity);
+            assertEquals(1, storage.getRefCount(firstBlock));
+            assertEquals(1, storage.getRefCount(lastBlock));
         }
 
         try (var reopened = new DataStorage()) {
             reopened.open(path.toString());
 
-            assertEquals(1, reopened.refCountAdjustments.get(firstBlock).adjustment());
-            assertEquals(1, reopened.refCountAdjustments.get(lastBlock).adjustment());
-            assertTrue(reopened.refCountAdjustments.size() > recordCapacity);
+            assertEquals(1, reopened.getRefCount(firstBlock));
+            assertEquals(1, reopened.getRefCount(lastBlock));
         }
     }
 
@@ -317,7 +304,7 @@ class DataStorageAllocatorTest {
         long listHead;
         try (var storage = newPersistentStorage(path)) {
             long dataStart = storage.rootBlock.fileLength - 8L * 1024 * 1024;
-            storage.incrementRefCount(dataStart, DataStorage.Area.DATA, true);
+            storage.incrementRefCount(dataStart, DataStorage.Area.DATA);
             storage.commit();
 
             byte[] rootBytes = storage.readBlock(storage.superBlock.rootBlock, DataStorage.Area.SYSTEM);
@@ -335,7 +322,7 @@ class DataStorageAllocatorTest {
 
     private static void assertEffectiveRefCount(DataStorage storage, long blockOffset, int expected) {
         var adjustment = storage.refCountAdjustments.get(blockOffset);
-        long pending = adjustment == null ? 0 : adjustment.adjustment();
+        long pending = adjustment == null ? 0 : adjustment.adjustment;
         assertEquals(expected, storage.getRefCount(blockOffset) + pending);
     }
 
@@ -484,6 +471,11 @@ class DataStorageAllocatorTest {
 
         @Override
         public void decrementRefCount(long blockOffset, java.util.function.Consumer<Long> onDelete) {
+        }
+
+        @Override
+        public boolean prepareFreeSpace(int blockCount) {
+            return true;
         }
     }
 }
