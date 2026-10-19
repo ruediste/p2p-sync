@@ -40,11 +40,9 @@ public class DataStorage implements Closeable {
 
     final class BTreeStorage implements BTree.Storage {
         private final Area area;
-        boolean useDeferredMetaFreeTreeRemoveBlocks;
         Optional<PersistableOnDelete> useDeferredRefCountUpdate = Optional.empty();
 
         public BTreeStorage deferred(PersistableOnDelete onDelete) {
-            this.useDeferredMetaFreeTreeRemoveBlocks = true;
             this.useDeferredRefCountUpdate = Optional.of(onDelete);
             return this;
         }
@@ -75,14 +73,7 @@ public class DataStorage implements Closeable {
 
         @Override
         public long writeNewBlock(byte[] data) {
-            long offset;
-            if (useDeferredMetaFreeTreeRemoveBlocks) {
-                offset = takeDeferredMetaFreeTreeRemoveBlock();
-                modifiedBlocks.put(offset, data.clone());
-            } else
-                offset = DataStorage.this.writeNewBlock(area, data);
-
-            return offset;
+            return DataStorage.this.writeNewBlock(area, data);
         }
 
         @Override
@@ -138,13 +129,17 @@ public class DataStorage implements Closeable {
         public long dataDeferredFreeBlockList;
 
         /**
-         * Reference to the list of meta blocks currently reserved. They are used for to
-         * allocate blocks for the metaFreeSpaceTree, in order to avoid infinite
-         * recursion.
+         * List of meta blocks which to be removed from the free space tree but deferred
+         * to the next transaction, in order to avoid infinite recursion in the free
+         * space tree updates (writes to the tree cause cascading changes).
          */
         public long deferredMetaFreeTreeRemoveList;
 
-        /** Reference to the list of ref count adjustments currently reserved. */
+        /**
+         * List of ref count adjustments deferred to the next transaction, in order
+         * to avoid infinite recursion in the ref count tree updates (writes to the tree
+         * cause cascading changes)l
+         */
         public long deferredRefCountAdjustmentList;
 
         public long systemKvTree;
@@ -292,10 +287,27 @@ public class DataStorage implements Closeable {
             freeBlocks.put(area, new TreeSet<>());
         }
     }
-    EnumMap<Area, HashSet<Long>> allocatedBlocks = new EnumMap<>(Area.class);
+
+    /**
+     * Allocated offsets that still need to be removed from their area's free tree.
+     */
+    EnumMap<Area, HashSet<Long>> pendingFreeTreeRemovals = new EnumMap<>(Area.class);
+
+    /**
+     * Snapshot currently being removed; callbacks use it to detect in-flight
+     * blocks.
+     */
+    EnumMap<Area, HashSet<Long>> blocksBeingRemovedFromFreeTree = new EnumMap<>(Area.class);
+
+    /**
+     * In-flight blocks that hit zero refs, to reinsert after their removal batch.
+     */
+    EnumMap<Area, HashSet<Long>> putBackBlocksToFreeTree = new EnumMap<>(Area.class);
     {
         for (Area area : Area.values()) {
-            allocatedBlocks.put(area, new HashSet<>());
+            pendingFreeTreeRemovals.put(area, new HashSet<>());
+            blocksBeingRemovedFromFreeTree.put(area, new HashSet<>());
+            putBackBlocksToFreeTree.put(area, new HashSet<>());
         }
     }
 
@@ -329,25 +341,6 @@ public class DataStorage implements Closeable {
      */
     HashMap<Long, RefCountAdjustment> refCountAdjustments = new HashMap<>();
 
-    /*
-     * Blocks with deferred removal from the META free-space B-tree. This list
-     * gets persisted on commit
-     */
-    Set<Long> deferredMetaFreeTreeRemoveBlocks = new HashSet<>();
-
-    /**
-     * While removing the {@link #deferredMetaFreeTreeRemoveBlocks}, the blocks are
-     * kept here temporarily.
-     */
-    Set<Long> oldDeferredMetaFreeTreeRemoveBlocks = new HashSet<>();
-
-    /**
-     * When, during the removal of deferred blocks from the META free-space B-tree,
-     * blocks become unreferenced, they are put back to the META free-space B-tree
-     * after the removal of the other blocks.
-     */
-    Set<Long> putBackBlocksToMetaFreeTree = new HashSet<>();
-
     private void resetInMemoryState() {
         superBlock = null;
         rootBlock = null;
@@ -355,14 +348,14 @@ public class DataStorage implements Closeable {
         deferredFreeBlocks.clear();
         for (Area area : Area.values()) {
             freeBlocks.get(area).clear();
-            allocatedBlocks.get(area).clear();
+            pendingFreeTreeRemovals.get(area).clear();
+            blocksBeingRemovedFromFreeTree.get(area).clear();
+            putBackBlocksToFreeTree.get(area).clear();
         }
         freeSpaceTrees.clear();
         freeSpaceAllocationOffset.clear();
         modifiedBlocks.clear();
         refCountAdjustments.clear();
-        deferredMetaFreeTreeRemoveBlocks.clear();
-        oldDeferredMetaFreeTreeRemoveBlocks.clear();
         refCountTree = null;
     }
 
@@ -425,25 +418,16 @@ public class DataStorage implements Closeable {
                 onDelete.ifPresent(callback -> callback.accept(blockOffset));
                 persistableOnDelete.ifPresent(action -> action.onDelete(this, blockOffset));
 
-                boolean wasAllocated = allocatedBlocks.get(area).remove(blockOffset);
-                boolean wasOldReserved = false;
-
-                if (area == Area.META) {
-                    boolean wasCurrentReserved = deferredMetaFreeTreeRemoveBlocks.remove(blockOffset);
-
-                    // if true, the block is in the process of being removed form the meta free
-                    // tree, but just stopped being referenced
-                    wasOldReserved = oldDeferredMetaFreeTreeRemoveBlocks.contains(blockOffset);
-                    if (wasOldReserved)
-                        putBackBlocksToMetaFreeTree.add(blockOffset);
-                    boolean wasReserved = wasCurrentReserved || wasOldReserved;
-                    if (wasReserved && wasAllocated)
-                        throw new IllegalStateException("META block was both allocated and reserved: " + blockOffset);
-                } else if (!wasAllocated) {
-                    throw new IllegalStateException("Block was not in allocated blocks");
-                }
-                if (!wasOldReserved)
+                boolean wasPending = pendingFreeTreeRemovals.get(area).remove(blockOffset);
+                boolean wasBeingRemoved = blocksBeingRemovedFromFreeTree.get(area).contains(blockOffset);
+                if (wasPending && wasBeingRemoved)
+                    throw new IllegalStateException("Block is both pending and being removed: " + blockOffset);
+                if (wasBeingRemoved)
+                    putBackBlocksToFreeTree.get(area).add(blockOffset);
+                else if (wasPending)
                     freeBlocks.get(area).add(blockOffset);
+                else
+                    addBlockToFreeTree(blockOffset, area);
             }
 
             // remove the ref count adjustment for this block, as it has reached zero and
@@ -753,9 +737,6 @@ public class DataStorage implements Closeable {
     }
 
     private void retainWorkingTreeRoots() {
-        // TODO: instead of a separate method, construct a new root block for the new
-        // transaction
-        // and properly increment the reference counts for the new root block
         for (Area area : Area.values()) {
             long rootOffset = freeSpaceTrees.get(area).rootOffset;
             if (rootOffset != 0)
@@ -765,33 +746,20 @@ public class DataStorage implements Closeable {
             incrementRefCount(refCountTree.rootOffset, Area.META);
     }
 
-    long takeDeferredMetaFreeTreeRemoveBlock() {
-        return takeFreeBlock(Area.META, true);
-    }
-
     long takeFreeBlock(Area area) {
-        return takeFreeBlock(area, false);
-    }
-
-    private long takeFreeBlock(Area area, boolean deferredRemove) {
         var blocks = freeBlocks.get(area);
         if (blocks.isEmpty())
             refillFreeBlocks(area, 256);
         var offset = blocks.isEmpty() ? null : blocks.first();
         if (offset == null)
             throw new IllegalStateException("No free " + area + " blocks available after refill");
-        if (deferredRemove && area != Area.META)
-            throw new IllegalArgumentException("Only META blocks can be added to metaReservedBlocks");
-        if (allocatedBlocks.get(area).contains(offset) || deferredMetaFreeTreeRemoveBlocks.contains(offset))
+        if (pendingFreeTreeRemovals.get(area).contains(offset)
+                || blocksBeingRemovedFromFreeTree.get(area).contains(offset))
             throw new IllegalStateException("Block is already allocated or reserved: " + offset);
         if (refCountAdjustments.containsKey(offset))
             throw new IllegalStateException("Block already has a refcount adjustment: " + offset);
         blocks.remove(offset);
-        if (deferredRemove) {
-            deferredMetaFreeTreeRemoveBlocks.add(offset);
-        } else {
-            allocatedBlocks.get(area).add(offset);
-        }
+        pendingFreeTreeRemovals.get(area).add(offset);
         var adjustment = RefCountAdjustment.create(area);
         adjustment.equalsCount = true;
         adjustment.adjustment = 1;
@@ -857,15 +825,11 @@ public class DataStorage implements Closeable {
                 // the free block list
                 for (; offset < extentEnd
                         && blocks.size() < desiredFreeBlockCount; offset += blockSize) {
-                    // Skip reserved meta blocks
-                    if (area == Area.META
-                            && (oldDeferredMetaFreeTreeRemoveBlocks.contains(offset)
-                                    || deferredMetaFreeTreeRemoveBlocks.contains(offset))) {
+                    if (pendingFreeTreeRemovals.get(area).contains(offset)
+                            || blocksBeingRemovedFromFreeTree.get(area).contains(offset)) {
                         cursor = offset;
                         continue;
                     }
-                    if (allocatedBlocks.get(area).contains(offset))
-                        throw new IllegalStateException("Free extent overlaps allocated block " + offset);
                     if (!blocks.add(offset))
                         throw new IllegalStateException("Free extent returned a duplicate block " + offset);
                     cursor = offset;
@@ -1077,8 +1041,11 @@ public class DataStorage implements Closeable {
     }
 
     private void loadDeferredMetaFreeTreeRemoveBlocks() {
-        deferredMetaFreeTreeRemoveBlocks.clear();
-        oldDeferredMetaFreeTreeRemoveBlocks.clear();
+        for (Area area : Area.values()) {
+            pendingFreeTreeRemovals.get(area).clear();
+            blocksBeingRemovedFromFreeTree.get(area).clear();
+            putBackBlocksToFreeTree.get(area).clear();
+        }
         int capacity = (blockSize(Area.META) - 2 * Long.BYTES) / Long.BYTES;
         long offset = rootBlock.deferredMetaFreeTreeRemoveList;
         rootBlock.deferredMetaFreeTreeRemoveList = 0;
@@ -1091,7 +1058,7 @@ public class DataStorage implements Closeable {
                     readBlock(offset, Area.META), capacity);
             for (long reserved : block.blockOffsets) {
                 validateBlockOffset(reserved, blockSize(Area.META), "deferred-meta-free-tree-remove block");
-                if (!deferredMetaFreeTreeRemoveBlocks.add(reserved))
+                if (!pendingFreeTreeRemovals.get(Area.META).add(reserved))
                     throw new IllegalStateException("Duplicate deferred-meta-free-tree-remove block: " + reserved);
             }
             offset = block.next;
@@ -1220,15 +1187,37 @@ public class DataStorage implements Closeable {
             tree.put(u64(blockEnd), u64(extentEnd - blockEnd));
     }
 
-    void removeDeferredMetaBlocksFromFreeTree() {
-        oldDeferredMetaFreeTreeRemoveBlocks = deferredMetaFreeTreeRemoveBlocks;
-        deferredMetaFreeTreeRemoveBlocks = new HashSet<>();
-        for (long blockOffset : oldDeferredMetaFreeTreeRemoveBlocks) {
-            removeBlockFromFreeTree(Area.META, blockOffset);
+    void removePendingFreeTreeRemovals(boolean includeMeta) {
+        // Work from a snapshot so recursive tree writes become pending for a later
+        // sweep.
+        for (Area area : Area.values()) {
+            if (!includeMeta && area == Area.META)
+                continue;
+            var pending = pendingFreeTreeRemovals.get(area);
+            var beingRemoved = blocksBeingRemovedFromFreeTree.get(area);
+            if (!beingRemoved.isEmpty())
+                throw new IllegalStateException("Free-tree removal batch is already in progress for " + area);
+            beingRemoved.addAll(pending);
+            pending.clear();
         }
-        oldDeferredMetaFreeTreeRemoveBlocks.clear();
-        putBackBlocksToMetaFreeTree.forEach(offset -> addBlockToFreeTree(offset, Area.META));
-        putBackBlocksToMetaFreeTree.clear();
+
+        for (Area area : Area.values()) {
+            if (!includeMeta && area == Area.META)
+                continue;
+            for (long blockOffset : blocksBeingRemovedFromFreeTree.get(area))
+                removeBlockFromFreeTree(area, blockOffset);
+        }
+
+        for (Area area : Area.values()) {
+            if (!includeMeta && area == Area.META)
+                continue;
+            // Reinsert only after the batch is gone from the tree, avoiding recursive
+            // updates.
+            blocksBeingRemovedFromFreeTree.get(area).clear();
+            for (long blockOffset : putBackBlocksToFreeTree.get(area))
+                addBlockToFreeTree(blockOffset, area);
+            putBackBlocksToFreeTree.get(area).clear();
+        }
     }
 
     private void applyRefCountAdjustments() {
@@ -1255,19 +1244,16 @@ public class DataStorage implements Closeable {
                 delta.persistableOnDelete.ifPresent(x -> x.onDelete(this, blockOffset));
 
                 if (modifiedBlocks.containsKey(blockOffset)) {
-                    if (allocatedBlocks.get(delta.area).remove(blockOffset)) {
-                        // the block was not yet removed from the free tree, just add it back to the
-                        // free blocks
+                    boolean wasPending = pendingFreeTreeRemovals.get(delta.area).remove(blockOffset);
+                    boolean wasBeingRemoved = blocksBeingRemovedFromFreeTree.get(delta.area).contains(blockOffset);
+                    if (wasPending && wasBeingRemoved)
+                        throw new IllegalStateException("Block is both pending and being removed: " + blockOffset);
+                    if (wasBeingRemoved)
+                        putBackBlocksToFreeTree.get(delta.area).add(blockOffset);
+                    else if (wasPending)
                         freeBlocks.get(delta.area).add(blockOffset);
-                    } else if (delta.area == Area.META
-                            && deferredMetaFreeTreeRemoveBlocks.remove(blockOffset)) {
-                        // The block is scheduled for deferred removal from the free tree, just add it
-                        // back to the free blocks
-                        freeBlocks.get(delta.area).add(blockOffset);
-                    } else {
-                        // the block was already removed from the free tree, add it back
+                    else
                         addBlockToFreeTree(blockOffset, delta.area);
-                    }
                 } else {
                     // This block was used in the previous transaction. Add it to the free space in
                     // the next transaction.
@@ -1282,31 +1268,25 @@ public class DataStorage implements Closeable {
         }
     }
 
-    void removeAllocatedBlocksFromFreeTrees() {
-        for (Area area : Area.values()) {
-            var blocks = new HashSet<>(allocatedBlocks.get(area));
-            allocatedBlocks.get(area).clear();
-            for (long blockOffset : blocks) {
-                removeBlockFromFreeTree(area, blockOffset);
-            }
+    private void applyAndRemovePendingFreeTreeRemovals() {
+        // Bound recursive META-tree updates; persist any remaining META work for next
+        // time.
+        for (int round = 0; round < 2; round++) {
+            applyRefCountAdjustments();
+            removePendingFreeTreeRemovals(true);
         }
-    }
 
-    private void applyAndRemoveAllocatedBlocks() {
-        // Applying immediate adjustments can invoke deletion callbacks that enqueue
-        // more adjustments. Removing allocations from free-space trees can also
-        // allocate replacement tree blocks. Repeat until both effects settle;
-        // deferred adjustments are intentionally left for the next transaction.
+        // The durable list stores META offsets only. Drain other areas and immediate
+        // callbacks, while leaving their recursively generated META work for
+        // persistence.
         while (true) {
             applyRefCountAdjustments();
-            removeAllocatedBlocksFromFreeTrees();
+            removePendingFreeTreeRemovals(false);
             boolean hasNonPersistableAdjustments = refCountAdjustments.values().stream()
                     .anyMatch(adjustment -> adjustment.onDelete.isPresent());
-            boolean hasAllocatedBlocks = false;
-            for (Area area : Area.values()) {
-                hasAllocatedBlocks |= !allocatedBlocks.get(area).isEmpty();
-            }
-            if (!hasNonPersistableAdjustments && !hasAllocatedBlocks)
+            boolean hasNonMetaPendingRemovals = pendingFreeTreeRemovals.get(Area.SYSTEM).size() > 0
+                    || pendingFreeTreeRemovals.get(Area.DATA).size() > 0;
+            if (!hasNonPersistableAdjustments && !hasNonMetaPendingRemovals)
                 return;
         }
     }
@@ -1349,7 +1329,7 @@ public class DataStorage implements Closeable {
                             entries.get().size(), listOffsets.size(), capacity);
                     if (listOffsets.size() >= requiredListBlocks)
                         return true;
-                    var offset = takeDeferredMetaFreeTreeRemoveBlock();
+                    var offset = takeFreeBlock(Area.META);
                     incrementRefCount(offset, Area.META);
                     modifiedBlocks.put(offset, DIRECT_WRITE_EMPTY_ARRAY);
                     listOffsets.add(offset);
@@ -1397,7 +1377,7 @@ public class DataStorage implements Closeable {
 
     private DeferredPersistor persistDeferredMetaFreeTreeRemoveBlockList() {
         return persistDeferredMetaList(
-                () -> new ArrayList<>(deferredMetaFreeTreeRemoveBlocks), Long.BYTES,
+                () -> new ArrayList<>(pendingFreeTreeRemovals.get(Area.META)), Long.BYTES,
                 ByteBuffer::putLong, head -> rootBlock.deferredMetaFreeTreeRemoveList = head);
     }
 
@@ -1448,17 +1428,16 @@ public class DataStorage implements Closeable {
         }
 
         // Perform the heavy tree updating
-        removeDeferredMetaBlocksFromFreeTree();
-        applyAndRemoveAllocatedBlocks();
+        applyAndRemovePendingFreeTreeRemovals();
         decrementRefCount(superBlock.rootBlock, Area.SYSTEM, this::onRootBlockDelete);
-        applyAndRemoveAllocatedBlocks();
+        applyAndRemovePendingFreeTreeRemovals();
 
         // allocate the root block
         superBlock.rootBlock = takeFreeBlock(Area.SYSTEM);
         modifiedBlocks.put(superBlock.rootBlock, DIRECT_WRITE_EMPTY_ARRAY);
 
         persistDeferredFreeBlockHeads();
-        applyAndRemoveAllocatedBlocks();
+        applyAndRemovePendingFreeTreeRemovals();
 
         // store deferred meta free tree removals and ref count updates
         var persistors = new ArrayList<DeferredPersistor>();
@@ -1490,8 +1469,6 @@ public class DataStorage implements Closeable {
         writeSuperBlock();
 
         // prepare next transaction
-        for (Area area : Area.values())
-            allocatedBlocks.get(area).clear();
         loadDeferredMetaFreeTreeRemoveBlocks();
         loadDeferredRefCountAdjustmentList();
         retainWorkingTreeRoots();

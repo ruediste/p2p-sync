@@ -25,7 +25,7 @@ class DataStorageAllocatorTest {
 
     /**
      * Allocates more than one refill batch in each area. The returned offsets
-     * must stay ordered, unique, and recorded as allocated across refills.
+     * must stay ordered, unique, and recorded for free-tree removal across refills.
      */
     @Test
     void allocatesAcrossBatchesWithoutDuplicatesInEveryArea() {
@@ -41,7 +41,7 @@ class DataStorageAllocatorTest {
                     long offset = storage.takeFreeBlock(area);
                     assertEquals(start + index * (long) blockSize, offset);
                     assertTrue(allocated.add(offset));
-                    assertTrue(storage.allocatedBlocks.get(area).contains(offset));
+                    assertTrue(storage.pendingFreeTreeRemovals.get(area).contains(offset));
                 }
             }
         }
@@ -102,8 +102,8 @@ class DataStorageAllocatorTest {
     }
 
     /**
-     * Allocates through the META-reserved B-tree storage adapter. The block must
-     * be reserved for allocator metadata, not exposed as an ordinary allocation.
+     * Allocates through the deferred B-tree storage adapter. The block must use
+     * the same pending-removal bookkeeping as other META allocations.
      */
     @Test
     void metaReservedAllocationIsRemovedFromOrdinaryPool() {
@@ -116,8 +116,7 @@ class DataStorageAllocatorTest {
                     .deferred(DataStorage.PersistableOnDelete.META_FREE_SPACE_TREE_BLOCK)
                     .writeNewBlock(new byte[16384]);
 
-            assertTrue(storage.deferredMetaFreeTreeRemoveBlocks.contains(reserved));
-            assertFalse(storage.allocatedBlocks.get(DataStorage.Area.META).contains(reserved));
+            assertTrue(storage.pendingFreeTreeRemovals.get(DataStorage.Area.META).contains(reserved));
             assertFalse(storage.freeBlocks.get(DataStorage.Area.META).contains(reserved));
             assertEquals(1, storage.refCountAdjustments.get(reserved).adjustment);
         }
@@ -136,12 +135,11 @@ class DataStorageAllocatorTest {
     }
 
     /**
-     * Removes one normal DATA allocation and one META reservation from the middle
-     * of their extents. The free ranges on both sides must remain, and a later
-     * pass with the reservation marked old must not remove it again.
+     * Removes pending DATA and META blocks from the middle of their extents. The
+     * free ranges on both sides must remain after a shared removal pass.
      */
     @Test
-    void removesAllocatedBlocksBySplittingTheirExtents() {
+    void removesPendingBlocksBySplittingTheirExtents() {
         int dataBlockSize = 4096;
         int metaBlockSize = 16384;
         long dataStart = 8192;
@@ -157,11 +155,10 @@ class DataStorageAllocatorTest {
                     tree(dataBlockSize, Map.of(dataStart, 5L * dataBlockSize)));
             storage.freeSpaceTrees.put(DataStorage.Area.META,
                     tree(metaBlockSize, Map.of(metaStart, 5L * metaBlockSize)));
-            storage.allocatedBlocks.get(DataStorage.Area.DATA).add(dataAllocation);
-            storage.deferredMetaFreeTreeRemoveBlocks.add(metaAllocation);
+            storage.pendingFreeTreeRemovals.get(DataStorage.Area.DATA).add(dataAllocation);
+            storage.pendingFreeTreeRemovals.get(DataStorage.Area.META).add(metaAllocation);
 
-            storage.removeAllocatedBlocksFromFreeTrees();
-            storage.removeDeferredMetaBlocksFromFreeTree();
+            storage.removePendingFreeTreeRemovals(true);
 
             assertEquals(2L * dataBlockSize,
                     toLong(storage.freeSpaceTrees.get(DataStorage.Area.DATA).get(u64(dataStart))));
@@ -172,16 +169,14 @@ class DataStorageAllocatorTest {
             assertEquals(2L * metaBlockSize,
                     toLong(storage.freeSpaceTrees.get(DataStorage.Area.META).get(u64(metaAllocation + metaBlockSize))));
 
-            storage.allocatedBlocks.get(DataStorage.Area.DATA).clear();
-            storage.oldDeferredMetaFreeTreeRemoveBlocks.add(metaAllocation);
-            storage.removeAllocatedBlocksFromFreeTrees();
+            assertTrue(storage.pendingFreeTreeRemovals.get(DataStorage.Area.DATA).isEmpty());
+            assertTrue(storage.pendingFreeTreeRemovals.get(DataStorage.Area.META).isEmpty());
         }
     }
 
     /**
-     * Models a META free-space extent that still spans an old reserved block.
-     * Refill must skip that offset so a normal allocation cannot reuse it while
-     * the allocator is removing reserved blocks from the persistent tree.
+     * Models a META free-space extent that still spans a pending removal. Refill
+     * must skip that offset so it cannot be reallocated before tree removal.
      */
     @Test
     void doesNotRefillOldReservedMetaBlocksIntoFreePool() {
@@ -191,8 +186,7 @@ class DataStorageAllocatorTest {
         try (var storage = newStorage("old-meta-reserved.db", start + 5L * blockSize)) {
             storage.freeSpaceTrees.put(DataStorage.Area.META,
                     tree(blockSize, Map.of(start, 5L * blockSize)));
-            storage.deferredMetaFreeTreeRemoveBlocks.add(reserved);
-            storage.oldDeferredMetaFreeTreeRemoveBlocks.add(reserved);
+            storage.pendingFreeTreeRemovals.get(DataStorage.Area.META).add(reserved);
 
             assertEquals(start, storage.takeFreeBlock(DataStorage.Area.META));
             assertEquals(start + blockSize, storage.takeFreeBlock(DataStorage.Area.META));
@@ -200,6 +194,30 @@ class DataStorageAllocatorTest {
             assertEquals(start + 3L * blockSize, storage.takeFreeBlock(DataStorage.Area.META));
 
             assertFalse(storage.freeBlocks.get(DataStorage.Area.META).contains(reserved));
+        }
+    }
+
+    /**
+     * Decrements a newly allocated block while its free-tree removal is in flight.
+     * The block must be queued for reinsertion after the current batch completes.
+     */
+    @Test
+    void putsBackBlockThatBecomesUnreferencedDuringRemoval() {
+        long blockOffset = 32768;
+        try (var storage = newStorage("in-flight-put-back.db", blockOffset + 16384)) {
+            storage.superBlock.metaBlockSize = 16384;
+            storage.modifiedBlocks.put(blockOffset, new byte[16384]);
+            storage.blocksBeingRemovedFromFreeTree.get(DataStorage.Area.META).add(blockOffset);
+            var adjustment = DataStorage.RefCountAdjustment.create(DataStorage.Area.META);
+            adjustment.equalsCount = true;
+            adjustment.adjustment = 1;
+            storage.refCountAdjustments.put(blockOffset, adjustment);
+
+            storage.decrementRefCount(blockOffset, DataStorage.Area.META, ignored -> {
+            });
+
+            assertTrue(storage.putBackBlocksToFreeTree.get(DataStorage.Area.META).contains(blockOffset));
+            assertFalse(storage.freeBlocks.get(DataStorage.Area.META).contains(blockOffset));
         }
     }
 
@@ -307,23 +325,25 @@ class DataStorageAllocatorTest {
     }
 
     /**
-     * Corrupts a persisted adjustment-list link into a self-cycle and verifies
-     * that opening the file rejects the malformed chain.
+     * Creates a persisted adjustment-list self-cycle and verifies that opening
+     * the file rejects the malformed chain.
      */
     @Test
     void rejectsCyclicDeferredRefCountAdjustmentList() throws IOException {
         Path path = tempDir.resolve("deferred-ref-count-cycle.db");
         long listHead;
         try (var storage = newPersistentStorage(path)) {
-            long dataStart = storage.rootBlock.fileLength - 8L * 1024 * 1024;
-            storage.incrementRefCount(dataStart, DataStorage.Area.DATA);
+            listHead = storage.writeNewBlock(DataStorage.Area.META,
+                    new byte[storage.blockSize(DataStorage.Area.META)]);
             storage.commit();
 
-            byte[] rootBytes = storage.readBlock(storage.superBlock.rootBlock, DataStorage.Area.SYSTEM);
-            listHead = ByteBuffer.wrap(rootBytes).getLong(19 * Long.BYTES);
-            assertTrue(listHead != 0);
+            long rootOffset = storage.superBlock.rootBlock;
+            byte[] rootBytes = storage.readBlock(rootOffset, DataStorage.Area.SYSTEM);
+            ByteBuffer.wrap(rootBytes).putLong(19 * Long.BYTES, listHead);
             storage.file.seek(listHead);
             storage.file.writeLong(listHead);
+            storage.file.seek(rootOffset);
+            storage.file.write(rootBytes);
         }
 
         try (var reopened = new DataStorage()) {
