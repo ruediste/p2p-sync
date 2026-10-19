@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -34,11 +35,6 @@ public class DataStorage implements Closeable {
     public static final long FORMAT_VERSION = 1;
     public static final int SUPERBLOCK_SIZE = 4096;
     private static final int BLOCK_OFFSET_SIZE = Long.BYTES;
-
-    // next + number of records
-    private static final int DEFERRED_REF_COUNT_LIST_HEADER_SIZE = 2 * Long.BYTES;
-    // blockOffset + adjustment + area + action
-    private static final int DEFERRED_REF_COUNT_RECORD_SIZE = Long.BYTES + Integer.BYTES + 2;
 
     private final byte[] DIRECT_WRITE_EMPTY_ARRAY = new byte[0];
 
@@ -333,9 +329,24 @@ public class DataStorage implements Closeable {
      */
     HashMap<Long, RefCountAdjustment> refCountAdjustments = new HashMap<>();
 
-    // blocks pending removal from the META free-space B-tree
+    /*
+     * Blocks with deferred removal from the META free-space B-tree. This list
+     * gets persisted on commit
+     */
     Set<Long> deferredMetaFreeTreeRemoveBlocks = new HashSet<>();
+
+    /**
+     * While removing the {@link #deferredMetaFreeTreeRemoveBlocks}, the blocks are
+     * kept here temporarily.
+     */
     Set<Long> oldDeferredMetaFreeTreeRemoveBlocks = new HashSet<>();
+
+    /**
+     * When, during the removal of deferred blocks from the META free-space B-tree,
+     * blocks become unreferenced, they are put back to the META free-space B-tree
+     * after the removal of the other blocks.
+     */
+    Set<Long> putBackBlocksToMetaFreeTree = new HashSet<>();
 
     private void resetInMemoryState() {
         superBlock = null;
@@ -422,8 +433,9 @@ public class DataStorage implements Closeable {
 
                     // if true, the block is in the process of being removed form the meta free
                     // tree, but just stopped being referenced
-                    // TODO: Take care of this issue
                     wasOldReserved = oldDeferredMetaFreeTreeRemoveBlocks.contains(blockOffset);
+                    if (wasOldReserved)
+                        putBackBlocksToMetaFreeTree.add(blockOffset);
                     boolean wasReserved = wasCurrentReserved || wasOldReserved;
                     if (wasReserved && wasAllocated)
                         throw new IllegalStateException("META block was both allocated and reserved: " + blockOffset);
@@ -994,11 +1006,11 @@ public class DataStorage implements Closeable {
         }
     }
 
-    private void addBlockToFreeTree(long blockOffset, Area kind) {
-        var tree = freeSpaceTrees.get(kind);
+    private void addBlockToFreeTree(long blockOffset, Area area) {
+        var tree = freeSpaceTrees.get(area);
         var it = tree.floorOrLowestIterator(u64(blockOffset));
         long mergedOffset = blockOffset;
-        long mergedSize = blockSize(kind);
+        long mergedSize = blockSize(area);
         byte[] successorKey = null;
         for (int inspected = 0; inspected < 2 && it.hasNext(); inspected++) {
             var entry = it.next();
@@ -1011,7 +1023,7 @@ public class DataStorage implements Closeable {
                     mergedSize += size;
                 }
             } else {
-                if (offset == blockOffset + blockSize(kind)) {
+                if (offset == blockOffset + blockSize(area)) {
                     mergedSize += size;
                     successorKey = entry.key;
                 }
@@ -1088,10 +1100,6 @@ public class DataStorage implements Closeable {
 
     private void loadDeferredRefCountAdjustmentList() {
         refCountAdjustments.clear();
-        int capacity = (blockSize(Area.META) - DEFERRED_REF_COUNT_LIST_HEADER_SIZE)
-                / DEFERRED_REF_COUNT_RECORD_SIZE;
-        if (capacity <= 0)
-            throw new IllegalStateException("META block is too small for deferred ref-count records");
 
         long offset = rootBlock.deferredRefCountAdjustmentList;
         rootBlock.deferredRefCountAdjustmentList = 0;
@@ -1105,8 +1113,6 @@ public class DataStorage implements Closeable {
             ByteBuffer buffer = wrap(readBlock(offset, Area.META));
             long next = buffer.getLong();
             long count = buffer.getLong();
-            if (count <= 0 || count > capacity)
-                throw new IllegalStateException("Invalid deferred ref-count adjustment count: " + count);
 
             for (int index = 0; index < count; index++) {
                 long blockOffset = buffer.getLong();
@@ -1221,6 +1227,8 @@ public class DataStorage implements Closeable {
             removeBlockFromFreeTree(Area.META, blockOffset);
         }
         oldDeferredMetaFreeTreeRemoveBlocks.clear();
+        putBackBlocksToMetaFreeTree.forEach(offset -> addBlockToFreeTree(offset, Area.META));
+        putBackBlocksToMetaFreeTree.clear();
     }
 
     private void applyRefCountAdjustments() {
@@ -1326,113 +1334,95 @@ public class DataStorage implements Closeable {
     private record DeferredPersistor(Supplier<Boolean> blockAllocator, Runnable persist) {
     }
 
-    private DeferredPersistor persistDeferredMetaFreeTreeRemoveBlockList() {
-        int capacity = (blockSize(Area.META) - 2 * Long.BYTES) / Long.BYTES;
+    private <T> DeferredPersistor persistDeferredMetaList(Supplier<List<T>> entries, int entrySize,
+            BiConsumer<ByteBuffer, T> persist, Consumer<Long> setHead) {
+        if (entrySize <= 0)
+            throw new IllegalArgumentException("Deferred META list entry size must be positive");
+        int capacity = (blockSize(Area.META) - 2 * Long.BYTES) / entrySize;
         if (capacity <= 0)
-            throw new IllegalStateException("META block is too small for a reserved-block list");
+            throw new IllegalStateException("META block is too small for a deferred list");
 
-        // TODO: we likely do not use all blocks reserved in all cases. This leads to
-        // wasted space in the META area. Add tests and fix
         List<Long> listOffsets = new ArrayList<>();
-
         return new DeferredPersistor(
                 () -> {
-                    var requiredListBlocks = 1 + deferredMetaFreeTreeRemoveBlocks.size() / capacity;
+                    int requiredListBlocks = requiredDeferredMetaListBlockCount(
+                            entries.get().size(), listOffsets.size(), capacity);
                     if (listOffsets.size() >= requiredListBlocks)
                         return true;
                     var offset = takeDeferredMetaFreeTreeRemoveBlock();
+                    incrementRefCount(offset, Area.META);
                     modifiedBlocks.put(offset, DIRECT_WRITE_EMPTY_ARRAY);
                     listOffsets.add(offset);
                     return false;
                 },
                 () -> {
-                    long next = 0;
-                    byte[] bytes = new byte[blockSize(Area.META)];
-                    ByteBuffer buffer = wrap(bytes);
-                    buffer.position(2 * Long.BYTES);
-                    long count = 0;
-                    var listOffsetsIterator = listOffsets.iterator();
-
-                    for (long blockOffset : deferredMetaFreeTreeRemoveBlocks) {
-                        if (buffer.remaining() < Long.BYTES) {
-                            buffer.putLong(0, next);
-                            buffer.putLong(Long.BYTES, count);
-                            next = listOffsetsIterator.next();
-                            writeBlockDirect(next, Area.META, bytes);
-                            buffer.clear();
-                            buffer.position(2 * Long.BYTES);
-                            count = 0;
-                        }
-                        buffer.putLong(blockOffset);
-                        count++;
-                    }
-                    // flush final buffer
-                    buffer.putLong(0, next);
-                    buffer.putLong(Long.BYTES, count);
-                    var head = listOffsetsIterator.next();
-                    writeBlockDirect(head, Area.META, bytes);
-
-                    rootBlock.deferredMetaFreeTreeRemoveList = next;
-                });
-    }
-
-    private DeferredPersistor persistRefCountAdjustmentList() {
-        int capacity = (blockSize(Area.META) - DEFERRED_REF_COUNT_LIST_HEADER_SIZE)
-                / DEFERRED_REF_COUNT_RECORD_SIZE;
-        if (capacity <= 0)
-            throw new IllegalStateException("META block is too small for deferred ref-count records");
-
-        // TODO: we likely do not use all blocks reserved in all cases. This leads to
-        // wasted space in the META area. Add tests and fix
-        List<Long> listOffsets = new ArrayList<>();
-
-        return new DeferredPersistor(
-                () -> {
-                    var requiredListBlocks = 1 + refCountAdjustments.size() / capacity;
-                    if (listOffsets.size() >= requiredListBlocks)
-                        return true;
-                    var offset = takeDeferredMetaFreeTreeRemoveBlock();
-                    modifiedBlocks.put(offset, DIRECT_WRITE_EMPTY_ARRAY);
-                    listOffsets.add(offset);
-                    return false;
-                },
-                () -> {
-                    List<Map.Entry<Long, RefCountAdjustment>> entries = refCountAdjustments.entrySet().stream()
-                            .sorted(Map.Entry.comparingByKey())
-                            .toList();
-                    if (entries.isEmpty()) {
-                        rootBlock.deferredRefCountAdjustmentList = 0;
+                    List<T> records = entries.get();
+                    if (records.isEmpty()) {
+                        setHead.accept(0L);
                         return;
                     }
 
-                    int entryIndex = 0;
+                    int recordIndex = 0;
                     for (int blockIndex = 0; blockIndex < listOffsets.size(); blockIndex++) {
                         byte[] bytes = new byte[blockSize(Area.META)];
                         ByteBuffer buffer = wrap(bytes);
                         long next = blockIndex + 1 < listOffsets.size() ? listOffsets.get(blockIndex + 1) : 0;
-                        int count = Math.min(capacity, entries.size() - entryIndex);
+                        int count = Math.min(capacity, records.size() - recordIndex);
                         buffer.putLong(next);
                         buffer.putLong(count);
-                        for (int index = 0; index < count; index++) {
-                            var entry = entries.get(entryIndex++);
-                            long blockOffset = entry.getKey();
-                            RefCountAdjustment adjustment = entry.getValue();
-                            Optional<PersistableOnDelete> action = adjustment.persistableOnDelete;
-                            int actionCode = action.map(PersistableOnDelete::code).orElse(0);
-                            if (adjustment.adjustment == 0)
-                                throw new IllegalStateException("Should have been removed when adjustment became 0");
-                            if (adjustment.adjustment < 0 && action.isEmpty())
-                                throw new IllegalStateException(
-                                        "Missing durable delete action for block " + blockOffset);
-                            buffer.putLong(blockOffset);
-                            buffer.putInt(adjustment.adjustment);
-                            buffer.put((byte) areaCode(adjustment.area));
-                            buffer.put((byte) actionCode);
-                        }
+                        for (int index = 0; index < count; index++)
+                            persist.accept(buffer, records.get(recordIndex++));
                         writeBlockDirect(listOffsets.get(blockIndex), Area.META, bytes);
                     }
-                    rootBlock.deferredRefCountAdjustmentList = listOffsets.get(0);
+                    if (recordIndex != records.size())
+                        throw new IllegalStateException("Deferred META list entries exceed allocated blocks");
+                    setHead.accept(listOffsets.get(0));
                 });
+    }
+
+    static int requiredDeferredMetaListBlockCount(int entryCount, int listBlockCount, int capacity) {
+        if (entryCount < listBlockCount || listBlockCount < 0 || capacity <= 0)
+            throw new IllegalArgumentException("Invalid deferred META list sizing");
+
+        int entriesBesidesOwnBlocks = entryCount - listBlockCount;
+        if (entriesBesidesOwnBlocks == 0)
+            return 0;
+        if (capacity == 1)
+            throw new IllegalStateException("META deferred list cannot store entries with capacity 1");
+
+        // Every list block is also an entry, leaving capacity - 1 slots per block
+        // for entries that do not belong to the list itself.
+        return 1 + (entriesBesidesOwnBlocks - 1) / (capacity - 1);
+    }
+
+    private DeferredPersistor persistDeferredMetaFreeTreeRemoveBlockList() {
+        return persistDeferredMetaList(
+                () -> new ArrayList<>(deferredMetaFreeTreeRemoveBlocks), Long.BYTES,
+                ByteBuffer::putLong, head -> rootBlock.deferredMetaFreeTreeRemoveList = head);
+    }
+
+    private DeferredPersistor persistRefCountAdjustmentList() {
+        return persistDeferredMetaList(
+                () -> refCountAdjustments.entrySet().stream()
+                        .sorted(Map.Entry.comparingByKey())
+                        .toList(),
+                // blockOffset + adjustment + area + action
+                Long.BYTES + Integer.BYTES + 2,
+                (buffer, entry) -> {
+                    long blockOffset = entry.getKey();
+                    RefCountAdjustment adjustment = entry.getValue();
+                    Optional<PersistableOnDelete> action = adjustment.persistableOnDelete;
+                    int actionCode = action.map(PersistableOnDelete::code).orElse(0);
+                    if (adjustment.adjustment == 0)
+                        throw new IllegalStateException("Should have been removed when adjustment became 0");
+                    if (adjustment.adjustment < 0 && action.isEmpty())
+                        throw new IllegalStateException(
+                                "Missing durable delete action for block " + blockOffset);
+                    buffer.putLong(blockOffset);
+                    buffer.putInt(adjustment.adjustment);
+                    buffer.put((byte) areaCode(adjustment.area));
+                    buffer.put((byte) actionCode);
+                }, head -> rootBlock.deferredRefCountAdjustmentList = head);
     }
 
     private Consumer<Long> decrementMetaReservedListBlock;
@@ -1451,6 +1441,7 @@ public class DataStorage implements Closeable {
         // update the info block
         if (infoBlock.dirty || rootBlock.infoBlock == 0) {
             decrementRefCount(rootBlock.infoBlock, Area.SYSTEM, ignored -> {
+                // NOP
             });
             rootBlock.infoBlock = writeNewBlock(Area.SYSTEM, serializeInfoBlock(infoBlock));
             infoBlock.dirty = false;

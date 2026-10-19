@@ -124,6 +124,18 @@ class DataStorageAllocatorTest {
     }
 
     /**
+     * Verifies deferred-list sizing accounts for the list blocks' own entries,
+     * including empty and exactly-full lists where an extra block was wasted.
+     */
+    @Test
+    void deferredMetaListSizingDoesNotReserveUnusedBlocks() {
+        assertEquals(0, DataStorage.requiredDeferredMetaListBlockCount(0, 0, 4));
+        assertEquals(1, DataStorage.requiredDeferredMetaListBlockCount(3, 0, 4));
+        assertEquals(1, DataStorage.requiredDeferredMetaListBlockCount(4, 1, 4));
+        assertEquals(2, DataStorage.requiredDeferredMetaListBlockCount(4, 0, 4));
+    }
+
+    /**
      * Removes one normal DATA allocation and one META reservation from the middle
      * of their extents. The free ranges on both sides must remain, and a later
      * pass with the reservation marked old must not remove it again.
