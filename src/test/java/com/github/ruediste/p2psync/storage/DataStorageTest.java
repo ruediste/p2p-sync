@@ -198,7 +198,7 @@ public class DataStorageTest {
     class DeferredFreeSpaceTests {
 
         @Test
-        @DisplayName("Freed blocks should be held in reserved set during transaction and reused after commit")
+        @DisplayName("Releasing the final reference should reclaim the block on commit")
         void testDeferredBlockReclamation() {
             byte[] payload = new byte[storage.blockSize(DataStorage.Area.DATA)];
             long blockOff = storage.writeNewBlock(DataStorage.Area.DATA, payload);
@@ -206,8 +206,9 @@ public class DataStorageTest {
 
             assertEquals(1, storage.getRefCount(blockOff));
 
-            // Free the block in current transaction
-            storage.addToDeferredFreeBlocks(blockOff, DataStorage.Area.DATA);
+            // Drop the final reference; its deletion defers returning the block to free space.
+            storage.decrementRefCount(blockOff, DataStorage.Area.DATA, ignored -> {
+            });
 
             // Before commit, refcount remains 1 in persisted state
             assertEquals(1, storage.getRefCount(blockOff));

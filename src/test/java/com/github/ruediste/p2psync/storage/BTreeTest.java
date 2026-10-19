@@ -110,21 +110,21 @@ public class BTreeTest {
     public void floorIteratorStartsAtFloorAndContinuesAcrossLeaves() {
         BTree tree = newTree();
         for (int i = 0; i < 100; i++)
-            tree.put(key(i * 10), bytes("value-" + i));
+            tree.put(key((i + 1) * 10), bytes("value-" + i));
 
         Iterator<BTree.Entry> iterator = tree.floorIterator(key(455));
         List<Long> seen = new ArrayList<>();
         while (iterator.hasNext())
             seen.add(longOf(iterator.next().key));
         List<Long> expected = new ArrayList<>();
-        for (int i = 45; i < 100; i++)
-            expected.add((long) i * 10);
+        for (int i = 44; i < 100; i++)
+            expected.add((long) (i + 1) * 10);
         assertEquals(expected, seen);
 
-        assertFalse(tree.floorIterator(key(-1)).hasNext());
+        assertFalse(tree.floorIterator(key(0)).hasNext());
         iterator = tree.floorIterator(key(1000));
         assertTrue(iterator.hasNext());
-        assertEquals(990, longOf(iterator.next().key));
+        assertEquals(1000, longOf(iterator.next().key));
         assertFalse(iterator.hasNext());
         assertFalse(newTree().floorIterator(key(0)).hasNext());
     }

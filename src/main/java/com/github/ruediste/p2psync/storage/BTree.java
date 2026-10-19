@@ -181,18 +181,23 @@ public class BTree implements Iterable<BTree.Entry> {
 
     private void prepareSpaceForWrite() {
         while (true) {
-            int required;
-            if (rootOffset == 0)
-                required = 1;
-            else {
-                int h = level(storage.readBlock(rootOffset)) + 1;
-                // worst case: split every block along the path into two blocks, and add a new
-                // root
-                required = 2 * h + 1;
-            }
+            int required = getWorstCaseBlocksForWrite();
             if (storage.prepareFreeSpace(required))
                 break;
         }
+    }
+
+    public int getWorstCaseBlocksForWrite() {
+        int required;
+        if (rootOffset == 0)
+            required = 1;
+        else {
+            int h = level(storage.readBlock(rootOffset)) + 1;
+            // worst case: split every block along the path into two blocks, and add a new
+            // root
+            required = 2 * h + 1;
+        }
+        return required;
     }
 
     private static class Result {

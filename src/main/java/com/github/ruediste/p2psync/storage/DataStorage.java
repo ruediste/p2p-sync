@@ -801,10 +801,10 @@ public class DataStorage implements Closeable {
             throw new IllegalStateException("Free-space tree is not initialized for " + area);
 
         int blockSize = blockSize(area);
-        Long cursor = freeSpaceAllocationOffset.get(area);
         var extended = false;
 
         while (true) {
+            Long cursor = freeSpaceAllocationOffset.get(area);
             var iterator = cursor == null ? tree.iterator() : tree.floorOrLowestIterator(u64(cursor));
             while (iterator.hasNext() && blocks.size() < desiredFreeBlockCount) {
                 // read the next free-space tree entry
@@ -860,10 +860,11 @@ public class DataStorage implements Closeable {
                 }
             }
 
+            freeSpaceAllocationOffset.put(area, cursor);
+
             // If we have gathered enough free blocks, update the allocation offset and
             // return.
             if (blocks.size() >= desiredFreeBlockCount) {
-                freeSpaceAllocationOffset.put(area, cursor);
                 return extended;
             }
 
@@ -1151,11 +1152,11 @@ public class DataStorage implements Closeable {
         };
     }
 
-    private void extend(Area kind) {
-        BTree tree = freeSpaceTrees.get(kind);
+    private void extend(Area area) {
+        BTree tree = freeSpaceTrees.get(area);
         if (tree == null)
-            throw new IllegalStateException("Free-space tree is not initialized for " + kind);
-        int blockSize = blockSize(kind);
+            throw new IllegalStateException("Free-space tree is not initialized for " + area);
+        int blockSize = blockSize(area);
         try {
             long start = alignUp(file.length(), blockSize);
             long minimumGrowth = Math.multiplyExact((long) blockSize, 256);
@@ -1163,6 +1164,19 @@ public class DataStorage implements Closeable {
             long end = Math.addExact(start, growth);
             file.setLength(end);
             rootBlock.fileLength = end;
+
+            // all free space trees live in the META area. Make sure there is enough space
+            // when extending the META area
+            if (area == Area.META) {
+                var freeBlocks = this.freeBlocks.get(Area.META);
+                var required = tree.getWorstCaseBlocksForWrite() - freeBlocks.size();
+                if (required > 0) {
+                    for (int i = 0; i < required; i++) {
+                        freeBlocks.add(start + i * blockSize);
+                    }
+                    freeSpaceAllocationOffset.put(Area.META, start + (required - 1) * blockSize);
+                }
+            }
             tree.put(u64(start), u64(growth));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
