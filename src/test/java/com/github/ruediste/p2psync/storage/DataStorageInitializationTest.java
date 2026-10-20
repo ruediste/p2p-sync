@@ -139,7 +139,9 @@ class DataStorageInitializationTest {
 
         try (var storage = new DataStorage()) {
             storage.open(path.toString());
-            storage.modifiedBlocks.put(123L, new byte[storage.blockSize(DataStorage.Area.DATA)]);
+            storage.modifiedBlocks.put(123L,
+                    new DataStorage.ModifiedBlock(new byte[storage.blockSize(DataStorage.Area.DATA)],
+                            java.util.List.of()));
             storage.freeBlocks.get(DataStorage.Area.DATA).add(16384L);
 
             storage.open(path.toString());

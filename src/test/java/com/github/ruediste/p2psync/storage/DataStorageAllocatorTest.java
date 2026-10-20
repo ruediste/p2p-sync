@@ -83,7 +83,7 @@ class DataStorageAllocatorTest {
 
             assertEquals(6000, allocated);
             assertEquals(1_056_000, fileLength(storage));
-            assertEquals(1_056_000, storage.rootBlock.fileLength);
+            assertEquals(1_056_000, storage.rootBlock.fileLength.value);
         }
     }
 
@@ -102,7 +102,7 @@ class DataStorageAllocatorTest {
     }
 
     /**
-     * Allocates through the deferred B-tree storage adapter. The block must use
+     * Allocates through the typed B-tree storage adapter. The block must use
      * the same pending-removal bookkeeping as other META allocations.
      */
     @Test
@@ -112,13 +112,13 @@ class DataStorageAllocatorTest {
             storage.freeSpaceTrees.put(DataStorage.Area.META,
                     tree(storage.blockSize(DataStorage.Area.META), Map.of(start, 4L * 16384)));
 
-            long reserved = storage.new BTreeStorage(DataStorage.Area.META)
-                    .deferred(DataStorage.PersistableOnDelete.META_FREE_SPACE_TREE_BLOCK)
-                    .writeNewBlock(new byte[16384]);
+            var adapter = storage.new BTreeStorage(DataStorage.Area.META);
+            var type = BTree.blockType(Long.BYTES, DataStorage.Area.META);
+            long reserved = adapter.writeNewBlock(new BTree.NodeBlock(new byte[16384], type));
 
             assertTrue(storage.pendingFreeTreeRemovals.get(DataStorage.Area.META).contains(reserved));
             assertFalse(storage.freeBlocks.get(DataStorage.Area.META).contains(reserved));
-            assertEquals(1, storage.refCountAdjustments.get(reserved).adjustment);
+            assertEquals(0, storage.refCountAdjustments.get(reserved).adjustment);
         }
     }
 
@@ -132,6 +132,37 @@ class DataStorageAllocatorTest {
         assertEquals(1, DataStorage.requiredDeferredMetaListBlockCount(3, 0, 4));
         assertEquals(1, DataStorage.requiredDeferredMetaListBlockCount(4, 1, 4));
         assertEquals(2, DataStorage.requiredDeferredMetaListBlockCount(4, 0, 4));
+    }
+
+    /**
+     * Reads the committed deferred META-removal list and verifies every persisted
+     * offset is queued for removal in the next in-memory transaction.
+     */
+    @Test
+    void committedDeferredMetaRemovalsRemainPendingInMemory() {
+        try (var storage = newPersistentStorage(tempDir.resolve("deferred-meta-removals.db"))) {
+            long dataStart = storage.rootBlock.fileLength.value - 8L * 1024 * 1024;
+            for (int index = 0; index < 1200; index++)
+                storage.incrementRefCount(dataStart + index * (long) storage.blockSize(DataStorage.Area.DATA),
+                        DataStorage.Area.DATA);
+            storage.commit();
+
+            var committedRoot = storage.readBlock(storage.superBlock.rootBlock,
+                    DataStorage.Area.SYSTEM, DataStorage.RootBlock.TYPE);
+            long listOffset = committedRoot.deferredMetaFreeTreeRemoveList.blockOffset;
+            Set<Long> persistedRemovals = new HashSet<>();
+            while (listOffset != 0) {
+                ByteBuffer buffer = ByteBuffer.wrap(storage.readBlock(listOffset, DataStorage.Area.META));
+                long next = buffer.getLong();
+                long count = buffer.getLong();
+                for (int index = 0; index < count; index++)
+                    persistedRemovals.add(buffer.getLong());
+                listOffset = next;
+            }
+
+            assertFalse(persistedRemovals.isEmpty());
+            assertTrue(storage.pendingFreeTreeRemovals.get(DataStorage.Area.META).containsAll(persistedRemovals));
+        }
     }
 
     /**
@@ -206,15 +237,16 @@ class DataStorageAllocatorTest {
         long blockOffset = 32768;
         try (var storage = newStorage("in-flight-put-back.db", blockOffset + 16384)) {
             storage.superBlock.metaBlockSize = 16384;
-            storage.modifiedBlocks.put(blockOffset, new byte[16384]);
+            storage.modifiedBlocks.put(blockOffset,
+                    new DataStorage.ModifiedBlock(new byte[16384], java.util.List.of()));
             storage.blocksBeingRemovedFromFreeTree.get(DataStorage.Area.META).add(blockOffset);
             var adjustment = DataStorage.RefCountAdjustment.create(DataStorage.Area.META);
             adjustment.equalsCount = true;
             adjustment.adjustment = 1;
             storage.refCountAdjustments.put(blockOffset, adjustment);
 
-            storage.decrementRefCount(blockOffset, DataStorage.Area.META, ignored -> {
-            });
+            storage.decrementRefCount(new BlockType.BlockRef(blockOffset, DataStorage.Area.META,
+                    DataStorage.BYTE_ARRAY_BLOCK_TYPE));
 
             assertTrue(storage.putBackBlocksToFreeTree.get(DataStorage.Area.META).contains(blockOffset));
             assertFalse(storage.freeBlocks.get(DataStorage.Area.META).contains(blockOffset));
@@ -230,8 +262,10 @@ class DataStorageAllocatorTest {
         Path path = tempDir.resolve("deferred-free-areas.db");
         long[] offsets = new long[DataStorage.Area.values().length];
         try (var storage = newPersistentStorage(path)) {
-            for (DataStorage.Area area : DataStorage.Area.values())
+            for (DataStorage.Area area : DataStorage.Area.values()) {
                 offsets[area.ordinal()] = storage.writeNewBlock(area, new byte[storage.blockSize(area)]);
+                storage.incrementRefCount(offsets[area.ordinal()], area);
+            }
             storage.commit();
 
             for (DataStorage.Area area : DataStorage.Area.values()) {
@@ -255,28 +289,29 @@ class DataStorageAllocatorTest {
     @Test
     void formattedRootOwnsItsFreeSpaceTreeRoots() {
         try (var storage = newPersistentStorage(tempDir.resolve("root-tree-refs.db"))) {
-            assertEffectiveRefCount(storage, storage.rootBlock.dataFreeSpaceTree, 2);
-            assertEffectiveRefCount(storage, storage.rootBlock.metaFreeSpaceTree, 2);
-            assertEffectiveRefCount(storage, storage.rootBlock.systemFreeSpaceTree, 2);
+            assertEffectiveRefCount(storage, storage.rootBlock.dataFreeSpaceTree.blockOffset, 1);
+            assertEffectiveRefCount(storage, storage.rootBlock.metaFreeSpaceTree.blockOffset, 1);
+            assertEffectiveRefCount(storage, storage.rootBlock.systemFreeSpaceTree.blockOffset, 1);
         }
     }
 
     /**
-     * Persists a deferred negative adjustment with an existing delete-action
-     * tag, reopens it, then commits to verify the action is restored and run.
+     * Drops a typed META block through its persisted block type, reopens the
+     * storage, and verifies the zero refcount survives recovery.
      */
     @Test
-    void persistableDeleteActionIsAppliedWhenRefCountReachesZero() {
+    void typedDeleteHandlerIsAppliedWhenRefCountReachesZero() {
         Path path = tempDir.resolve("deferred-ref-count-action.db");
         long blockOffset;
         try (var storage = newPersistentStorage(path)) {
             blockOffset = storage.writeNewBlock(DataStorage.Area.META,
                     new byte[storage.blockSize(DataStorage.Area.META)]);
+            storage.incrementRefCount(blockOffset, DataStorage.Area.META);
             storage.commit();
             assertEquals(1, storage.getRefCount(blockOffset));
 
-            storage.decrementRefCount(blockOffset, DataStorage.Area.META,
-                    DataStorage.PersistableOnDelete.META_FREE_SPACE_TREE_BLOCK);
+            storage.decrementRefCount(new BlockType.BlockRef(blockOffset, DataStorage.Area.META,
+                    BTree.blockType(Long.BYTES, DataStorage.Area.META)));
             storage.commit();
 
             assertEquals(0, storage.getRefCount(blockOffset));
@@ -302,7 +337,7 @@ class DataStorageAllocatorTest {
         long lastBlock;
         try (var storage = newPersistentStorage(path)) {
             adjustmentCount = 1200;
-            long dataStart = storage.rootBlock.fileLength - 8L * 1024 * 1024;
+            long dataStart = storage.rootBlock.fileLength.value - 8L * 1024 * 1024;
             firstBlock = dataStart;
             lastBlock = dataStart + (adjustmentCount - 1L) * storage.blockSize(DataStorage.Area.DATA);
 
@@ -335,6 +370,7 @@ class DataStorageAllocatorTest {
         try (var storage = newPersistentStorage(path)) {
             listHead = storage.writeNewBlock(DataStorage.Area.META,
                     new byte[storage.blockSize(DataStorage.Area.META)]);
+            storage.incrementRefCount(listHead, DataStorage.Area.META);
             storage.commit();
 
             long rootOffset = storage.superBlock.rootBlock;
@@ -368,8 +404,11 @@ class DataStorageAllocatorTest {
         int blockCount = 31;
         long[] offsets = new long[blockCount];
         try (var storage = newPersistentStorage(path, 256)) {
-            for (int i = 0; i < blockCount; i++)
-                offsets[i] = storage.takeFreeBlock(DataStorage.Area.DATA);
+            for (int i = 0; i < blockCount; i++) {
+                offsets[i] = storage.writeNewBlock(DataStorage.Area.DATA,
+                        new byte[storage.blockSize(DataStorage.Area.DATA)]);
+                storage.incrementRefCount(offsets[i], DataStorage.Area.DATA);
+            }
             storage.commit();
 
             for (long offset : offsets)
@@ -393,7 +432,7 @@ class DataStorageAllocatorTest {
         storage.superBlock.dataBlockSize = 4096;
         storage.rootBlock = new DataStorage.RootBlock();
         storage.file = openFile(tempDir.resolve(fileName), fileLength);
-        storage.rootBlock.fileLength = fileLength;
+        storage.rootBlock.fileLength.value = fileLength;
         return storage;
     }
 
@@ -474,8 +513,13 @@ class DataStorageAllocatorTest {
         }
 
         @Override
-        public byte[] readBlock(long blockOffset) {
-            return blocks.get(blockOffset).clone();
+        public DataStorage.Area area() {
+            return DataStorage.Area.META;
+        }
+
+        @Override
+        public BTree.NodeBlock readBlock(long blockOffset, BlockType<BTree.NodeBlock> type) {
+            return new BTree.NodeBlock(blocks.get(blockOffset), type);
         }
 
         @Override
@@ -484,25 +528,17 @@ class DataStorageAllocatorTest {
         }
 
         @Override
-        public void writeBlock(long blockOffset, byte[] data) {
-            blocks.put(blockOffset, data.clone());
+        public void writeBlock(long blockOffset, BTree.NodeBlock data) {
+            blocks.put(blockOffset, data.data.clone());
             modified.add(blockOffset);
         }
 
         @Override
-        public long writeNewBlock(byte[] data) {
+        public long writeNewBlock(BTree.NodeBlock data) {
             long offset = nextOffset++;
-            blocks.put(offset, data.clone());
+            blocks.put(offset, data.data.clone());
             modified.add(offset);
             return offset;
-        }
-
-        @Override
-        public void incrementRefCount(long blockOffset) {
-        }
-
-        @Override
-        public void decrementRefCount(long blockOffset, java.util.function.Consumer<Long> onDelete) {
         }
 
         @Override

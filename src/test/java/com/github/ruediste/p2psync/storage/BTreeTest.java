@@ -208,6 +208,7 @@ public class BTreeTest {
             expected.put(k, v);
         }
         long root = tree.rootOffset;
+        storage.incrementRefCount(root, DataStorage.Area.META);
         storage.commit();
         storage.close();
 
@@ -225,6 +226,7 @@ public class BTreeTest {
         BTree tree = newTree();
         for (int i = 0; i < 100; i++)
             tree.put(key(i), bytes("old-" + i));
+        storage.incrementRefCount(tree.rootOffset, DataStorage.Area.META);
         storage.commit();
 
         long oldRoot = tree.rootOffset;
@@ -245,6 +247,7 @@ public class BTreeTest {
         for (int i = 0; i < 1000; i++)
             tree.put(key(i), bytes("value-" + String.format("%04d", i)));
         assertEquals(1000, count(tree));
+        storage.incrementRefCount(tree.rootOffset, DataStorage.Area.META);
         storage.commit();
         assertTrue(storage.refCountAdjustments.size() > 1);
     }

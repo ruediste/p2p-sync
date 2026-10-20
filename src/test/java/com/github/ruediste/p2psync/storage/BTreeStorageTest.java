@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +22,7 @@ class BTreeStorageTest {
         final Map<Long, byte[]> blocks = new HashMap<>();
         final Map<Long, Integer> references = new HashMap<>();
         final Set<Long> modified = new HashSet<>();
+        BlockType<BTree.NodeBlock> nodeType;
         long nextOffset = 1;
 
         @Override
@@ -31,8 +31,14 @@ class BTreeStorageTest {
         }
 
         @Override
-        public byte[] readBlock(long blockOffset) {
-            return java.util.Objects.requireNonNull(blocks.get(blockOffset)).clone();
+        public DataStorage.Area area() {
+            return DataStorage.Area.META;
+        }
+
+        @Override
+        public BTree.NodeBlock readBlock(long blockOffset, BlockType<BTree.NodeBlock> type) {
+            nodeType = type;
+            return new BTree.NodeBlock(java.util.Objects.requireNonNull(blocks.get(blockOffset)), type);
         }
 
         @Override
@@ -41,36 +47,85 @@ class BTreeStorageTest {
         }
 
         @Override
-        public void writeBlock(long blockOffset, byte[] data) {
+        public void writeBlock(long blockOffset, BTree.NodeBlock data) {
             assertTrue(modified.contains(blockOffset));
-            blocks.put(blockOffset, data.clone());
+            byte[] previousData = blocks.get(blockOffset);
+            adjustChildReferences(data, 1);
+            blocks.put(blockOffset, data.data.clone());
+            adjustChildReferences(blockOffset, previousData, -1);
         }
 
         @Override
-        public long writeNewBlock(byte[] data) {
-            assertEquals(blockSize(), data.length);
+        public long writeNewBlock(BTree.NodeBlock data) {
+            assertEquals(blockSize(), data.data.length);
+            nodeType = data.getBlockType();
             long offset = nextOffset++;
-            blocks.put(offset, data.clone());
+            blocks.put(offset, data.data.clone());
             references.put(offset, 1);
             modified.add(offset);
+            adjustChildReferences(data, 1);
+            unclaimed.add(offset);
             return offset;
         }
 
-        @Override
-        public void incrementRefCount(long blockOffset) {
-            references.put(blockOffset, references.get(blockOffset) + 1);
+        final Set<Long> unclaimed = new HashSet<>();
+
+        private void retain(long blockOffset) {
+            if (blockOffset != 0) {
+                Integer current = references.get(blockOffset);
+                if (current == null)
+                    throw new IllegalStateException("Increment of unreferenced block " + blockOffset
+                            + "; allocated=" + blocks.containsKey(blockOffset));
+                references.put(blockOffset, current + 1);
+            }
         }
 
-        @Override
-        public void decrementRefCount(long blockOffset, Consumer<Long> onDelete) {
+        private void release(long blockOffset) {
+            if (blockOffset == 0)
+                return;
             int remaining = references.get(blockOffset) - 1;
             assertTrue(remaining >= 0);
             references.put(blockOffset, remaining);
             if (remaining == 0) {
-                onDelete.accept(blockOffset);
+                adjustChildReferences(blockOffset, blocks.get(blockOffset), -1);
                 blocks.remove(blockOffset);
                 references.remove(blockOffset);
                 modified.remove(blockOffset);
+                unclaimed.remove(blockOffset);
+            }
+        }
+
+        void publishRoot(long oldOffset, long newOffset) {
+            if (oldOffset == newOffset)
+                return;
+            if (newOffset != 0 && !unclaimed.remove(newOffset))
+                retain(newOffset);
+            unclaimed.remove(oldOffset);
+            release(oldOffset);
+        }
+
+        void retainRoot(long blockOffset) {
+            retain(blockOffset);
+        }
+
+        void releaseRoot(long blockOffset) {
+            release(blockOffset);
+        }
+
+        private void adjustChildReferences(long blockOffset, byte[] data, int adjustment) {
+            if (data == null)
+                return;
+            adjustChildReferences(new BTree.NodeBlock(data, nodeType), adjustment);
+        }
+
+        private void adjustChildReferences(BTree.NodeBlock block, int adjustment) {
+            for (var reference : nodeType.getReferencedBlocks(block)) {
+                if (adjustment > 0)
+                    retain(reference.blockOffset());
+                else
+                    release(reference.blockOffset());
+                if (adjustment > 0 && unclaimed.remove(reference.blockOffset()))
+                    release(reference.blockOffset());
             }
         }
 
@@ -84,6 +139,19 @@ class BTreeStorageTest {
         return new byte[] { (byte) (value >>> 8), (byte) value };
     }
 
+    private static void put(MemoryStorage storage, BTree tree, byte[] key, byte[] value) {
+        long oldRoot = tree.rootOffset;
+        tree.put(key, value);
+        storage.publishRoot(oldRoot, tree.rootOffset);
+    }
+
+    private static boolean remove(MemoryStorage storage, BTree tree, byte[] key) {
+        long oldRoot = tree.rootOffset;
+        boolean result = tree.remove(key);
+        storage.publishRoot(oldRoot, tree.rootOffset);
+        return result;
+    }
+
     /**
      * Replaces and removes an entry while its leaf is still transaction-modified.
      * The leaf should be reused, absent-key removal should do nothing, and entry
@@ -94,12 +162,12 @@ class BTreeStorageTest {
         MemoryStorage storage = new MemoryStorage();
         List<Integer> deleted = new ArrayList<>();
         BTree tree = new BTree(storage, 2, (entryKey, value) -> deleted.add((int) value[0]));
-        tree.put(key(1), new byte[] { 10 });
+        put(storage, tree, key(1), new byte[] { 10 });
         long root = tree.rootOffset;
-        tree.put(key(1), new byte[] { 20 });
+        put(storage, tree, key(1), new byte[] { 20 });
         assertEquals(root, tree.rootOffset);
-        assertFalse(tree.remove(key(2)));
-        assertTrue(tree.remove(key(1)));
+        assertFalse(remove(storage, tree, key(2)));
+        assertTrue(remove(storage, tree, key(1)));
         assertEquals(List.of(10, 20), deleted);
         assertTrue(storage.blocks.isEmpty());
     }
@@ -115,23 +183,23 @@ class BTreeStorageTest {
         MemoryStorage storage = new MemoryStorage();
         BTree tree = new BTree(storage, 2, null);
         for (int index = 0; index < 100; index++)
-            tree.put(key(index), key(index));
+            put(storage, tree, key(index), key(index));
         long oldRoot = tree.rootOffset;
-        storage.incrementRefCount(oldRoot);
+        storage.retainRoot(oldRoot);
         storage.modified.clear();
         BTree snapshot = new BTree(storage, 2, null, oldRoot);
 
-        tree.put(key(50), new byte[] { 42 });
+        put(storage, tree, key(50), new byte[] { 42 });
         assertNotEquals(oldRoot, tree.rootOffset);
         assertArrayEquals(key(50), snapshot.get(key(50)));
         assertArrayEquals(new byte[] { 42 }, tree.get(key(50)));
         for (int index = 0; index < 100; index++)
-            assertTrue(tree.remove(key(index)));
+            assertTrue(remove(storage, tree, key(index)));
         assertEquals(0, tree.rootOffset);
         for (int index = 0; index < 100; index++)
             assertArrayEquals(key(index), snapshot.get(key(index)));
 
-        storage.decrementRefCount(oldRoot, snapshot.decrementRefCount);
+        storage.releaseRoot(oldRoot);
         assertTrue(storage.blocks.isEmpty());
         assertTrue(storage.references.isEmpty());
     }
@@ -155,10 +223,10 @@ class BTreeStorageTest {
             int entryKey = random.nextInt(100);
             if (random.nextBoolean()) {
                 byte[] value = key(iteration);
-                tree.put(key(entryKey), value);
+                put(storage, tree, key(entryKey), value);
                 expected.put(entryKey, value);
             } else {
-                assertEquals(expected.remove(entryKey) != null, tree.remove(key(entryKey)));
+                assertEquals(expected.remove(entryKey) != null, remove(storage, tree, key(entryKey)));
             }
             List<Integer> actualKeys = new ArrayList<>();
             tree.forEach((entry, value) -> {
@@ -169,7 +237,7 @@ class BTreeStorageTest {
             assertEquals(new ArrayList<>(expected.keySet()), actualKeys);
         }
         if (tree.rootOffset != 0)
-            storage.decrementRefCount(tree.rootOffset, tree.decrementRefCount);
+            storage.releaseRoot(tree.rootOffset);
         assertTrue(storage.blocks.isEmpty());
     }
 }
