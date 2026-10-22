@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -160,25 +161,55 @@ public class DataStorageTest {
     }
 
     /**
-     * Replaces a persisted tree root repeatedly, then reopens the file to verify
-     * parent-owned tree blocks survive commits without allocation references.
+     * Verifies a root reference handle allocates on first write and overwrites
+     * that transaction-local block on subsequent writes.
      */
     @Test
-    void parentOwnedTreeSurvivesRepeatedCommitsAndReopen() {
-        var tree = new BTree(storage.new BTreeStorage(DataStorage.Area.META), Long.BYTES, null);
-        for (int round = 0; round < 12; round++) {
-            tree.put(java.nio.ByteBuffer.allocate(Long.BYTES).putLong(round).array(), new byte[] { (byte) round });
-            storage.rootBlock.systemKvTree.blockOffset = tree.rootOffset;
-            storage.commit();
-        }
+    void rootRefHandleWritesReuseItsBlockWithinTransaction() {
+        var handle = storage.getRootRefHandle(17, DataStorage.Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE);
+        byte[] firstValue = new byte[] { 1, 2, 3 };
+        byte[] secondValue = new byte[] { 4, 5, 6 };
+
+        handle.write(new DataStorage.ByteArrayBlock(firstValue));
+        long blockOffset = handle.blockOffset;
+        handle.write(new DataStorage.ByteArrayBlock(secondValue));
+
+        assertTrue(blockOffset > 0);
+        assertEquals(blockOffset, handle.blockOffset);
+        assertArrayEquals(secondValue, Arrays.copyOf(storage.readBlock(blockOffset, DataStorage.Area.DATA,
+            DataStorage.BYTE_ARRAY_BLOCK_TYPE).data, secondValue.length));
+    }
+
+    /**
+     * Verifies root reference handle identifiers cannot be registered twice in
+     * the same storage instance.
+     */
+    @Test
+    void rootRefHandleRejectsDuplicateIds() {
+        storage.getRootRefHandle(17, DataStorage.Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE);
+
+        assertThrows(IllegalStateException.class,
+                () -> storage.getRootRefHandle(17, DataStorage.Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE));
+    }
+
+    /**
+     * Verifies commit stores registered root reference handle IDs and offsets in
+     * the root block, and that the metadata survives reopening the file.
+     */
+    @Test
+    void commitPersistsRegisteredRootRefHandleMetadata() {
+        storage.getRootRefHandle(17, DataStorage.Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE);
+
+        storage.commit();
+        assertEquals(java.util.List.of(17), storage.rootBlock.refHandleIds.values);
+        assertEquals(java.util.List.of(0L), storage.rootBlock.refHandles.blockOffsets);
 
         storage.close();
+        storage = new DataStorage();
         storage.open(dbPath);
-        var reopenedTree = new BTree(storage.new BTreeStorage(DataStorage.Area.META), Long.BYTES, null,
-                storage.rootBlock.systemKvTree.blockOffset);
-        for (int round = 0; round < 12; round++)
-            assertArrayEquals(new byte[] { (byte) round },
-                    reopenedTree.get(java.nio.ByteBuffer.allocate(Long.BYTES).putLong(round).array()));
+
+        assertEquals(java.util.List.of(17), storage.rootBlock.refHandleIds.values);
+        assertEquals(java.util.List.of(0L), storage.rootBlock.refHandles.blockOffsets);
     }
 
     /**

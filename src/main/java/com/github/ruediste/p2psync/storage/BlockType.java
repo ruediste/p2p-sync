@@ -8,6 +8,12 @@ import java.util.function.Supplier;
 import com.github.ruediste.p2psync.storage.DataStorage.Area;
 
 public interface BlockType<T> {
+    private static int checkedListSize(int size) {
+        if (size > 0xFFFF)
+            throw new IllegalArgumentException("List slot exceeds unsigned 16-bit length");
+        return size;
+    }
+
     record BlockRef(long blockOffset, Area area, BlockType<?> type) {
     }
 
@@ -94,7 +100,7 @@ public interface BlockType<T> {
 
         @Override
         void serialize(ByteBuffer buffer) {
-            buffer.putInt(blockOffsets.size());
+            buffer.putShort((short) checkedListSize(blockOffsets.size()));
             for (Long offset : blockOffsets) {
                 buffer.putLong(offset);
             }
@@ -102,13 +108,13 @@ public interface BlockType<T> {
 
         @Override
         int serializedSize() {
-            return Integer.BYTES + Long.BYTES * blockOffsets.size();
+            return Short.BYTES + Long.BYTES * checkedListSize(blockOffsets.size());
         }
 
         @Override
         void deserialize(ByteBuffer buffer) {
-            int size = buffer.getInt();
-            if (size < 0 || size > buffer.remaining() / Long.BYTES)
+            int size = Short.toUnsignedInt(buffer.getShort());
+            if (size > buffer.remaining() / Long.BYTES)
                 throw new IllegalArgumentException("Invalid reference-slot length: " + size);
             blockOffsets = new ArrayList<>(size);
             for (int i = 0; i < size; i++) {
@@ -170,6 +176,63 @@ public interface BlockType<T> {
         }
     }
 
+    public static class UInt16sSlot extends Slot {
+        public List<Integer> values = new ArrayList<>();
+
+        @Override
+        List<BlockRef> getReferencedBlocks() {
+            return List.of();
+        }
+
+        @Override
+        void serialize(ByteBuffer buffer) {
+            buffer.putShort((short) checkedListSize(values.size()));
+            for (int value : values) {
+                buffer.putShort((short) value);
+            }
+        }
+
+        @Override
+        int serializedSize() {
+            return Short.BYTES + checkedListSize(values.size()) * Short.BYTES;
+        }
+
+        @Override
+        void deserialize(ByteBuffer buffer) {
+            int size = Short.toUnsignedInt(buffer.getShort());
+            if (size > buffer.remaining() / Short.BYTES)
+                throw new IllegalArgumentException("Invalid uint16-list slot length: " + size);
+            values = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) {
+                values.add(Short.toUnsignedInt(buffer.getShort()));
+            }
+        }
+    }
+
+    public static class UInt16Slot extends Slot {
+        public int value;
+
+        @Override
+        List<BlockRef> getReferencedBlocks() {
+            return List.of();
+        }
+
+        @Override
+        void serialize(ByteBuffer buffer) {
+            buffer.putShort((short) value);
+        }
+
+        @Override
+        int serializedSize() {
+            return Short.BYTES;
+        }
+
+        @Override
+        void deserialize(ByteBuffer buffer) {
+            value = Short.toUnsignedInt(buffer.getShort());
+        }
+    }
+
     public static class LongSlot extends Slot {
         public long value;
 
@@ -191,6 +254,39 @@ public interface BlockType<T> {
         @Override
         void deserialize(ByteBuffer buffer) {
             value = buffer.getLong();
+        }
+    }
+
+    public static class LongsSlot extends Slot {
+        public List<Long> values = new ArrayList<>();
+
+        @Override
+        List<BlockRef> getReferencedBlocks() {
+            return List.of();
+        }
+
+        @Override
+        void serialize(ByteBuffer buffer) {
+            buffer.putShort((short) checkedListSize(values.size()));
+            for (long value : values) {
+                buffer.putLong(value);
+            }
+        }
+
+        @Override
+        int serializedSize() {
+            return Short.BYTES + checkedListSize(values.size()) * Long.BYTES;
+        }
+
+        @Override
+        void deserialize(ByteBuffer buffer) {
+            int size = Short.toUnsignedInt(buffer.getShort());
+            if (size > buffer.remaining() / Long.BYTES)
+                throw new IllegalArgumentException("Invalid long-list slot length: " + size);
+            values = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) {
+                values.add(buffer.getLong());
+            }
         }
     }
 
@@ -261,6 +357,18 @@ public interface BlockType<T> {
 
         protected BytesSlot bytesSlot() {
             return addSlot(new BytesSlot());
+        }
+
+        protected UInt16Slot uint16Slot() {
+            return addSlot(new UInt16Slot());
+        }
+
+        protected UInt16sSlot uint16sSlot() {
+            return addSlot(new UInt16sSlot());
+        }
+
+        protected LongsSlot longsSlot() {
+            return addSlot(new LongsSlot());
         }
 
     }

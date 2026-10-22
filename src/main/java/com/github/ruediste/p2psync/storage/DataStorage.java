@@ -22,9 +22,13 @@ import java.util.function.Supplier;
 import com.github.ruediste.p2psync.storage.BlockType.BlockInstance;
 import com.github.ruediste.p2psync.storage.BlockType.BlockRef;
 import com.github.ruediste.p2psync.storage.BlockType.LongSlot;
+import com.github.ruediste.p2psync.storage.BlockType.LongsSlot;
 import com.github.ruediste.p2psync.storage.BlockType.RefSlot;
+import com.github.ruediste.p2psync.storage.BlockType.RefsSlot;
 import com.github.ruediste.p2psync.storage.BlockType.SlotBlock;
 import com.github.ruediste.p2psync.storage.BlockType.SlotBlockType;
+import com.github.ruediste.p2psync.storage.BlockType.UInt16sSlot;
+import com.github.ruediste.p2psync.util.Event;
 
 /**
  * A single-file copy-on-write storage system with SYSTEM, META, and DATA areas.
@@ -90,6 +94,50 @@ public class DataStorage implements Closeable {
         }
     }
 
+    private static class DeferredFreeBlockListBlock implements BlockInstance<DeferredFreeBlockListBlock> {
+        long next;
+        final List<Long> blockOffsets = new ArrayList<>();
+
+        DeferredFreeBlockListBlock(long next) {
+            this.next = next;
+        }
+
+        @Override
+        public BlockType<DeferredFreeBlockListBlock> getBlockType() {
+            return DEFERRED_FREE_BLOCK_LIST_TYPE;
+        }
+    }
+
+    private static final BlockType<DeferredFreeBlockListBlock> DEFERRED_FREE_BLOCK_LIST_TYPE = new BlockType<>() {
+        @Override
+        public List<BlockRef> getReferencedBlocks(DeferredFreeBlockListBlock value) {
+            return value.next == 0 ? List.of() : List.of(new BlockRef(value.next, Area.SYSTEM, this));
+        }
+
+        @Override
+        public ByteBuffer serialize(DeferredFreeBlockListBlock value) {
+            ByteBuffer buffer = ByteBuffer.allocate(2 * Long.BYTES + value.blockOffsets.size() * Long.BYTES);
+            buffer.putLong(value.next);
+            buffer.putLong(value.blockOffsets.size());
+            value.blockOffsets.forEach(buffer::putLong);
+            return buffer.flip();
+        }
+
+        @Override
+        public DeferredFreeBlockListBlock deserialize(ByteBuffer buffer) {
+            requireDeferredListHeader(buffer);
+            long next = buffer.getLong();
+            long count = buffer.getLong();
+            if (count < 0 || count > buffer.remaining() / Long.BYTES)
+                throw new IllegalArgumentException(
+                        "Invalid deferred-free list count: " + count + " (next block: " + next + ")");
+            var result = new DeferredFreeBlockListBlock(next);
+            for (int index = 0; index < count; index++)
+                result.blockOffsets.add(buffer.getLong());
+            return result;
+        }
+    };
+
     private static final BlockType<DeferredListBlock> DEFERRED_META_FREE_TREE_REMOVE_BLOCK_TYPE = new BlockType<>() {
         @Override
         public List<BlockRef> getReferencedBlocks(DeferredListBlock value) {
@@ -152,7 +200,7 @@ public class DataStorage implements Closeable {
 
     private static void requireDeferredListHeader(ByteBuffer buffer) {
         if (buffer.remaining() < 2 * Long.BYTES)
-            throw new IllegalArgumentException("Truncated deferred META list block");
+            throw new IllegalArgumentException("Truncated deferred list block");
     }
 
     final class BTreeStorage implements BTree.Storage {
@@ -220,7 +268,8 @@ public class DataStorage implements Closeable {
         DEFERRED_META_FREE_TREE_REMOVE_LIST(2, DEFERRED_META_FREE_TREE_REMOVE_BLOCK_TYPE),
         DEFERRED_REF_COUNT_ADJUSTMENT_LIST(3, DEFERRED_REF_COUNT_ADJUSTMENT_BLOCK_TYPE),
         INFO_BLOCK(4, InfoBlock.TYPE),
-        BYTE_ARRAY_BLOCK(5, BYTE_ARRAY_BLOCK_TYPE);
+        BYTE_ARRAY_BLOCK(5, BYTE_ARRAY_BLOCK_TYPE),
+        DEFERRED_FREE_BLOCK_LIST(6, DEFERRED_FREE_BLOCK_LIST_TYPE);
 
         public final int code;
         public final BlockType<?> blockType;
@@ -258,30 +307,71 @@ public class DataStorage implements Closeable {
         public final RefSlot dataFreeSpaceTree = refSlot(Area.META, META_TREE_TYPE);
         public final RefSlot metaFreeSpaceTree = refSlot(Area.META, META_TREE_TYPE);
         public final RefSlot systemFreeSpaceTree = refSlot(Area.META, META_TREE_TYPE);
-        public final RefSlot systemKvTree = refSlot(Area.META, META_TREE_TYPE);
         public final RefSlot refCountTree = refSlot(Area.META, META_TREE_TYPE);
         public final RefSlot infoBlock = refSlot(Area.SYSTEM, InfoBlock.TYPE);
-        public final LongSlot nextGuidCounter = longSlot();
-        public final RefSlot guidMappingTree = refSlot(Area.META, META_TREE_TYPE);
-        public final LongSlot distributedClock = longSlot();
-        public final RefSlot operationStagingTree = refSlot(Area.META, META_TREE_TYPE);
-        public final RefSlot operationRetrievalTree = refSlot(Area.META, META_TREE_TYPE);
-        public final RefSlot fileSystemTree = refSlot(Area.META, META_TREE_TYPE);
-        public final RefSlot operationTree = refSlot(Area.META, META_TREE_TYPE);
-        public final RefSlot snapshotTree = refSlot(Area.META, META_TREE_TYPE);
         public final LongSlot fileLength = longSlot();
-        public final LongSlot systemDeferredFreeBlockList = longSlot();
-        public final LongSlot metaDeferredFreeBlockList = longSlot();
-        public final LongSlot dataDeferredFreeBlockList = longSlot();
+        public final RefSlot systemDeferredFreeBlockList = refSlot(Area.SYSTEM, DEFERRED_FREE_BLOCK_LIST_TYPE);
+        public final RefSlot metaDeferredFreeBlockList = refSlot(Area.SYSTEM, DEFERRED_FREE_BLOCK_LIST_TYPE);
+        public final RefSlot dataDeferredFreeBlockList = refSlot(Area.SYSTEM, DEFERRED_FREE_BLOCK_LIST_TYPE);
         public final RefSlot deferredMetaFreeTreeRemoveList = refSlot(Area.META,
                 DEFERRED_META_FREE_TREE_REMOVE_BLOCK_TYPE);
         public final RefSlot deferredRefCountAdjustmentList = refSlot(Area.META,
                 DEFERRED_REF_COUNT_ADJUSTMENT_BLOCK_TYPE);
 
+        public final UInt16sSlot refHandleIds = uint16sSlot();
+        public final RefsSlot refHandles = refsSlot();
+
+        public final UInt16sSlot longHandleIds = uint16sSlot();
+        public final LongsSlot longHandles = longsSlot();
+
         @Override
         public BlockType<RootBlock> getBlockType() {
             return TYPE;
         }
+    }
+
+    private HashMap<Integer, RootRefHandle<?>> rootRefHandles = new HashMap<>();
+
+    public class RootRefHandle<T extends BlockInstance<T>> {
+
+        public final int id;
+        public final Area area;
+        public final BlockType<T> blockType;
+
+        public long blockOffset;
+
+        private RootRefHandle(int id, Area area, BlockType<T> blockType) {
+            this.id = id;
+            this.area = area;
+            this.blockType = blockType;
+        }
+
+        public void write(T value) {
+            if (blockOffset == 0 || !isBlockModified(blockOffset)) {
+                blockOffset = writeNewBlock(area, value);
+            } else
+                writeBlock(blockOffset, area, value);
+        }
+    }
+
+    private HashMap<Integer, RootLongHandle> rootLongHandles = new HashMap<>();
+
+    public class RootLongHandle {
+
+        public final int id;
+        public long value;
+
+        private RootLongHandle(int id) {
+            this.id = id;
+        }
+
+    }
+
+    public <T extends BlockInstance<T>> RootRefHandle<T> getRootRefHandle(int id, Area area, BlockType<T> blockType) {
+        var handle = new RootRefHandle<>(id, area, blockType);
+        if (rootRefHandles.put(id, handle) != null)
+            throw new IllegalStateException("RootRefHandle with id " + id + " already exists");
+        return handle;
     }
 
     public static class InfoBlock implements BlockInstance<InfoBlock> {
@@ -372,15 +462,12 @@ public class DataStorage implements Closeable {
      * 
      * The lists are stored in system space.
      */
-    EnumMap<Area, ByteBuffer> deferredFreeBlocks = new EnumMap<>(Area.class);
+    EnumMap<Area, DeferredFreeBlockListBlock> deferredFreeBlocks = new EnumMap<>(Area.class);
 
     private void initializeDeferredFreeBlocks() {
         deferredFreeBlocks.clear();
         for (Area area : Area.values()) {
-            ByteBuffer block = ByteBuffer.allocate(superBlock.systemBlockSize);
-            block.putLong(0); // offset of the next unallocated block list block, 0 for end of list
-            block.putLong(0); // skip number of unallocated blocks in this block (will be updated later)
-            deferredFreeBlocks.put(area, block);
+            deferredFreeBlocks.put(area, new DeferredFreeBlockListBlock(0));
         }
     }
 
@@ -992,42 +1079,22 @@ public class DataStorage implements Closeable {
     public void addToDeferredFreeBlocks(long blockOffset, Area area) {
         // this block has been modified in a previous transaction
         var list = deferredFreeBlocks.get(area);
-        if (list.remaining() == 0) {
+        int capacity = (blockSize(Area.SYSTEM) - 2 * Long.BYTES) / Long.BYTES;
+        if (list.blockOffsets.size() == capacity) {
             // the current freed block list block is full, allocate a new one
-
-            // first, write the current block
-            list.putLong(8, (list.position() / 8) - 2); // subtract 2 for the first two
-                                                        // uint64_t
-            // fields
-            var newBlock = writeNewBlock(Area.SYSTEM, list.array());
-            incrementRefCount(newBlock, Area.SYSTEM);
-
-            list.clear(); // reset the buffer for the new block
-            list.putLong(newBlock); // write the offset of the new freed block list block
-            list.putLong(0); // skip the number of freed blocks field for now
+            long newBlock = writeNewBlock(Area.SYSTEM, list);
+            list = new DeferredFreeBlockListBlock(newBlock);
+            deferredFreeBlocks.put(area, list);
         }
-
-        list.putLong(blockOffset);
+        list.blockOffsets.add(blockOffset);
     }
 
     private void persistDeferredFreeBlockHeads() {
-        int headerSize = 2 * Long.BYTES;
-        int capacity = (blockSize(Area.SYSTEM) - headerSize) / Long.BYTES;
         for (Area area : Area.values()) {
-            ByteBuffer list = deferredFreeBlocks.get(area);
-            long head = list.getLong(0);
-            if (list.position() > headerSize) {
-                int count = (list.position() - headerSize) / Long.BYTES;
-                if (count > capacity)
-                    throw new IllegalStateException("Deferred-free list buffer exceeds block capacity");
-                list.putLong(Long.BYTES, count);
-                head = writeNewBlock(Area.SYSTEM, list.array());
-                incrementRefCount(head, Area.SYSTEM);
-            }
+            var list = deferredFreeBlocks.get(area);
+            long head = list.blockOffsets.isEmpty() ? list.next : writeNewBlock(Area.SYSTEM, list);
             setDeferredFreeListHead(area, head);
-            list.clear();
-            list.putLong(0);
-            list.putLong(0);
+            deferredFreeBlocks.put(area, new DeferredFreeBlockListBlock(0));
         }
     }
 
@@ -1062,22 +1129,21 @@ public class DataStorage implements Closeable {
 
     private long getDeferredFreeListHead(Area area) {
         return switch (area) {
-            case SYSTEM -> rootBlock.systemDeferredFreeBlockList.value;
-            case META -> rootBlock.metaDeferredFreeBlockList.value;
-            case DATA -> rootBlock.dataDeferredFreeBlockList.value;
+            case SYSTEM -> rootBlock.systemDeferredFreeBlockList.blockOffset;
+            case META -> rootBlock.metaDeferredFreeBlockList.blockOffset;
+            case DATA -> rootBlock.dataDeferredFreeBlockList.blockOffset;
         };
     }
 
     private void setDeferredFreeListHead(Area area, long head) {
         switch (area) {
-            case SYSTEM -> rootBlock.systemDeferredFreeBlockList.value = head;
-            case META -> rootBlock.metaDeferredFreeBlockList.value = head;
-            case DATA -> rootBlock.dataDeferredFreeBlockList.value = head;
+            case SYSTEM -> rootBlock.systemDeferredFreeBlockList.blockOffset = head;
+            case META -> rootBlock.metaDeferredFreeBlockList.blockOffset = head;
+            case DATA -> rootBlock.dataDeferredFreeBlockList.blockOffset = head;
         }
     }
 
     private void addDeferredFreeBlocksToFreeTree() {
-        int capacity = (blockSize(Area.SYSTEM) - 2 * Long.BYTES) / Long.BYTES;
         for (Area area : Area.values()) {
             long offset = getDeferredFreeListHead(area);
             setDeferredFreeListHead(area, 0);
@@ -1086,17 +1152,18 @@ public class DataStorage implements Closeable {
                 validateBlockOffset(offset, blockSize(Area.SYSTEM), "deferred-free list block");
                 if (!visited.add(offset))
                     throw new IllegalStateException("Cycle in deferred-free list for " + area);
-                ByteBuffer buffer = wrap(readBlock(offset, Area.SYSTEM));
-                long next = buffer.getLong();
-                long count = buffer.getLong();
-                if (count < 0 || count > capacity)
-                    throw new IllegalStateException("Invalid deferred-free list count: " + count);
-                for (int i = 0; i < count; i++) {
-                    long freed = buffer.getLong();
+                DeferredFreeBlockListBlock block;
+                try {
+                    block = readBlock(offset, Area.SYSTEM, DEFERRED_FREE_BLOCK_LIST_TYPE);
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException(
+                            "Invalid deferred-free list block at " + offset + " for " + area, e);
+                }
+                for (long freed : block.blockOffsets) {
                     validateBlockOffset(freed, blockSize(area), "deferred-free block");
                     addBlockToFreeTree(freed, area);
                 }
-                offset = next;
+                offset = block.next;
             }
         }
     }
@@ -1498,9 +1565,27 @@ public class DataStorage implements Closeable {
                 }, head -> rootBlock.deferredRefCountAdjustmentList.blockOffset = head);
     }
 
+    private void updateRootHandles() {
+        {
+            var handles = rootRefHandles.values().stream().toList();
+            rootBlock.refHandleIds.values = handles.stream().map(x -> x.id).toList();
+            rootBlock.refHandles.blockOffsets = handles.stream().map(x -> x.blockOffset).toList();
+        }
+        {
+            var handles = rootLongHandles.values().stream().toList();
+            rootBlock.longHandleIds.values = handles.stream().map(x -> x.id).toList();
+            rootBlock.longHandles.values = handles.stream().map(x -> x.value).toList();
+        }
+    }
+
+    public final Event<Void> beforeCommit = new Event<>();
+
     public void commit() {
-        // Perform the heavy tree updating
-        applyAndRemovePendingFreeTreeRemovals();
+        beforeCommit.trigger(null);
+        updateRootHandles();
+        persistDeferredFreeBlockHeads();
+        for (Area area : Area.values())
+            deferredFreeBlocks.put(area, new DeferredFreeBlockListBlock(getDeferredFreeListHead(area)));
         updateRootBlockTreeReferences();
         long previousRootOffset = superBlock.rootBlock;
         superBlock.rootBlock = writeNewBlock(Area.SYSTEM, copyRootBlock(rootBlock));
@@ -1509,6 +1594,8 @@ public class DataStorage implements Closeable {
         applyAndRemovePendingFreeTreeRemovals();
 
         persistDeferredFreeBlockHeads();
+        updateRootBlockTreeReferences();
+        writeBlock(superBlock.rootBlock, Area.SYSTEM, copyRootBlock(rootBlock));
         applyAndRemovePendingFreeTreeRemovals();
 
         // store deferred meta free tree removals and ref count updates

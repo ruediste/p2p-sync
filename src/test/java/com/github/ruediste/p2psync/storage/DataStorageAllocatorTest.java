@@ -375,7 +375,9 @@ class DataStorageAllocatorTest {
 
             long rootOffset = storage.superBlock.rootBlock;
             byte[] rootBytes = storage.readBlock(rootOffset, DataStorage.Area.SYSTEM);
-            ByteBuffer.wrap(rootBytes).putLong(19 * Long.BYTES, listHead);
+            var rootBlock = DataStorage.RootBlock.TYPE.deserialize(ByteBuffer.wrap(rootBytes));
+            rootBlock.deferredRefCountAdjustmentList.blockOffset = listHead;
+            ByteBuffer.wrap(rootBytes).put(DataStorage.RootBlock.TYPE.serialize(rootBlock));
             storage.file.seek(listHead);
             storage.file.writeLong(listHead);
             storage.file.seek(rootOffset);
@@ -395,13 +397,13 @@ class DataStorageAllocatorTest {
     }
 
     /**
-     * Defers more offsets than fit in one SYSTEM list block, then reopens the
-     * file. Verifies both ends of the linked list are reclaimed into DATA space.
+     * Defers enough offsets to span several SYSTEM list blocks, then reopens the
+     * file. Verifies early root ownership preserves every link until reclamation.
      */
     @Test
     void deferredFreeListRollsOverAcrossSystemBlocks() {
         Path path = tempDir.resolve("deferred-free-rollover.db");
-        int blockCount = 31;
+        int blockCount = 91;
         long[] offsets = new long[blockCount];
         try (var storage = newPersistentStorage(path, 256)) {
             for (int i = 0; i < blockCount; i++) {
@@ -419,8 +421,8 @@ class DataStorageAllocatorTest {
         try (var reopened = new DataStorage()) {
             reopened.open(path.toString());
             BTree tree = reopened.freeSpaceTrees.get(DataStorage.Area.DATA);
-            assertTrue(containsBlock(tree, offsets[0]));
-            assertTrue(containsBlock(tree, offsets[offsets.length - 1]));
+            for (long offset : offsets)
+                assertTrue(containsBlock(tree, offset));
         }
     }
 
