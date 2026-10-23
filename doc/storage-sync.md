@@ -102,15 +102,9 @@ struct RefCountEntry {
 ```
 
 ### Typed Blocks and References
-TODO: This section is AI slop, rewrite
+Storage blocks are represented in memory by `BlockInstance<TSelf>` implementations. Each instance returns its `BlockType<TSelf>`, which defines how to serialize and deserialize the value and how to enumerate the blocks it references. `SlotBlock` is a helper implementation for values composed of slots of different types. This avoids manually writing serialization code.
 
-Storage blocks are represented in memory by `BlockInstance<TSelf>` implementations. Each instance returns its `BlockType<TSelf>`, which defines how to serialize and deserialize the value and how to enumerate the blocks it references. `SlotBlock` is a helper implementation for values composed of slots; reference slots carry the target area and block type in addition to the offset. The reference metadata is supplied by the block layout and is not part of the serialized offset itself.
-
-Every `BlockRef` reported by a block type represents one owned reference to a target block. A reference slot contributes one reference, and each entry in a multi-reference slot contributes one. A zero offset represents no block and must not contribute to the refcount. The block's own offset is not counted by serializing that block; it is counted by whichever owner points to it. The superblock owns one reference to the root block.
-
-Allocation immediately records a reference-count adjustment of zero. Writing a typed parent block adds one reference-count increment for each block it references, including newly allocated B-tree children; no provisional allocation reference needs to be transferred. A caller retaining a block outside the persisted block graph must explicitly increment its reference count. Allocations that remain unreferenced are reclaimed during commit, releasing their child references as well. Current working tree roots are protected until their references are recorded by writing the root block. At commit, DataStorage copies each internal B-tree's current `rootOffset` into the root block and reconciles those references against the previous committed root. When an already allocated, modified block is replaced, storage increments references in the replacement before decrementing references in the old value. Thus changing a reference from one target to another releases the old target and retains the new one; unchanged references have a net-zero adjustment. Mutating a block's reference slots must be followed by the storage write operation so these deltas are recorded. Deferred reference-count lists are finalized after writing the root block so they include their own incoming references and the final root's child-reference changes.
-
-These changes are accumulated in the current transaction's in-memory refcount adjustments; they do not immediately update the persisted `RefCountTree`. The adjustments are applied as part of commit, following the existing copy-on-write and deferred-update rules. A block whose final reference is removed becomes eligible for reclamation according to the deferred-free rules above.
+When writing a block, the block references of the are recorded immediately (refcount adjustments). When a block is overwritten, the references of the existing block are decremented, and the new references are incremented accordingly. When a block is freed, the block is deserialized and the references it holds are decremented.
 
 ### Transaction and Block Management
 Changes to the data file are managed within transactions. During a transaction, blocks used by the previous transaction are never modified. All changes are written to newly allocated blocks. For efficient and correct block management, a few in-memory structures are maintained:
@@ -216,8 +210,6 @@ struct BlobHeader {
 ```
 
 The data is stored in `INLINE_DATA` and `EXTENT_DATA` entries.
-
-
 
 ## Globally Unique Identifiers (GUID)
 When creating a new file or directory a globally unique identifier (GUID) has to be generated. We use the SHA-256 (32 bytes) hash of the public key of the node creating the entity, followed by a per node counter (64 bits, 8 bytes). This is the full GUID, consisting of 40 bytes in total.
@@ -391,7 +383,7 @@ A file system tree contains a full representation of the file system's hierarchi
 struct FsTreeKey {
     uint8_t guid[12]; // short GUID of the file or directory
     uint8_t type;     // type of the entry, see FsTreeEntryType
-    uint32_t offset;  // depends on the type of the entry
+    uint64_t offset;  // depends on the type of the entry
 };
 
 enum FsTreeEntryType {

@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Simple FUSE Filesystem",
+      "request": "launch",
+      "mainClass": "com.github.ruediste.p2psync.storage.SimpleFuseMain",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": ["${input:fuseBackingFile}", "${input:fuseMountDirectory}"]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "fuseBackingFile",
+      "type": "promptString",
+      "description": "DataStorage backing file (outside the mount directory)",
+      "default": "files.db"
+    },
+    {
+      "id": "fuseMountDirectory",
+      "type": "promptString",
+      "description": "Existing empty FUSE mount directory",
+      "default": "mount"
+    }
+  ]
+}

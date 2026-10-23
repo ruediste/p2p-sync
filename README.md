@@ -15,6 +15,33 @@ mvn compile
 
 If protobuf code generation misbehaves, a `mvn clean` usually helps.
 
+## Simple FUSE filesystem
+
+`com.github.ruediste.p2psync.storage.SimpleFuseMain` mounts a persistent `FileTree`
+using jnr-fuse. On Linux, install the FUSE 2 compatibility library (`libfuse2` or
+`libfuse2t64`, depending on your distribution) and the FUSE mount tools. The
+`/dev/fuse` device must be available to your user.
+
+Create an empty mount directory, then run with Java 21:
+
+```bash
+mvn compile org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
+	-Dexec.mainClass=com.github.ruediste.p2psync.storage.SimpleFuseMain \
+	-Dexec.args="/absolute/path/files.db /absolute/path/mount"
+```
+
+The first argument is the `DataStorage` backing file, created if absent or empty;
+the second is an existing mount directory. Keep the backing file outside the
+mount directory, and use only one process per backing file. Mounting runs in the
+foreground. Unmount from another terminal with `fusermount -u /absolute/path/mount`.
+Remount with the same backing file to recover committed files and directories.
+
+The filesystem supports regular files, directories, offset reads/writes,
+truncation, rename, and removal. Each mutation is committed. Permissions are fixed
+at 0644 for files and 0755 for directories, owned by the mounting user. This is a
+simple path-based filesystem: links, extended attributes, permission changes, and
+continued access through open descriptors after unlink or rename are not supported.
+
 ## Running tests
 
 ### Unit tests

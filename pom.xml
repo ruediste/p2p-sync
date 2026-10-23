@@ -22,6 +22,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>com.github.serceman</groupId>
+      <artifactId>jnr-fuse</artifactId>
+      <version>0.5.8</version>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>${junit.version}</version>

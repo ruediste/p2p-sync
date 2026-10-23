@@ -304,6 +304,62 @@ public class DataStorage implements Closeable {
         static final SlotBlockType<RootBlock> TYPE = new SlotBlockType<>(RootBlock::new);
         private static final BlockType<?> META_TREE_TYPE = BTree.blockType(BLOCK_OFFSET_SIZE, Area.META);
 
+        public class RootRefsSlot extends RefsSlot {
+            public List<Integer> handleIds = new ArrayList<>();
+            private Map<Integer, RootRefHandle<?>> handles = Map.of();
+
+            @Override
+            List<BlockRef> getReferencedBlocks() {
+                List<BlockRef> result = new ArrayList<>();
+                for (int index = 0; index < blockOffsets.size(); index++) {
+                    long offset = blockOffsets.get(index);
+                    if (offset == 0)
+                        continue;
+                    RootRefHandle<?> handle = handles.get(handleIds.get(index));
+                    if (handle != null) {
+                        result.add(new BlockRef(offset, handle.area, handle.blockType));
+                    } else {
+                        int target = refHandleTargets.values.get(index);
+                        result.add(new BlockRef(offset, areaFromCode(target >>> 8),
+                                PersistableBlockType.fromCode(target & 0xFF).blockType));
+                    }
+                }
+                return result;
+            }
+
+            @Override
+            void serialize(ByteBuffer buffer) {
+                if (handleIds.size() != blockOffsets.size())
+                    throw new IllegalStateException("Root reference handle IDs and offsets differ in size");
+                if (handleIds.size() > 0xFFFF)
+                    throw new IllegalArgumentException("Root reference handle list exceeds unsigned 16-bit length");
+                buffer.putShort((short) handleIds.size());
+                for (int id : handleIds)
+                    buffer.putShort((short) id);
+                super.serialize(buffer);
+            }
+
+            @Override
+            int serializedSize() {
+                if (handleIds.size() != blockOffsets.size())
+                    throw new IllegalStateException("Root reference handle IDs and offsets differ in size");
+                return Short.BYTES + handleIds.size() * Short.BYTES + super.serializedSize();
+            }
+
+            @Override
+            void deserialize(ByteBuffer buffer) {
+                int size = Short.toUnsignedInt(buffer.getShort());
+                if (size > buffer.remaining() / Short.BYTES)
+                    throw new IllegalArgumentException("Invalid root reference handle ID list length: " + size);
+                handleIds = new ArrayList<>(size);
+                for (int index = 0; index < size; index++)
+                    handleIds.add(Short.toUnsignedInt(buffer.getShort()));
+                super.deserialize(buffer);
+                if (handleIds.size() != blockOffsets.size())
+                    throw new IllegalArgumentException("Root reference handle IDs and offsets differ in size");
+            }
+        }
+
         public final RefSlot dataFreeSpaceTree = refSlot(Area.META, META_TREE_TYPE);
         public final RefSlot metaFreeSpaceTree = refSlot(Area.META, META_TREE_TYPE);
         public final RefSlot systemFreeSpaceTree = refSlot(Area.META, META_TREE_TYPE);
@@ -318,11 +374,21 @@ public class DataStorage implements Closeable {
         public final RefSlot deferredRefCountAdjustmentList = refSlot(Area.META,
                 DEFERRED_REF_COUNT_ADJUSTMENT_BLOCK_TYPE);
 
-        public final UInt16sSlot refHandleIds = uint16sSlot();
-        public final RefsSlot refHandles = refsSlot();
+        public final RootRefsSlot refHandles = rootRefsSlot();
 
         public final UInt16sSlot longHandleIds = uint16sSlot();
         public final LongsSlot longHandles = longsSlot();
+        public final UInt16sSlot refHandleTargets = uint16sSlot();
+
+        private RootRefsSlot rootRefsSlot() {
+            var slot = new RootRefsSlot();
+            slots.add(slot);
+            return slot;
+        }
+
+        private void setRootRefHandles(Map<Integer, RootRefHandle<?>> handles) {
+            refHandles.handles = handles;
+        }
 
         @Override
         public BlockType<RootBlock> getBlockType() {
@@ -368,10 +434,26 @@ public class DataStorage implements Closeable {
     }
 
     public <T extends BlockInstance<T>> RootRefHandle<T> getRootRefHandle(int id, Area area, BlockType<T> blockType) {
-        var handle = new RootRefHandle<>(id, area, blockType);
-        if (rootRefHandles.put(id, handle) != null)
+        if (id < 0 || id > 0xFFFF)
+            throw new IllegalArgumentException("RootRefHandle id must be an unsigned 16-bit integer");
+        if (rootRefHandles.containsKey(id))
             throw new IllegalStateException("RootRefHandle with id " + id + " already exists");
+        var handle = new RootRefHandle<>(id, area, blockType);
+        if (rootBlock != null)
+            restoreRootRefHandle(handle);
+        rootRefHandles.put(id, handle);
         return handle;
+    }
+
+    private void restoreRootRefHandle(RootRefHandle<?> handle) {
+        int index = rootBlock.refHandles.handleIds.indexOf(handle.id);
+        handle.blockOffset = index < 0 ? 0 : rootBlock.refHandles.blockOffsets.get(index);
+        if (handle.blockOffset != 0) {
+            int target = rootBlock.refHandleTargets.values.get(index);
+            if (areaFromCode(target >>> 8) != handle.area
+                    || PersistableBlockType.fromCode(target & 0xFF).blockType != handle.blockType)
+                throw new IllegalArgumentException("RootRefHandle target type or area differs for id " + handle.id);
+        }
     }
 
     public static class InfoBlock implements BlockInstance<InfoBlock> {
@@ -537,6 +619,7 @@ public class DataStorage implements Closeable {
     private void resetInMemoryState() {
         superBlock = null;
         rootBlock = null;
+        rootRefHandles.values().forEach(handle -> handle.blockOffset = 0);
         infoBlock = null;
         deferredFreeBlocks.clear();
         for (Area area : Area.values()) {
@@ -697,6 +780,7 @@ public class DataStorage implements Closeable {
         infoBlock.inlineDataThreshold = 16384;
 
         rootBlock = new RootBlock();
+        rootBlock.setRootRefHandles(rootRefHandles);
 
         // define file layout
         long systemStart;
@@ -800,10 +884,14 @@ public class DataStorage implements Closeable {
 
     private void readRootBlock() {
         rootBlock = readBlock(superBlock.rootBlock, Area.SYSTEM, RootBlock.TYPE);
+        rootBlock.setRootRefHandles(rootRefHandles);
+        rootRefHandles.values().forEach(this::restoreRootRefHandle);
     }
 
     private RootBlock copyRootBlock(RootBlock value) {
-        return RootBlock.TYPE.deserialize(RootBlock.TYPE.serialize(value));
+        RootBlock result = RootBlock.TYPE.deserialize(RootBlock.TYPE.serialize(value));
+        result.setRootRefHandles(rootRefHandles);
+        return result;
     }
 
     private void truncateToRootFileLength() {
@@ -1567,9 +1655,33 @@ public class DataStorage implements Closeable {
 
     private void updateRootHandles() {
         {
-            var handles = rootRefHandles.values().stream().toList();
-            rootBlock.refHandleIds.values = handles.stream().map(x -> x.id).toList();
-            rootBlock.refHandles.blockOffsets = handles.stream().map(x -> x.blockOffset).toList();
+            var ids = new ArrayList<>(rootBlock.refHandles.handleIds);
+            var offsets = new ArrayList<>(rootBlock.refHandles.blockOffsets);
+            var targets = new ArrayList<>(rootBlock.refHandleTargets.values);
+            while (targets.size() < ids.size())
+                targets.add(0);
+            for (var handle : rootRefHandles.values()) {
+                int target = PersistableBlockType.fromBlockType(handle.blockType)
+                        .map(type -> areaCode(handle.area) << 8 | type.code)
+                        .orElseGet(() -> {
+                            if (handle.blockOffset != 0)
+                                throw new IllegalStateException(
+                                        "Unregistered root handle block type for id " + handle.id);
+                            return 0;
+                        });
+                int index = ids.indexOf(handle.id);
+                if (index < 0) {
+                    ids.add(handle.id);
+                    offsets.add(handle.blockOffset);
+                    targets.add(target);
+                } else {
+                    offsets.set(index, handle.blockOffset);
+                    targets.set(index, target);
+                }
+            }
+            rootBlock.refHandles.handleIds = ids;
+            rootBlock.refHandles.blockOffsets = offsets;
+            rootBlock.refHandleTargets.values = targets;
         }
         {
             var handles = rootLongHandles.values().stream().toList();
