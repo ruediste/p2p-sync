@@ -1,5 +1,6 @@
 package com.github.ruediste.p2psync.storage;
 
+import static com.github.ruediste.p2psync.storage.DataStorageTestUtils.containsBlock;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -159,8 +160,9 @@ public class DataStorageTest {
 
         assertEquals(0, storage.getRefCount(parent));
         assertEquals(0, storage.getRefCount(child));
-        assertTrue(storage.freeBlocks.get(DataStorage.Area.DATA).contains(parent));
-        assertTrue(storage.freeBlocks.get(DataStorage.Area.DATA).contains(child));
+        var freeTree = storage.freeSpaceTrees.get(DataStorage.Area.DATA);
+        assertTrue(containsBlock(freeTree, parent));
+        assertTrue(containsBlock(freeTree, child));
     }
 
     /**

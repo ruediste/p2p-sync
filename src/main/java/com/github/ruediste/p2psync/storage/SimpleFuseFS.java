@@ -24,9 +24,10 @@ public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(SimpleFuseFS.class);
     private static final long UTIME_NOW = (1L << 30) - 1;
     private static final long UTIME_OMIT = (1L << 30) - 2;
+    static final int TREE_ROOT_HANDLE_ID = 1;
     private final DataStorage storage = new DataStorage();
     private final DataStorage.RootRefHandle<BTree.NodeBlock> treeRoot = storage.getRootRefHandle(
-            1, DataStorage.Area.META, FileTree.BLOCK_TYPE);
+            TREE_ROOT_HANDLE_ID, DataStorage.Area.META, FileTree.BLOCK_TYPE);
     private final FileTree tree;
     private final ShortGuid root = new ShortGuid();
     private final int uid = POSIXFactory.getNativePOSIX().getuid();

@@ -1,5 +1,6 @@
 package com.github.ruediste.p2psync.storage;
 
+import static com.github.ruediste.p2psync.storage.DataStorageTestUtils.containsBlock;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -461,16 +462,6 @@ class DataStorageAllocatorTest {
         storage.format(path.toString(), 512 * 1024, 8 * 1024 * 1024, 8 * 1024 * 1024,
                 4096, 16384, systemBlockSize);
         return storage;
-    }
-
-    private static boolean containsBlock(BTree<byte[], byte[]> tree, long offset) {
-        var iterator = tree.floorOrLowestIterator(u64(offset));
-        if (!iterator.hasNext())
-            return false;
-        var extent = iterator.next();
-        long start = toLong(extent.key);
-        long end = start + toLong(extent.value);
-        return offset >= start && offset < end;
     }
 
     private static int blockSize(DataStorage.Area area) {

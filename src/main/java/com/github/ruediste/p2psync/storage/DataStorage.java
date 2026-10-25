@@ -21,6 +21,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import com.github.ruediste.p2psync.storage.BlockType.BlockInstance;
 import com.github.ruediste.p2psync.storage.BlockType.BlockRef;
@@ -537,6 +538,36 @@ public class DataStorage implements Closeable {
             loadPendingMetaFreeTreeRemoveBlocks();
             loadDeferredRefCountAdjustmentList();
             addDeferredFreeBlocksToFreeTree();
+        } catch (RuntimeException e) {
+            close();
+            resetInMemoryState();
+            throw e;
+        }
+    }
+
+    /**
+     * Opens an existing file read-only and loads only the committed root state,
+     * without starting a transaction. Used for inspection; never commit afterwards.
+     */
+    void openReadOnly(String path) {
+        close();
+        resetInMemoryState();
+        try {
+            file = new RandomAccessFile(path, "r");
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        try {
+            if (file.length() < SUPERBLOCK_SIZE)
+                throw new UncheckedIOException(new IOException("Truncated data storage superblock"));
+            readSuperBlock();
+            readRootBlock();
+            readInfoBlock();
+            loadSystemTrees();
+        } catch (IOException e) {
+            close();
+            resetInMemoryState();
+            throw new UncheckedIOException(e);
         } catch (RuntimeException e) {
             close();
             resetInMemoryState();
@@ -1134,9 +1165,6 @@ public class DataStorage implements Closeable {
                 }
                 offset = next;
             }
-
-            // switch to a new in memory deferred free block list for this area
-            deferredFreeBlockHeads.put(area, new DeferredFreeBlockListBlock(0));
         }
     }
 
@@ -1213,7 +1241,7 @@ public class DataStorage implements Closeable {
         };
     }
 
-    private static Area areaFromCode(int code) {
+    static Area areaFromCode(int code) {
         return switch (code) {
             case 1 -> Area.SYSTEM;
             case 2 -> Area.META;
@@ -1487,7 +1515,8 @@ public class DataStorage implements Closeable {
                     }
                     if (it.hasNext())
                         throw new IllegalStateException("Deferred META list entries exceed allocated blocks");
-                    setHead.accept(listOffsets.get(0));
+                    // each block links to its predecessor, so the last written block is the head
+                    setHead.accept(next);
                 });
     }
 
@@ -1664,15 +1693,38 @@ public class DataStorage implements Closeable {
         writeSuperBlock();
 
         // prepare next transaction
+        // ------------------------
+
+        // clear the modified blocks
+        modifiedBlocks.clear();
+
+        // start with fresh free blocks
+        Stream.of(Area.values()).forEach(area -> freeBlocks.put(area, new TreeSet<>()));
+        freeSpaceAllocationOffset.clear();
+
+        // switch to new deferred free block heads, such that freeing blocks of the last
+        // transaction will use the new heads
+        initializeDeferredFreeBlockHeads();
+
+        // add deferred free blocks to the free tree and initialize the deferred free
+        // block heads
         addDeferredFreeBlocksToFreeTree();
+
+        // add blocks of the pending meta free tree removal list and the ref count
+        // adjustment list to the deferred free blocks
+        // important: needs to be done after adding deferred free blocks of the last
+        // transaction to the free tree, otherwise they would be freed right away
         addListBlocksToDeferredFreeBlocks(rootBlock.pendingMetaFreeTreeRemovalList.value, Area.META);
         addListBlocksToDeferredFreeBlocks(rootBlock.refCountAdjustmentList.value, Area.META);
+
     }
 
     private void addListBlocksToDeferredFreeBlocks(long offset, Area area) {
         while (offset != 0) {
             var block = ByteBuffer.wrap(readBlock(offset, area));
             addToDeferredFreeBlocks(offset, area);
+
+            // read the offset of the next block
             offset = block.getLong();
         }
     }

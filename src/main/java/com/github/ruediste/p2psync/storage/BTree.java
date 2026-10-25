@@ -138,10 +138,38 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
         }
     }
 
+    /**
+     * @param usedBytes bytes occupied by header, items and (for leaves) values
+     */
+    record NodeInfo(int level, int itemCount, long usedBytes) {
+    }
+
+    /** Node block type, identifiable so tools can inspect tree structure. */
+    abstract static class NodeBlockType extends BlockType<NodeBlock> {
+        final int keySize;
+
+        NodeBlockType(int keySize) {
+            this.keySize = keySize;
+        }
+
+        NodeInfo nodeInfo(byte[] data) {
+            ByteBuffer buffer = BTree.wrap(data);
+            int itemCount = buffer.getInt(0);
+            int level = level(data);
+            long used = HEADER_SIZE;
+            if (level == 0) {
+                for (int index = 0; index < itemCount; index++)
+                    used += keySize + 8 + buffer.getInt(HEADER_SIZE + index * (keySize + 8) + keySize + 4);
+            } else
+                used += (long) itemCount * (keySize + NODE_PTR_EXTRA);
+            return new NodeInfo(level, itemCount, used);
+        }
+    }
+
     public static <K, V> BlockType<NodeBlock> blockType(KeySerializer<K> keySerializer,
             DataStorage.Area area, BlockType<Entry<K, V>> entryType) {
         int keySize = keySerializer.keySize();
-        return new BlockType<>() {
+        return new NodeBlockType(keySize) {
             @Override
             public List<BlockRef> getReferencedBlocks(NodeBlock value, DataStorage storage) {
                 if (value.data.length < HEADER_SIZE)

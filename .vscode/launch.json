@@ -10,6 +10,16 @@
       "console": "integratedTerminal",
       // "args": ["${input:fuseBackingFile}", "${input:fuseMountDirectory}"]
       "args": ["files.db", "mount"]
+    },
+    {
+      "type": "java",
+      "name": "FSCK",
+      "request": "launch",
+      "mainClass": "com.github.ruediste.p2psync.storage.StorageCheckMain",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      // "args": ["${input:fuseBackingFile}", "${input:fuseMountDirectory}"]
+      "args": ["files.db"]
     }
   ],
   "inputs": [
