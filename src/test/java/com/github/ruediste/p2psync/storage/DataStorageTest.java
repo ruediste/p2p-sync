@@ -35,7 +35,8 @@ public class DataStorageTest {
     private static class ReferenceBlock implements BlockType.BlockInstance<ReferenceBlock> {
         static final BlockType<ReferenceBlock> TYPE = new BlockType<>() {
             @Override
-            public java.util.List<BlockType.BlockRef> getReferencedBlocks(ReferenceBlock value) {
+            public java.util.List<BlockType.BlockRef> getReferencedBlocks(ReferenceBlock value,
+                    DataStorage storage) {
                 if (value.childOffset == 0)
                     return java.util.List.of();
                 return java.util.List.of(new BlockType.BlockRef(value.childOffset, DataStorage.Area.DATA, this));
@@ -152,6 +153,8 @@ public class DataStorageTest {
         long child = storage.writeNewBlock(DataStorage.Area.DATA, new ReferenceBlock(0));
         long parent = storage.writeNewBlock(DataStorage.Area.DATA, new ReferenceBlock(child));
 
+        assertEquals(1, storage.getRefCount(storage.superBlock.rootBlock),
+                "The committed superblock root must retain its reference");
         storage.commit();
 
         assertEquals(0, storage.getRefCount(parent));
@@ -181,7 +184,7 @@ public class DataStorageTest {
     }
 
     /**
-     * Commits a nonzero handle and reopens with registration before and after open,
+     * Commits a nonzero handle and reopens with registration before open,
      * verifying its offset, contents, and copy-on-write replacement survive.
      */
     @Test
@@ -204,9 +207,9 @@ public class DataStorageTest {
         storage.close();
 
         storage = new DataStorage();
+        handle = storage.getRootRefHandle(17, DataStorage.Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE);
         storage.open(dbPath);
         storage.commit();
-        handle = storage.getRootRefHandle(17, DataStorage.Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE);
         assertArrayEquals(new byte[] { 4, 5, 6 }, Arrays.copyOf(storage.readBlock(handle.blockOffset,
                 DataStorage.Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE).data, 3));
         storage.open(dbPath);
@@ -240,6 +243,7 @@ public class DataStorageTest {
 
         storage.close();
         storage = new DataStorage();
+        storage.getRootRefHandle(17, DataStorage.Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE);
         storage.open(dbPath);
 
         assertEquals(java.util.List.of(17), storage.rootBlock.refHandles.handleIds);
@@ -248,21 +252,47 @@ public class DataStorageTest {
 
     /**
      * Verifies a registered root reference handle supplies the reference target
-     * type even when the persisted fallback target metadata disagrees.
+     * area and type to the special root slot.
      */
     @Test
     void rootRefHandleDeterminesReferenceTarget() {
         var handle = storage.getRootRefHandle(17, DataStorage.Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE);
         handle.write(new DataStorage.ByteArrayBlock(new byte[] { 1 }));
         storage.commit();
-        storage.rootBlock.refHandleTargets.values.set(0, 0x0104);
 
-        var reference = DataStorage.RootBlock.TYPE.getReferencedBlocks(storage.rootBlock).stream()
+        var reference = RootBlock.TYPE.getReferencedBlocks(storage.rootBlock, storage).stream()
                 .filter(ref -> ref.blockOffset() == handle.blockOffset)
                 .findFirst().orElseThrow();
 
         assertEquals(DataStorage.Area.DATA, reference.area());
         assertEquals(DataStorage.BYTE_ARRAY_BLOCK_TYPE, reference.type());
+    }
+
+    /**
+     * Verifies unregistered root references survive reopening and committing,
+     * then can be restored when their handle is registered later.
+     */
+    @Test
+    void unregisteredRootRefHandlesSurviveOpenAndCommit() {
+        var handle = storage.getRootRefHandle(17, DataStorage.Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE);
+        handle.write(new DataStorage.ByteArrayBlock(new byte[] { 1, 2, 3 }));
+        long blockOffset = handle.blockOffset;
+        storage.commit();
+        storage.close();
+
+        storage = new DataStorage();
+        storage.open(dbPath);
+        assertEquals(java.util.List.of(17), storage.rootBlock.refHandles.handleIds);
+        assertEquals(java.util.List.of(blockOffset), storage.rootBlock.refHandles.blockOffsets);
+        storage.commit();
+        storage.close();
+
+        storage = new DataStorage();
+        handle = storage.getRootRefHandle(17, DataStorage.Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE);
+        storage.open(dbPath);
+        assertEquals(blockOffset, handle.blockOffset);
+        assertArrayEquals(new byte[] { 1, 2, 3 }, Arrays.copyOf(storage.readBlock(handle.blockOffset,
+                DataStorage.Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE).data, 3));
     }
 
     /**

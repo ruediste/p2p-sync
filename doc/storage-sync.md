@@ -106,6 +106,12 @@ Storage blocks are represented in memory by `BlockInstance<TSelf>` implementatio
 
 When writing a block, the block references of the are recorded immediately (refcount adjustments). When a block is overwritten, the references of the existing block are decremented, and the new references are incremented accordingly. When a block is freed, the block is deserialized and the references it holds are decremented.
 
+`BTree<K, V>` uses a `BTree.KeySerializer<K>` for fixed-size keys and a `BlockType<BTree.Entry<K, V>>` for variable-size payloads. The entry type receives both key and value during serialization and reference enumeration. Its deserializer returns an entry with a null key; the tree supplies the separately decoded key. Keys are ordered by their serialized bytes in unsigned lexicographic order, so key serializers must preserve the intended ordering. Lookups, mutations, entries, iterators, and callbacks use the declared key and value types. `KeySerializer.bytes(size)` and `BTree.BYTE_ARRAY_ENTRY_TYPE` support byte-array trees without outgoing value references; `BTree.entryType(valueType)` adapts a value-only `BlockType`.
+
+Internal tree blocks reference their child blocks; leaf blocks enumerate references through the entry's `BlockType`. Storage manages those references on block writes and releases, including copy-on-write snapshots. There is no entry-deletion callback, and callers must not separately increment references owned by entries.
+
+`FileTree` uses the entry-type code already present in the key to identify extent and directory spill references. Values have no redundant type prefix; the original storage format version 1 and B-tree layout are preserved.
+
 ### Transaction and Block Management
 Changes to the data file are managed within transactions. During a transaction, blocks used by the previous transaction are never modified. All changes are written to newly allocated blocks. For efficient and correct block management, a few in-memory structures are maintained:
 

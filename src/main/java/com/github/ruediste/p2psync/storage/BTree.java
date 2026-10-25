@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -19,10 +18,12 @@ import com.github.ruediste.p2psync.storage.BlockType.BlockInstance;
  *
  * <p>
  * A tree is a copy-on-write B+ tree with variable sized values. Keys have a
- * fixed size per tree. Internal nodes only store keys and child pointers,
+ * fixed serialized size per tree. Internal nodes only store keys and child
+ * pointers,
  * leaves
  * store the actual key/value pairs. All keys of a node are sorted in ascending
- * (unsigned lexicographic) order and each child pointer holds the smallest key
+ * (unsigned lexicographic serialized-byte) order and each child pointer holds
+ * the smallest key
  * reachable in the child's subtree.
  *
  * <p>
@@ -30,23 +31,96 @@ import com.github.ruediste.p2psync.storage.BlockType.BlockInstance;
  * the current transaction. Blocks are managed through {@link Storage}.
  * A {@link BTree} therefore references the root of a
  * particular version of the tree; the caller is responsible for persisting the
- * root offset.
+ * root offset. Entries declare their outgoing block references through their
+ * {@link BlockType}; those references are owned by the leaf blocks.
  */
-public class BTree implements Iterable<BTree.Entry> {
+public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
 
     private static final int HEADER_SIZE = 5; // nritems (4) + level (1)
     private static final int NODE_PTR_EXTRA = 8; // blockptr (8)
 
     private final Storage storage;
-    private final BiConsumer<byte[], byte[]> onEntryDelete;
+    private final KeySerializer<K> keySerializer;
+    private final BlockType<Entry<K, V>> entryType;
     public final int keySize;
     public long rootOffset;
 
-    private final BlockType<NodeBlock> blockType;
+    public final BlockType<NodeBlock> blockType;
 
-    private static final Map<NodeTypeKey, BlockType<NodeBlock>> NODE_TYPES = new java.util.HashMap<>();
+    public static final BlockType<Entry<byte[], byte[]>> BYTE_ARRAY_ENTRY_TYPE = entryType(BlockType.BYTES);
 
-    private record NodeTypeKey(int keySize, DataStorage.Area area) {
+    /** Adapts a value-only codec; deserialized entries have a null key. */
+    public static <K, V> BlockType<Entry<K, V>> entryType(BlockType<V> valueType) {
+        return new BlockType<>() {
+            @Override
+            public List<BlockRef> getReferencedBlocks(Entry<K, V> entry, DataStorage storage) {
+                return valueType.getReferencedBlocks(entry.value, storage);
+            }
+
+            @Override
+            public ByteBuffer serialize(Entry<K, V> entry) {
+                return valueType.serialize(entry.value);
+            }
+
+            @Override
+            public Entry<K, V> deserialize(ByteBuffer buffer) {
+                return new Entry<>(null, valueType.deserialize(buffer));
+            }
+        };
+    }
+
+    public static interface KeySerializer<T> extends BlockSerializer<T> {
+        int keySize();
+
+        static KeySerializer<byte[]> bytes(int size) {
+            if (size <= 0)
+                throw new IllegalArgumentException("Key size must be positive");
+            return new ByteArrayKeySerializer(size);
+        }
+
+        static KeySerializer<Long> longs() {
+            return new LongKeySerializer();
+        }
+    }
+
+    private record LongKeySerializer() implements KeySerializer<Long> {
+        @Override
+        public int keySize() {
+            return Long.BYTES;
+        }
+
+        @Override
+        public ByteBuffer serialize(Long value) {
+            ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+            buffer.putLong(value);
+            buffer.flip();
+            return buffer;
+        }
+
+        @Override
+        public Long deserialize(ByteBuffer buffer) {
+            if (buffer.remaining() != Long.BYTES)
+                throw new IllegalArgumentException("Expected " + Long.BYTES + " key bytes, got " + buffer.remaining());
+            return buffer.getLong();
+        }
+    }
+
+    private record ByteArrayKeySerializer(int keySize) implements KeySerializer<byte[]> {
+        @Override
+        public ByteBuffer serialize(byte[] value) {
+            if (value.length != keySize)
+                throw new IllegalArgumentException("Expected " + keySize + " key bytes, got " + value.length);
+            return ByteBuffer.wrap(value);
+        }
+
+        @Override
+        public byte[] deserialize(ByteBuffer buffer) {
+            if (buffer.remaining() != keySize)
+                throw new IllegalArgumentException("Expected " + keySize + " key bytes, got " + buffer.remaining());
+            byte[] result = new byte[keySize];
+            buffer.get(result);
+            return result;
+        }
     }
 
     public static final class NodeBlock implements BlockInstance<NodeBlock> {
@@ -64,11 +138,12 @@ public class BTree implements Iterable<BTree.Entry> {
         }
     }
 
-    public static synchronized BlockType<NodeBlock> blockType(int keySize, DataStorage.Area area) {
-        var key = new NodeTypeKey(keySize, area);
-        return NODE_TYPES.computeIfAbsent(key, ignored -> new BlockType<>() {
+    public static <K, V> BlockType<NodeBlock> blockType(KeySerializer<K> keySerializer,
+            DataStorage.Area area, BlockType<Entry<K, V>> entryType) {
+        int keySize = keySerializer.keySize();
+        return new BlockType<>() {
             @Override
-            public List<BlockRef> getReferencedBlocks(NodeBlock value) {
+            public List<BlockRef> getReferencedBlocks(NodeBlock value, DataStorage storage) {
                 if (value.data.length < HEADER_SIZE)
                     throw new IllegalArgumentException("B-tree block is shorter than its header");
                 ByteBuffer buffer = BTree.wrap(value.data);
@@ -76,8 +151,22 @@ public class BTree implements Iterable<BTree.Entry> {
                 int level = Byte.toUnsignedInt(buffer.get());
                 if (itemCount < 0)
                     throw new IllegalArgumentException("Negative B-tree item count");
-                if (level == 0)
-                    return List.of();
+                if (level == 0) {
+                    int itemSize = keySize + 8;
+                    if (HEADER_SIZE + (long) itemCount * itemSize > value.data.length)
+                        throw new IllegalArgumentException("B-tree leaf items exceed block size");
+                    List<BlockRef> references = new ArrayList<>();
+                    for (int index = 0; index < itemCount; index++) {
+                        int itemOffset = HEADER_SIZE + index * itemSize;
+                        int dataOffset = buffer.getInt(itemOffset + keySize);
+                        int dataSize = buffer.getInt(itemOffset + keySize + 4);
+                        K itemKey = keySerializer.deserialize(ByteBuffer.wrap(value.data, itemOffset, keySize).slice());
+                        Entry<K, V> item = entryType
+                                .deserialize(ByteBuffer.wrap(value.data, dataOffset, dataSize).slice());
+                        references.addAll(entryType.getReferencedBlocks(new Entry<>(itemKey, item.value), storage));
+                    }
+                    return references;
+                }
                 int pointerSize = keySize + NODE_PTR_EXTRA;
                 if (HEADER_SIZE + (long) itemCount * pointerSize > value.data.length)
                     throw new IllegalArgumentException("B-tree node pointers exceed block size");
@@ -102,7 +191,8 @@ public class BTree implements Iterable<BTree.Entry> {
                 buffer.get(data);
                 return new NodeBlock(data, this);
             }
-        });
+
+        };
     }
 
     public interface Storage {
@@ -136,31 +226,47 @@ public class BTree implements Iterable<BTree.Entry> {
     /**
      * Constructs a new empty BTree.
      *
-     * @param onEntryDelete callback for entries removed or replaced, or null
+     * @param entryType serializes payloads from full entries; deserialization
+     *                  returns
+     *                  entries with a null key, which the tree restores separately
      */
-    public BTree(Storage storage, int keySize, BiConsumer<byte[], byte[]> onEntryDelete) {
-        this(storage, keySize, onEntryDelete, 0);
+    public BTree(Storage storage, KeySerializer<K> keySerializer, BlockType<Entry<K, V>> entryType) {
+        this(storage, keySerializer, entryType, 0);
     }
 
     /**
      * Constructs a new BTree for an existing tree. If the rootOffset is zero, the
-    * tree is considered empty. The caller must persist or retain the root reference.
+     * tree is considered empty. The caller must persist or retain the root
+     * reference.
      *
-     * @param onEntryDelete callback for entries removed or replaced, or null
+     * @param entryType serializes payloads from full entries; deserialization
+     *                  returns
+     *                  entries with a null key, which the tree restores separately
      */
-    public BTree(Storage storage, int keySize, BiConsumer<byte[], byte[]> onEntryDelete, long rootOffset) {
+    public BTree(Storage storage, KeySerializer<K> keySerializer, BlockType<Entry<K, V>> entryType, long rootOffset) {
         this.storage = storage;
-        this.keySize = keySize;
-        this.onEntryDelete = onEntryDelete;
-        this.blockType = blockType(keySize, storage.area());
+        this.keySerializer = java.util.Objects.requireNonNull(keySerializer);
+        this.entryType = java.util.Objects.requireNonNull(entryType);
+        this.keySize = keySerializer.keySize();
+        this.blockType = blockType(keySerializer, storage.area(), entryType);
         this.rootOffset = rootOffset;
     }
 
-    public static class Entry {
+    public static class Entry<K, V> {
+        public final K key;
+        public final V value;
+
+        public Entry(K key, V value) {
+            this.key = key;
+            this.value = value;
+        }
+    }
+
+    private static class SerializedEntry {
         public final byte[] key;
         public final byte[] value;
 
-        public Entry(byte[] key, byte[] value) {
+        public SerializedEntry(byte[] key, byte[] value) {
             this.key = key;
             this.value = value;
         }
@@ -171,7 +277,12 @@ public class BTree implements Iterable<BTree.Entry> {
     // ------------------------------------------------------------------
 
     /** Returns the value associated with {@code key}, or {@code null}. */
-    public byte[] get(byte[] key) {
+    public V get(K key) {
+        byte[] value = getSerialized(serializeKey(key));
+        return value == null ? null : entryType.deserialize(ByteBuffer.wrap(value)).value;
+    }
+
+    private byte[] getSerialized(byte[] key) {
         checkKey(key);
         long off = rootOffset;
         while (off != 0) {
@@ -188,8 +299,8 @@ public class BTree implements Iterable<BTree.Entry> {
         return null;
     }
 
-    public boolean contains(byte[] key) {
-        return get(key) != null;
+    public boolean contains(K key) {
+        return getSerialized(serializeKey(key)) != null;
     }
 
     // ------------------------------------------------------------------
@@ -200,14 +311,18 @@ public class BTree implements Iterable<BTree.Entry> {
      * Insert or replace the value for {@code key}. The tree's root offset is
      * updated in place.
      */
-    public void put(byte[] key, byte[] value) {
+    public void put(K key, V value) {
+        putSerialized(serializeKey(key), bytes(entryType.serialize(new Entry<>(key, value))));
+    }
+
+    private void putSerialized(byte[] key, byte[] value) {
         checkKey(key);
 
         prepareSpaceForWrite();
 
         if (rootOffset == 0) {
-            List<Entry> entries = new ArrayList<>();
-            entries.add(new Entry(key.clone(), value.clone()));
+            List<SerializedEntry> entries = new ArrayList<>();
+            entries.add(new SerializedEntry(key.clone(), value.clone()));
             rootOffset = writeNewLeaf(entries);
             return;
         }
@@ -255,14 +370,13 @@ public class BTree implements Iterable<BTree.Entry> {
         byte[] block = readBlock(offset);
         Result res = new Result();
         if (level(block) == 0) {
-            List<Entry> entries = parseLeaf(block, keySize);
+            List<SerializedEntry> entries = parseLeaf(block, keySize);
             int idx = searchEntries(entries, key);
             if (idx >= 0) {
-                entryDeleted(entries.get(idx));
-                entries.set(idx, new Entry(entries.get(idx).key, value.clone()));
+                entries.set(idx, new SerializedEntry(entries.get(idx).key, value.clone()));
             } else {
                 int ins = -(idx + 1);
-                entries.add(ins, new Entry(key.clone(), value.clone()));
+                entries.add(ins, new SerializedEntry(key.clone(), value.clone()));
             }
 
             if (fitsLeaf(entries)) {
@@ -270,10 +384,10 @@ public class BTree implements Iterable<BTree.Entry> {
                 res.firstKey = entries.get(0).key;
             } else {
                 int k = chooseLeafSplit(entries);
-                List<Entry> left = new ArrayList<>(entries.subList(0, k));
-                List<Entry> right = new ArrayList<>(entries.subList(k, entries.size()));
-                res.newOffset = writeLeaf(offset, left);
+                List<SerializedEntry> left = new ArrayList<>(entries.subList(0, k));
+                List<SerializedEntry> right = new ArrayList<>(entries.subList(k, entries.size()));
                 res.splitOffset = writeNewLeaf(right);
+                res.newOffset = writeLeaf(offset, left);
                 res.firstKey = left.get(0).key;
                 res.splitKey = right.get(0).key;
             }
@@ -310,7 +424,11 @@ public class BTree implements Iterable<BTree.Entry> {
     // ------------------------------------------------------------------
 
     /** Remove {@code key} if present. Returns true if an entry was removed. */
-    public boolean remove(byte[] key) {
+    public boolean remove(K key) {
+        return removeSerialized(serializeKey(key));
+    }
+
+    private boolean removeSerialized(byte[] key) {
         checkKey(key);
         if (rootOffset == 0)
             return false;
@@ -340,11 +458,11 @@ public class BTree implements Iterable<BTree.Entry> {
      * Remove and return the first entry if present. Returns an empty Optional if
      * the tree is empty.
      */
-    public Optional<Entry> removeFirst() {
-        Iterator<Entry> iterator = iterator();
+    public Optional<Entry<K, V>> removeFirst() {
+        Iterator<Entry<K, V>> iterator = iterator();
         if (!iterator.hasNext())
             return Optional.empty();
-        Entry first = iterator.next();
+        Entry<K, V> first = iterator.next();
         remove(first.key);
         return Optional.of(first);
     }
@@ -358,11 +476,11 @@ public class BTree implements Iterable<BTree.Entry> {
         byte[] block = readBlock(offset);
         Result res = new Result();
         if (level(block) == 0) {
-            List<Entry> entries = parseLeaf(block, keySize);
+            List<SerializedEntry> entries = parseLeaf(block, keySize);
             int idx = searchEntries(entries, key);
             if (idx < 0)
                 return null;
-            entryDeleted(entries.remove(idx));
+            entries.remove(idx);
             if (entries.isEmpty()) {
                 res.newOffset = 0;
                 return res;
@@ -398,13 +516,13 @@ public class BTree implements Iterable<BTree.Entry> {
     // Iteration
     // ------------------------------------------------------------------
 
-    public void forEach(BiConsumer<byte[], byte[]> consumer) {
+    public void forEach(BiConsumer<K, V> consumer) {
         if (rootOffset != 0)
             walk(rootOffset, consumer);
     }
 
     @Override
-    public Iterator<Entry> iterator() {
+    public Iterator<Entry<K, V>> iterator() {
         if (rootOffset == 0)
             return Collections.emptyIterator();
 
@@ -439,12 +557,14 @@ public class BTree implements Iterable<BTree.Entry> {
             collectBlocks(p.blockptr, consumer);
     }
 
-    private void walk(long offset, BiConsumer<byte[], byte[]> consumer) {
+    private void walk(long offset, BiConsumer<K, V> consumer) {
         byte[] block = readBlock(offset);
         if (level(block) == 0) {
-            List<Entry> entries = parseLeaf(block, keySize);
-            for (Entry e : entries)
-                consumer.accept(e.key, e.value);
+            List<SerializedEntry> entries = parseLeaf(block, keySize);
+            for (SerializedEntry entry : entries) {
+                Entry<K, V> decoded = deserializeEntry(entry);
+                consumer.accept(decoded.key, decoded.value);
+            }
             return;
         }
         for (Ptr p : parseNode(block, keySize))
@@ -458,11 +578,11 @@ public class BTree implements Iterable<BTree.Entry> {
      * stored key is less than or equal to {@code key}, the iterator starts at the
      * lowest key.
      *
-     * @param key key to find the floor of; must have length {@link #keySize}
+     * @param key key to find the floor of; must serialize to {@link #keySize} bytes
      * @return the floor entry and all subsequent entries, or an empty iterator
      */
-    public Iterator<Entry> floorOrLowestIterator(byte[] key) {
-        return floorIterator(key, true);
+    public Iterator<Entry<K, V>> floorOrLowestIterator(K key) {
+        return floorIterator(serializeKey(key), true);
     }
 
     /**
@@ -471,14 +591,14 @@ public class BTree implements Iterable<BTree.Entry> {
      * ascending unsigned lexicographic order. Returns an empty iterator if no
      * stored key is less than or equal to {@code key}.
      *
-     * @param key key to find the floor of; must have length {@link #keySize}
+     * @param key key to find the floor of; must serialize to {@link #keySize} bytes
      * @return the floor entry and all subsequent entries, or an empty iterator
      */
-    public Iterator<Entry> floorIterator(byte[] key) {
-        return floorIterator(key, false);
+    public Iterator<Entry<K, V>> floorIterator(K key) {
+        return floorIterator(serializeKey(key), false);
     }
 
-    private Iterator<Entry> floorIterator(byte[] key, boolean returnLowestIfNotFound) {
+    private Iterator<Entry<K, V>> floorIterator(byte[] key, boolean returnLowestIfNotFound) {
         checkKey(key);
         if (rootOffset == 0)
             return Collections.emptyIterator();
@@ -494,7 +614,7 @@ public class BTree implements Iterable<BTree.Entry> {
             block = readBlock(offset);
         }
 
-        List<Entry> entries = parseLeaf(block, keySize);
+        List<SerializedEntry> entries = parseLeaf(block, keySize);
         int search = searchEntries(entries, key);
         int entryIndex = search >= 0 ? search : -search - 2;
         if (entryIndex < 0)
@@ -518,17 +638,17 @@ public class BTree implements Iterable<BTree.Entry> {
 
     private static class Position {
         final List<Frame> path;
-        final List<Entry> entries;
+        final List<SerializedEntry> entries;
         final int entryIndex;
 
-        Position(List<Frame> path, List<Entry> entries, int entryIndex) {
+        Position(List<Frame> path, List<SerializedEntry> entries, int entryIndex) {
             this.path = path;
             this.entries = entries;
             this.entryIndex = entryIndex;
         }
     }
 
-    private class BTreeIterator implements Iterator<Entry> {
+    private class BTreeIterator implements Iterator<Entry<K, V>> {
         private Position position;
 
         BTreeIterator(Position position) {
@@ -541,10 +661,10 @@ public class BTree implements Iterable<BTree.Entry> {
         }
 
         @Override
-        public Entry next() {
+        public Entry<K, V> next() {
             if (position == null)
                 throw new NoSuchElementException();
-            Entry result = position.entries.get(position.entryIndex);
+            Entry<K, V> result = deserializeEntry(position.entries.get(position.entryIndex));
             position = nextPosition(position);
             return result;
         }
@@ -594,9 +714,9 @@ public class BTree implements Iterable<BTree.Entry> {
         return block[4] & 0xff;
     }
 
-    private boolean fitsLeaf(List<Entry> entries) {
+    private boolean fitsLeaf(List<SerializedEntry> entries) {
         long used = (long) entries.size() * (keySize + 8);
-        for (Entry e : entries)
+        for (SerializedEntry e : entries)
             used += e.value.length;
         return used <= storage.blockSize() - HEADER_SIZE;
     }
@@ -605,7 +725,7 @@ public class BTree implements Iterable<BTree.Entry> {
         return (long) ptrs.size() * (keySize + NODE_PTR_EXTRA) <= storage.blockSize() - HEADER_SIZE;
     }
 
-    private int chooseLeafSplit(List<Entry> entries) {
+    private int chooseLeafSplit(List<SerializedEntry> entries) {
         int capacity = storage.blockSize() - HEADER_SIZE;
         int n = entries.size();
         // Find the smallest index so that the right half still fits; then check the
@@ -624,7 +744,7 @@ public class BTree implements Iterable<BTree.Entry> {
         return k;
     }
 
-    private byte[] serializeLeaf(List<Entry> entries) {
+    private byte[] serializeLeaf(List<SerializedEntry> entries) {
         int blockSize = storage.blockSize();
         byte[] buf = new byte[blockSize];
         ByteBuffer bb = wrap(buf);
@@ -632,7 +752,7 @@ public class BTree implements Iterable<BTree.Entry> {
         int itemSize = keySize + 8;
         int dataEnd = blockSize;
         for (int i = entries.size() - 1; i >= 0; i--) {
-            Entry e = entries.get(i);
+            SerializedEntry e = entries.get(i);
             dataEnd -= e.value.length;
             System.arraycopy(e.value, 0, buf, dataEnd, e.value.length);
             int itemOff = HEADER_SIZE + i * itemSize;
@@ -658,7 +778,7 @@ public class BTree implements Iterable<BTree.Entry> {
         return buf;
     }
 
-    private long writeNewLeaf(List<Entry> entries) {
+    private long writeNewLeaf(List<SerializedEntry> entries) {
         return writeNewBlock(serializeLeaf(entries));
     }
 
@@ -666,7 +786,7 @@ public class BTree implements Iterable<BTree.Entry> {
         return writeNewBlock(serializeNode(ptrs, level));
     }
 
-    private long writeLeaf(long offset, List<Entry> entries) {
+    private long writeLeaf(long offset, List<SerializedEntry> entries) {
         return replaceBlock(offset, serializeLeaf(entries));
     }
 
@@ -694,11 +814,6 @@ public class BTree implements Iterable<BTree.Entry> {
         return storage.writeNewBlock(new NodeBlock(data, blockType));
     }
 
-    private void entryDeleted(Entry entry) {
-        if (onEntryDelete != null)
-            onEntryDelete.accept(entry.key, entry.value);
-    }
-
     private boolean containsInSubtree(long offset, byte[] key) {
         byte[] block = readBlock(offset);
         while (level(block) != 0) {
@@ -722,10 +837,10 @@ public class BTree implements Iterable<BTree.Entry> {
         }
     }
 
-    private List<Entry> parseLeaf(byte[] block, int keySize) {
+    private List<SerializedEntry> parseLeaf(byte[] block, int keySize) {
         int n = nritems(block);
         int itemSize = keySize + 8;
-        List<Entry> result = new ArrayList<>(n);
+        List<SerializedEntry> result = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
             int off = HEADER_SIZE + i * itemSize;
             byte[] key = new byte[keySize];
@@ -735,7 +850,7 @@ public class BTree implements Iterable<BTree.Entry> {
             int size = bb.getInt(off + keySize + 4);
             byte[] value = new byte[size];
             System.arraycopy(block, dataOff, value, 0, size);
-            result.add(new Entry(key, value));
+            result.add(new SerializedEntry(key, value));
         }
         return result;
     }
@@ -792,7 +907,7 @@ public class BTree implements Iterable<BTree.Entry> {
      * lexicographic ordering. Returns its index if found, or
      * {@code -(insertion point) - 1} if absent.
      */
-    private int searchEntries(List<Entry> entries, byte[] key) {
+    private int searchEntries(List<SerializedEntry> entries, byte[] key) {
         int low = 0;
         int high = entries.size() - 1;
         while (low <= high) {
@@ -855,6 +970,23 @@ public class BTree implements Iterable<BTree.Entry> {
         if (key.length != keySize)
             throw new IllegalArgumentException(
                     "key must be " + keySize + " bytes, got " + key.length);
+    }
+
+    private byte[] serializeKey(K key) {
+        byte[] result = bytes(keySerializer.serialize(key));
+        checkKey(result);
+        return result;
+    }
+
+    private Entry<K, V> deserializeEntry(SerializedEntry entry) {
+        return new Entry<>(keySerializer.deserialize(ByteBuffer.wrap(entry.key)),
+                entryType.deserialize(ByteBuffer.wrap(entry.value)).value);
+    }
+
+    private static byte[] bytes(ByteBuffer buffer) {
+        byte[] result = new byte[buffer.remaining()];
+        buffer.get(result);
+        return result;
     }
 
     private static ByteBuffer wrap(byte[] buf) {

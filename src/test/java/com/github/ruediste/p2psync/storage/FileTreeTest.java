@@ -125,6 +125,33 @@ class FileTreeTest {
     }
 
     /**
+     * Persists two roots and reopens them to verify extent references preserve both
+     * file versions.
+     */
+    @Test
+    void extentSnapshotsSurviveCommitAndReopen() {
+        tree.createFile(root, file, "snapshot.bin", new FileTree.FileMeta());
+        byte[] original = new byte[40_000];
+        Arrays.fill(original, (byte) 17);
+        tree.write(file, 0, original);
+        long snapshotRoot = tree.getRootOffset();
+        storage.incrementRefCount(snapshotRoot, DataStorage.Area.META);
+        storage.commit();
+
+        byte[] changed = original.clone();
+        changed[8190] = 42;
+        tree.write(file, 8190, new byte[] { 42 });
+        long liveRoot = tree.getRootOffset();
+        storage.incrementRefCount(liveRoot, DataStorage.Area.META);
+        storage.commit();
+        storage.close();
+        storage.open(tempDir.resolve("files.db").toString());
+
+        assertArrayEquals(original, new FileTree(storage, snapshotRoot).read(file));
+        assertArrayEquals(changed, new FileTree(storage, liveRoot).read(file));
+    }
+
+    /**
      * Adds enough names to exceed the inline directory-item limit, then verifies
      * spilled names remain searchable and are removed with their directory entry.
      */

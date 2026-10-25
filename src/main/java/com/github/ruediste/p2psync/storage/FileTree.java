@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.zip.CRC32C;
 
-import com.github.ruediste.p2psync.storage.BlockType.BlockRef;
 import com.github.ruediste.p2psync.util.ShortGuid;
 
 public class FileTree {
@@ -42,10 +41,46 @@ public class FileTree {
         }
     }
 
-    public static final BlockType<BTree.NodeBlock> BLOCK_TYPE = BTree.blockType(KEY_SIZE, DataStorage.Area.META);
+    private static final BlockType<BTree.Entry<byte[], byte[]>> ENTRY_TYPE = new BlockType<>() {
+        @Override
+        public List<BlockRef> getReferencedBlocks(BTree.Entry<byte[], byte[]> entry, DataStorage storage) {
+            EntryType type = EntryType.fromCode(Byte.toUnsignedInt(entry.key[GUID_SIZE]));
+            List<BlockRef> references = new ArrayList<>();
+            if (type == EntryType.EXTENT_DATA) {
+                if (entry.value.length % Long.BYTES != 0)
+                    throw new IllegalStateException("Invalid extent entry length");
+                ByteBuffer offsets = ByteBuffer.wrap(entry.value).order(ByteOrder.BIG_ENDIAN);
+                while (offsets.hasRemaining())
+                    references.add(new BlockRef(offsets.getLong(), DataStorage.Area.DATA,
+                            DataStorage.BYTE_ARRAY_BLOCK_TYPE));
+            } else if (type == EntryType.DIR_ITEM) {
+                long spillRoot = decodeDirItem(entry.value).spillRoot;
+                if (spillRoot != 0)
+                    references.add(new BlockRef(spillRoot, DataStorage.Area.META,
+                            BTree.blockType(BTree.KeySerializer.bytes(SPILL_KEY_SIZE), DataStorage.Area.META,
+                                    BTree.BYTE_ARRAY_ENTRY_TYPE)));
+            }
+            return references;
+        }
+
+        @Override
+        public ByteBuffer serialize(BTree.Entry<byte[], byte[]> entry) {
+            return ByteBuffer.wrap(entry.value);
+        }
+
+        @Override
+        public BTree.Entry<byte[], byte[]> deserialize(ByteBuffer buffer) {
+            byte[] data = new byte[buffer.remaining()];
+            buffer.get(data);
+            return new BTree.Entry<>(null, data);
+        }
+    };
+
+    public static final BlockType<BTree.NodeBlock> BLOCK_TYPE = BTree.blockType(BTree.KeySerializer.bytes(KEY_SIZE),
+            DataStorage.Area.META, ENTRY_TYPE);
 
     private final DataStorage storage;
-    private final BTree tree;
+    private final BTree<byte[], byte[]> tree;
 
     public FileTree(DataStorage storage) {
         this(storage, 0);
@@ -53,8 +88,8 @@ public class FileTree {
 
     public FileTree(DataStorage storage, long rootOffset) {
         this.storage = java.util.Objects.requireNonNull(storage);
-        tree = new BTree(storage.new BTreeStorage(DataStorage.Area.META), KEY_SIZE, this::entryReplaced,
-                rootOffset);
+        tree = new BTree<>(storage.new BTreeStorage(DataStorage.Area.META), BTree.KeySerializer.bytes(KEY_SIZE),
+                ENTRY_TYPE, rootOffset);
     }
 
     public long getRootOffset() {
@@ -92,9 +127,9 @@ public class FileTree {
         // Begin at the floor key so a chunk starting before the requested range is not
         // missed.
         byte[] inlineStartKey = key(guid, EntryType.INLINE_DATA, offset);
-        Iterator<BTree.Entry> inlineEntries = tree.floorOrLowestIterator(inlineStartKey);
+        Iterator<BTree.Entry<byte[], byte[]>> inlineEntries = tree.floorOrLowestIterator(inlineStartKey);
         while (inlineEntries.hasNext()) {
-            BTree.Entry entry = inlineEntries.next();
+            BTree.Entry<byte[], byte[]> entry = inlineEntries.next();
             int comparison = compareKeys(entry.key, inlineStartKey);
             if (!hasPrefix(entry.key, guid, EntryType.INLINE_DATA)) {
                 if (comparison < 0)
@@ -111,9 +146,9 @@ public class FileTree {
 
         int blockSize = storage.blockSize(DataStorage.Area.DATA);
         byte[] extentStartKey = key(guid, EntryType.EXTENT_DATA, offset);
-        Iterator<BTree.Entry> extentEntries = tree.floorOrLowestIterator(extentStartKey);
+        Iterator<BTree.Entry<byte[], byte[]>> extentEntries = tree.floorOrLowestIterator(extentStartKey);
         while (extentEntries.hasNext()) {
-            BTree.Entry entry = extentEntries.next();
+            BTree.Entry<byte[], byte[]> entry = extentEntries.next();
             int comparison = compareKeys(entry.key, extentStartKey);
             if (!hasPrefix(entry.key, guid, EntryType.EXTENT_DATA)) {
                 if (comparison < 0)
@@ -256,11 +291,19 @@ public class FileTree {
         return new FileMeta(0, buffer.getLong(GUID_SIZE), buffer.getLong(GUID_SIZE + Long.BYTES));
     }
 
+    public void setModificationTime(ShortGuid guid, long modificationTime) {
+        byte[] header = requireEntityHeader(guid);
+        boolean directory = isDirectoryHeader(header);
+        int timeOffset = GUID_SIZE + (directory ? Long.BYTES : 2 * Long.BYTES);
+        ByteBuffer.wrap(header).order(ByteOrder.BIG_ENDIAN).putLong(timeOffset, modificationTime);
+        tree.put(key(guid, directory ? EntryType.DIR_HEADER : EntryType.FILE_HEADER, 0), header);
+    }
+
     public List<DirectoryEntry> listDirectory(ShortGuid directoryId) {
         if (getHeader(directoryId, EntryType.DIR_HEADER) == null)
             throw new IllegalArgumentException("Not a directory: " + formatGuid(directoryId));
         List<DirectoryEntry> result = new ArrayList<>();
-        for (BTree.Entry entry : entriesFor(directoryId, EntryType.DIR_INDEX))
+        for (BTree.Entry<byte[], byte[]> entry : entriesFor(directoryId, EntryType.DIR_INDEX))
             result.add(decodeDirectoryIndex(entry.value));
         return List.copyOf(result);
     }
@@ -367,7 +410,7 @@ public class FileTree {
     }
 
     private void truncateInlineData(ShortGuid guid, long newSize) {
-        for (BTree.Entry entry : entriesFor(guid, EntryType.INLINE_DATA)) {
+        for (BTree.Entry<byte[], byte[]> entry : entriesFor(guid, EntryType.INLINE_DATA)) {
             long start = offsetOf(entry.key);
             if (start >= newSize) {
                 tree.remove(entry.key);
@@ -383,7 +426,7 @@ public class FileTree {
         int dataBlockSize = storage.blockSize(DataStorage.Area.DATA);
         long finalBlockIndex = blockCount(newSize) - 1;
         int finalBlockLength = (int) (newSize % dataBlockSize);
-        for (BTree.Entry entry : entriesFor(guid, EntryType.EXTENT_DATA)) {
+        for (BTree.Entry<byte[], byte[]> entry : entriesFor(guid, EntryType.EXTENT_DATA)) {
             long start = offsetOf(entry.key);
             int blockCount = entry.value.length / Long.BYTES;
             long keepCount = start >= newSize ? 0 : Math.min(blockCount, blockCount(newSize - start));
@@ -406,7 +449,6 @@ public class FileTree {
                     Arrays.fill(block, finalBlockLength, block.length, (byte) 0);
                     blockOffset = storage.writeNewBlock(DataStorage.Area.DATA, block);
                 }
-                storage.incrementRefCount(blockOffset, DataStorage.Area.DATA);
                 retainedOffsets.putLong(blockOffset);
             }
             tree.put(entry.key, retainedOffsets.array());
@@ -429,7 +471,6 @@ public class FileTree {
                 System.arraycopy(prefix, (int) fileOffset, block, 0, length);
             }
             long blockOffset = storage.writeNewBlock(DataStorage.Area.DATA, block);
-            storage.incrementRefCount(blockOffset, DataStorage.Area.DATA);
             if (offsets.isEmpty())
                 entryStart = fileOffset;
             offsets.add(blockOffset);
@@ -449,7 +490,7 @@ public class FileTree {
         // each extent value.
         for (long blockIndex = offset / blockSize; blockIndex < blockCount(endOffset); blockIndex++) {
             long blockStart = blockIndex * blockSize;
-            BTree.Entry extentEntry = findExtentEntry(guid, blockStart, blockSize);
+            BTree.Entry<byte[], byte[]> extentEntry = findExtentEntry(guid, blockStart, blockSize);
             // Spill new names by SHA-256 while preserving the current spill-tree root.
             if (extentEntry == null)
                 throw new IllegalStateException("Missing file extent at offset " + blockStart);
@@ -468,15 +509,14 @@ public class FileTree {
             ByteBuffer replacement = ByteBuffer.allocate(blockOffsets.length * Long.BYTES)
                     .order(ByteOrder.BIG_ENDIAN);
             for (long blockOffset : blockOffsets) {
-                storage.incrementRefCount(blockOffset, DataStorage.Area.DATA);
                 replacement.putLong(blockOffset);
             }
             tree.put(extentEntry.key, replacement.array());
         }
     }
 
-    private BTree.Entry findExtentEntry(ShortGuid guid, long blockStart, int blockSize) {
-        for (BTree.Entry entry : entriesFor(guid, EntryType.EXTENT_DATA)) {
+    private BTree.Entry<byte[], byte[]> findExtentEntry(ShortGuid guid, long blockStart, int blockSize) {
+        for (BTree.Entry<byte[], byte[]> entry : entriesFor(guid, EntryType.EXTENT_DATA)) {
             long entryStart = offsetOf(entry.key);
             long entrySize = (long) (entry.value.length / Long.BYTES) * blockSize;
             if (blockStart >= entryStart && blockStart - entryStart < entrySize)
@@ -492,28 +532,11 @@ public class FileTree {
 
     private void clearData(ShortGuid guid) {
         List<byte[]> keys = new ArrayList<>();
-        for (BTree.Entry entry : entriesFor(guid, EntryType.INLINE_DATA))
+        for (BTree.Entry<byte[], byte[]> entry : entriesFor(guid, EntryType.INLINE_DATA))
             keys.add(entry.key);
-        for (BTree.Entry entry : entriesFor(guid, EntryType.EXTENT_DATA))
+        for (BTree.Entry<byte[], byte[]> entry : entriesFor(guid, EntryType.EXTENT_DATA))
             keys.add(entry.key);
         keys.forEach(tree::remove);
-    }
-
-    private void entryReplaced(byte[] key, byte[] value) {
-        EntryType type = EntryType.fromCode(Byte.toUnsignedInt(key[GUID_SIZE]));
-        if (type == EntryType.EXTENT_DATA) {
-            if (value.length % Long.BYTES != 0)
-                throw new IllegalStateException("Invalid extent entry length");
-            ByteBuffer offsets = ByteBuffer.wrap(value).order(ByteOrder.BIG_ENDIAN);
-            while (offsets.hasRemaining())
-                storage.decrementRefCount(new BlockRef(offsets.getLong(), DataStorage.Area.DATA,
-                        DataStorage.BYTE_ARRAY_BLOCK_TYPE));
-        } else if (type == EntryType.DIR_ITEM) {
-            long spillRoot = decodeDirItem(value).spillRoot;
-            if (spillRoot != 0)
-                storage.decrementRefCount(new BlockRef(spillRoot, DataStorage.Area.META,
-                        BTree.blockType(SPILL_KEY_SIZE, DataStorage.Area.META)));
-        }
     }
 
     private void addDirectoryEntry(ShortGuid parentId, DirectoryEntry entry) {
@@ -531,15 +554,14 @@ public class FileTree {
             item.entries.clear();
             item.entries.addAll(inlineEntries);
         } else {
-            BTree spill = newSpillTree(item.spillRoot);
+            BTree<byte[], byte[]> spill = newSpillTree(item.spillRoot);
             spill.put(nextSpillKey(spill, added.name), encodeSpillValue(added));
             item.spillRoot = spill.rootOffset;
-            storage.incrementRefCount(item.spillRoot, DataStorage.Area.META);
         }
         tree.put(itemKey, encodeDirItem(item));
 
         long nextIndex = 0;
-        for (BTree.Entry index : entriesFor(parentId, EntryType.DIR_INDEX)) {
+        for (BTree.Entry<byte[], byte[]> index : entriesFor(parentId, EntryType.DIR_INDEX)) {
             long indexOffset = offsetOf(index.key);
             if (indexOffset < 0 || indexOffset == Long.MAX_VALUE)
                 throw new IllegalStateException("Directory index exhausted");
@@ -555,8 +577,8 @@ public class FileTree {
         boolean removed = item.entries.removeIf(candidate -> candidate.name.equals(entry.name())
                 && sameGuid(candidate.guid, entry.guid()));
         if (!removed && item.spillRoot != 0) {
-            BTree spill = newSpillTree(item.spillRoot);
-            for (BTree.Entry candidate : spill) {
+            BTree<byte[], byte[]> spill = newSpillTree(item.spillRoot);
+            for (BTree.Entry<byte[], byte[]> candidate : spill) {
                 NameEntry name = decodeSpillValue(candidate.value);
                 if (name.name.equals(entry.name()) && sameGuid(name.guid, entry.guid())) {
                     spill.remove(candidate.key);
@@ -565,8 +587,6 @@ public class FileTree {
                 }
             }
             item.spillRoot = spill.rootOffset;
-            if (item.spillRoot != 0)
-                storage.incrementRefCount(item.spillRoot, DataStorage.Area.META);
         }
         if (!removed)
             throw new IllegalStateException("Directory entry not found: " + entry.name());
@@ -574,7 +594,7 @@ public class FileTree {
             tree.remove(itemKey);
         else
             tree.put(itemKey, encodeDirItem(item));
-        for (BTree.Entry index : entriesFor(parentId, EntryType.DIR_INDEX)) {
+        for (BTree.Entry<byte[], byte[]> index : entriesFor(parentId, EntryType.DIR_INDEX)) {
             DirectoryEntry indexed = decodeDirectoryIndex(index.value);
             if (indexed.name().equals(entry.name()) && sameGuid(indexed.guid(), entry.guid())) {
                 tree.remove(index.key);
@@ -643,12 +663,12 @@ public class FileTree {
         return tree.get(key(guid, type, 0));
     }
 
-    private List<BTree.Entry> entriesFor(ShortGuid guid, EntryType type) {
+    private List<BTree.Entry<byte[], byte[]>> entriesFor(ShortGuid guid, EntryType type) {
         byte[] start = key(guid, type, 0);
-        Iterator<BTree.Entry> iterator = tree.floorOrLowestIterator(start);
-        List<BTree.Entry> result = new ArrayList<>();
+        Iterator<BTree.Entry<byte[], byte[]>> iterator = tree.floorOrLowestIterator(start);
+        List<BTree.Entry<byte[], byte[]>> result = new ArrayList<>();
         while (iterator.hasNext()) {
-            BTree.Entry entry = iterator.next();
+            BTree.Entry<byte[], byte[]> entry = iterator.next();
             if (compareKeys(entry.key, start) < 0)
                 continue;
             if (!hasPrefix(entry.key, guid, type))
@@ -661,19 +681,20 @@ public class FileTree {
     private List<NameEntry> allNames(DirItem item) {
         List<NameEntry> result = new ArrayList<>(item.entries);
         if (item.spillRoot != 0)
-            for (BTree.Entry entry : newSpillTree(item.spillRoot))
+            for (BTree.Entry<byte[], byte[]> entry : newSpillTree(item.spillRoot))
                 result.add(decodeSpillValue(entry.value));
         return result;
     }
 
-    private BTree newSpillTree(long root) {
-        return new BTree(storage.new BTreeStorage(DataStorage.Area.META), SPILL_KEY_SIZE, null, root);
+    private BTree<byte[], byte[]> newSpillTree(long root) {
+        return new BTree<>(storage.new BTreeStorage(DataStorage.Area.META), BTree.KeySerializer.bytes(SPILL_KEY_SIZE),
+                BTree.BYTE_ARRAY_ENTRY_TYPE, root);
     }
 
-    private static byte[] nextSpillKey(BTree spill, String name) {
+    private static byte[] nextSpillKey(BTree<byte[], byte[]> spill, String name) {
         byte[] hash = sha256(name.getBytes(StandardCharsets.UTF_8));
         int next = 0;
-        for (BTree.Entry entry : spill) {
+        for (BTree.Entry<byte[], byte[]> entry : spill) {
             if (startsWith(entry.key, hash)) {
                 int existing = ByteBuffer.wrap(entry.key, 32, Integer.BYTES).order(ByteOrder.BIG_ENDIAN).getInt();
                 if (Integer.compareUnsigned(existing, next) >= 0)

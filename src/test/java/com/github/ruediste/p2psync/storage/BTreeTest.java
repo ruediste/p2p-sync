@@ -24,6 +24,23 @@ import org.junit.jupiter.api.Test;
 
 public class BTreeTest {
 
+    private static final BTree.KeySerializer<Long> LONG_KEYS = new BTree.KeySerializer<>() {
+        @Override
+        public int keySize() {
+            return Long.BYTES;
+        }
+
+        @Override
+        public ByteBuffer serialize(Long value) {
+            return ByteBuffer.allocate(Long.BYTES).putLong(value).flip();
+        }
+
+        @Override
+        public Long deserialize(ByteBuffer buffer) {
+            return buffer.getLong();
+        }
+    };
+
     private Path dir;
     private Path file;
     private DataStorage storage;
@@ -50,13 +67,151 @@ public class BTreeTest {
         }
     }
 
-    private BTree newTree() {
-        return new BTree(storage.new BTreeStorage(DataStorage.Area.META), 8, null);
+    private BTree<byte[], byte[]> newTree() {
+        return new BTree<>(storage.new BTreeStorage(DataStorage.Area.META), BTree.KeySerializer.bytes(8),
+                BTree.BYTE_ARRAY_ENTRY_TYPE);
+    }
+
+    /**
+     * Exercises typed keys and values through splits, floor lookup, iteration,
+     * replacement and removal.
+     */
+    @Test
+    void typedKeysAndValuesRoundTripThroughAllOperations() {
+        BlockType<BTree.Entry<Long, String>> strings = new BlockType<>() {
+            @Override
+            public List<BlockRef> getReferencedBlocks(BTree.Entry<Long, String> entry, DataStorage storage) {
+                org.junit.jupiter.api.Assertions.assertNotNull(entry.key);
+                return List.of();
+            }
+
+            @Override
+            public ByteBuffer serialize(BTree.Entry<Long, String> entry) {
+                org.junit.jupiter.api.Assertions.assertNotNull(entry.key);
+                byte[] data = bytes(entry.value);
+                return ByteBuffer.allocate(data.length + 2).put((byte) 0).put(data).flip().position(1);
+            }
+
+            @Override
+            public BTree.Entry<Long, String> deserialize(ByteBuffer buffer) {
+                return new BTree.Entry<>(null, java.nio.charset.StandardCharsets.UTF_8.decode(buffer).toString());
+            }
+        };
+        BTree<Long, String> tree = new BTree<>(storage.new BTreeStorage(DataStorage.Area.META), LONG_KEYS, strings);
+        for (long index = 100; index >= 1; index--)
+            tree.put(index * 10, "value-" + index);
+        assertEquals("value-45", tree.get(450L));
+        assertNull(tree.get(451L));
+        assertTrue(tree.contains(450L));
+        tree.put(450L, "replaced");
+        var floor = tree.floorIterator(455L).next();
+        assertEquals(450L, floor.key);
+        assertEquals("replaced", floor.value);
+        assertFalse(tree.floorIterator(0L).hasNext());
+        assertEquals(10L, tree.floorOrLowestIterator(0L).next().key);
+        List<Long> seen = new ArrayList<>();
+        tree.forEach((entryKey, value) -> seen.add(entryKey));
+        assertEquals(java.util.stream.LongStream.rangeClosed(1, 100).map(index -> index * 10).boxed().toList(), seen);
+        assertEquals(10L, tree.iterator().next().key);
+        assertEquals("value-1", tree.removeFirst().orElseThrow().value);
+        assertTrue(tree.remove(450L));
+        assertFalse(tree.remove(450L));
+        var reopened = new BTree<>(storage.new BTreeStorage(DataStorage.Area.META), LONG_KEYS, strings,
+                tree.rootOffset);
+        assertEquals("value-99", reopened.get(990L));
+    }
+
+    /**
+     * Keeps a snapshot while replacing a referenced value, then checks each DATA
+     * block is freed with its last leaf.
+     */
+    @Test
+    void leafValuesRetainReferencesUntilTheirLastSnapshotIsReleased() {
+        BlockType<BTree.Entry<Long, Long>> references = referenceType();
+        var nodeType = BTree.blockType(LONG_KEYS, DataStorage.Area.META, references);
+        var tree = new BTree<>(storage.new BTreeStorage(DataStorage.Area.META), LONG_KEYS, references);
+        long firstBlock = storage.writeNewBlock(DataStorage.Area.DATA,
+                new byte[storage.blockSize(DataStorage.Area.DATA)]);
+        tree.put(1L, firstBlock);
+        long snapshotRoot = tree.rootOffset;
+        storage.incrementRefCount(snapshotRoot, DataStorage.Area.META);
+        storage.commit();
+        assertEquals(1, storage.getRefCount(firstBlock));
+
+        long secondBlock = storage.writeNewBlock(DataStorage.Area.DATA,
+                new byte[storage.blockSize(DataStorage.Area.DATA)]);
+        tree.put(1L, secondBlock);
+        long liveRoot = tree.rootOffset;
+        storage.incrementRefCount(liveRoot, DataStorage.Area.META);
+        storage.commit();
+        var snapshot = new BTree<>(storage.new BTreeStorage(DataStorage.Area.META), LONG_KEYS, references,
+                snapshotRoot);
+        assertEquals(firstBlock, snapshot.get(1L));
+        assertEquals(secondBlock, tree.get(1L));
+        assertEquals(1, storage.getRefCount(firstBlock));
+        assertEquals(1, storage.getRefCount(secondBlock));
+
+        assertTrue(tree.remove(1L));
+        storage.decrementRefCount(new BlockType.BlockRef(liveRoot, DataStorage.Area.META, nodeType));
+        storage.commit();
+        assertEquals(0, storage.getRefCount(secondBlock));
+        assertEquals(1, storage.getRefCount(firstBlock));
+        storage.decrementRefCount(new BlockType.BlockRef(snapshotRoot, DataStorage.Area.META, nodeType));
+        storage.commit();
+        assertEquals(0, storage.getRefCount(firstBlock));
+    }
+
+    /**
+     * Forces leaf splits and verifies moving references never frees
+     * transaction-local DATA blocks.
+     */
+    @Test
+    void leafSplitsPreserveReferencedBlocks() {
+        BlockType<BTree.Entry<Long, Long>> references = referenceType();
+        var tree = new BTree<>(storage.new BTreeStorage(DataStorage.Area.META), LONG_KEYS, references);
+        List<Long> blocks = new ArrayList<>();
+        for (long index = 0; index < 100; index++) {
+            byte[] data = new byte[storage.blockSize(DataStorage.Area.DATA)];
+            data[0] = (byte) index;
+            long block = storage.writeNewBlock(DataStorage.Area.DATA, data);
+            blocks.add(block);
+            tree.put(index, block);
+        }
+        for (int index = 0; index < blocks.size(); index++) {
+            assertEquals(blocks.get(index), tree.get((long) index));
+            assertTrue(storage.isBlockModified(blocks.get(index)));
+            assertEquals((byte) index, storage.readBlock(blocks.get(index), DataStorage.Area.DATA)[0]);
+        }
+        storage.incrementRefCount(tree.rootOffset, DataStorage.Area.META);
+        storage.commit();
+        for (long block : blocks)
+            assertEquals(1, storage.getRefCount(block));
+    }
+
+    private static BlockType<BTree.Entry<Long, Long>> referenceType() {
+        return new BlockType<>() {
+            @Override
+            public List<BlockRef> getReferencedBlocks(BTree.Entry<Long, Long> entry, DataStorage storage) {
+                org.junit.jupiter.api.Assertions.assertNotNull(entry.key);
+                return List.of(new BlockRef(entry.value, DataStorage.Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE));
+            }
+
+            @Override
+            public ByteBuffer serialize(BTree.Entry<Long, Long> entry) {
+                org.junit.jupiter.api.Assertions.assertNotNull(entry.key);
+                return ByteBuffer.allocate(Long.BYTES).putLong(entry.value).flip();
+            }
+
+            @Override
+            public BTree.Entry<Long, Long> deserialize(ByteBuffer buffer) {
+                return new BTree.Entry<>(null, buffer.getLong());
+            }
+        };
     }
 
     @Test
     public void putAndGetSingle() {
-        BTree tree = newTree();
+        BTree<byte[], byte[]> tree = newTree();
         tree.put(key(5), bytes("hello"));
         assertArrayEquals(bytes("hello"), tree.get(key(5)));
         assertNull(tree.get(key(6)));
@@ -66,7 +221,7 @@ public class BTreeTest {
 
     @Test
     public void updateExistingKey() {
-        BTree tree = newTree();
+        BTree<byte[], byte[]> tree = newTree();
         tree.put(key(1), bytes("a"));
         tree.put(key(1), bytes("bbbb"));
         assertArrayEquals(bytes("bbbb"), tree.get(key(1)));
@@ -75,7 +230,7 @@ public class BTreeTest {
 
     @Test
     public void insertManyAndReadAll() {
-        BTree tree = newTree();
+        BTree<byte[], byte[]> tree = newTree();
         Map<Long, byte[]> expected = new TreeMap<>();
         Random rnd = new Random(42);
         for (int i = 0; i < 1000; i++) {
@@ -91,7 +246,7 @@ public class BTreeTest {
 
     @Test
     public void forEachReturnsSortedOrder() {
-        BTree tree = newTree();
+        BTree<byte[], byte[]> tree = newTree();
         Random rnd = new Random(7);
         TreeMap<Long, byte[]> expected = new TreeMap<>();
         for (int i = 0; i < 500; i++) {
@@ -108,11 +263,11 @@ public class BTreeTest {
 
     @Test
     public void floorIteratorStartsAtFloorAndContinuesAcrossLeaves() {
-        BTree tree = newTree();
+        BTree<byte[], byte[]> tree = newTree();
         for (int i = 0; i < 100; i++)
             tree.put(key((i + 1) * 10), bytes("value-" + i));
 
-        Iterator<BTree.Entry> iterator = tree.floorIterator(key(455));
+        Iterator<BTree.Entry<byte[], byte[]>> iterator = tree.floorIterator(key(455));
         List<Long> seen = new ArrayList<>();
         while (iterator.hasNext())
             seen.add(longOf(iterator.next().key));
@@ -131,12 +286,12 @@ public class BTreeTest {
 
     @Test
     public void iteratorStartsAtLowestKeyAndReturnsSortedEntries() {
-        BTree tree = newTree();
+        BTree<byte[], byte[]> tree = newTree();
         for (int i = 99; i >= 0; i--)
             tree.put(key(i), bytes("value-" + i));
 
         List<Long> seen = new ArrayList<>();
-        for (BTree.Entry entry : tree)
+        for (BTree.Entry<byte[], byte[]> entry : tree)
             seen.add(longOf(entry.key));
         List<Long> expected = new ArrayList<>();
         for (int i = 0; i < 100; i++)
@@ -147,7 +302,7 @@ public class BTreeTest {
 
     @Test
     public void removeEntries() {
-        BTree tree = newTree();
+        BTree<byte[], byte[]> tree = newTree();
         for (int i = 0; i < 300; i++)
             tree.put(key(i), bytes("value-" + i));
         for (int i = 0; i < 300; i += 2)
@@ -163,12 +318,12 @@ public class BTreeTest {
 
     @Test
     public void removeFirstReturnsAndRemovesLowestEntry() {
-        BTree tree = newTree();
+        BTree<byte[], byte[]> tree = newTree();
         tree.put(key(20), bytes("twenty"));
         tree.put(key(0), bytes("zero"));
         tree.put(key(10), bytes("ten"));
 
-        BTree.Entry removed = tree.removeFirst().orElseThrow();
+        BTree.Entry<byte[], byte[]> removed = tree.removeFirst().orElseThrow();
         assertArrayEquals(key(0), removed.key);
         assertArrayEquals(bytes("zero"), removed.value);
         assertNull(tree.get(key(0)));
@@ -180,14 +335,14 @@ public class BTreeTest {
 
     @Test
     public void removeNonExistentReturnsFalse() {
-        BTree tree = newTree();
+        BTree<byte[], byte[]> tree = newTree();
         tree.put(key(1), bytes("a"));
         assertFalse(tree.remove(key(2)));
     }
 
     @Test
     public void removeAllLeavesEmptyTree() {
-        BTree tree = newTree();
+        BTree<byte[], byte[]> tree = newTree();
         for (int i = 0; i < 200; i++)
             tree.put(key(i), bytes("v" + i));
         for (int i = 0; i < 200; i++)
@@ -198,7 +353,7 @@ public class BTreeTest {
 
     @Test
     public void persistsAcrossReopen() {
-        BTree tree = newTree();
+        BTree<byte[], byte[]> tree = newTree();
         Map<Long, byte[]> expected = new TreeMap<>();
         Random rnd = new Random(11);
         for (int i = 0; i < 400; i++) {
@@ -214,7 +369,7 @@ public class BTreeTest {
 
         storage = new DataStorage();
         storage.open(file.toString());
-        BTree reopened = newTree();
+        BTree<byte[], byte[]> reopened = newTree();
         reopened.rootOffset = root;
         for (Map.Entry<Long, byte[]> e : expected.entrySet())
             assertArrayEquals(e.getValue(), reopened.get(key(e.getKey())));
@@ -223,14 +378,14 @@ public class BTreeTest {
 
     @Test
     public void copyOnWriteKeepsOldRootReadable() {
-        BTree tree = newTree();
+        BTree<byte[], byte[]> tree = newTree();
         for (int i = 0; i < 100; i++)
             tree.put(key(i), bytes("old-" + i));
         storage.incrementRefCount(tree.rootOffset, DataStorage.Area.META);
         storage.commit();
 
         long oldRoot = tree.rootOffset;
-        BTree snapshot = newTree();
+        BTree<byte[], byte[]> snapshot = newTree();
         snapshot.rootOffset = oldRoot;
 
         tree.put(key(50), bytes("new-50"));
@@ -243,7 +398,7 @@ public class BTreeTest {
 
     @Test
     public void blockCountIsReasonable() {
-        BTree tree = newTree();
+        BTree<byte[], byte[]> tree = newTree();
         for (int i = 0; i < 1000; i++)
             tree.put(key(i), bytes("value-" + String.format("%04d", i)));
         assertEquals(1000, count(tree));
@@ -252,7 +407,7 @@ public class BTreeTest {
         assertTrue(storage.refCountAdjustments.size() > 1);
     }
 
-    private int count(BTree tree) {
+    private int count(BTree<byte[], byte[]> tree) {
         int[] c = { 0 };
         tree.forEach((k, v) -> c[0]++);
         return c[0];

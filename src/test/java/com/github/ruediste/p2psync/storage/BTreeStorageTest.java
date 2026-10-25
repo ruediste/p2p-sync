@@ -18,6 +18,32 @@ import java.util.TreeMap;
 import org.junit.jupiter.api.Test;
 
 class BTreeStorageTest {
+    /**
+     * Verifies the entry adapter serializes only the value and leaves the decoded
+     * key null.
+     */
+    @Test
+    void entryTypeDeserializesWithoutKey() {
+        var type = BTree.BYTE_ARRAY_ENTRY_TYPE;
+        var entry = type.deserialize(type.serialize(new BTree.Entry<>(key(1), key(257))));
+        org.junit.jupiter.api.Assertions.assertNull(entry.key);
+        assertArrayEquals(key(257), entry.value);
+    }
+
+    /**
+     * Verifies fixed-size byte keys round-trip and reject an invalid serialized
+     * size.
+     */
+    @Test
+    void byteKeySerializerEnforcesFixedSize() {
+        var serializer = BTree.KeySerializer.bytes(2);
+        assertArrayEquals(key(257), serializer.deserialize(serializer.serialize(key(257))));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> serializer.serialize(new byte[1]));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> serializer.deserialize(java.nio.ByteBuffer.allocate(3)));
+    }
+
     private static class MemoryStorage implements BTree.Storage {
         final Map<Long, byte[]> blocks = new HashMap<>();
         final Map<Long, Integer> references = new HashMap<>();
@@ -119,7 +145,7 @@ class BTreeStorageTest {
         }
 
         private void adjustChildReferences(BTree.NodeBlock block, int adjustment) {
-            for (var reference : nodeType.getReferencedBlocks(block)) {
+            for (var reference : nodeType.getReferencedBlocks(block, null)) {
                 if (adjustment > 0)
                     retain(reference.blockOffset());
                 else
@@ -139,13 +165,13 @@ class BTreeStorageTest {
         return new byte[] { (byte) (value >>> 8), (byte) value };
     }
 
-    private static void put(MemoryStorage storage, BTree tree, byte[] key, byte[] value) {
+    private static void put(MemoryStorage storage, BTree<byte[], byte[]> tree, byte[] key, byte[] value) {
         long oldRoot = tree.rootOffset;
         tree.put(key, value);
         storage.publishRoot(oldRoot, tree.rootOffset);
     }
 
-    private static boolean remove(MemoryStorage storage, BTree tree, byte[] key) {
+    private static boolean remove(MemoryStorage storage, BTree<byte[], byte[]> tree, byte[] key) {
         long oldRoot = tree.rootOffset;
         boolean result = tree.remove(key);
         storage.publishRoot(oldRoot, tree.rootOffset);
@@ -154,21 +180,19 @@ class BTreeStorageTest {
 
     /**
      * Replaces and removes an entry while its leaf is still transaction-modified.
-     * The leaf should be reused, absent-key removal should do nothing, and entry
-     * deletion callbacks should report the replaced and finally removed values.
+     * The leaf should be reused, absent-key removal should do nothing, and the
+     * final removal should reclaim the empty leaf.
      */
     @Test
-    void modifiedLeafIsReusedAndEntryDeletionIsReported() {
+    void modifiedLeafIsReusedAndReclaimedWhenEmpty() {
         MemoryStorage storage = new MemoryStorage();
-        List<Integer> deleted = new ArrayList<>();
-        BTree tree = new BTree(storage, 2, (entryKey, value) -> deleted.add((int) value[0]));
+        BTree<byte[], byte[]> tree = new BTree<>(storage, BTree.KeySerializer.bytes(2), BTree.BYTE_ARRAY_ENTRY_TYPE);
         put(storage, tree, key(1), new byte[] { 10 });
         long root = tree.rootOffset;
         put(storage, tree, key(1), new byte[] { 20 });
         assertEquals(root, tree.rootOffset);
         assertFalse(remove(storage, tree, key(2)));
         assertTrue(remove(storage, tree, key(1)));
-        assertEquals(List.of(10, 20), deleted);
         assertTrue(storage.blocks.isEmpty());
     }
 
@@ -181,13 +205,13 @@ class BTreeStorageTest {
     @Test
     void copiedPathsPreserveSnapshotsAndRecursivelyReleaseAllBlocks() {
         MemoryStorage storage = new MemoryStorage();
-        BTree tree = new BTree(storage, 2, null);
+        BTree<byte[], byte[]> tree = new BTree<>(storage, BTree.KeySerializer.bytes(2), BTree.BYTE_ARRAY_ENTRY_TYPE);
         for (int index = 0; index < 100; index++)
             put(storage, tree, key(index), key(index));
         long oldRoot = tree.rootOffset;
         storage.retainRoot(oldRoot);
         storage.modified.clear();
-        BTree snapshot = new BTree(storage, 2, null, oldRoot);
+        BTree<byte[], byte[]> snapshot = new BTree<>(storage, BTree.KeySerializer.bytes(2), BTree.BYTE_ARRAY_ENTRY_TYPE, oldRoot);
 
         put(storage, tree, key(50), new byte[] { 42 });
         assertNotEquals(oldRoot, tree.rootOffset);
@@ -214,7 +238,7 @@ class BTreeStorageTest {
     @Test
     void mixedMutationsAcrossTransactionsMatchSortedMapWithoutLeaks() {
         MemoryStorage storage = new MemoryStorage();
-        BTree tree = new BTree(storage, 2, null);
+        BTree<byte[], byte[]> tree = new BTree<>(storage, BTree.KeySerializer.bytes(2), BTree.BYTE_ARRAY_ENTRY_TYPE);
         Map<Integer, byte[]> expected = new TreeMap<>();
         Random random = new Random(42);
         for (int iteration = 0; iteration < 1000; iteration++) {

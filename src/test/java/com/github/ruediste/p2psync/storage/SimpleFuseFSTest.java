@@ -2,6 +2,7 @@ package com.github.ruediste.p2psync.storage;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -17,6 +18,7 @@ import jnr.ffi.Runtime;
 import ru.serce.jnrfuse.ErrorCodes;
 import ru.serce.jnrfuse.FuseFillDir;
 import ru.serce.jnrfuse.struct.FileStat;
+import ru.serce.jnrfuse.struct.Timespec;
 
 class SimpleFuseFSTest {
     @TempDir
@@ -26,6 +28,78 @@ class SimpleFuseFSTest {
         Pointer result = Memory.allocateDirect(Runtime.getSystemRuntime(), Math.max(1, bytes.length));
         result.put(0, bytes, 0, bytes.length);
         return result;
+    }
+
+    private Timespec timespec(long seconds, long nanoseconds) {
+        Pointer memory = Memory.allocateDirect(Runtime.getSystemRuntime(), 2 * Long.BYTES);
+        Timespec result = Timespec.of(memory);
+        result.tv_sec.set(seconds);
+        result.tv_nsec.set(nanoseconds);
+        return result;
+    }
+
+    /**
+     * Verifies the timestamp callback stores the requested modification time for
+     * subsequent getattr calls.
+     */
+    @Test
+    void updatesAndPersistsModificationTime() {
+        Path backing = tempDir.resolve("files.db");
+        try (var fs = new SimpleFuseFS(backing)) {
+            assertEquals(0, fs.create("/file", 0644, null));
+            assertEquals(0, fs.utimens("/file", new Timespec[] {
+                    timespec(0, 0), timespec(1_700_000_000L, 123_456_789)
+            }));
+
+            FileStat stat = new FileStat(Runtime.getSystemRuntime());
+            assertEquals(0, fs.getattr("/file", stat));
+            assertEquals(1_700_000_000L, stat.st_mtim.tv_sec.longValue());
+            assertEquals(123_000_000L, stat.st_mtim.tv_nsec.longValue());
+        }
+
+        try (var fs = new SimpleFuseFS(backing)) {
+            FileStat stat = new FileStat(Runtime.getSystemRuntime());
+            assertEquals(0, fs.getattr("/file", stat));
+            assertEquals(1_700_000_000L, stat.st_mtim.tv_sec.longValue());
+            assertEquals(123_000_000L, stat.st_mtim.tv_nsec.longValue());
+        }
+    }
+
+    /**
+     * Verifies UTIME_NOW updates mtime, UTIME_OMIT preserves it, and invalid
+     * requests return errors without poisoning subsequent operations.
+     */
+    @Test
+    void utimensSupportsNowOmitAndValidation() {
+        try (var fs = new SimpleFuseFS(tempDir.resolve("files.db"))) {
+            assertEquals(0, fs.create("/file", 0644, null));
+            assertEquals(0, fs.utimens("/file", new Timespec[] {
+                    timespec(0, 0), timespec(1_700_000_000L, 0)
+            }));
+
+            assertEquals(0, fs.utimens("/file", new Timespec[] {
+                    timespec(0, 0), timespec(0, (1L << 30) - 2)
+            }));
+            FileStat stat = new FileStat(Runtime.getSystemRuntime());
+            assertEquals(0, fs.getattr("/file", stat));
+            assertEquals(1_700_000_000L, stat.st_mtim.tv_sec.longValue());
+
+            long beforeUpdate = System.currentTimeMillis();
+            assertEquals(0, fs.utimens("/file", new Timespec[] {
+                    timespec(0, 0), timespec(0, (1L << 30) - 1)
+            }));
+            long afterUpdate = System.currentTimeMillis();
+            assertEquals(0, fs.getattr("/file", stat));
+            long actualMtime = stat.st_mtim.tv_sec.longValue() * 1000
+                    + stat.st_mtim.tv_nsec.longValue() / 1_000_000;
+            assertTrue(actualMtime >= beforeUpdate && actualMtime <= afterUpdate);
+
+            assertEquals(-ErrorCodes.EINVAL(), fs.utimens("/file", new Timespec[] {
+                    timespec(0, 0), timespec(0, 1_000_000_000L)
+            }));
+            assertEquals(-ErrorCodes.ENOENT(), fs.utimens("/missing", null));
+            assertEquals(0, fs.getattr("/file", stat));
+        }
     }
 
     /**

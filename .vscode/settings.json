@@ -172,6 +172,7 @@
     "xargs": false,
     "eval": false,
     "Invoke-Expression": false,
-    "iex": false
+    "iex": false,
+    "javap": true
   }
 }

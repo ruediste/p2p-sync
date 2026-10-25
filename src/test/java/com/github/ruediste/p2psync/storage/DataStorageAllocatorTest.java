@@ -113,7 +113,8 @@ class DataStorageAllocatorTest {
                     tree(storage.blockSize(DataStorage.Area.META), Map.of(start, 4L * 16384)));
 
             var adapter = storage.new BTreeStorage(DataStorage.Area.META);
-            var type = BTree.blockType(Long.BYTES, DataStorage.Area.META);
+            var type = BTree.blockType(BTree.KeySerializer.bytes(Long.BYTES), DataStorage.Area.META,
+                    BTree.BYTE_ARRAY_ENTRY_TYPE);
             long reserved = adapter.writeNewBlock(new BTree.NodeBlock(new byte[16384], type));
 
             assertTrue(storage.pendingFreeTreeRemovals.get(DataStorage.Area.META).contains(reserved));
@@ -148,8 +149,8 @@ class DataStorageAllocatorTest {
             storage.commit();
 
             var committedRoot = storage.readBlock(storage.superBlock.rootBlock,
-                    DataStorage.Area.SYSTEM, DataStorage.RootBlock.TYPE);
-            long listOffset = committedRoot.deferredMetaFreeTreeRemoveList.blockOffset;
+                    DataStorage.Area.SYSTEM, RootBlock.TYPE);
+            long listOffset = committedRoot.pendingMetaFreeTreeRemovalList.blockOffset;
             Set<Long> persistedRemovals = new HashSet<>();
             while (listOffset != 0) {
                 ByteBuffer buffer = ByteBuffer.wrap(storage.readBlock(listOffset, DataStorage.Area.META));
@@ -180,7 +181,7 @@ class DataStorageAllocatorTest {
         long fileLength = metaStart + 5L * metaBlockSize;
 
         try (var storage = newStorage("remove-allocated.db", fileLength)) {
-            storage.rootBlock = new DataStorage.RootBlock();
+            storage.rootBlock = new RootBlock();
             storage.freeSpaceTrees.put(DataStorage.Area.SYSTEM, tree(4096, Map.of()));
             storage.freeSpaceTrees.put(DataStorage.Area.DATA,
                     tree(dataBlockSize, Map.of(dataStart, 5L * dataBlockSize)));
@@ -189,7 +190,7 @@ class DataStorageAllocatorTest {
             storage.pendingFreeTreeRemovals.get(DataStorage.Area.DATA).add(dataAllocation);
             storage.pendingFreeTreeRemovals.get(DataStorage.Area.META).add(metaAllocation);
 
-            storage.removePendingFreeTreeRemovals(true);
+            storage.applyPendingFreeTreeRemovals(true);
 
             assertEquals(2L * dataBlockSize,
                     toLong(storage.freeSpaceTrees.get(DataStorage.Area.DATA).get(u64(dataStart))));
@@ -240,7 +241,7 @@ class DataStorageAllocatorTest {
             storage.modifiedBlocks.put(blockOffset,
                     new DataStorage.ModifiedBlock(new byte[16384], java.util.List.of()));
             storage.blocksBeingRemovedFromFreeTree.get(DataStorage.Area.META).add(blockOffset);
-            var adjustment = DataStorage.RefCountAdjustment.create(DataStorage.Area.META);
+            var adjustment = RefCountAdjustments.RefCountAdjustment.create(DataStorage.Area.META);
             adjustment.equalsCount = true;
             adjustment.adjustment = 1;
             storage.refCountAdjustments.put(blockOffset, adjustment);
@@ -311,7 +312,8 @@ class DataStorageAllocatorTest {
             assertEquals(1, storage.getRefCount(blockOffset));
 
             storage.decrementRefCount(new BlockType.BlockRef(blockOffset, DataStorage.Area.META,
-                    BTree.blockType(Long.BYTES, DataStorage.Area.META)));
+                    BTree.blockType(BTree.KeySerializer.bytes(Long.BYTES), DataStorage.Area.META,
+                            BTree.BYTE_ARRAY_ENTRY_TYPE)));
             storage.commit();
 
             assertEquals(0, storage.getRefCount(blockOffset));
@@ -375,9 +377,9 @@ class DataStorageAllocatorTest {
 
             long rootOffset = storage.superBlock.rootBlock;
             byte[] rootBytes = storage.readBlock(rootOffset, DataStorage.Area.SYSTEM);
-            var rootBlock = DataStorage.RootBlock.TYPE.deserialize(ByteBuffer.wrap(rootBytes));
-            rootBlock.deferredRefCountAdjustmentList.blockOffset = listHead;
-            ByteBuffer.wrap(rootBytes).put(DataStorage.RootBlock.TYPE.serialize(rootBlock));
+            var rootBlock = RootBlock.TYPE.deserialize(ByteBuffer.wrap(rootBytes));
+            rootBlock.refCountAdjustmentList.blockOffset = listHead;
+            ByteBuffer.wrap(rootBytes).put(RootBlock.TYPE.serialize(rootBlock));
             storage.file.seek(listHead);
             storage.file.writeLong(listHead);
             storage.file.seek(rootOffset);
@@ -420,7 +422,7 @@ class DataStorageAllocatorTest {
 
         try (var reopened = new DataStorage()) {
             reopened.open(path.toString());
-            BTree tree = reopened.freeSpaceTrees.get(DataStorage.Area.DATA);
+            BTree<byte[], byte[]> tree = reopened.freeSpaceTrees.get(DataStorage.Area.DATA);
             for (long offset : offsets)
                 assertTrue(containsBlock(tree, offset));
         }
@@ -432,7 +434,7 @@ class DataStorageAllocatorTest {
         storage.superBlock.systemBlockSize = 4096;
         storage.superBlock.metaBlockSize = 16384;
         storage.superBlock.dataBlockSize = 4096;
-        storage.rootBlock = new DataStorage.RootBlock();
+        storage.rootBlock = new RootBlock();
         storage.file = openFile(tempDir.resolve(fileName), fileLength);
         storage.rootBlock.fileLength.value = fileLength;
         return storage;
@@ -449,7 +451,7 @@ class DataStorageAllocatorTest {
         return storage;
     }
 
-    private static boolean containsBlock(BTree tree, long offset) {
+    private static boolean containsBlock(BTree<byte[], byte[]> tree, long offset) {
         var iterator = tree.floorOrLowestIterator(u64(offset));
         if (!iterator.hasNext())
             return false;
@@ -467,8 +469,9 @@ class DataStorageAllocatorTest {
         };
     }
 
-    private static BTree tree(int blockSize, Map<Long, Long> extents) {
-        BTree tree = new BTree(new MemoryTreeStorage(blockSize), Long.BYTES, null);
+    private static BTree<byte[], byte[]> tree(int blockSize, Map<Long, Long> extents) {
+        BTree<byte[], byte[]> tree = new BTree<>(new MemoryTreeStorage(blockSize),
+                BTree.KeySerializer.bytes(Long.BYTES), BTree.BYTE_ARRAY_ENTRY_TYPE);
         extents.forEach((offset, size) -> tree.put(u64(offset), u64(size)));
         return tree;
     }

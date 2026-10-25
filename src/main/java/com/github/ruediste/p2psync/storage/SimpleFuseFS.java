@@ -18,9 +18,12 @@ import ru.serce.jnrfuse.FuseFillDir;
 import ru.serce.jnrfuse.FuseStubFS;
 import ru.serce.jnrfuse.struct.FileStat;
 import ru.serce.jnrfuse.struct.FuseFileInfo;
+import ru.serce.jnrfuse.struct.Timespec;
 
 public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(SimpleFuseFS.class);
+    private static final long UTIME_NOW = (1L << 30) - 1;
+    private static final long UTIME_OMIT = (1L << 30) - 2;
     private final DataStorage storage = new DataStorage();
     private final DataStorage.RootRefHandle<BTree.NodeBlock> treeRoot = storage.getRootRefHandle(
             1, DataStorage.Area.META, FileTree.BLOCK_TYPE);
@@ -226,6 +229,33 @@ public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
         return execute(true, () -> {
             require(size >= 0, ErrorCodes.EINVAL());
             tree.truncate(file(path).guid(), size);
+            return 0;
+        });
+    }
+
+    @Override
+    public int utimens(String path, Timespec[] times) {
+        return execute(true, () -> {
+            var entry = resolve(path);
+            if (times != null)
+                require(times.length == 2 && times[1] != null, ErrorCodes.EINVAL());
+
+            long modificationTime;
+            if (times == null || times[1].tv_nsec.longValue() == UTIME_NOW) {
+                modificationTime = System.currentTimeMillis();
+            } else {
+                long nanoseconds = times[1].tv_nsec.longValue();
+                if (nanoseconds == UTIME_OMIT)
+                    return 0;
+                require(nanoseconds >= 0 && nanoseconds < 1_000_000_000L, ErrorCodes.EINVAL());
+                try {
+                    modificationTime = Math.addExact(
+                            Math.multiplyExact(times[1].tv_sec.longValue(), 1000), nanoseconds / 1_000_000);
+                } catch (ArithmeticException exception) {
+                    throw new FsError(ErrorCodes.EOVERFLOW());
+                }
+            }
+            tree.setModificationTime(entry.guid(), modificationTime);
             return 0;
         });
     }
