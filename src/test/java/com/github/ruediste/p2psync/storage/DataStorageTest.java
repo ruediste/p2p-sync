@@ -106,7 +106,7 @@ public class DataStorageTest {
             var value = new ReferenceBlock(firstChild);
             long parent = direct ? storage.writeNewBlockDirect(DataStorage.Area.DATA, value)
                     : storage.writeNewBlock(DataStorage.Area.DATA, value);
-            storage.incrementRefCount(parent, DataStorage.Area.DATA);
+            storage.incrementRefCount(new BlockType.BlockRef(parent, DataStorage.Area.DATA, ReferenceBlock.TYPE));
 
             value.childOffset = secondChild;
             assertEquals(firstChild, storage.readBlock(parent, DataStorage.Area.DATA, ReferenceBlock.TYPE).childOffset);
@@ -129,16 +129,16 @@ public class DataStorageTest {
     }
 
     /**
-     * Replaces a typed parent with raw direct bytes and verifies its old child
-     * edge is released immediately rather than reconstructed from the new bytes.
+     * Replaces a typed parent with a direct typed block without children and
+     * verifies its old child edge is released immediately.
      */
     @Test
     void directOverwriteReleasesPreviousReferences() {
         long child = storage.writeNewBlock(DataStorage.Area.DATA, new ReferenceBlock(0));
         long parent = storage.writeNewBlock(DataStorage.Area.DATA, new ReferenceBlock(child));
-        storage.incrementRefCount(parent, DataStorage.Area.DATA);
+        storage.incrementRefCount(new BlockType.BlockRef(parent, DataStorage.Area.DATA, ReferenceBlock.TYPE));
 
-        storage.writeBlockDirect(parent, DataStorage.Area.DATA, new byte[storage.blockSize(DataStorage.Area.DATA)]);
+        storage.writeBlockDirect(parent, DataStorage.Area.DATA, new ReferenceBlock(0));
 
         assertTrue(!storage.refCountAdjustments.containsKey(child));
         assertEquals(0, storage.readBlock(parent, DataStorage.Area.DATA, ReferenceBlock.TYPE).childOffset);
@@ -260,7 +260,7 @@ public class DataStorageTest {
         handle.write(new DataStorage.ByteArrayBlock(new byte[] { 1 }));
         storage.commit();
 
-        var reference = RootBlock.TYPE.getReferencedBlocks(storage.rootBlock, storage).stream()
+        var reference = RootBlock.getBlockType(storage).getReferencedBlocks(storage.rootBlock, storage).stream()
                 .filter(ref -> ref.blockOffset() == handle.blockOffset)
                 .findFirst().orElseThrow();
 
@@ -304,7 +304,7 @@ public class DataStorageTest {
         long firstChild = storage.writeNewBlock(DataStorage.Area.DATA, new ReferenceBlock(0));
         long secondChild = storage.writeNewBlock(DataStorage.Area.DATA, new ReferenceBlock(0));
         long parent = storage.writeNewBlock(DataStorage.Area.DATA, new ReferenceBlock(firstChild));
-        storage.incrementRefCount(parent, DataStorage.Area.DATA);
+        storage.incrementRefCount(new BlockType.BlockRef(parent, DataStorage.Area.DATA, ReferenceBlock.TYPE));
         storage.writeBlock(parent, DataStorage.Area.DATA, new ReferenceBlock(secondChild));
 
         storage.commit();
@@ -377,7 +377,8 @@ public class DataStorageTest {
         void testDeferredRefCountUpdates() {
             byte[] payload = new byte[storage.blockSize(DataStorage.Area.DATA)];
             long blockOff = storage.writeNewBlock(DataStorage.Area.DATA, payload);
-            storage.incrementRefCount(blockOff, DataStorage.Area.DATA);
+            storage.incrementRefCount(new BlockType.BlockRef(blockOff, DataStorage.Area.DATA,
+                    DataStorage.BYTE_ARRAY_BLOCK_TYPE));
 
             // Prior to commit, refcount tree on disk should not contain the block
             assertEquals(0, storage.getRefCount(blockOff));
@@ -401,12 +402,14 @@ public class DataStorageTest {
             byte[] data1 = new byte[storage.blockSize(DataStorage.Area.DATA)];
             Arrays.fill(data1, (byte) 0x11);
             long b1 = storage.writeNewBlock(DataStorage.Area.DATA, data1);
-            storage.incrementRefCount(b1, DataStorage.Area.DATA);
+            storage.incrementRefCount(new BlockType.BlockRef(b1, DataStorage.Area.DATA,
+                    DataStorage.BYTE_ARRAY_BLOCK_TYPE));
 
             byte[] data2 = new byte[storage.blockSize(DataStorage.Area.META)];
             Arrays.fill(data2, (byte) 0x22);
             long b2 = storage.writeNewBlock(DataStorage.Area.META, data2);
-            storage.incrementRefCount(b2, DataStorage.Area.META);
+            storage.incrementRefCount(new BlockType.BlockRef(b2, DataStorage.Area.META,
+                    DataStorage.BYTE_ARRAY_BLOCK_TYPE));
 
             storage.commit();
 
@@ -438,7 +441,8 @@ public class DataStorageTest {
             byte[] v1Data = new byte[storage.blockSize(DataStorage.Area.DATA)];
             Arrays.fill(v1Data, (byte) 0x55);
             long b1 = storage.writeNewBlock(DataStorage.Area.DATA, v1Data);
-            storage.incrementRefCount(b1, DataStorage.Area.DATA);
+            storage.incrementRefCount(new BlockType.BlockRef(b1, DataStorage.Area.DATA,
+                    DataStorage.BYTE_ARRAY_BLOCK_TYPE));
             storage.commit();
 
             long committedRoot = storage.superBlock.rootBlock;
@@ -482,7 +486,8 @@ public class DataStorageTest {
         void testDeferredBlockReclamation() {
             byte[] payload = new byte[storage.blockSize(DataStorage.Area.DATA)];
             long blockOff = storage.writeNewBlock(DataStorage.Area.DATA, payload);
-            storage.incrementRefCount(blockOff, DataStorage.Area.DATA);
+            storage.incrementRefCount(new BlockType.BlockRef(blockOff, DataStorage.Area.DATA,
+                    DataStorage.BYTE_ARRAY_BLOCK_TYPE));
             storage.commit();
 
             assertEquals(1, storage.getRefCount(blockOff));

@@ -134,7 +134,8 @@ public class BTreeTest {
                 new byte[storage.blockSize(DataStorage.Area.DATA)]);
         tree.put(1L, firstBlock);
         long snapshotRoot = tree.rootOffset;
-        storage.incrementRefCount(snapshotRoot, DataStorage.Area.META);
+        storage.incrementRefCount(new BlockType.BlockRef(snapshotRoot, DataStorage.Area.META,
+                DataStorage.BYTE_ARRAY_BLOCK_TYPE));
         storage.commit();
         assertEquals(1, storage.getRefCount(firstBlock));
 
@@ -142,7 +143,8 @@ public class BTreeTest {
                 new byte[storage.blockSize(DataStorage.Area.DATA)]);
         tree.put(1L, secondBlock);
         long liveRoot = tree.rootOffset;
-        storage.incrementRefCount(liveRoot, DataStorage.Area.META);
+        storage.incrementRefCount(new BlockType.BlockRef(liveRoot, DataStorage.Area.META,
+                DataStorage.BYTE_ARRAY_BLOCK_TYPE));
         storage.commit();
         var snapshot = new BTree<>(storage.new BTreeStorage(DataStorage.Area.META), LONG_KEYS, references,
                 snapshotRoot);
@@ -182,7 +184,8 @@ public class BTreeTest {
             assertTrue(storage.isBlockModified(blocks.get(index)));
             assertEquals((byte) index, storage.readBlock(blocks.get(index), DataStorage.Area.DATA)[0]);
         }
-        storage.incrementRefCount(tree.rootOffset, DataStorage.Area.META);
+        storage.incrementRefCount(new BlockType.BlockRef(tree.rootOffset, DataStorage.Area.META,
+                DataStorage.BYTE_ARRAY_BLOCK_TYPE));
         storage.commit();
         for (long block : blocks)
             assertEquals(1, storage.getRefCount(block));
@@ -363,7 +366,8 @@ public class BTreeTest {
             expected.put(k, v);
         }
         long root = tree.rootOffset;
-        storage.incrementRefCount(root, DataStorage.Area.META);
+        storage.incrementRefCount(new BlockType.BlockRef(root, DataStorage.Area.META,
+                DataStorage.BYTE_ARRAY_BLOCK_TYPE));
         storage.commit();
         storage.close();
 
@@ -381,7 +385,8 @@ public class BTreeTest {
         BTree<byte[], byte[]> tree = newTree();
         for (int i = 0; i < 100; i++)
             tree.put(key(i), bytes("old-" + i));
-        storage.incrementRefCount(tree.rootOffset, DataStorage.Area.META);
+        storage.incrementRefCount(new BlockType.BlockRef(tree.rootOffset, DataStorage.Area.META,
+                DataStorage.BYTE_ARRAY_BLOCK_TYPE));
         storage.commit();
 
         long oldRoot = tree.rootOffset;
@@ -402,9 +407,10 @@ public class BTreeTest {
         for (int i = 0; i < 1000; i++)
             tree.put(key(i), bytes("value-" + String.format("%04d", i)));
         assertEquals(1000, count(tree));
-        storage.incrementRefCount(tree.rootOffset, DataStorage.Area.META);
+        storage.incrementRefCount(new BlockType.BlockRef(tree.rootOffset, DataStorage.Area.META,
+                DataStorage.BYTE_ARRAY_BLOCK_TYPE));
         storage.commit();
-        assertTrue(storage.refCountAdjustments.size() > 1);
+        assertTrue(storage.refCountAdjustments.entrySet().size() > 1);
     }
 
     private int count(BTree<byte[], byte[]> tree) {

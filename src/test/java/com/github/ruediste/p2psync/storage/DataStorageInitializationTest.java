@@ -202,15 +202,17 @@ class DataStorageInitializationTest {
         file.putInt(16384);
         file.putInt(blockSize);
 
-        var rootBlock = new RootBlock();
-        rootBlock.infoBlock.blockOffset = infoOffset;
-        rootBlock.fileLength.value = committedLength;
-        ByteBuffer rootBytes = ByteBuffer.allocate(blockSize);
-        rootBytes.put(RootBlock.TYPE.serialize(rootBlock));
-        file.position((int) rootOffset);
-        file.put(rootBytes.array());
-        file.position((int) infoOffset);
-        file.putInt(16384);
+        try (var storage = new DataStorage()) {
+            var rootBlock = new RootBlock(storage);
+            rootBlock.infoBlock.blockOffset = infoOffset;
+            rootBlock.fileLength.value = committedLength;
+            ByteBuffer rootBytes = ByteBuffer.allocate(blockSize);
+            rootBytes.put(rootBlock.getBlockType().serialize(rootBlock));
+            file.position((int) rootOffset);
+            file.put(rootBytes.array());
+            file.position((int) infoOffset);
+            file.putInt(16384);
+        }
         writeFile(path, file.array());
     }
 

@@ -84,6 +84,10 @@ public class RefCountAdjustments {
         });
     }
 
+    public RefCountAdjustment get(long blockOffset) {
+        return refCountAdjustments.get(blockOffset);
+    }
+
     public void remove(long blockOffset) {
         refCountAdjustments.remove(blockOffset);
         refCountAdjustmentsPersistable.remove(blockOffset);

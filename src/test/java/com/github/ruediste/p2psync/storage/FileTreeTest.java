@@ -135,14 +135,14 @@ class FileTreeTest {
         Arrays.fill(original, (byte) 17);
         tree.write(file, 0, original);
         long snapshotRoot = tree.getRootOffset();
-        storage.incrementRefCount(snapshotRoot, DataStorage.Area.META);
+        storage.incrementRefCount(new BlockType.BlockRef(snapshotRoot, DataStorage.Area.META, FileTree.BLOCK_TYPE));
         storage.commit();
 
         byte[] changed = original.clone();
         changed[8190] = 42;
         tree.write(file, 8190, new byte[] { 42 });
         long liveRoot = tree.getRootOffset();
-        storage.incrementRefCount(liveRoot, DataStorage.Area.META);
+        storage.incrementRefCount(new BlockType.BlockRef(liveRoot, DataStorage.Area.META, FileTree.BLOCK_TYPE));
         storage.commit();
         storage.close();
         storage.open(tempDir.resolve("files.db").toString());

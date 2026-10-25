@@ -474,7 +474,7 @@ public class DataStorage implements Closeable {
             // check if this is a block that was newly allocated in this transaction and the
             // count reached zero. If so, remove it.
             if (adjustment.equalsCount && modifiedBlocks.containsKey(ref.blockOffset())) {
-                releaseReferencedBlocks(ref.blockOffset(), ref.area(), ref.type());
+                releaseReferencedBlocks(ref.blockOffset(), ref.area(), Optional.of(ref.type()));
                 modifiedBlocks.remove(ref.blockOffset());
                 boolean wasPending = pendingFreeTreeRemovals.get(ref.area()).remove(ref.blockOffset());
                 boolean wasBeingRemoved = blocksBeingRemovedFromFreeTree.get(ref.area()).contains(ref.blockOffset());
@@ -494,15 +494,23 @@ public class DataStorage implements Closeable {
         }
     }
 
-    private <T> void releaseReferencedBlocks(long blockOffset, Area area, BlockType<T> type) {
+    private void releaseReferencedBlocks(long blockOffset, Area area, Optional<BlockType<?>> type) {
         var existing = modifiedBlocks.get(blockOffset);
         if (existing != null) {
             existing.references().forEach(this::decrementRefCount);
             return;
         }
+        if (type.isEmpty()) {
+            throw new IllegalStateException(
+                    "No block type specified for " + area + " block " + blockOffset);
+        }
+        releaseReferencedBlocksHelper(blockOffset, area, type.get());
+    }
+
+    private <T> void releaseReferencedBlocksHelper(long blockOffset, Area area, BlockType<T> type) {
         T value = type.deserialize(ByteBuffer.wrap(readFromDisk(blockOffset, blockSize(area))));
-        for (Object reference : type.getReferencedBlocks(value, this))
-            decrementRefCount((BlockRef) reference);
+        for (BlockRef reference : type.getReferencedBlocks(value, this))
+            decrementRefCount(reference);
     }
 
     public void open(String path) {
@@ -942,6 +950,10 @@ public class DataStorage implements Closeable {
         writeToDisk(blockOffset, data);
     }
 
+    public <T extends BlockInstance<T>> void writeBlockDirect(long blockOffset, Area area, T data) {
+        writeBlock(blockOffset, area, data, true);
+    }
+
     /**
      * Store a modified block in the current transaction. If direct is true,
      * the block is written directly to disk. Otherwise, the serialized block is
@@ -1122,6 +1134,9 @@ public class DataStorage implements Closeable {
                 }
                 offset = next;
             }
+
+            // switch to a new in memory deferred free block list for this area
+            deferredFreeBlockHeads.put(area, new DeferredFreeBlockListBlock(0));
         }
     }
 
@@ -1343,7 +1358,7 @@ public class DataStorage implements Closeable {
             if (refCountAdjustments.nonPersistableCount() == 0 && persistableOnly > 2)
                 break;
 
-            if (refCountAdjustments.persistableCount() == 0)
+            if (refCountAdjustments.nonPersistableCount() == 0)
                 persistableOnly++;
             else
                 persistableOnly = 0;
@@ -1367,11 +1382,7 @@ public class DataStorage implements Closeable {
                     if (existingCount != null)
                         refCountTree.remove(blockOffset);
 
-                    if (delta.blockType().isEmpty()) {
-                        throw new IllegalStateException(
-                                "No block type specified for " + delta.area + " block " + blockOffset);
-                    }
-                    releaseReferencedBlocks(blockOffset, delta.area, delta.blockType().get());
+                    releaseReferencedBlocks(blockOffset, delta.area, delta.blockType());
 
                     if (modifiedBlocks.containsKey(blockOffset)) {
                         boolean wasPending = pendingFreeTreeRemovals.get(delta.area).remove(blockOffset);
@@ -1469,6 +1480,7 @@ public class DataStorage implements Closeable {
                         buffer.putLong(count);
                         for (int index = 0; index < count; index++)
                             persist.accept(buffer, it.next());
+                        recordIndex += count;
                         long blockOffset = listOffsets.get(blockIndex);
                         writeBlock(blockOffset, Area.META, bytes);
                         next = blockOffset;

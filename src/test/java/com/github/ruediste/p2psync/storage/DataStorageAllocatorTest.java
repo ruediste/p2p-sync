@@ -14,8 +14,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 
 class DataStorageAllocatorTest {
@@ -140,17 +142,19 @@ class DataStorageAllocatorTest {
      * offset is queued for removal in the next in-memory transaction.
      */
     @Test
+    @Timeout(value = 3, unit = TimeUnit.SECONDS)
     void committedDeferredMetaRemovalsRemainPendingInMemory() {
         try (var storage = newPersistentStorage(tempDir.resolve("deferred-meta-removals.db"))) {
             long dataStart = storage.rootBlock.fileLength.value - 8L * 1024 * 1024;
             for (int index = 0; index < 1200; index++)
-                storage.incrementRefCount(dataStart + index * (long) storage.blockSize(DataStorage.Area.DATA),
-                        DataStorage.Area.DATA);
+                storage.incrementRefCount(new BlockType.BlockRef(
+                        dataStart + index * (long) storage.blockSize(DataStorage.Area.DATA), DataStorage.Area.DATA,
+                        DataStorage.BYTE_ARRAY_BLOCK_TYPE));
             storage.commit();
 
             var committedRoot = storage.readBlock(storage.superBlock.rootBlock,
-                    DataStorage.Area.SYSTEM, RootBlock.TYPE);
-            long listOffset = committedRoot.pendingMetaFreeTreeRemovalList.blockOffset;
+                    DataStorage.Area.SYSTEM, RootBlock.getBlockType(storage));
+            long listOffset = committedRoot.pendingMetaFreeTreeRemovalList.value;
             Set<Long> persistedRemovals = new HashSet<>();
             while (listOffset != 0) {
                 ByteBuffer buffer = ByteBuffer.wrap(storage.readBlock(listOffset, DataStorage.Area.META));
@@ -181,7 +185,7 @@ class DataStorageAllocatorTest {
         long fileLength = metaStart + 5L * metaBlockSize;
 
         try (var storage = newStorage("remove-allocated.db", fileLength)) {
-            storage.rootBlock = new RootBlock();
+            storage.rootBlock = new RootBlock(storage);
             storage.freeSpaceTrees.put(DataStorage.Area.SYSTEM, tree(4096, Map.of()));
             storage.freeSpaceTrees.put(DataStorage.Area.DATA,
                     tree(dataBlockSize, Map.of(dataStart, 5L * dataBlockSize)));
@@ -190,7 +194,7 @@ class DataStorageAllocatorTest {
             storage.pendingFreeTreeRemovals.get(DataStorage.Area.DATA).add(dataAllocation);
             storage.pendingFreeTreeRemovals.get(DataStorage.Area.META).add(metaAllocation);
 
-            storage.applyPendingFreeTreeRemovals(true);
+            storage.applyPendingFreeTreeRemovals();
 
             assertEquals(2L * dataBlockSize,
                     toLong(storage.freeSpaceTrees.get(DataStorage.Area.DATA).get(u64(dataStart))));
@@ -244,7 +248,9 @@ class DataStorageAllocatorTest {
             var adjustment = RefCountAdjustments.RefCountAdjustment.create(DataStorage.Area.META);
             adjustment.equalsCount = true;
             adjustment.adjustment = 1;
-            storage.refCountAdjustments.put(blockOffset, adjustment);
+            var storedAdjustment = storage.refCountAdjustments.getOrCreate(blockOffset, DataStorage.Area.META);
+            storedAdjustment.equalsCount = true;
+            storedAdjustment.adjustment = 1;
 
             storage.decrementRefCount(new BlockType.BlockRef(blockOffset, DataStorage.Area.META,
                     DataStorage.BYTE_ARRAY_BLOCK_TYPE));
@@ -265,7 +271,8 @@ class DataStorageAllocatorTest {
         try (var storage = newPersistentStorage(path)) {
             for (DataStorage.Area area : DataStorage.Area.values()) {
                 offsets[area.ordinal()] = storage.writeNewBlock(area, new byte[storage.blockSize(area)]);
-                storage.incrementRefCount(offsets[area.ordinal()], area);
+                storage.incrementRefCount(new BlockType.BlockRef(offsets[area.ordinal()], area,
+                        DataStorage.BYTE_ARRAY_BLOCK_TYPE));
             }
             storage.commit();
 
@@ -307,7 +314,8 @@ class DataStorageAllocatorTest {
         try (var storage = newPersistentStorage(path)) {
             blockOffset = storage.writeNewBlock(DataStorage.Area.META,
                     new byte[storage.blockSize(DataStorage.Area.META)]);
-            storage.incrementRefCount(blockOffset, DataStorage.Area.META);
+            storage.incrementRefCount(new BlockType.BlockRef(blockOffset, DataStorage.Area.META,
+                    DataStorage.BYTE_ARRAY_BLOCK_TYPE));
             storage.commit();
             assertEquals(1, storage.getRefCount(blockOffset));
 
@@ -344,8 +352,9 @@ class DataStorageAllocatorTest {
             lastBlock = dataStart + (adjustmentCount - 1L) * storage.blockSize(DataStorage.Area.DATA);
 
             for (int index = 0; index < adjustmentCount; index++)
-                storage.incrementRefCount(dataStart + index * (long) storage.blockSize(DataStorage.Area.DATA),
-                        DataStorage.Area.DATA);
+                storage.incrementRefCount(new BlockType.BlockRef(
+                        dataStart + index * (long) storage.blockSize(DataStorage.Area.DATA), DataStorage.Area.DATA,
+                        DataStorage.BYTE_ARRAY_BLOCK_TYPE));
 
             storage.commit();
 
@@ -372,14 +381,16 @@ class DataStorageAllocatorTest {
         try (var storage = newPersistentStorage(path)) {
             listHead = storage.writeNewBlock(DataStorage.Area.META,
                     new byte[storage.blockSize(DataStorage.Area.META)]);
-            storage.incrementRefCount(listHead, DataStorage.Area.META);
+            storage.incrementRefCount(new BlockType.BlockRef(listHead, DataStorage.Area.META,
+                    DataStorage.BYTE_ARRAY_BLOCK_TYPE));
             storage.commit();
 
             long rootOffset = storage.superBlock.rootBlock;
             byte[] rootBytes = storage.readBlock(rootOffset, DataStorage.Area.SYSTEM);
-            var rootBlock = RootBlock.TYPE.deserialize(ByteBuffer.wrap(rootBytes));
-            rootBlock.refCountAdjustmentList.blockOffset = listHead;
-            ByteBuffer.wrap(rootBytes).put(RootBlock.TYPE.serialize(rootBlock));
+            var rootType = RootBlock.getBlockType(storage);
+            var rootBlock = rootType.deserialize(ByteBuffer.wrap(rootBytes));
+            rootBlock.refCountAdjustmentList.value = listHead;
+            ByteBuffer.wrap(rootBytes).put(rootType.serialize(rootBlock));
             storage.file.seek(listHead);
             storage.file.writeLong(listHead);
             storage.file.seek(rootOffset);
@@ -411,7 +422,8 @@ class DataStorageAllocatorTest {
             for (int i = 0; i < blockCount; i++) {
                 offsets[i] = storage.writeNewBlock(DataStorage.Area.DATA,
                         new byte[storage.blockSize(DataStorage.Area.DATA)]);
-                storage.incrementRefCount(offsets[i], DataStorage.Area.DATA);
+                storage.incrementRefCount(new BlockType.BlockRef(offsets[i], DataStorage.Area.DATA,
+                        DataStorage.BYTE_ARRAY_BLOCK_TYPE));
             }
             storage.commit();
 
@@ -434,7 +446,7 @@ class DataStorageAllocatorTest {
         storage.superBlock.systemBlockSize = 4096;
         storage.superBlock.metaBlockSize = 16384;
         storage.superBlock.dataBlockSize = 4096;
-        storage.rootBlock = new RootBlock();
+        storage.rootBlock = new RootBlock(storage);
         storage.file = openFile(tempDir.resolve(fileName), fileLength);
         storage.rootBlock.fileLength.value = fileLength;
         return storage;
