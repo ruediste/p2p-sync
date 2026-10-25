@@ -84,7 +84,7 @@ public class RootBlock extends SlotBlock<RootBlock> {
     public final LongSlot metaDeferredFreeBlockList = longSlot();
     public final LongSlot dataDeferredFreeBlockList = longSlot();
     public final LongSlot pendingMetaFreeTreeRemovalList = longSlot();
-    public final LongSlot refCountAdjustmentList = longSlot();
+    public final LongSlot refCountUpdateList = longSlot();
 
     public final RootRefsSlot refHandles = rootRefsSlot();
 

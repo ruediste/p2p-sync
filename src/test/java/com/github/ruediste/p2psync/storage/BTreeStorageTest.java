@@ -76,9 +76,9 @@ class BTreeStorageTest {
         public void writeBlock(long blockOffset, BTree.NodeBlock data) {
             assertTrue(modified.contains(blockOffset));
             byte[] previousData = blocks.get(blockOffset);
-            adjustChildReferences(data, 1);
+            updateChildReferences(data, 1);
             blocks.put(blockOffset, data.data.clone());
-            adjustChildReferences(blockOffset, previousData, -1);
+            updateChildReferences(blockOffset, previousData, -1);
         }
 
         @Override
@@ -89,7 +89,7 @@ class BTreeStorageTest {
             blocks.put(offset, data.data.clone());
             references.put(offset, 1);
             modified.add(offset);
-            adjustChildReferences(data, 1);
+            updateChildReferences(data, 1);
             unclaimed.add(offset);
             return offset;
         }
@@ -113,7 +113,7 @@ class BTreeStorageTest {
             assertTrue(remaining >= 0);
             references.put(blockOffset, remaining);
             if (remaining == 0) {
-                adjustChildReferences(blockOffset, blocks.get(blockOffset), -1);
+                updateChildReferences(blockOffset, blocks.get(blockOffset), -1);
                 blocks.remove(blockOffset);
                 references.remove(blockOffset);
                 modified.remove(blockOffset);
@@ -138,19 +138,19 @@ class BTreeStorageTest {
             release(blockOffset);
         }
 
-        private void adjustChildReferences(long blockOffset, byte[] data, int adjustment) {
+        private void updateChildReferences(long blockOffset, byte[] data, int referenceChange) {
             if (data == null)
                 return;
-            adjustChildReferences(new BTree.NodeBlock(data, nodeType), adjustment);
+            updateChildReferences(new BTree.NodeBlock(data, nodeType), referenceChange);
         }
 
-        private void adjustChildReferences(BTree.NodeBlock block, int adjustment) {
+        private void updateChildReferences(BTree.NodeBlock block, int referenceChange) {
             for (var reference : nodeType.getReferencedBlocks(block, null)) {
-                if (adjustment > 0)
+                if (referenceChange > 0)
                     retain(reference.blockOffset());
                 else
                     release(reference.blockOffset());
-                if (adjustment > 0 && unclaimed.remove(reference.blockOffset()))
+                if (referenceChange > 0 && unclaimed.remove(reference.blockOffset()))
                     release(reference.blockOffset());
             }
         }
@@ -211,7 +211,8 @@ class BTreeStorageTest {
         long oldRoot = tree.rootOffset;
         storage.retainRoot(oldRoot);
         storage.modified.clear();
-        BTree<byte[], byte[]> snapshot = new BTree<>(storage, BTree.KeySerializer.bytes(2), BTree.BYTE_ARRAY_ENTRY_TYPE, oldRoot);
+        BTree<byte[], byte[]> snapshot = new BTree<>(storage, BTree.KeySerializer.bytes(2), BTree.BYTE_ARRAY_ENTRY_TYPE,
+                oldRoot);
 
         put(storage, tree, key(50), new byte[] { 42 });
         assertNotEquals(oldRoot, tree.rootOffset);

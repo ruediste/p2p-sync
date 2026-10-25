@@ -122,7 +122,7 @@ class DataStorageAllocatorTest {
 
             assertTrue(storage.pendingFreeTreeRemovals.get(DataStorage.Area.META).contains(reserved));
             assertFalse(storage.freeBlocks.get(DataStorage.Area.META).contains(reserved));
-            assertEquals(0, storage.refCountAdjustments.get(reserved).adjustment);
+            assertEquals(0, storage.refCountUpdates.get(reserved).count);
         }
     }
 
@@ -246,12 +246,7 @@ class DataStorageAllocatorTest {
             storage.modifiedBlocks.put(blockOffset,
                     new DataStorage.ModifiedBlock(new byte[16384], java.util.List.of()));
             storage.blocksBeingRemovedFromFreeTree.get(DataStorage.Area.META).add(blockOffset);
-            var adjustment = RefCountAdjustments.RefCountAdjustment.create(DataStorage.Area.META);
-            adjustment.equalsCount = true;
-            adjustment.adjustment = 1;
-            var storedAdjustment = storage.refCountAdjustments.getOrCreate(blockOffset, DataStorage.Area.META);
-            storedAdjustment.equalsCount = true;
-            storedAdjustment.adjustment = 1;
+            storage.refCountUpdates.create(blockOffset, DataStorage.Area.META, 0).count = 1;
 
             storage.decrementRefCount(new BlockType.BlockRef(blockOffset, DataStorage.Area.META,
                     DataStorage.BYTE_ARRAY_BLOCK_TYPE));
@@ -343,16 +338,16 @@ class DataStorageAllocatorTest {
     @Test
     void refCountUpdatesRoundTripAcrossLargeBatch() {
         Path path = tempDir.resolve("deferred-ref-count-rollover.db");
-        int adjustmentCount;
+        int updateCount;
         long firstBlock;
         long lastBlock;
         try (var storage = newPersistentStorage(path)) {
-            adjustmentCount = 1200;
+            updateCount = 1200;
             long dataStart = storage.rootBlock.fileLength.value - 8L * 1024 * 1024;
             firstBlock = dataStart;
-            lastBlock = dataStart + (adjustmentCount - 1L) * storage.blockSize(DataStorage.Area.DATA);
+            lastBlock = dataStart + (updateCount - 1L) * storage.blockSize(DataStorage.Area.DATA);
 
-            for (int index = 0; index < adjustmentCount; index++)
+            for (int index = 0; index < updateCount; index++)
                 storage.incrementRefCount(new BlockType.BlockRef(
                         dataStart + index * (long) storage.blockSize(DataStorage.Area.DATA), DataStorage.Area.DATA,
                         DataStorage.BYTE_ARRAY_BLOCK_TYPE));
@@ -372,11 +367,11 @@ class DataStorageAllocatorTest {
     }
 
     /**
-     * Creates a persisted adjustment-list self-cycle and verifies that opening
+     * Creates a persisted update-list self-cycle and verifies that opening
      * the file rejects the malformed chain.
      */
     @Test
-    void rejectsCyclicDeferredRefCountAdjustmentList() throws IOException {
+    void rejectsCyclicDeferredRefCountUpdateList() throws IOException {
         Path path = tempDir.resolve("deferred-ref-count-cycle.db");
         long listHead;
         try (var storage = newPersistentStorage(path)) {
@@ -390,7 +385,7 @@ class DataStorageAllocatorTest {
             byte[] rootBytes = storage.readBlock(rootOffset, DataStorage.Area.SYSTEM);
             var rootType = RootBlock.getBlockType(storage);
             var rootBlock = rootType.deserialize(ByteBuffer.wrap(rootBytes));
-            rootBlock.refCountAdjustmentList.value = listHead;
+            rootBlock.refCountUpdateList.value = listHead;
             ByteBuffer.wrap(rootBytes).put(rootType.serialize(rootBlock));
             storage.file.seek(listHead);
             storage.file.writeLong(listHead);
@@ -400,14 +395,13 @@ class DataStorageAllocatorTest {
 
         try (var reopened = new DataStorage()) {
             var exception = assertThrows(IllegalStateException.class, () -> reopened.open(path.toString()));
-            assertEquals("Cycle in deferred ref-count adjustment list", exception.getMessage());
+            assertEquals("Cycle in deferred ref-count update list", exception.getMessage());
         }
     }
 
     private static void assertEffectiveRefCount(DataStorage storage, long blockOffset, int expected) {
-        var adjustment = storage.refCountAdjustments.get(blockOffset);
-        long pending = adjustment == null ? 0 : adjustment.adjustment;
-        assertEquals(expected, storage.getRefCount(blockOffset) + pending);
+        var update = storage.refCountUpdates.get(blockOffset);
+        assertEquals(expected, update == null ? storage.getRefCount(blockOffset) : update.count);
     }
 
     /**

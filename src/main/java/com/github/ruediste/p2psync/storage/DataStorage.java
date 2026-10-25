@@ -84,12 +84,12 @@ public class DataStorage implements Closeable {
     private enum Mod {
         /** no modification */
         NONE,
-        /** general reference count adjustment */
-        REFCOUNT_ADJ,
-        /** reference count adjustment for blocks of a free tree */
-        REFCOUNT_ADJ_FREE_TREE,
-        /** reference count adjustment for blocks of the meta free */
-        REFCOUNT_ADJ_FREE_TREE_META,
+        /** general reference count update */
+        REFCOUNT_UPDATE,
+        /** reference count update for blocks of a free tree */
+        REFCOUNT_UPDATE_FREE_TREE,
+        /** reference count update for blocks of the meta free */
+        REFCOUNT_UPDATE_FREE_TREE_META,
         /** add pending free tree removal {@link #pendingFreeTreeRemovals} */
         ADD_PENDING_FREE_TREE_REMOVAL
     }
@@ -384,11 +384,17 @@ public class DataStorage implements Closeable {
     final HashMap<Long, ModifiedBlock> modifiedBlocks = new HashMap<>();
 
     /**
-     * Invariant: adjustments can only be negative if the block has been allocated
-     * in a previous transaction. A block that has been allocated in the current
-     * transaction is freed immediately if the adjustment becomes 0.
+     * Pending absolute reference counts. Newly allocated blocks are freed
+     * immediately when their count becomes zero.
      */
-    RefCountAdjustments refCountAdjustments = new RefCountAdjustments(this);
+    RefCountUpdates refCountUpdates = new RefCountUpdates(this);
+    private long refCountBeingApplied;
+    /**
+     * Refcount-tree writes can split nodes before their parent links are updated.
+     * Reference callbacks must not read initial counts from that intermediate tree,
+     * so they are queued and replayed in order once the tree write is complete.
+     */
+    private List<Runnable> deferredRefCountChanges;
 
     private void resetInMemoryState() {
         superBlock = null;
@@ -405,7 +411,7 @@ public class DataStorage implements Closeable {
         freeSpaceTrees.clear();
         freeSpaceAllocationOffset.clear();
         modifiedBlocks.clear();
-        refCountAdjustments.clear();
+        refCountUpdates.clear();
         refCountTree = null;
     }
 
@@ -455,26 +461,36 @@ public class DataStorage implements Closeable {
     public void incrementRefCount(BlockRef ref) {
         if (ref.blockOffset() == 0)
             return;
-        var adjustment = refCountAdjustments.getOrCreate(ref.blockOffset(), ref.area());
-        adjustment.adjustment += 1;
-
-        // If the adjustment becomes 0 it has no more effect and can be removed
-        if (adjustment.adjustment == 0)
-            refCountAdjustments.remove(ref.blockOffset());
+        if (deferredRefCountChanges != null) {
+            deferredRefCountChanges.add(() -> incrementRefCount(ref));
+            return;
+        }
+        var update = refCountUpdates.getOrCreate(ref.blockOffset(), ref.area());
+        update.count = Math.incrementExact(update.count);
+        if (ref.blockOffset() != refCountBeingApplied && update.count == update.initialCount)
+            refCountUpdates.remove(ref.blockOffset());
     }
 
     public void decrementRefCount(BlockRef ref) {
         if (ref.blockOffset() == 0)
             return;
+        if (deferredRefCountChanges != null) {
+            deferredRefCountChanges.add(() -> decrementRefCount(ref));
+            return;
+        }
 
-        var adjustment = refCountAdjustments.getOrCreate(ref.blockOffset(), ref.area());
+        var update = refCountUpdates.getOrCreate(ref.blockOffset(), ref.area());
 
-        adjustment.adjustment--;
+        if (update.count <= 0)
+            throw new IllegalStateException("Reference count for " + ref.area() + " block " + ref.blockOffset()
+                    + " would become negative");
+        update.count--;
 
-        if (adjustment.adjustment == 0) {
+        if (update.count == 0) {
             // check if this is a block that was newly allocated in this transaction and the
             // count reached zero. If so, remove it.
-            if (adjustment.equalsCount && modifiedBlocks.containsKey(ref.blockOffset())) {
+            if (ref.blockOffset() != refCountBeingApplied && modifiedBlocks.containsKey(ref.blockOffset())
+                    && update.initialCount == 0) {
                 releaseReferencedBlocks(ref.blockOffset(), ref.area(), Optional.of(ref.type()));
                 modifiedBlocks.remove(ref.blockOffset());
                 boolean wasPending = pendingFreeTreeRemovals.get(ref.area()).remove(ref.blockOffset());
@@ -487,11 +503,12 @@ public class DataStorage implements Closeable {
                     freeBlocks.get(ref.area()).add(ref.blockOffset());
                 else
                     addBlockToFreeTree(ref.blockOffset(), ref.area());
+                refCountUpdates.remove(ref.blockOffset());
+            } else {
+                refCountUpdates.setBlockType(ref.blockOffset(), update, ref.type());
             }
-            refCountAdjustments.remove(ref.blockOffset());
-        } else if (adjustment.adjustment < 0) {
-            if (adjustment.blockType().isEmpty())
-                refCountAdjustments.setBlockType(ref.blockOffset(), adjustment, ref.type());
+        } else if (ref.blockOffset() != refCountBeingApplied && update.count == update.initialCount) {
+            refCountUpdates.remove(ref.blockOffset());
         }
     }
 
@@ -536,7 +553,7 @@ public class DataStorage implements Closeable {
             readInfoBlock();
             loadSystemTrees();
             loadPendingMetaFreeTreeRemoveBlocks();
-            loadDeferredRefCountAdjustmentList();
+            loadDeferredRefCountUpdateList();
             addDeferredFreeBlocksToFreeTree();
         } catch (RuntimeException e) {
             close();
@@ -778,17 +795,17 @@ public class DataStorage implements Closeable {
      * attempts to refill the free blocks, possibly extending the storage if needed.
      *
      * <ul>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE} (area ! = META), otherwise only
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE} (area ! = META), otherwise only
      * meta free tree is modified</li>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE_META} can happen in for all
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE_META} can happen in for all
      * areas, as all free trees live in the META area</li>
      * <li>{@link Mod#ADD_PENDING_FREE_TREE_REMOVAL}</li>
-     * <li>{@link Mod#REFCOUNT_ADJ}</li>
+     * <li>{@link Mod#REFCOUNT_UPDATE}</li>
      * </ul>
      */
     long takeFreeBlock(Area area) {
         var offset = takeFreeBlockNoRefcount(area);
-        refCountAdjustments.getOrCreate(offset, area).equalsCount = true;
+        refCountUpdates.create(offset, area, 0);
         return offset;
     }
 
@@ -802,8 +819,8 @@ public class DataStorage implements Closeable {
         if (pendingFreeTreeRemovals.get(area).contains(offset)
                 || blocksBeingRemovedFromFreeTree.get(area).contains(offset))
             throw new IllegalStateException("Block is already allocated or reserved: " + offset);
-        if (refCountAdjustments.containsKey(offset))
-            throw new IllegalStateException("Block already has a refcount adjustment: " + offset);
+        if (refCountUpdates.containsKey(offset))
+            throw new IllegalStateException("Block already has a refcount update: " + offset);
         freeBlocks.remove(offset);
         pendingFreeTreeRemovals.get(area).add(offset);
         modifiedBlocks.put(offset, new ModifiedBlock(null, List.of()));
@@ -815,10 +832,11 @@ public class DataStorage implements Closeable {
      * true if the storage was extended.
      * 
      * <ul>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE} (result && area ! = META), otherwise
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE} (result && area ! = META),
+     * otherwise
      * only
      * meta free tree is modified</li>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE_META} (result) can happen in for all
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE_META} (result) can happen in for all
      * areas, as all free trees live in the META area</li>
      * </ul>
      */
@@ -956,7 +974,7 @@ public class DataStorage implements Closeable {
      * later.
      * *
      * <ul>
-     * <li>{@link Mod#REFCOUNT_ADJ}</li> If the block or the old block references
+     * <li>{@link Mod#REFCOUNT_UPDATE}</li> If the block or the old block references
      * other blocks
      * </ul>
      */
@@ -993,7 +1011,7 @@ public class DataStorage implements Closeable {
      * reference counts for any replaced blocks.
      * 
      * <ul>
-     * <li>{@link Mod#REFCOUNT_ADJ}</li>
+     * <li>{@link Mod#REFCOUNT_UPDATE}</li>
      * </ul>
      */
     private <T extends BlockInstance<T>> void writeBlock(long blockOffset, Area area, T data, boolean direct) {
@@ -1006,7 +1024,7 @@ public class DataStorage implements Closeable {
         var existing = modifiedBlocks.put(blockOffset, new ModifiedBlock(direct ? null : bytes, references));
         if (existing != null)
             existing.references().forEach(this::decrementRefCount);
-        if (refCountAdjustments.containsKey(blockOffset))
+        if (refCountUpdates.containsKey(blockOffset))
             if (direct)
                 writeToDisk(blockOffset, bytes);
     }
@@ -1014,12 +1032,12 @@ public class DataStorage implements Closeable {
     /**
      * Write a new block. The refcount of the new block is zero.
      * <ul>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE} (area ! = META), otherwise only
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE} (area ! = META), otherwise only
      * meta free tree is modified</li>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE_META} can happen in for all
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE_META} can happen in for all
      * areas, as all free trees live in the META area</li>
      * <li>{@link Mod#ADD_PENDING_FREE_TREE_REMOVAL}</li>
-     * <li>{@link Mod#REFCOUNT_ADJ}</li>
+     * <li>{@link Mod#REFCOUNT_UPDATE}</li>
      * </ul>
      */
     public <T extends BlockInstance<T>> long writeNewBlock(Area area, T data) {
@@ -1034,9 +1052,9 @@ public class DataStorage implements Closeable {
      * The block may not reference other blocks.
      * 
      * <ul>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE} (area ! = META), otherwise only
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE} (area ! = META), otherwise only
      * meta free tree is modified</li>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE_META} can happen in for all
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE_META} can happen in for all
      * areas, as all free trees live in the META area</li>
      * <li>{@link Mod#ADD_PENDING_FREE_TREE_REMOVAL}</li>
      * </ul>
@@ -1051,12 +1069,12 @@ public class DataStorage implements Closeable {
     /**
      * Write a new block directly to disk. The refcount of the new block is zero.
      * <ul>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE} (area ! = META), otherwise only
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE} (area ! = META), otherwise only
      * meta free tree is modified</li>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE_META} can happen in for all
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE_META} can happen in for all
      * areas, as all free trees live in the META area</li>
      * <li>{@link Mod#ADD_PENDING_FREE_TREE_REMOVAL}</li>
-     * <li>{@link Mod#REFCOUNT_ADJ}</li>
+     * <li>{@link Mod#REFCOUNT_UPDATE}</li>
      * </ul>
      */
     public <T extends BlockInstance<T>> long writeNewBlockDirect(Area area, T data) {
@@ -1082,12 +1100,12 @@ public class DataStorage implements Closeable {
      * longer referenced to the deferred free blocks list for the specified area.
      * 
      * <ul>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE} (area ! = META), otherwise only
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE} (area ! = META), otherwise only
      * meta free tree is modified</li>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE_META} can happen in for all
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE_META} can happen in for all
      * areas, as all free trees live in the META area</li>
      * <li>{@link Mod#ADD_PENDING_FREE_TREE_REMOVAL}</li>
-     * <li>{@link Mod#REFCOUNT_ADJ}</li>
+     * <li>{@link Mod#REFCOUNT_UPDATE}</li>
      * </ul>
      */
     public void addToDeferredFreeBlocks(long blockOffset, Area area) {
@@ -1189,17 +1207,17 @@ public class DataStorage implements Closeable {
         }
     }
 
-    private void loadDeferredRefCountAdjustmentList() {
-        refCountAdjustments.clear();
+    private void loadDeferredRefCountUpdateList() {
+        refCountUpdates.clear();
 
-        long offset = rootBlock.refCountAdjustmentList.value;
-        rootBlock.refCountAdjustmentList.value = 0;
+        long offset = rootBlock.refCountUpdateList.value;
+        rootBlock.refCountUpdateList.value = 0;
         Set<Long> visited = new HashSet<>();
-        Set<Long> adjustedBlocks = new HashSet<>();
+        Set<Long> updatedBlocks = new HashSet<>();
         while (offset != 0) {
-            validateBlockOffset(offset, blockSize(Area.META), "deferred-ref-count-adjustment list block");
+            validateBlockOffset(offset, blockSize(Area.META), "deferred-ref-count-update list block");
             if (!visited.add(offset))
-                throw new IllegalStateException("Cycle in deferred ref-count adjustment list");
+                throw new IllegalStateException("Cycle in deferred ref-count update list");
 
             addToDeferredFreeBlocks(offset, Area.META);
 
@@ -1209,25 +1227,25 @@ public class DataStorage implements Closeable {
 
             for (int index = 0; index < count; index++) {
                 long blockOffset = buffer.getLong();
-                int adjustmentValue = buffer.getInt();
+                long countValue = buffer.getLong();
                 Area area = areaFromCode(Byte.toUnsignedInt(buffer.get()));
                 int blockTypeCode = Byte.toUnsignedInt(buffer.get());
                 Optional<BlockType<?>> blockType = blockTypeCode == 0
                         ? Optional.empty()
                         : Optional.of(PersistableBlockType.fromCode(blockTypeCode).blockType.apply(this));
 
-                validateBlockOffset(blockOffset, blockSize(area), "deferred ref-count adjustment block");
-                if (adjustmentValue == 0)
-                    throw new IllegalStateException("Zero deferred ref-count adjustment for block " + blockOffset);
-                if (!adjustedBlocks.add(blockOffset))
-                    throw new IllegalStateException("Duplicate deferred ref-count adjustment for block " + blockOffset);
-                if (adjustmentValue < 0 && blockType.isEmpty())
+                validateBlockOffset(blockOffset, blockSize(area), "deferred ref-count update block");
+                if (countValue < 0)
+                    throw new IllegalStateException("Negative deferred ref-count for block " + blockOffset);
+                if (!updatedBlocks.add(blockOffset))
+                    throw new IllegalStateException("Duplicate deferred ref-count update for block " + blockOffset);
+                if (countValue == 0 && blockType.isEmpty())
                     throw new IllegalStateException(
-                            "Missing delete action for deferred ref-count adjustment " + blockOffset);
+                            "Missing delete action for deferred ref-count update " + blockOffset);
 
-                var adjustment = refCountAdjustments.getOrCreate(blockOffset, area);
-                blockType.ifPresent(bt -> refCountAdjustments.setBlockType(blockOffset, adjustment, bt));
-                adjustment.adjustment = adjustmentValue;
+                var update = refCountUpdates.getOrCreate(blockOffset, area);
+                update.count = countValue;
+                blockType.ifPresent(bt -> refCountUpdates.setBlockType(blockOffset, update, bt));
             }
             offset = next;
         }
@@ -1254,9 +1272,9 @@ public class DataStorage implements Closeable {
      * Extends the storage area by allocating additional blocks. Updates the
      * corresponding free tree.
      *
-     * @see Mod#REFCOUNT_ADJ_FREE_TREE (area ! = META), otherwise only meta free
+     * @see Mod#REFCOUNT_UPDATE_FREE_TREE (area ! = META), otherwise only meta free
      *      tree is modified
-     * @see Mod#REFCOUNT_ADJ_FREE_TREE_META can happen for all areas, as all free
+     * @see Mod#REFCOUNT_UPDATE_FREE_TREE_META can happen for all areas, as all free
      *      trees live in the META area, and requesting additional blocks may
      *      require extending the META area as well.
      */
@@ -1298,12 +1316,12 @@ public class DataStorage implements Closeable {
      * Splits the free extent if necessary.
      * *
      * <ul>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE} (area ! = META), otherwise only
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE} (area ! = META), otherwise only
      * meta free tree is modified</li>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE_META} can happen in for all
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE_META} can happen in for all
      * areas, as all free trees live in the META area</li>
      * <li>{@link Mod#ADD_PENDING_FREE_TREE_REMOVAL}</li>
-     * <li>{@link Mod#REFCOUNT_ADJ}</li>
+     * <li>{@link Mod#REFCOUNT_UPDATE}</li>
      * </ul>
      */
     private void removeBlockFromFreeTree(Area area, long blockOffset) {
@@ -1338,12 +1356,12 @@ public class DataStorage implements Closeable {
     /**
      * Writes all pending free tree removals from the free trees.
      * <ul>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE} (area ! = META), otherwise only
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE} (area ! = META), otherwise only
      * meta free tree is modified</li>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE_META} can happen in for all
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE_META} can happen in for all
      * areas, as all free trees live in the META area</li>
      * <li>{@link Mod#ADD_PENDING_FREE_TREE_REMOVAL}</li>
-     * <li>{@link Mod#REFCOUNT_ADJ}</li>
+     * <li>{@link Mod#REFCOUNT_UPDATE}</li>
      * </ul>
      */
     void applyPendingFreeTreeRemovals() {
@@ -1360,6 +1378,8 @@ public class DataStorage implements Closeable {
             for (long blockOffset : pending)
                 removeBlockFromFreeTree(area, blockOffset);
 
+            blocksBeingRemovedFromFreeTree.put(area, new HashSet<>());
+
             // Reinsert only after the batch is gone from the tree, avoiding recursive
             // updates.
             for (long blockOffset : putBackBlocksToFreeTree.get(area))
@@ -1370,23 +1390,23 @@ public class DataStorage implements Closeable {
         }
     }
 
-    private void applyRefCountAdjustments() {
+    private void applyRefCountUpdates() {
         // In each iteration, referenced blocks are released, which will result in
-        // further refCountAdjustments being added. In addition, the refCountTree is
-        // updated, which causes further adjustments and allocations from the meta
+        // further refCountUpdates being added. In addition, the refCountTree is
+        // updated, which causes further updates and allocations from the meta
         // space, which can in turn cause modifications to the meta free tree in case of
-        // meta space extensions. To detect when adjustments have stabilized, we
+        // meta space extensions. To detect when updates have stabilized, we
         // separate updates from the meta free tree and the refCountTree from other
-        // adjustments..
+        // updates..
         int persistableOnly = 0;
-        while (refCountAdjustments.persistableCount() > 0 || refCountAdjustments.nonPersistableCount() > 0) {
+        while (refCountUpdates.persistableCount() > 0 || refCountUpdates.nonPersistableCount() > 0) {
 
-            // return if there are no more adjustments and no management-only adjustments
+            // return if there are no more updates and no management-only updates
             // pending
-            if (refCountAdjustments.nonPersistableCount() == 0 && persistableOnly > 2)
+            if (refCountUpdates.nonPersistableCount() == 0 && persistableOnly > 2)
                 break;
 
-            if (refCountAdjustments.nonPersistableCount() == 0)
+            if (refCountUpdates.nonPersistableCount() == 0)
                 persistableOnly++;
             else
                 persistableOnly = 0;
@@ -1394,50 +1414,66 @@ public class DataStorage implements Closeable {
             // update the root block to ensure it reflects the latest block references
             updateAndWriteRootBlock();
 
-            // switch the adjustment maps to work on a fresh set in the next iteration
-            var refCountAdjustments = this.refCountAdjustments;
-            this.refCountAdjustments = new RefCountAdjustments(this);
-
-            for (var e : refCountAdjustments.entrySet()) {
-                long blockOffset = e.getKey();
-                var delta = e.getValue();
-                int adjustment = delta.adjustment;
-
-                var existingCount = refCountTree.get(blockOffset);
-                var count = existingCount == null ? 0 : existingCount;
-                count += adjustment;
-                if (count == 0) {
-                    if (existingCount != null)
+            for (var entry : new ArrayList<>(refCountUpdates.entrySet())) {
+                long blockOffset = entry.getKey();
+                var update = entry.getValue();
+                if (refCountUpdates.get(blockOffset) != update)
+                    continue;
+                if (update.count == 0 && (refCountTree.rootOffset == blockOffset
+                        || freeSpaceTrees.values().stream().anyMatch(tree -> tree.rootOffset == blockOffset)))
+                    continue;
+                long count = update.count;
+                refCountBeingApplied = blockOffset;
+                deferredRefCountChanges = new ArrayList<>();
+                try {
+                    if (count == 0)
                         refCountTree.remove(blockOffset);
-
-                    releaseReferencedBlocks(blockOffset, delta.area, delta.blockType());
+                    else if (count > 0)
+                        refCountTree.put(blockOffset, count);
+                    else
+                        throw new IllegalStateException("Reference count for " + update.area + " block " + blockOffset
+                                + " went negative: " + count);
+                    update.initialCount = count;
+                    var changes = deferredRefCountChanges;
+                    deferredRefCountChanges = null;
+                    changes.forEach(Runnable::run);
+                } finally {
+                    deferredRefCountChanges = null;
+                    refCountBeingApplied = 0;
+                }
+                if (update.count != count)
+                    continue;
+                refCountUpdates.remove(blockOffset);
+                if (count == 0) {
+                    releaseReferencedBlocks(blockOffset, update.area, update.blockType());
 
                     if (modifiedBlocks.containsKey(blockOffset)) {
-                        boolean wasPending = pendingFreeTreeRemovals.get(delta.area).remove(blockOffset);
-                        if (wasPending)
-                            freeBlocks.get(delta.area).add(blockOffset);
+                        modifiedBlocks.remove(blockOffset);
+                        boolean wasPending = pendingFreeTreeRemovals.get(update.area).remove(blockOffset);
+                        boolean wasBeingRemoved = blocksBeingRemovedFromFreeTree.get(update.area).contains(blockOffset);
+                        if (wasPending && wasBeingRemoved)
+                            throw new IllegalStateException("Block is both pending and being removed: " + blockOffset);
+                        if (wasBeingRemoved)
+                            putBackBlocksToFreeTree.get(update.area).add(blockOffset);
+                        else if (wasPending)
+                            freeBlocks.get(update.area).add(blockOffset);
                         else
-                            addBlockToFreeTree(blockOffset, delta.area);
+                            addBlockToFreeTree(blockOffset, update.area);
                     } else {
                         // This block was used in the previous transaction. Add it to the free space in
                         // the next transaction.
-                        addToDeferredFreeBlocks(blockOffset, delta.area);
+                        addToDeferredFreeBlocks(blockOffset, update.area);
                     }
-                } else if (count < 0) {
-                    throw new IllegalStateException("Reference count for " + delta.area + " block " + blockOffset
-                            + " went negative: existing=" + (count - adjustment) + ", adjustment=" + adjustment);
-                } else {
-                    refCountTree.put(blockOffset, count);
                 }
             }
         }
     }
 
-    private void applyRefcountAdjustmentsAndRemovePendingFreeTreeRemovals() {
+    private void applyRefCountUpdatesAndRemovePendingFreeTreeRemovals() {
         // Bound recursive META-tree updates; persist any remaining META work for next
         // time.
         for (int round = 0; round < 2; round++) {
-            applyRefCountAdjustments();
+            applyRefCountUpdates();
             applyPendingFreeTreeRemovals();
         }
     }
@@ -1492,7 +1528,7 @@ public class DataStorage implements Closeable {
                 },
                 () -> {
                     Collection<T> records = entries.get();
-                    if (records.isEmpty()) {
+                    if (records.isEmpty() && listOffsets.isEmpty()) {
                         setHead.accept(0L);
                         return;
                     }
@@ -1542,39 +1578,40 @@ public class DataStorage implements Closeable {
                 ByteBuffer::putLong, head -> rootBlock.pendingMetaFreeTreeRemovalList.value = head);
     }
 
-    private DeferredPersistor persistRefCountAdjustmentList() {
+    private DeferredPersistor persistRefCountUpdateList() {
         return persistListInMeta(
-                () -> refCountAdjustments.entrySet(),
-                // blockOffset + adjustment + area + blockType
-                Long.BYTES + Integer.BYTES + 2,
+                () -> refCountUpdates.entrySet(),
+                Long.BYTES + Long.BYTES + 2,
                 (buffer, entry) -> {
                     long blockOffset = entry.getKey();
-                    RefCountAdjustments.RefCountAdjustment adjustment = entry.getValue();
+                    RefCountUpdates.RefCountUpdate update = entry.getValue();
                     int blockTypeCode = 0;
-                    if (adjustment.blockType().isPresent()) {
-                        var persistableType = persistableBlockType(adjustment.blockType().get())
+                    if (update.count == 0 && update.blockType().isPresent()) {
+                        var persistableType = persistableBlockType(update.blockType().get())
                                 .orElseThrow(() -> new IllegalStateException(
                                         "Block type is not registered for deferred refcount updates: "
-                                                + adjustment.blockType().get()));
+                                                + update.area + " block " + blockOffset + " (initial="
+                                                + update.initialCount + ", count=" + update.count + "): "
+                                                + update.blockType().get()));
                         blockTypeCode = persistableType.code;
                     }
-                    if (adjustment.adjustment < 0 && blockTypeCode == 0)
+                    if (update.count == 0 && blockTypeCode == 0 && !modifiedBlocks.containsKey(blockOffset))
                         throw new IllegalStateException(
                                 "Missing durable delete action for block " + blockOffset);
                     buffer.putLong(blockOffset);
-                    buffer.putInt(adjustment.adjustment);
-                    buffer.put((byte) areaCode(adjustment.area));
+                    buffer.putLong(update.count);
+                    buffer.put((byte) areaCode(update.area));
                     buffer.put((byte) blockTypeCode);
-                }, head -> rootBlock.refCountAdjustmentList.value = head);
+                }, head -> rootBlock.refCountUpdateList.value = head);
     }
 
     /**
      * write the deferred free block heads and update the root block with their
      * offsets
      * <ul>
-     * <li>{@link Mod#REFCOUNT_ADJ_FREE_TREE}</li>
+     * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE}</li>
      * <li>{@link Mod#ADD_PENDING_FREE_TREE_REMOVAL}</li>
-     * <li>{@link Mod#REFCOUNT_ADJ}</li>
+     * <li>{@link Mod#REFCOUNT_UPDATE}</li>
      * </ul>
      */
     private DeferredPersistor writeDeferredFreeBlockHeads() {
@@ -1654,11 +1691,11 @@ public class DataStorage implements Closeable {
             decrementRefCount(new BlockRef(previousRootOffset, Area.SYSTEM, RootBlock.getBlockType(this)));
         }
 
-        // heavy lifting: apply refcount adjustments and remove pending free tree
-        // removals. Afterwards, only refcount adjustments of the refcount tree and the
+        // heavy lifting: apply refcount updates and remove pending free tree
+        // removals. Afterwards, only refcount updates of the refcount tree and the
         // meta free tree, as well as pending removals from the meta free tree will
         // remain.
-        applyRefcountAdjustmentsAndRemovePendingFreeTreeRemovals();
+        applyRefCountUpdatesAndRemovePendingFreeTreeRemovals();
 
         // Now all the heavy lifting is completed. We'll only touch the meta free tree
         // when allocating space (when extending the meta area) to persist the deferred
@@ -1666,9 +1703,10 @@ public class DataStorage implements Closeable {
         var persistors = new ArrayList<DeferredPersistor>();
         persistors.add(persistPendingMetaFreeTreeRemovalList());
         persistors.add(writeDeferredFreeBlockHeads());
-        var refCountPersistor = persistRefCountAdjustmentList();
+        var refCountPersistor = persistRefCountUpdateList();
         persistors.add(refCountPersistor);
         while (true) {
+            updateAndWriteRootBlock();
             // All persistors might need new blocks allocated, but they should
             // eventually eventually settle
             boolean allAllocated = true;
@@ -1711,11 +1749,11 @@ public class DataStorage implements Closeable {
         addDeferredFreeBlocksToFreeTree();
 
         // add blocks of the pending meta free tree removal list and the ref count
-        // adjustment list to the deferred free blocks
+        // update list to the deferred free blocks
         // important: needs to be done after adding deferred free blocks of the last
         // transaction to the free tree, otherwise they would be freed right away
         addListBlocksToDeferredFreeBlocks(rootBlock.pendingMetaFreeTreeRemovalList.value, Area.META);
-        addListBlocksToDeferredFreeBlocks(rootBlock.refCountAdjustmentList.value, Area.META);
+        addListBlocksToDeferredFreeBlocks(rootBlock.refCountUpdateList.value, Area.META);
 
     }
 

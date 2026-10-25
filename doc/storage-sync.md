@@ -104,7 +104,9 @@ struct RefCountEntry {
 ### Typed Blocks and References
 Storage blocks are represented in memory by `BlockInstance<TSelf>` implementations. Each instance returns its `BlockType<TSelf>`, which defines how to serialize and deserialize the value and how to enumerate the blocks it references. `SlotBlock` is a helper implementation for values composed of slots of different types. This avoids manually writing serialization code.
 
-When writing a block, the block references of the are recorded immediately (refcount adjustments). When a block is overwritten, the references of the existing block are decremented, and the new references are incremented accordingly. When a block is freed, the block is deserialized and the references it holds are decremented.
+When writing a block, the block references of the are recorded immediately (refcount updates). When a block is overwritten, the references of the existing block are decremented, and the new references are incremented accordingly. When a block is freed, the block is deserialized and the references it holds are decremented.
+
+Pending reference-count updates store absolute counts. Newly allocated blocks start at zero; the first update to an existing block reads its count from the reference-count tree. Subsequent changes use the pending count, and updates that return to the tree's count are discarded. Commit keeps pending counts visible while applying a snapshot, so recursive tree updates use the latest count.
 
 `BTree<K, V>` uses a `BTree.KeySerializer<K>` for fixed-size keys and a `BlockType<BTree.Entry<K, V>>` for variable-size payloads. The entry type receives both key and value during serialization and reference enumeration. Its deserializer returns an entry with a null key; the tree supplies the separately decoded key. Keys are ordered by their serialized bytes in unsigned lexicographic order, so key serializers must preserve the intended ordering. Lookups, mutations, entries, iterators, and callbacks use the declared key and value types. `KeySerializer.bytes(size)` and `BTree.BYTE_ARRAY_ENTRY_TYPE` support byte-array trees without outgoing value references; `BTree.entryType(valueType)` adapts a value-only `BlockType`.
 
@@ -129,18 +131,18 @@ Changes to the data file are managed within transactions. During a transaction, 
 
     While a snapshot is being removed, its offsets remain marked as in-flight. If one becomes unreferenced during removal, it is reinserted into the free-space tree only after the batch completes; this avoids recursively editing the tree in the middle of removing that same batch.
 
-- `DeferredRefCountAdjustments`: Copy-on-write changes to the META free-space tree and reference-count tree can themselves create reference-count updates. Those updates are deferred to the next commit to break the recursion; ordinary transaction adjustments are applied during the current commit. Deferred records are stored in a linked list of META blocks. Each list block has a `uint64_t` next-block offset and a `uint64_t` record count, followed by fixed-size records:
+- `DeferredRefCountUpdates`: Copy-on-write changes to the META free-space tree and reference-count tree can themselves create reference-count updates. Those updates are deferred to the next commit to break the recursion; ordinary transaction updates are applied during the current commit. Deferred records are stored in a linked list of META blocks. Each list block has a `uint64_t` next-block offset and a `uint64_t` record count, followed by fixed-size records:
 
     ```C
-    struct DeferredRefCountAdjustment {
+    struct DeferredRefCountUpdate {
             uint64_t blockOffset;
-            int32_t delta;
+            int64_t count;
             uint8_t area;       // 1 SYSTEM, 2 META, 3 DATA
             uint8_t blockType;  // 0 none, 1 META B-tree, 2 META free-tree list, 3 refcount list, 4 info, 5 raw bytes
     };
     ```
 
-    All fields use big-endian encoding. A block holds `floor((metaBlockSize - 16) / 14)` records. Each block offset appears at most once in a list. Negative deltas require a registered block type; 0 means no type is stored. Recovery validates the chain and records, then queues its deltas for application during the next commit. The list blocks' own deferred reference increments are included in the list. The old list chain is released while retiring its root block.
+    All fields use big-endian encoding. A block holds `floor((metaBlockSize - 16) / 18)` records. Each block offset appears at most once in a list. Counts must be nonnegative; a zero count requires a registered block type to release the block's children. A block-type code of 0 means no type is stored. Recovery validates the chain and records, then queues its absolute counts for application during the next commit. The list blocks' own deferred reference counts are included in the list. The old list chain is released while retiring its root block. The file version remains 1; no migration from the previous delta-based deferred records is provided.
 
 - `DeferredFreeBlocks`: When a block is no longer referenced (refcount hits 0), it can be unallocated. However, care has to be taken not to reuse a block used in the previous transaction in the current transaction, as the block is still used by the last committed transaction. 
 

@@ -22,3 +22,6 @@ Do not explore the git history unless explicitly instructed to do so. Also do no
 
 ## Asking Questions
 This is not an automated test. It is fine to ask the user questions.
+
+## DataStore File Versions
+This project is in early development. Do not update the file version number, and do not care about backward compatibility of the DataStore files.

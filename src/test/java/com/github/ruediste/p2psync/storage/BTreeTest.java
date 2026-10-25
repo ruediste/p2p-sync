@@ -73,6 +73,58 @@ public class BTreeTest {
     }
 
     /**
+     * Inserts ascending fixed-size entries and checks leaf occupancy so repeated
+     * splits cannot leave one-entry leaves behind.
+     */
+    @Test
+    void ascendingInsertsKeepLeavesBalanced() {
+        var tree = newTree();
+        for (int index = 0; index < 200; index++)
+            tree.put(key(index), key(index));
+
+        var root = ByteBuffer.wrap(storage.readBlock(tree.rootOffset, DataStorage.Area.META))
+                .order(ByteOrder.LITTLE_ENDIAN);
+        assertEquals(1, root.get(4));
+        int leafCount = root.getInt(0);
+        assertTrue(leafCount <= 10, "Ascending inserts should keep leaves at least half full");
+        for (int index = 0; index < leafCount; index++) {
+            long leafOffset = root.getLong(5 + index * 16 + Long.BYTES);
+            var leaf = ByteBuffer.wrap(storage.readBlock(leafOffset, DataStorage.Area.META))
+                    .order(ByteOrder.LITTLE_ENDIAN);
+            assertTrue(leaf.getInt(0) >= 21, "Split leaves should contain at least 21 entries");
+        }
+        for (int index = 0; index < 200; index++)
+            assertArrayEquals(key(index), tree.get(key(index)));
+    }
+
+    /**
+     * Splits small entries followed by a large value and checks the split balances
+     * serialized bytes rather than the number of entries, preserving all values.
+     */
+    @Test
+    void leafSplitBalancesBytesForUnevenValues() {
+        var tree = newTree();
+        for (int index = 0; index < 18; index++)
+            tree.put(key(index), key(index));
+        byte[] largeValue = new byte[600];
+        tree.put(key(18), largeValue);
+
+        var root = ByteBuffer.wrap(storage.readBlock(tree.rootOffset, DataStorage.Area.META))
+                .order(ByteOrder.LITTLE_ENDIAN);
+        assertEquals(1, root.get(4));
+        assertEquals(2, root.getInt(0));
+        var left = ByteBuffer.wrap(storage.readBlock(root.getLong(13), DataStorage.Area.META))
+                .order(ByteOrder.LITTLE_ENDIAN);
+        var right = ByteBuffer.wrap(storage.readBlock(root.getLong(29), DataStorage.Area.META))
+                .order(ByteOrder.LITTLE_ENDIAN);
+        assertEquals(18, left.getInt(0));
+        assertEquals(1, right.getInt(0));
+        for (int index = 0; index < 18; index++)
+            assertArrayEquals(key(index), tree.get(key(index)));
+        assertArrayEquals(largeValue, tree.get(key(18)));
+    }
+
+    /**
      * Exercises typed keys and values through splits, floor lookup, iteration,
      * replacement and removal.
      */
@@ -410,7 +462,7 @@ public class BTreeTest {
         storage.incrementRefCount(new BlockType.BlockRef(tree.rootOffset, DataStorage.Area.META,
                 DataStorage.BYTE_ARRAY_BLOCK_TYPE));
         storage.commit();
-        assertTrue(storage.refCountAdjustments.entrySet().size() > 1);
+        assertTrue(storage.refCountUpdates.entrySet().size() > 1);
     }
 
     private int count(BTree<byte[], byte[]> tree) {

@@ -7,7 +7,7 @@ Scope: the B+ tree and single-file storage engine in `storage/BTree.java` and `s
 - **B+ tree:** Core copy-on-write tree behavior, variable-sized values, iteration, and reference callbacks are implemented. A tree root can represent a snapshot, but the storage API does not yet define snapshot lifetime or reader ownership.
 - **File format:** Formatting, opening, validation of basic header fields, root serialization, committed file length, and tail truncation are implemented. Documentation does not match the current encoding: block sizes live in the superblock; `InfoBlock` currently stores `inlineDataThreshold`; and the serialized root has subsystem pointers, file length, and deferred-list heads not shown in the documented structure.
 - **Free-space allocation:** Three area trees, batched allocation, a cursor, extent splitting/coalescing, META reservations, and file extension are implemented. The documentation's simpler “allocate from the beginning” description misses the actual cursor/batch behavior and reservation lifecycle.
-- **Reference counts and deferred freeing:** The basic adjustment flow and per-area deferred-free lists are implemented. Deferred reference-count recovery is unfinished: `loadDeferredRefCountAdjustmentList()` is a stub; the persistence routine currently iterates the META reserved-block set instead of the adjustment records; and deferred reserved-list deletion contains a null callback TODO.
+- **Reference counts and deferred freeing:** The basic update flow and per-area deferred-free lists are implemented. Deferred reference-count recovery is unfinished: `loadDeferredRefCountUpdateList()` is a stub; the persistence routine currently iterates the META reserved-block set instead of the update records; and deferred reserved-list deletion contains a null callback TODO.
 - **Commit safety:** The implementation writes updated blocks and then overwrites the superblock root pointer in place. Tests cover rollback of uncommitted writes, but not interruption during commit, torn root publication, or durable write ordering. This does not yet establish the documented atomic-commit guarantee, especially for power loss.
 - **Concurrency:** The documentation promises a single writer and multiple readers, but `DataStorage` has no reader snapshot API or writer coordination.
 - **Implementation comments:** The `DataStorage` class comment describes `allocatorTreeMode` and `freeSpace` maps that do not exist in the current implementation; update it along with the design documentation.
@@ -25,13 +25,13 @@ Scope: the B+ tree and single-file storage engine in `storage/BTree.java` and `s
 
 ### 2. Finish Deferred Ref-Count Persistence
 
-- Specify a restart-safe record format for each deferred adjustment. Persist only durable data; do not attempt to serialize Java callbacks. Define how the area and deferred deletion action are restored or derived.
+- Specify a restart-safe record format for each deferred update. Persist only durable data; do not attempt to serialize Java callbacks. Define how the area and deferred deletion action are restored or derived.
 - Implement list loading with range/count checks, duplicate detection, cycle detection, and validation of record contents.
-- Fix persistence to serialize the adjustment map (not `deferredMetaFreeTreeRemoveBlocks`) and size/roll over blocks based on the actual record format.
+- Fix persistence to serialize the update map (not `deferredMetaFreeTreeRemoveBlocks`) and size/roll over blocks based on the actual record format.
 - Complete deletion of old deferred lists and their referenced blocks with valid ownership/deletion behavior.
-- Define publication and retirement order so a crash cannot lose, replay twice, or prematurely reclaim adjustments.
+- Define publication and retirement order so a crash cannot lose, replay twice, or prematurely reclaim updates.
 
-**Complete when:** tests cover empty, one-record, exact-capacity, multi-block, reopen/replay, malformed, and retired lists; repeated commits neither lose nor double-apply adjustments.
+**Complete when:** tests cover empty, one-record, exact-capacity, multi-block, reopen/replay, malformed, and retired lists; repeated commits neither lose nor double-apply updates.
 
 ### 3. Validate Allocator And Ref-Count Invariants
 

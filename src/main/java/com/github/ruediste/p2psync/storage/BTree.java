@@ -754,22 +754,27 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
     }
 
     private int chooseLeafSplit(List<SerializedEntry> entries) {
+        // Among boundaries where both nonempty leaves fit, minimize the difference
+        // in serialized bytes (keys, item offsets/sizes, and values), not entry counts.
         int capacity = storage.blockSize() - HEADER_SIZE;
-        int n = entries.size();
-        // Find the smallest index so that the right half still fits; then check the
-        // left half fits too, otherwise increase.
-        long[] suffix = new long[n + 1];
-        for (int i = n - 1; i >= 0; i--)
-            suffix[i] = suffix[i + 1] + entries.get(i).value.length + keySize + 8;
-        int k = 1;
-        while (k < n && suffix[k] > capacity)
-            k++;
-        long leftUsed = suffix[0] - suffix[k];
-        while (leftUsed > capacity && k < n - 1) {
-            k++;
-            leftUsed = suffix[0] - suffix[k];
+        long totalUsed = 0;
+        for (SerializedEntry entry : entries)
+            totalUsed += (long) entry.value.length + keySize + 8;
+        long leftUsed = 0;
+        long bestDifference = Long.MAX_VALUE;
+        int splitIndex = -1;
+        for (int index = 1; index < entries.size(); index++) {
+            leftUsed += (long) entries.get(index - 1).value.length + keySize + 8;
+            long rightUsed = totalUsed - leftUsed;
+            long difference = Math.abs(leftUsed - rightUsed);
+            if (leftUsed <= capacity && rightUsed <= capacity && difference < bestDifference) {
+                splitIndex = index;
+                bestDifference = difference;
+            }
         }
-        return k;
+        if (splitIndex < 0)
+            throw new IllegalArgumentException("Leaf entries cannot fit in two blocks");
+        return splitIndex;
     }
 
     private byte[] serializeLeaf(List<SerializedEntry> entries) {

@@ -87,11 +87,98 @@ public class DataStorageTest {
     @Test
     void allocationsAreReferencedOnlyByTheirParents() {
         long child = storage.writeNewBlock(DataStorage.Area.DATA, new ReferenceBlock(0));
-        assertEquals(0, storage.refCountAdjustments.get(child).adjustment);
+        assertEquals(0, storage.refCountUpdates.get(child).count);
 
         long parent = storage.writeNewBlockDirect(DataStorage.Area.DATA, new ReferenceBlock(child));
-        assertEquals(1, storage.refCountAdjustments.get(child).adjustment);
-        assertEquals(0, storage.refCountAdjustments.get(parent).adjustment);
+        assertEquals(1, storage.refCountUpdates.get(child).count);
+        assertEquals(0, storage.refCountUpdates.get(parent).count);
+    }
+
+    /**
+     * Updates an existing block in separate transactions and verifies pending
+     * counts start from the tree value and survive commit and reopen.
+     */
+    @Test
+    void existingBlockUpdatesStoreAbsoluteCounts() {
+        long offset = storage.writeNewBlock(DataStorage.Area.DATA, new ReferenceBlock(0));
+        var ref = new BlockType.BlockRef(offset, DataStorage.Area.DATA, ReferenceBlock.TYPE);
+        storage.incrementRefCount(ref);
+        storage.incrementRefCount(ref);
+        storage.commit();
+
+        storage.incrementRefCount(ref);
+        assertEquals(3, storage.refCountUpdates.get(offset).count);
+        assertEquals(2, storage.refCountUpdates.get(offset).initialCount);
+        storage.decrementRefCount(ref);
+        assertTrue(!storage.refCountUpdates.containsKey(offset));
+        assertEquals(2, storage.getRefCount(offset));
+        storage.commit();
+
+        storage.decrementRefCount(ref);
+        assertEquals(1, storage.refCountUpdates.get(offset).count);
+        storage.commit();
+        storage.close();
+        storage = new DataStorage();
+        storage.open(dbPath);
+        assertEquals(1, storage.getRefCount(offset));
+
+        storage.decrementRefCount(ref);
+        assertEquals(0, storage.refCountUpdates.get(offset).count);
+        storage.commit();
+        assertEquals(0, storage.getRefCount(offset));
+    }
+
+    /**
+     * Models a committed block whose live count is still deferred rather than in
+     * the tree, then verifies releasing its last reference schedules reclamation.
+     */
+    @Test
+    void committedDeferredCountReachingZeroIsReleased() {
+        long offset = storage.writeNewBlock(DataStorage.Area.DATA, new ReferenceBlock(0));
+        var ref = new BlockType.BlockRef(offset, DataStorage.Area.DATA, ReferenceBlock.TYPE);
+        storage.incrementRefCount(ref);
+        storage.commit();
+
+        storage.refCountTree.remove(offset);
+        var update = storage.refCountUpdates.getOrCreate(offset, DataStorage.Area.DATA);
+        update.count = 1;
+        assertEquals(0, update.initialCount);
+
+        storage.decrementRefCount(ref);
+        assertNotNull(storage.refCountUpdates.get(offset));
+        assertEquals(0, storage.refCountUpdates.get(offset).count);
+        storage.commit();
+
+        assertEquals(0, storage.getRefCount(offset));
+        assertTrue(containsBlock(storage.freeSpaceTrees.get(DataStorage.Area.DATA), offset));
+    }
+
+    /**
+     * Counts tree reads while retaining and releasing an existing block to verify
+     * pending updates reuse their initial count and cancel without another lookup.
+     */
+    @Test
+    void refCountUpdatesReadInitialCountOnlyOnce() {
+        int[] reads = { 0 };
+        try (var countingStorage = new DataStorage() {
+            @Override
+            public long getRefCount(long blockOffset) {
+                reads[0]++;
+                return 2;
+            }
+        }) {
+            var ref = new BlockType.BlockRef(4096, DataStorage.Area.DATA, ReferenceBlock.TYPE);
+            countingStorage.incrementRefCount(ref);
+            countingStorage.incrementRefCount(ref);
+            countingStorage.decrementRefCount(ref);
+            assertEquals(2, countingStorage.refCountUpdates.get(4096).initialCount);
+            assertEquals(3, countingStorage.refCountUpdates.get(4096).count);
+            assertEquals(1, reads[0]);
+
+            countingStorage.decrementRefCount(ref);
+            assertTrue(!countingStorage.refCountUpdates.containsKey(4096));
+            assertEquals(1, reads[0]);
+        }
     }
 
     /**
@@ -121,11 +208,11 @@ public class DataStorageTest {
             value.childOffset = 0;
             assertEquals(secondChild,
                     storage.readBlock(parent, DataStorage.Area.DATA, ReferenceBlock.TYPE).childOffset);
-            assertTrue(!storage.refCountAdjustments.containsKey(firstChild));
-            assertEquals(1, storage.refCountAdjustments.get(secondChild).adjustment);
+            assertTrue(!storage.refCountUpdates.containsKey(firstChild));
+            assertEquals(1, storage.refCountUpdates.get(secondChild).count);
 
             storage.decrementRefCount(new BlockType.BlockRef(parent, DataStorage.Area.DATA, ReferenceBlock.TYPE));
-            assertTrue(!storage.refCountAdjustments.containsKey(secondChild));
+            assertTrue(!storage.refCountUpdates.containsKey(secondChild));
         }
     }
 
@@ -141,7 +228,7 @@ public class DataStorageTest {
 
         storage.writeBlockDirect(parent, DataStorage.Area.DATA, new ReferenceBlock(0));
 
-        assertTrue(!storage.refCountAdjustments.containsKey(child));
+        assertTrue(!storage.refCountUpdates.containsKey(child));
         assertEquals(0, storage.readBlock(parent, DataStorage.Area.DATA, ReferenceBlock.TYPE).childOffset);
     }
 

@@ -110,7 +110,7 @@ class StorageCheckTest {
     /**
      * Verifies deferred META lists spanning several blocks are persisted
      * completely. Tiny META blocks plus many root handles make the commit leave
-     * more pending META free-tree removals and ref-count adjustments than fit
+     * more pending META free-tree removals and ref-count updates than fit
      * into one list block; any list block lost from the chain shows up as
      * unaccounted space, also after reopening and committing again.
      */
