@@ -175,6 +175,9 @@ public class StorageCheck {
         Map<Long, Long> treeCounts = loadRefCountTree();
         Map<Long, Update> updates = loadUpdates(root.refCountUpdateList.value);
         checkRefCounts(treeCounts, updates);
+        for (Area area : Area.values())
+            checkExclusiveTree(storage.freeSpaceTrees.get(area), "free space tree " + area, treeCounts, updates);
+        checkExclusiveTree(storage.refCountTree, "ref count tree", treeCounts, updates);
 
         for (Area area : Area.values())
             readList(root.getDeferredFreeListHead(area), "deferred free list (" + area + ")", Long.BYTES,
@@ -384,6 +387,40 @@ public class StorageCheck {
                     claim(offset, update.area, BlockKind.UNREFERENCED, "unreferenced block");
                 } else
                     error("Unreferenced block " + offset + " (unknown area) with ref count " + effective);
+            }
+        }
+    }
+
+    private void checkExclusiveTree(BTree<?, ?> tree, String name, Map<Long, Long> counts,
+            Map<Long, Update> updates) {
+        if (tree.rootOffset == 0)
+            return;
+        var pending = new ArrayDeque<Long>();
+        var visited = new HashSet<Long>();
+        pending.add(tree.rootOffset);
+        while (!pending.isEmpty()) {
+            long offset = pending.remove();
+            // Unlike counted trees, an exclusive tree cannot have shared nodes;
+            // revisiting one indicates multiple owners or a cycle.
+            if (!visited.add(offset)) {
+                error("Exclusive tree block " + offset + " has multiple owners in " + name);
+                continue;
+            }
+            if (!validOffset(offset, Area.META, name))
+                continue;
+            // Uncounted does not mean free: these nodes still occupy allocated space.
+            claim(offset, Area.META, BlockKind.REFERENCED, "exclusive block of " + name);
+            if (counts.containsKey(offset) || updates.containsKey(offset))
+                error("Exclusive tree block " + offset + " has a reference count");
+            try {
+                var block = storage.readBlock(offset, Area.META, tree.blockType);
+                var type = (BTree.NodeBlockType) tree.blockType;
+                var info = type.nodeInfo(block.data);
+                addTreeNode(name, info, block.data.length, offset == tree.rootOffset);
+                for (var child : type.getReferencedBlocks(block, storage))
+                    pending.add(child.blockOffset());
+            } catch (RuntimeException exception) {
+                error("Failed to read exclusive " + name + " block " + offset + ": " + exception);
             }
         }
     }

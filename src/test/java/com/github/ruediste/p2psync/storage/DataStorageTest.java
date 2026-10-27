@@ -95,6 +95,96 @@ public class DataStorageTest {
     }
 
     /**
+     * Uses non-tree blocks to verify child-mode selection sees pending counts,
+     * SHARE preserves modified sources, and TRANSFER reuses only singly owned
+     * blocks.
+     */
+    @Test
+    void genericBlockReplacementUsesLiveOwnership() {
+        var area = DataStorage.Area.DATA;
+        long offset = storage.writeNewBlock(area, new ReferenceBlock(0), RefMode.TRANSFER);
+        var ref = new BlockType.BlockRef(offset, area, ReferenceBlock.TYPE);
+        storage.incrementRefCount(ref);
+
+        assertEquals(1, storage.getRefCount(offset));
+        assertEquals(RefMode.TRANSFER, storage.childRefMode(offset, RefMode.TRANSFER));
+        assertEquals(RefMode.SHARE, storage.childRefMode(offset, RefMode.SHARE));
+        assertEquals(RefMode.EXCLUSIVE, storage.childRefMode(offset, RefMode.EXCLUSIVE));
+        assertEquals(offset, storage.mutate(
+                () -> storage.replaceBlock(offset, area, new ReferenceBlock(0), RefMode.TRANSFER)).longValue());
+
+        long child = storage.writeNewBlock(area, new ReferenceBlock(0));
+        long shared = storage.mutate(
+                () -> storage.replaceBlock(offset, area, new ReferenceBlock(child), RefMode.SHARE));
+        assertNotEquals(offset, shared);
+        assertEquals(0, storage.readBlock(offset, area, ReferenceBlock.TYPE).childOffset);
+        assertEquals(child, storage.readBlock(shared, area, ReferenceBlock.TYPE).childOffset);
+        assertEquals(1, storage.getRefCount(child));
+
+        storage.incrementRefCount(ref);
+        assertEquals(0, storage.getRefPersistedCount(offset));
+        assertEquals(2, storage.getRefCount(offset));
+        assertEquals(RefMode.SHARE, storage.childRefMode(offset, RefMode.TRANSFER));
+        long transferred = storage.mutate(
+                () -> storage.replaceBlock(offset, area, new ReferenceBlock(0), RefMode.TRANSFER));
+        assertNotEquals(offset, transferred);
+    }
+
+    /**
+     * Retires non-tree blocks in different areas inside nested scopes. Neither
+     * block may return to its allocation pool until the outer scope publishes.
+     */
+    @Test
+    void nestedGenericMutationsDeferRetirementAcrossAreas() {
+        long data = storage.writeNewBlock(DataStorage.Area.DATA, new ReferenceBlock(0), RefMode.EXCLUSIVE);
+        long system = storage.writeNewBlock(DataStorage.Area.SYSTEM, new ReferenceBlock(0), RefMode.EXCLUSIVE);
+        assertTrue(!storage.refCountUpdates.containsKey(data));
+        assertTrue(!storage.refCountUpdates.containsKey(system));
+        assertEquals(data, storage.mutate(() -> storage.replaceBlock(data, DataStorage.Area.DATA,
+                new ReferenceBlock(0), RefMode.EXCLUSIVE)).longValue());
+
+        storage.mutate(() -> {
+            storage.retireExclusiveBlock(data, DataStorage.Area.DATA);
+            storage.mutate(() -> {
+                storage.retireExclusiveBlock(system, DataStorage.Area.SYSTEM);
+                return null;
+            });
+            assertTrue(storage.modifiedBlocks.containsKey(data));
+            assertTrue(storage.modifiedBlocks.containsKey(system));
+            assertTrue(!storage.freeBlocks.get(DataStorage.Area.DATA).contains(data));
+            assertTrue(!storage.freeBlocks.get(DataStorage.Area.SYSTEM).contains(system));
+            return null;
+        });
+
+        assertTrue(!storage.modifiedBlocks.containsKey(data));
+        assertTrue(!storage.modifiedBlocks.containsKey(system));
+        assertTrue(storage.freeBlocks.get(DataStorage.Area.DATA).contains(data));
+        assertTrue(storage.freeBlocks.get(DataStorage.Area.SYSTEM).contains(system));
+    }
+
+    /**
+     * Replaces a committed non-tree exclusive block and verifies its old bytes
+     * remain readable until commit and its storage is reclaimed afterwards.
+     */
+    @Test
+    void genericExclusiveReplacementDefersCommittedBlockReuse() {
+        var area = DataStorage.Area.DATA;
+        long original = storage.writeNewBlock(area, new ReferenceBlock(0), RefMode.EXCLUSIVE);
+        storage.commit();
+
+        long replacement = storage.mutate(
+                () -> storage.replaceBlock(original, area, new ReferenceBlock(0), RefMode.EXCLUSIVE));
+        assertNotEquals(original, replacement);
+        assertTrue(!containsBlock(storage.freeSpaceTrees.get(area), original));
+        assertEquals(0, storage.readBlock(original, area, ReferenceBlock.TYPE).childOffset);
+        assertTrue(!storage.refCountUpdates.containsKey(replacement));
+        storage.commit();
+        assertTrue(containsBlock(storage.freeSpaceTrees.get(area), original));
+        storage.open(dbPath);
+        assertEquals(0, storage.readBlock(replacement, area, ReferenceBlock.TYPE).childOffset);
+    }
+
+    /**
      * Updates an existing block in separate transactions and verifies pending
      * counts start from the tree value and survive commit and reopen.
      */
@@ -111,7 +201,7 @@ public class DataStorageTest {
         assertEquals(2, storage.refCountUpdates.get(offset).initialCount);
         storage.decrementRefCount(ref);
         assertTrue(!storage.refCountUpdates.containsKey(offset));
-        assertEquals(2, storage.getRefCount(offset));
+        assertEquals(2, storage.getRefPersistedCount(offset));
         storage.commit();
 
         storage.decrementRefCount(ref);
@@ -120,12 +210,12 @@ public class DataStorageTest {
         storage.close();
         storage = new DataStorage();
         storage.open(dbPath);
-        assertEquals(1, storage.getRefCount(offset));
+        assertEquals(1, storage.getRefPersistedCount(offset));
 
         storage.decrementRefCount(ref);
         assertEquals(0, storage.refCountUpdates.get(offset).count);
         storage.commit();
-        assertEquals(0, storage.getRefCount(offset));
+        assertEquals(0, storage.getRefPersistedCount(offset));
     }
 
     /**
@@ -149,7 +239,7 @@ public class DataStorageTest {
         assertEquals(0, storage.refCountUpdates.get(offset).count);
         storage.commit();
 
-        assertEquals(0, storage.getRefCount(offset));
+        assertEquals(0, storage.getRefPersistedCount(offset));
         assertTrue(containsBlock(storage.freeSpaceTrees.get(DataStorage.Area.DATA), offset));
     }
 
@@ -162,7 +252,7 @@ public class DataStorageTest {
         int[] reads = { 0 };
         try (var countingStorage = new DataStorage() {
             @Override
-            public long getRefCount(long blockOffset) {
+            public long getRefPersistedCount(long blockOffset) {
                 reads[0]++;
                 return 2;
             }
@@ -241,12 +331,12 @@ public class DataStorageTest {
         long child = storage.writeNewBlock(DataStorage.Area.DATA, new ReferenceBlock(0));
         long parent = storage.writeNewBlock(DataStorage.Area.DATA, new ReferenceBlock(child));
 
-        assertEquals(1, storage.getRefCount(storage.superBlock.rootBlock),
+        assertEquals(1, storage.getRefPersistedCount(storage.superBlock.rootBlock),
                 "The committed superblock root must retain its reference");
         storage.commit();
 
-        assertEquals(0, storage.getRefCount(parent));
-        assertEquals(0, storage.getRefCount(child));
+        assertEquals(0, storage.getRefPersistedCount(parent));
+        assertEquals(0, storage.getRefPersistedCount(child));
         var freeTree = storage.freeSpaceTrees.get(DataStorage.Area.DATA);
         assertTrue(containsBlock(freeTree, parent));
         assertTrue(containsBlock(freeTree, child));
@@ -397,15 +487,15 @@ public class DataStorageTest {
         storage.writeBlock(parent, DataStorage.Area.DATA, new ReferenceBlock(secondChild));
 
         storage.commit();
-        assertEquals(0, storage.getRefCount(firstChild));
-        assertEquals(1, storage.getRefCount(secondChild));
-        assertEquals(1, storage.getRefCount(parent));
+        assertEquals(0, storage.getRefPersistedCount(firstChild));
+        assertEquals(1, storage.getRefPersistedCount(secondChild));
+        assertEquals(1, storage.getRefPersistedCount(parent));
 
         storage.decrementRefCount(new BlockType.BlockRef(parent, DataStorage.Area.DATA, ReferenceBlock.TYPE));
         storage.commit();
 
-        assertEquals(0, storage.getRefCount(parent));
-        assertEquals(0, storage.getRefCount(secondChild));
+        assertEquals(0, storage.getRefPersistedCount(parent));
+        assertEquals(0, storage.getRefPersistedCount(secondChild));
     }
 
     @Nested
@@ -470,12 +560,12 @@ public class DataStorageTest {
                     DataStorage.BYTE_ARRAY_BLOCK_TYPE));
 
             // Prior to commit, refcount tree on disk should not contain the block
-            assertEquals(0, storage.getRefCount(blockOff));
+            assertEquals(0, storage.getRefPersistedCount(blockOff));
 
             storage.commit();
 
             // After commit, reference count should be updated to 1
-            assertEquals(1, storage.getRefCount(blockOff));
+            assertEquals(1, storage.getRefPersistedCount(blockOff));
         }
     }
 
@@ -504,7 +594,7 @@ public class DataStorageTest {
 
             long newRoot = storage.superBlock.rootBlock;
             assertNotEquals(oldRoot, newRoot, "Commit must produce a new root block via CoW");
-            assertEquals(0, storage.getRefCount(oldRoot),
+            assertEquals(0, storage.getRefPersistedCount(oldRoot),
                     "The previous root must release its final reference after the new root is written");
 
             // Verify persistence by reopening from disk
@@ -558,8 +648,8 @@ public class DataStorageTest {
             // Verifications
             assertEquals(committedRoot, recovered.superBlock.rootBlock,
                     "Recovered state must point to last committed superblock root");
-            assertEquals(1, recovered.getRefCount(b1), "Committed block b1 must retain reference count of 1");
-            assertEquals(0, recovered.getRefCount(b2), "Uncommitted block b2 must not exist in refcount tree");
+            assertEquals(1, recovered.getRefPersistedCount(b1), "Committed block b1 must retain reference count of 1");
+            assertEquals(0, recovered.getRefPersistedCount(b2), "Uncommitted block b2 must not exist in refcount tree");
             assertArrayEquals(v1Data, recovered.readBlock(b1, DataStorage.Area.DATA), "Committed data must be intact");
 
             recovered.close();
@@ -579,7 +669,7 @@ public class DataStorageTest {
                     DataStorage.BYTE_ARRAY_BLOCK_TYPE));
             storage.commit();
 
-            assertEquals(1, storage.getRefCount(blockOff));
+            assertEquals(1, storage.getRefPersistedCount(blockOff));
 
             // Drop the final reference; its deletion defers returning the block to free
             // space.
@@ -587,12 +677,12 @@ public class DataStorageTest {
                     DataStorage.BYTE_ARRAY_BLOCK_TYPE));
 
             // Before commit, refcount remains 1 in persisted state
-            assertEquals(1, storage.getRefCount(blockOff));
+            assertEquals(1, storage.getRefPersistedCount(blockOff));
 
             storage.commit();
 
             // After commit, block refcount drops to 0 and space is returned to free tree
-            assertEquals(0, storage.getRefCount(blockOff));
+            assertEquals(0, storage.getRefPersistedCount(blockOff));
         }
     }
 }

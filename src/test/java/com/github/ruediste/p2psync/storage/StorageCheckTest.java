@@ -66,10 +66,12 @@ class StorageCheckTest {
             write(fs, "/large", new byte[100_000]);
             write(fs, "/deleted", new byte[50_000]);
             assertEquals(0, fs.unlink("/deleted"));
+            assertEquals(0, fs.flush("/", null));
         }
         try (var fs = new SimpleFuseFS(file)) {
             write(fs, "/second", new byte[70_000]);
             assertEquals(0, fs.unlink("/large"));
+            assertEquals(0, fs.flush("/", null));
         }
 
         var report = StorageCheck.check(fuseStorage(), file.toString());
@@ -142,5 +144,41 @@ class StorageCheckTest {
             checkStorage.getRootRefHandle(id, Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE);
         var report = StorageCheck.check(checkStorage, file.toString());
         assertTrue(report.isOk(), () -> String.join("\n", report.errors));
+    }
+
+    /**
+     * Churns tiny allocator-tree nodes across commits and reopen, then abandons
+     * pending free-tree removals. Each committed graph must pass the read-only
+     * checker without allocator refcounts or leaked/dead blocks.
+     */
+    @Test
+    void exclusiveAllocatorChurnAndRollbackPreserveCommittedGraph() {
+        Path file = tempDir.resolve("exclusive-churn.db");
+        int handleCount = 150;
+        try (var storage = new DataStorage()) {
+            List<DataStorage.RootRefHandle<DataStorage.ByteArrayBlock>> handles = new ArrayList<>();
+            for (int id = 1; id <= handleCount; id++)
+                handles.add(storage.getRootRefHandle(id, Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE));
+            storage.format(file.toString(), 64 * 1024, 256 * 1024, 1024 * 1024, 4096, 512, 4096);
+            for (int transaction = 0; transaction < 12; transaction++) {
+                for (int index = 0; index < handleCount; index++) {
+                    var handle = handles.get(index);
+                    if ((index + transaction) % 3 == 0)
+                        handle.blockOffset = 0;
+                    else
+                        handle.write(new DataStorage.ByteArrayBlock(new byte[storage.blockSize(Area.DATA)]));
+                }
+                storage.commit();
+                assertEquals(0, storage.rootBlock.refCountUpdateList.value);
+                assertTrue(storage.refCountUpdates.entrySet().isEmpty());
+                assertCheckPasses(file, handleCount);
+                if (transaction % 3 == 0)
+                    storage.open(file.toString());
+            }
+            for (var handle : handles)
+                handle.write(new DataStorage.ByteArrayBlock(new byte[storage.blockSize(Area.DATA)]));
+            storage.applyPendingFreeTreeRemovals();
+        }
+        assertCheckPasses(file, handleCount);
     }
 }

@@ -55,6 +55,7 @@ class SimpleFuseFSTest {
             assertEquals(0, fs.getattr("/file", stat));
             assertEquals(1_700_000_000L, stat.st_mtim.tv_sec.longValue());
             assertEquals(123_000_000L, stat.st_mtim.tv_nsec.longValue());
+            assertEquals(0, fs.flush("/file", null));
         }
 
         try (var fs = new SimpleFuseFS(backing)) {
@@ -118,6 +119,7 @@ class SimpleFuseFSTest {
             assertEquals(content.length, fs.write("/folder/data", buffer(content), content.length, 0, null));
             assertEquals(0, fs.create("/small", 0644, null));
             assertEquals(2, fs.write("/small", buffer(new byte[] { 7, 8 }), 2, 2, null));
+            assertEquals(0, fs.fsync("/folder/data", 0, null));
         }
         try (var fs = new SimpleFuseFS(backing)) {
             Pointer result = buffer(new byte[content.length]);
@@ -209,6 +211,7 @@ class SimpleFuseFSTest {
             assertEquals(-ErrorCodes.EISDIR(), fs.rename("/to/target", "/from"));
             assertEquals(-ErrorCodes.ENOTDIR(), fs.rename("/from", "/to/target"));
             assertEquals(-ErrorCodes.ENOTEMPTY(), fs.rename("/from", "/to"));
+            assertEquals(0, fs.flush("/to/target", null));
         }
         try (var fs = new SimpleFuseFS(backing)) {
             Pointer result = buffer(new byte[1]);
@@ -243,6 +246,34 @@ class SimpleFuseFSTest {
             assertEquals(0, fs.readdir("/", null, filler, resumeOffset, null));
             assertEquals(List.of("file"), names);
             assertEquals(-ErrorCodes.ENOTDIR(), fs.readdir("/file", null, filler, 0, null));
+        }
+    }
+
+    /**
+     * Verifies close discards uncommitted changes and flush, fsync, and the timer
+     * each publish successful mutations.
+     */
+    @Test
+    void commitsOnFlushFsyncAndPeriodically() throws InterruptedException {
+        Path backing = tempDir.resolve("commit-triggers.db");
+        try (var fs = new SimpleFuseFS(backing)) {
+            assertEquals(0, fs.create("/discarded", 0644, null));
+        }
+
+        try (var fs = new SimpleFuseFS(backing)) {
+            assertEquals(-ErrorCodes.ENOENT(), fs.open("/discarded", null));
+            assertEquals(0, fs.create("/flushed", 0644, null));
+            assertEquals(0, fs.flush("/flushed", null));
+            assertEquals(0, fs.create("/synced", 0644, null));
+            assertEquals(0, fs.fsync("/synced", 0, null));
+            assertEquals(0, fs.create("/periodic", 0644, null));
+            Thread.sleep(5_500);
+        }
+
+        try (var fs = new SimpleFuseFS(backing)) {
+            assertEquals(0, fs.open("/flushed", null));
+            assertEquals(0, fs.open("/synced", null));
+            assertEquals(0, fs.open("/periodic", null));
         }
     }
 }

@@ -122,7 +122,17 @@ Internal tree blocks reference their child blocks; leaf blocks enumerate referen
 
 For counted trees the caller remains responsible for publishing the resulting root and updating its incoming counted reference. Newly written counted nodes acquire their outgoing references; retiring the old owning edge releases its references through normal storage accounting.
 
-All three free-space trees and the reference-count tree default to `EXCLUSIVE`. Their root pointers are persisted in the root block but excluded from its counted references. Retirement callbacks are drained after the new tree root is published, so reclaiming a block cannot re-enter a half-updated allocator tree. A retired committed block goes onto the deferred-free list; a retired transaction-local block returns to its pending allocation pool or is put back after its in-flight removal batch. Consequently, allocator-tree updates generate allocations and frees, but no recursive refcount updates. `StorageCheck` traverses these trees independently, checking structural ownership, coverage, and the absence of refcount entries.
+The ownership policy is implemented by `DataStorage`, not by the tree or its adapter. Other data structures can use the same typed-block APIs:
+
+- `getEffectiveRefCount(offset)` includes pending transaction updates; `childRefMode(offset, mode)` determines the policy to pass down a changed ownership path.
+- `writeNewBlock(area, value, mode)` and `writeBlock(offset, area, value, mode)` distinguish counted writes from structurally owned exclusive writes.
+- `replaceBlock(offset, area, value, mode)` chooses in-place overwrite versus copy-on-write and queues retirement of replaced exclusive blocks. A zero offset creates a new block.
+- `mutate(callback)` surrounds a structural update. The callback must publish replacement pointers before returning. Scopes nest across data structures and storage areas; only the outermost successfully completed scope drains retirements. Reclamation itself can update allocator trees without draining recursively. If a structural mutation fails, abandon the transaction by closing and reopening storage; this scope is not an undo mechanism.
+- `retireExclusiveBlock(offset, area)` queues a structurally discarded block within a mutation scope, without releasing children whose ownership was transferred or already handled by the caller.
+
+BTree retains only structural responsibilities: finding changed paths, splitting nodes, detaching empty nodes, promoting roots, and publishing its resulting root. Its storage adapter forwards ownership operations to `DataStorage` with the tree's area.
+
+All three free-space trees and the reference-count tree default to `EXCLUSIVE`. Their root pointers are persisted in the root block but excluded from its counted references. Retirement callbacks are drained after replacement pointers are published, so reclaiming a block cannot re-enter a half-updated structure. A retired committed block goes onto the deferred-free list; a retired transaction-local block returns to its pending allocation pool or is put back after its in-flight removal batch. Consequently, allocator-tree updates generate allocations and frees, but no recursive refcount updates. `StorageCheck` traverses these trees independently, checking structural ownership, coverage, and the absence of refcount entries.
 
 
 ### Transaction and Block Management

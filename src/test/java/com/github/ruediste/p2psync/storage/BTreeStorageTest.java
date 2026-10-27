@@ -18,6 +18,28 @@ import java.util.TreeMap;
 import org.junit.jupiter.api.Test;
 
 class BTreeStorageTest {
+    /** Verifies allocator trees remain reachable without owning counted blocks. */
+    @Test
+    void allocatorTreesAreExclusive() throws java.io.IOException {
+        var path = java.nio.file.Files.createTempFile("exclusive-trees", ".dat");
+        try (var storage = new DataStorage()) {
+            storage.open(path.toString());
+            for (int transaction = 0; transaction < 4; transaction++) {
+                storage.commit();
+                for (var tree : storage.freeSpaceTrees.values())
+                    tree.collectBlocks(offset -> assertEquals(0, storage.getRefPersistedCount(offset)));
+                storage.refCountTree.collectBlocks(offset -> assertEquals(0, storage.getRefPersistedCount(offset)));
+            }
+            storage.close();
+            storage.open(path.toString());
+            for (var tree : storage.freeSpaceTrees.values())
+                tree.collectBlocks(offset -> assertEquals(0, storage.getRefPersistedCount(offset)));
+            storage.refCountTree.collectBlocks(offset -> assertEquals(0, storage.getRefPersistedCount(offset)));
+        } finally {
+            java.nio.file.Files.deleteIfExists(path);
+        }
+    }
+
     /**
      * Verifies the entry adapter serializes only the value and leaves the decoded
      * key null.
@@ -67,13 +89,16 @@ class BTreeStorageTest {
             return new BTree.NodeBlock(java.util.Objects.requireNonNull(blocks.get(blockOffset)), type);
         }
 
-        @Override
         public boolean isBlockModified(long blockOffset) {
             return modified.contains(blockOffset);
         }
 
-        @Override
-        public void writeBlock(long blockOffset, BTree.NodeBlock data) {
+        public long refCount(long blockOffset) {
+            return references.getOrDefault(blockOffset, 0);
+        }
+
+        public void writeBlock(long blockOffset, BTree.NodeBlock data, RefMode mode) {
+            assertNotEquals(RefMode.EXCLUSIVE, mode);
             assertTrue(modified.contains(blockOffset));
             byte[] previousData = blocks.get(blockOffset);
             updateChildReferences(data, 1);
@@ -82,7 +107,8 @@ class BTreeStorageTest {
         }
 
         @Override
-        public long writeNewBlock(BTree.NodeBlock data) {
+        public long writeNewBlock(BTree.NodeBlock data, RefMode mode) {
+            assertNotEquals(RefMode.EXCLUSIVE, mode);
             assertEquals(blockSize(), data.data.length);
             nodeType = data.getBlockType();
             long offset = nextOffset++;
@@ -92,6 +118,39 @@ class BTreeStorageTest {
             updateChildReferences(data, 1);
             unclaimed.add(offset);
             return offset;
+        }
+
+        @Override
+        public void retireExclusiveBlock(long blockOffset) {
+            throw new AssertionError("Counted storage cannot retire exclusive blocks");
+        }
+
+        public void finishMutation() {
+        }
+
+        @Override
+        public RefMode childRefMode(long blockOffset, RefMode mode) {
+            return mode == RefMode.TRANSFER && refCount(blockOffset) > 1 ? RefMode.SHARE : mode;
+        }
+
+        @Override
+        public long replaceBlock(long blockOffset, BTree.NodeBlock data, RefMode mode) {
+            if (mode != RefMode.SHARE && isBlockModified(blockOffset)
+                    && (mode == RefMode.EXCLUSIVE || refCount(blockOffset) <= 1)) {
+                writeBlock(blockOffset, data, mode);
+                return blockOffset;
+            }
+            long replacement = writeNewBlock(data, mode);
+            if (mode == RefMode.EXCLUSIVE)
+                retireExclusiveBlock(blockOffset);
+            return replacement;
+        }
+
+        @Override
+        public <T> T mutate(java.util.function.Supplier<T> mutation) {
+            T result = mutation.get();
+            finishMutation();
+            return result;
         }
 
         final Set<Long> unclaimed = new HashSet<>();
@@ -163,6 +222,115 @@ class BTreeStorageTest {
 
     private static byte[] key(int value) {
         return new byte[] { (byte) (value >>> 8), (byte) value };
+    }
+
+    /**
+     * Verifies SHARE copies a modified path and preserves the independent source.
+     */
+    @Test
+    void sharePreservesTransactionLocalSource() {
+        var storage = new MemoryStorage();
+        var tree = new BTree<>(storage, BTree.KeySerializer.bytes(2), BTree.BYTE_ARRAY_ENTRY_TYPE);
+        for (int index = 0; index < 100; index++)
+            put(storage, tree, key(index), key(index));
+        long source = tree.rootOffset;
+        var snapshot = new BTree<>(storage, BTree.KeySerializer.bytes(2), BTree.BYTE_ARRAY_ENTRY_TYPE, source);
+
+        tree.put(key(50), key(500), RefMode.SHARE);
+        storage.publishRoot(0, tree.rootOffset);
+
+        assertNotEquals(source, tree.rootOffset);
+        assertArrayEquals(key(50), snapshot.get(key(50)));
+        assertArrayEquals(key(500), tree.get(key(50)));
+        storage.releaseRoot(source);
+        storage.releaseRoot(tree.rootOffset);
+        assertTrue(storage.blocks.isEmpty());
+    }
+
+    /** Verifies TRANSFER switches to SHARE below a multiply owned modified root. */
+    @Test
+    void transferPreservesSharedTransactionLocalRoot() {
+        var storage = new MemoryStorage();
+        var tree = new BTree<>(storage, BTree.KeySerializer.bytes(2), BTree.BYTE_ARRAY_ENTRY_TYPE);
+        for (int index = 0; index < 100; index++)
+            put(storage, tree, key(index), key(index));
+        long source = tree.rootOffset;
+        storage.retainRoot(source);
+        var snapshot = new BTree<>(storage, BTree.KeySerializer.bytes(2), BTree.BYTE_ARRAY_ENTRY_TYPE, source);
+
+        put(storage, tree, key(50), key(500));
+
+        assertNotEquals(source, tree.rootOffset);
+        assertArrayEquals(key(50), snapshot.get(key(50)));
+        assertArrayEquals(key(500), tree.get(key(50)));
+        storage.releaseRoot(source);
+        storage.releaseRoot(tree.rootOffset);
+        assertTrue(storage.blocks.isEmpty());
+    }
+
+    private static class ExclusiveMemoryStorage extends MemoryStorage {
+        BTree<?, ?> tree;
+        final List<Long> retired = new ArrayList<>();
+
+        @Override
+        public long writeNewBlock(BTree.NodeBlock data, RefMode mode) {
+            assertEquals(RefMode.EXCLUSIVE, mode);
+            long offset = nextOffset++;
+            blocks.put(offset, data.data.clone());
+            modified.add(offset);
+            return offset;
+        }
+
+        @Override
+        public void writeBlock(long blockOffset, BTree.NodeBlock data, RefMode mode) {
+            assertEquals(RefMode.EXCLUSIVE, mode);
+            assertTrue(modified.contains(blockOffset));
+            blocks.put(blockOffset, data.data.clone());
+        }
+
+        @Override
+        public void retireExclusiveBlock(long blockOffset) {
+            retired.add(blockOffset);
+        }
+
+        @Override
+        public void finishMutation() {
+            var reachable = new HashSet<Long>();
+            tree.collectBlocks(reachable::add);
+            for (long offset : retired) {
+                assertFalse(reachable.contains(offset), "Publish the replacement before reclaiming its source");
+                assertTrue(blocks.remove(offset) != null, "Block must be retired exactly once");
+                modified.remove(offset);
+            }
+            retired.clear();
+        }
+    }
+
+    /**
+     * Verifies exclusive splits, copied paths, empty nodes and root collapse
+     * reclaim every block.
+     */
+    @Test
+    void exclusiveMutationsRetireEveryNodeExactlyOnce() {
+        var storage = new ExclusiveMemoryStorage();
+        var tree = new BTree<>(storage, BTree.KeySerializer.bytes(2), BTree.BYTE_ARRAY_ENTRY_TYPE,
+                0, RefMode.EXCLUSIVE);
+        storage.tree = tree;
+        for (int index = 0; index < 300; index++) {
+            tree.put(key(index), key(index));
+            if (index % 11 == 0)
+                storage.modified.clear();
+        }
+        for (int index = 0; index < 300; index++) {
+            assertArrayEquals(key(index), tree.get(key(index)));
+            assertFalse(tree.remove(key(500)));
+            assertTrue(tree.remove(key(index)));
+            if (index % 7 == 0)
+                storage.modified.clear();
+        }
+        assertEquals(0, tree.rootOffset);
+        assertTrue(storage.blocks.isEmpty());
+        assertTrue(storage.references.isEmpty());
     }
 
     private static void put(MemoryStorage storage, BTree<byte[], byte[]> tree, byte[] key, byte[] value) {

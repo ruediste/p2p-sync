@@ -44,6 +44,7 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
     private final BlockType<Entry<K, V>> entryType;
     public final int keySize;
     public long rootOffset;
+    private final RefMode defaultRefMode;
 
     public final BlockType<NodeBlock> blockType;
 
@@ -230,17 +231,22 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
 
         NodeBlock readBlock(long blockOffset, BlockType<NodeBlock> type);
 
-        /**
-         * Check if this block has been modified in the current transaction, and can
-         * therefore be modified directly.
-         */
-        boolean isBlockModified(long blockOffset);
-
-        /** Write a block which has already been modified in the current transaction. */
-        void writeBlock(long blockOffset, NodeBlock data);
+        /** Replace a block according to its transaction state and ownership policy. */
+        long replaceBlock(long blockOffset, NodeBlock data, RefMode mode);
 
         /** Allocate and write a new block; its parent supplies its reference. */
-        long writeNewBlock(NodeBlock data);
+        long writeNewBlock(NodeBlock data, RefMode mode);
+
+        RefMode childRefMode(long blockOffset, RefMode mode);
+
+        /**
+         * Retire a node without releasing child ownership transferred to its
+         * replacement.
+         */
+        void retireExclusiveBlock(long blockOffset);
+
+        /** Publish replacement pointers inside the callback before reclamation runs. */
+        <T> T mutate(java.util.function.Supplier<T> mutation);
 
         /**
          * Ensure that there is enough free space to write the specified number of
@@ -272,7 +278,13 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
      *                  entries with a null key, which the tree restores separately
      */
     public BTree(Storage storage, KeySerializer<K> keySerializer, BlockType<Entry<K, V>> entryType, long rootOffset) {
+        this(storage, keySerializer, entryType, rootOffset, RefMode.TRANSFER);
+    }
+
+    public BTree(Storage storage, KeySerializer<K> keySerializer, BlockType<Entry<K, V>> entryType,
+            long rootOffset, RefMode defaultRefMode) {
         this.storage = storage;
+        this.defaultRefMode = java.util.Objects.requireNonNull(defaultRefMode);
         this.keySerializer = java.util.Objects.requireNonNull(keySerializer);
         this.entryType = java.util.Objects.requireNonNull(entryType);
         this.keySize = keySerializer.keySize();
@@ -311,7 +323,7 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
     }
 
     private byte[] getSerialized(byte[] key) {
-        checkKey(key);
+        checkKeyLength(key);
         long off = rootOffset;
         while (off != 0) {
             byte[] block = readBlock(off);
@@ -340,27 +352,40 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
      * updated in place.
      */
     public void put(K key, V value) {
-        putSerialized(serializeKey(key), bytes(entryType.serialize(new Entry<>(key, value))));
+        put(key, value, defaultRefMode);
     }
 
-    private void putSerialized(byte[] key, byte[] value) {
-        checkKey(key);
+    /**
+     * Mutates using the supplied ownership policy. The caller publishes the new
+     * root and retains/releases counted root references; SHARE preserves the old
+     * root even when its blocks are transaction-local.
+     */
+    public void put(K key, V value, RefMode mode) {
+        storage.mutate(() -> {
+            putSerialized(serializeKey(key), bytes(entryType.serialize(new Entry<>(key, value))), mode);
+            return null;
+        });
+    }
+
+    private void putSerialized(byte[] key, byte[] value, RefMode mode) {
+        checkKeyLength(key);
 
         prepareSpaceForWrite();
 
         if (rootOffset == 0) {
             List<SerializedEntry> entries = new ArrayList<>();
             entries.add(new SerializedEntry(key.clone(), value.clone()));
-            rootOffset = writeNewLeaf(entries);
+            rootOffset = writeNewBlock(serializeLeaf(entries), mode);
             return;
         }
         int rootLevel = level(readBlock(rootOffset));
-        Result res = insertInto(rootOffset, key, value);
+        Result res = insertInto(rootOffset, key, value, mode);
         if (res.splitOffset != 0) {
+            // the root was split, so we need to create a new root node
             List<Ptr> ptrs = new ArrayList<>();
             ptrs.add(new Ptr(res.firstKey, res.newOffset));
             ptrs.add(new Ptr(res.splitKey, res.splitOffset));
-            rootOffset = writeNewNode(ptrs, rootLevel + 1);
+            rootOffset = writeNewBlock(serializeNode(ptrs, rootLevel + 1), mode);
         } else {
             rootOffset = res.newOffset;
         }
@@ -394,7 +419,7 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
         byte[] splitKey;
     }
 
-    private Result insertInto(long offset, byte[] key, byte[] value) {
+    private Result insertInto(long offset, byte[] key, byte[] value, RefMode mode) {
         byte[] block = readBlock(offset);
         Result res = new Result();
         if (level(block) == 0) {
@@ -408,14 +433,16 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
             }
 
             if (fitsLeaf(entries)) {
-                res.newOffset = writeLeaf(offset, entries);
+                res.newOffset = replaceBlock(offset, serializeLeaf(entries), mode);
                 res.firstKey = entries.get(0).key;
             } else {
                 int k = chooseLeafSplit(entries);
                 List<SerializedEntry> left = new ArrayList<>(entries.subList(0, k));
                 List<SerializedEntry> right = new ArrayList<>(entries.subList(k, entries.size()));
-                res.splitOffset = writeNewLeaf(right);
-                res.newOffset = writeLeaf(offset, left);
+                // Acquire the right leaf's counted value references before replacing the left,
+                // otherwise moved values could transiently lose their last reference.
+                res.splitOffset = writeNewBlock(serializeLeaf(right), mode);
+                res.newOffset = replaceBlock(offset, serializeLeaf(left), mode);
                 res.firstKey = left.get(0).key;
                 res.splitKey = right.get(0).key;
             }
@@ -424,7 +451,7 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
 
         List<Ptr> ptrs = parseNode(block, keySize);
         int child = findChild(ptrs, key);
-        Result childRes = insertInto(ptrs.get(child).blockptr, key, value);
+        Result childRes = insertInto(ptrs.get(child).blockptr, key, value, storage.childRefMode(offset, mode));
         ptrs.get(child).blockptr = childRes.newOffset;
         ptrs.get(child).key = childRes.firstKey;
         if (childRes.splitOffset != 0) {
@@ -433,14 +460,14 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
         }
 
         if (fitsNode(ptrs)) {
-            res.newOffset = writeNode(offset, ptrs, level(block));
+            res.newOffset = replaceBlock(offset, serializeNode(ptrs, level(block)), mode);
             res.firstKey = ptrs.get(0).key;
         } else {
             int mid = ptrs.size() / 2;
             List<Ptr> left = new ArrayList<>(ptrs.subList(0, mid));
             List<Ptr> right = new ArrayList<>(ptrs.subList(mid, ptrs.size()));
-            res.splitOffset = writeNewNode(right, level(block));
-            res.newOffset = writeNode(offset, left, level(block));
+            res.splitOffset = writeNewBlock(serializeNode(right, level(block)), mode);
+            res.newOffset = replaceBlock(offset, serializeNode(left, level(block)), mode);
             res.firstKey = left.get(0).key;
             res.splitKey = right.get(0).key;
         }
@@ -453,17 +480,25 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
 
     /** Remove {@code key} if present. Returns true if an entry was removed. */
     public boolean remove(K key) {
-        return removeSerialized(serializeKey(key));
+        return remove(key, defaultRefMode);
     }
 
-    private boolean removeSerialized(byte[] key) {
-        checkKey(key);
+    /**
+     * Removes an entry using the same root ownership contract as
+     * {@link #put(Object, Object, RefMode)}.
+     */
+    public boolean remove(K key, RefMode mode) {
+        return storage.mutate(() -> removeSerialized(serializeKey(key), java.util.Objects.requireNonNull(mode)));
+    }
+
+    private boolean removeSerialized(byte[] key, RefMode mode) {
+        checkKeyLength(key);
         if (rootOffset == 0)
             return false;
 
         prepareSpaceForWrite();
 
-        Result res = removeFrom(rootOffset, key);
+        Result res = removeFrom(rootOffset, key, mode);
         if (res == null)
             return false;
         rootOffset = res.newOffset;
@@ -477,6 +512,11 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
             if (ptrs.size() != 1)
                 break;
             long child = ptrs.get(0).blockptr;
+            // Promote the child by transferring its structural ownership, not by freeing
+            // it.
+            // Counted roots instead follow the caller's incoming-reference update.
+            if (mode == RefMode.EXCLUSIVE)
+                storage.retireExclusiveBlock(rootOffset);
             rootOffset = child;
         }
         return true;
@@ -487,11 +527,15 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
      * the tree is empty.
      */
     public Optional<Entry<K, V>> removeFirst() {
+        return removeFirst(defaultRefMode);
+    }
+
+    public Optional<Entry<K, V>> removeFirst(RefMode mode) {
         Iterator<Entry<K, V>> iterator = iterator();
         if (!iterator.hasNext())
             return Optional.empty();
         Entry<K, V> first = iterator.next();
-        remove(first.key);
+        remove(first.key, mode);
         return Optional.of(first);
     }
 
@@ -500,7 +544,7 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
      * copy-on-write. Returns {@code null} if the key is absent; otherwise returns
      * the replacement subtree root and its first key.
      */
-    private Result removeFrom(long offset, byte[] key) {
+    private Result removeFrom(long offset, byte[] key, RefMode mode) {
         byte[] block = readBlock(offset);
         Result res = new Result();
         if (level(block) == 0) {
@@ -510,10 +554,13 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
                 return null;
             entries.remove(idx);
             if (entries.isEmpty()) {
+                // There is no replacement leaf to retire this uncounted block implicitly.
+                if (mode == RefMode.EXCLUSIVE)
+                    storage.retireExclusiveBlock(offset);
                 res.newOffset = 0;
                 return res;
             }
-            res.newOffset = writeLeaf(offset, entries);
+            res.newOffset = replaceBlock(offset, serializeLeaf(entries), mode);
             res.firstKey = entries.get(0).key;
             return res;
         }
@@ -522,7 +569,7 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
         int child = findChild(ptrs, key);
         if (!containsInSubtree(ptrs.get(child).blockptr, key))
             return null;
-        Result childRes = removeFrom(ptrs.get(child).blockptr, key);
+        Result childRes = removeFrom(ptrs.get(child).blockptr, key, storage.childRefMode(offset, mode));
         if (childRes == null)
             return null;
         if (childRes.newOffset == 0) {
@@ -532,10 +579,14 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
             ptrs.get(child).key = childRes.firstKey;
         }
         if (ptrs.isEmpty()) {
+            // Descendants were already retired while unwinding; retire only this empty
+            // node.
+            if (mode == RefMode.EXCLUSIVE)
+                storage.retireExclusiveBlock(offset);
             res.newOffset = 0;
             return res;
         }
-        res.newOffset = writeNode(offset, ptrs, level(block));
+        res.newOffset = replaceBlock(offset, serializeNode(ptrs, level(block)), mode);
         res.firstKey = ptrs.get(0).key;
         return res;
     }
@@ -626,10 +677,35 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
         return floorIterator(serializeKey(key), false);
     }
 
-    private Iterator<Entry<K, V>> floorIterator(byte[] key, boolean returnLowestIfNotFound) {
-        checkKey(key);
-        if (rootOffset == 0)
+    /**
+     * Returns entries in the half-open serialized-key range
+     * {@code [fromInclusive, toExclusive)}. Keys are ordered by their serialized
+     * unsigned lexicographic representation. Returns an empty iterator when the
+     * range is empty or reversed.
+     *
+     * @param fromInclusive first included key
+     * @param toExclusive   first excluded key
+     * @return entries in the requested key range
+     */
+    public Iterator<Entry<K, V>> rangeIterator(K fromInclusive, K toExclusive) {
+        byte[] start = serializeKey(fromInclusive);
+        byte[] end = serializeKey(toExclusive);
+        if (compare(start, end) >= 0)
             return Collections.emptyIterator();
+
+        Position position = floorPosition(start, true);
+        return position == null ? Collections.emptyIterator() : new BTreeIterator(position, start, end);
+    }
+
+    private Iterator<Entry<K, V>> floorIterator(byte[] key, boolean returnLowestIfNotFound) {
+        Position position = floorPosition(key, returnLowestIfNotFound);
+        return position == null ? Collections.emptyIterator() : new BTreeIterator(position);
+    }
+
+    private Position floorPosition(byte[] key, boolean returnLowestIfNotFound) {
+        checkKeyLength(key);
+        if (rootOffset == 0)
+            return null;
 
         List<Frame> path = new ArrayList<>();
         long offset = rootOffset;
@@ -649,9 +725,9 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
             if (returnLowestIfNotFound) {
                 entryIndex = 0;
             } else {
-                return Collections.emptyIterator();
+                return null;
             }
-        return new BTreeIterator(new Position(path, entries, entryIndex));
+        return new Position(path, entries, entryIndex);
     }
 
     private static class Frame {
@@ -678,26 +754,53 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
 
     private class BTreeIterator implements Iterator<Entry<K, V>> {
         private Position position;
+        private final byte[] startInclusive;
+        private final byte[] endExclusive;
 
         BTreeIterator(Position position) {
+            this(position, null, null);
+        }
+
+        BTreeIterator(Position position, byte[] startInclusive, byte[] endExclusive) {
             this.position = position;
+            this.startInclusive = startInclusive;
+            this.endExclusive = endExclusive;
         }
 
         @Override
         public boolean hasNext() {
+            prepareNext();
             return position != null;
         }
 
         @Override
         public Entry<K, V> next() {
-            if (position == null)
+            if (!hasNext())
                 throw new NoSuchElementException();
             Entry<K, V> result = deserializeEntry(position.entries.get(position.entryIndex));
             position = nextPosition(position);
             return result;
         }
+
+        private void prepareNext() {
+            while (position != null) {
+                byte[] key = position.entries.get(position.entryIndex).key;
+                if (startInclusive != null && compare(key, startInclusive) < 0) {
+                    position = nextPosition(position);
+                    continue;
+                }
+                if (endExclusive != null && compare(key, endExclusive) >= 0)
+                    position = null;
+                return;
+            }
+        }
     }
 
+    /**
+     * Advances to the next entry in key order: consume the rest of this leaf,
+     * otherwise climb until a parent has an unvisited child, then descend through
+     * that child's first-child pointers to its leftmost leaf.
+     */
     private Position nextPosition(Position position) {
         if (position.entryIndex + 1 < position.entries.size())
             return new Position(position.path, position.entries, position.entryIndex + 1);
@@ -708,11 +811,13 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
             if (frame.childIndex + 1 >= frame.ptrs.size())
                 continue;
 
+            // Discard exhausted descendants and move to this parent's next child.
             frame.childIndex++;
             while (path.size() > i + 1)
                 path.remove(path.size() - 1);
             long offset = frame.ptrs.get(frame.childIndex).blockptr;
             byte[] block = readBlock(offset);
+            // The next entry is in the leftmost leaf of the selected subtree.
             while (level(block) != 0) {
                 List<Ptr> ptrs = parseNode(block, keySize);
                 path.add(new Frame(ptrs, 0));
@@ -811,40 +916,16 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
         return buf;
     }
 
-    private long writeNewLeaf(List<SerializedEntry> entries) {
-        return writeNewBlock(serializeLeaf(entries));
-    }
-
-    private long writeNewNode(List<Ptr> ptrs, int level) {
-        return writeNewBlock(serializeNode(ptrs, level));
-    }
-
-    private long writeLeaf(long offset, List<SerializedEntry> entries) {
-        return replaceBlock(offset, serializeLeaf(entries));
-    }
-
-    private long writeNode(long offset, List<Ptr> ptrs, int level) {
-        return replaceBlock(offset, serializeNode(ptrs, level));
-    }
-
-    private long replaceBlock(long offset, byte[] data) {
-        if (storage.isBlockModified(offset)) {
-            writeBlock(offset, data);
-            return offset;
-        }
-        return writeNewBlock(data);
+    private long replaceBlock(long offset, byte[] data, RefMode mode) {
+        return storage.replaceBlock(offset, new NodeBlock(data, blockType), mode);
     }
 
     private byte[] readBlock(long offset) {
         return storage.readBlock(offset, blockType).data;
     }
 
-    private void writeBlock(long offset, byte[] data) {
-        storage.writeBlock(offset, new NodeBlock(data, blockType));
-    }
-
-    private long writeNewBlock(byte[] data) {
-        return storage.writeNewBlock(new NodeBlock(data, blockType));
+    private long writeNewBlock(byte[] data, RefMode mode) {
+        return storage.writeNewBlock(new NodeBlock(data, blockType), mode);
     }
 
     private boolean containsInSubtree(long offset, byte[] key) {
@@ -999,7 +1080,7 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
         return compare(a, 0, b, 0, Math.min(a.length, b.length));
     }
 
-    private void checkKey(byte[] key) {
+    private void checkKeyLength(byte[] key) {
         if (key.length != keySize)
             throw new IllegalArgumentException(
                     "key must be " + keySize + " bytes, got " + key.length);
@@ -1007,7 +1088,7 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
 
     private byte[] serializeKey(K key) {
         byte[] result = bytes(keySerializer.serialize(key));
-        checkKey(result);
+        checkKeyLength(result);
         return result;
     }
 

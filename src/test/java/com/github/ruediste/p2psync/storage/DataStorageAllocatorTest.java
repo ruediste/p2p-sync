@@ -118,7 +118,7 @@ class DataStorageAllocatorTest {
             var adapter = storage.new BTreeStorage(DataStorage.Area.META);
             var type = BTree.blockType(BTree.KeySerializer.bytes(Long.BYTES), DataStorage.Area.META,
                     BTree.BYTE_ARRAY_ENTRY_TYPE);
-            long reserved = adapter.writeNewBlock(new BTree.NodeBlock(new byte[16384], type));
+            long reserved = adapter.writeNewBlock(new BTree.NodeBlock(new byte[16384], type), RefMode.TRANSFER);
 
             assertTrue(storage.pendingFreeTreeRemovals.get(DataStorage.Area.META).contains(reserved));
             assertFalse(storage.freeBlocks.get(DataStorage.Area.META).contains(reserved));
@@ -287,15 +287,15 @@ class DataStorageAllocatorTest {
     }
 
     /**
-     * Verifies that each formatted free-space-tree root is owned by both the
-     * committed root block and the in-memory working transaction.
+     * Verifies that formatted free-space trees have structural ownership without
+     * reference-count entries.
      */
     @Test
     void formattedRootOwnsItsFreeSpaceTreeRoots() {
         try (var storage = newPersistentStorage(tempDir.resolve("root-tree-refs.db"))) {
-            assertEffectiveRefCount(storage, storage.rootBlock.dataFreeSpaceTree.blockOffset, 1);
-            assertEffectiveRefCount(storage, storage.rootBlock.metaFreeSpaceTree.blockOffset, 1);
-            assertEffectiveRefCount(storage, storage.rootBlock.systemFreeSpaceTree.blockOffset, 1);
+            assertEffectiveRefCount(storage, storage.rootBlock.dataFreeSpaceTree.blockOffset, 0);
+            assertEffectiveRefCount(storage, storage.rootBlock.metaFreeSpaceTree.blockOffset, 0);
+            assertEffectiveRefCount(storage, storage.rootBlock.systemFreeSpaceTree.blockOffset, 0);
         }
     }
 
@@ -313,21 +313,21 @@ class DataStorageAllocatorTest {
             storage.incrementRefCount(new BlockType.BlockRef(blockOffset, DataStorage.Area.META,
                     DataStorage.BYTE_ARRAY_BLOCK_TYPE));
             storage.commit();
-            assertEquals(1, storage.getRefCount(blockOffset));
+            assertEquals(1, storage.getRefPersistedCount(blockOffset));
 
             storage.decrementRefCount(new BlockType.BlockRef(blockOffset, DataStorage.Area.META,
                     BTree.blockType(BTree.KeySerializer.bytes(Long.BYTES), DataStorage.Area.META,
                             BTree.BYTE_ARRAY_ENTRY_TYPE)));
             storage.commit();
 
-            assertEquals(0, storage.getRefCount(blockOffset));
+            assertEquals(0, storage.getRefPersistedCount(blockOffset));
         }
 
         try (var reopened = new DataStorage()) {
             reopened.open(path.toString());
             reopened.commit();
 
-            assertEquals(0, reopened.getRefCount(blockOffset));
+            assertEquals(0, reopened.getRefPersistedCount(blockOffset));
         }
     }
 
@@ -354,15 +354,15 @@ class DataStorageAllocatorTest {
 
             storage.commit();
 
-            assertEquals(1, storage.getRefCount(firstBlock));
-            assertEquals(1, storage.getRefCount(lastBlock));
+            assertEquals(1, storage.getRefPersistedCount(firstBlock));
+            assertEquals(1, storage.getRefPersistedCount(lastBlock));
         }
 
         try (var reopened = new DataStorage()) {
             reopened.open(path.toString());
 
-            assertEquals(1, reopened.getRefCount(firstBlock));
-            assertEquals(1, reopened.getRefCount(lastBlock));
+            assertEquals(1, reopened.getRefPersistedCount(firstBlock));
+            assertEquals(1, reopened.getRefPersistedCount(lastBlock));
         }
     }
 
@@ -401,7 +401,7 @@ class DataStorageAllocatorTest {
 
     private static void assertEffectiveRefCount(DataStorage storage, long blockOffset, int expected) {
         var update = storage.refCountUpdates.get(blockOffset);
-        assertEquals(expected, update == null ? storage.getRefCount(blockOffset) : update.count);
+        assertEquals(expected, update == null ? storage.getRefPersistedCount(blockOffset) : update.count);
     }
 
     /**
@@ -524,23 +524,49 @@ class DataStorageAllocatorTest {
             return new BTree.NodeBlock(blocks.get(blockOffset), type);
         }
 
-        @Override
         public boolean isBlockModified(long blockOffset) {
             return modified.contains(blockOffset);
         }
 
-        @Override
-        public void writeBlock(long blockOffset, BTree.NodeBlock data) {
+        public void writeBlock(long blockOffset, BTree.NodeBlock data, RefMode mode) {
             blocks.put(blockOffset, data.data.clone());
             modified.add(blockOffset);
         }
 
         @Override
-        public long writeNewBlock(BTree.NodeBlock data) {
+        public long writeNewBlock(BTree.NodeBlock data, RefMode mode) {
             long offset = nextOffset++;
             blocks.put(offset, data.data.clone());
             modified.add(offset);
             return offset;
+        }
+
+        @Override
+        public RefMode childRefMode(long blockOffset, RefMode mode) {
+            return mode;
+        }
+
+        @Override
+        public long replaceBlock(long blockOffset, BTree.NodeBlock data, RefMode mode) {
+            if (mode != RefMode.SHARE && isBlockModified(blockOffset)) {
+                writeBlock(blockOffset, data, mode);
+                return blockOffset;
+            }
+            long replacement = writeNewBlock(data, mode);
+            if (mode == RefMode.EXCLUSIVE)
+                retireExclusiveBlock(blockOffset);
+            return replacement;
+        }
+
+        @Override
+        public void retireExclusiveBlock(long blockOffset) {
+            blocks.remove(blockOffset);
+            modified.remove(blockOffset);
+        }
+
+        @Override
+        public <T> T mutate(java.util.function.Supplier<T> mutation) {
+            return mutation.get();
         }
 
         @Override

@@ -80,7 +80,7 @@ public class RefCountUpdates {
 
     public RefCountUpdate getOrCreate(long blockOffset, DataStorage.Area area) {
         return refCountUpdates.computeIfAbsent(blockOffset, k -> {
-            var update = new RefCountUpdate(area, storage.getRefCount(blockOffset));
+            var update = new RefCountUpdate(area, storage.getRefPersistedCount(blockOffset));
             refCountUpdatesPersistable.add(blockOffset);
             return update;
         });

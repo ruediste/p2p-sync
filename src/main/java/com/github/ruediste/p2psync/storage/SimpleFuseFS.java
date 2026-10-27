@@ -3,6 +3,9 @@ package com.github.ruediste.p2psync.storage;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.UUID;
 import java.util.function.IntSupplier;
 
@@ -34,6 +37,8 @@ public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
     private final int gid = POSIXFactory.getNativePOSIX().getgid();
     private boolean closed;
     private boolean failed;
+    private boolean dirty;
+    private ScheduledExecutorService commitScheduler;
 
     public SimpleFuseFS(Path backingFile) {
         root.counter = 1;
@@ -50,11 +55,35 @@ public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
             storage.close();
             throw exception;
         }
+        commitScheduler = Executors.newSingleThreadScheduledExecutor(task -> {
+            Thread thread = new Thread(task, "simple-fuse-commit");
+            thread.setDaemon(true);
+            return thread;
+        });
+        commitScheduler.scheduleAtFixedRate(this::periodicCommit, 5, 5, TimeUnit.SECONDS);
     }
 
     private void commit() {
         treeRoot.blockOffset = tree.getRootOffset();
         storage.commit();
+    }
+
+    private void commitIfDirty() {
+        if (dirty) {
+            commit();
+            dirty = false;
+        }
+    }
+
+    private synchronized void periodicCommit() {
+        if (closed || failed || !dirty)
+            return;
+        try {
+            commitIfDirty();
+        } catch (RuntimeException exception) {
+            failed = true;
+            log.error("Periodic FUSE storage commit failed; refusing further operations", exception);
+        }
     }
 
     private synchronized int execute(boolean mutation, IntSupplier action) {
@@ -63,7 +92,7 @@ public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
         try {
             int result = action.getAsInt();
             if (mutation)
-                commit();
+                dirty = true;
             return result;
         } catch (FsError exception) {
             return -exception.errno;
@@ -313,18 +342,26 @@ public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
 
     @Override
     public int flush(String path, FuseFileInfo info) {
-        return execute(false, () -> 0);
+        return execute(false, () -> {
+            commitIfDirty();
+            return 0;
+        });
     }
 
     @Override
     public int fsync(String path, int datasync, FuseFileInfo info) {
-        return execute(true, () -> 0);
+        return execute(false, () -> {
+            commitIfDirty();
+            return 0;
+        });
     }
 
     @Override
     public synchronized void close() {
         if (!closed) {
             closed = true;
+            if (commitScheduler != null)
+                commitScheduler.shutdownNow();
             storage.close();
         }
     }

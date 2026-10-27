@@ -10,7 +10,6 @@ import com.github.ruediste.p2psync.storage.DataStorage.InfoBlock;
 import com.github.ruediste.p2psync.storage.DataStorage.RootRefHandle;
 
 public class RootBlock extends SlotBlock<RootBlock> {
-    private DataStorage storage;
     private BlockType<RootBlock> type;
 
     public class RootRefsSlot extends SlotBlock.RefsSlot {
@@ -65,15 +64,13 @@ public class RootBlock extends SlotBlock<RootBlock> {
     }
 
     public RootBlock(DataStorage storage) {
-        this.storage = storage;
         this.type = getBlockType(storage);
     }
 
-    public final RefSlot dataFreeSpaceTree = refSlot(Area.META, () -> storage.freeSpaceTrees.get(Area.DATA).blockType);
-    public final RefSlot metaFreeSpaceTree = refSlot(Area.META, () -> storage.freeSpaceTrees.get(Area.META).blockType);
-    public final RefSlot systemFreeSpaceTree = refSlot(Area.META,
-            () -> storage.freeSpaceTrees.get(Area.SYSTEM).blockType);
-    public final RefSlot refCountTree = refSlot(Area.META, () -> storage.refCountTree.blockType);
+    public final RefSlot dataFreeSpaceTree = exclusiveTreeSlot();
+    public final RefSlot metaFreeSpaceTree = exclusiveTreeSlot();
+    public final RefSlot systemFreeSpaceTree = exclusiveTreeSlot();
+    public final RefSlot refCountTree = exclusiveTreeSlot();
     public final RefSlot infoBlock = refSlot(Area.SYSTEM, InfoBlock.TYPE);
     public final SlotBlock.LongSlot fileLength = longSlot();
 
@@ -90,6 +87,19 @@ public class RootBlock extends SlotBlock<RootBlock> {
 
     public final UInt16sSlot longHandleIds = uint16sSlot();
     public final SlotBlock.LongsSlot longHandles = longsSlot();
+
+    private RefSlot exclusiveTreeSlot() {
+        // Persist the root pointer without retaining a counted edge. BTree explicitly
+        // retires replaced exclusive nodes, independently of root-block refcounting.
+        var slot = new RefSlot() {
+            @Override
+            List<BlockRef> getReferencedBlocks(DataStorage storage) {
+                return List.of();
+            }
+        };
+        slots.add(slot);
+        return slot;
+    }
 
     private RootRefsSlot rootRefsSlot() {
         var slot = new RootRefsSlot();

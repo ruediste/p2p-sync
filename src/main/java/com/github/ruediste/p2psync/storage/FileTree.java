@@ -300,11 +300,13 @@ public class FileTree {
     }
 
     public List<DirectoryEntry> listDirectory(ShortGuid directoryId) {
-        if (getHeader(directoryId, EntryType.DIR_HEADER) == null)
-            throw new IllegalArgumentException("Not a directory: " + formatGuid(directoryId));
+        requireDirectory(directoryId);
         List<DirectoryEntry> result = new ArrayList<>();
-        for (BTree.Entry<byte[], byte[]> entry : entriesFor(directoryId, EntryType.DIR_INDEX))
+        Iterator<BTree.Entry<byte[], byte[]>> entries = entriesForIterator(directoryId, EntryType.DIR_INDEX);
+        while (entries.hasNext()) {
+            BTree.Entry<byte[], byte[]> entry = entries.next();
             result.add(decodeDirectoryIndex(entry.value));
+        }
         return List.copyOf(result);
     }
 
@@ -410,7 +412,7 @@ public class FileTree {
     }
 
     private void truncateInlineData(ShortGuid guid, long newSize) {
-        for (BTree.Entry<byte[], byte[]> entry : entriesFor(guid, EntryType.INLINE_DATA)) {
+        for (BTree.Entry<byte[], byte[]> entry : entriesFrom(guid, EntryType.INLINE_DATA, newSize)) {
             long start = offsetOf(entry.key);
             if (start >= newSize) {
                 tree.remove(entry.key);
@@ -426,7 +428,7 @@ public class FileTree {
         int dataBlockSize = storage.blockSize(DataStorage.Area.DATA);
         long finalBlockIndex = blockCount(newSize) - 1;
         int finalBlockLength = (int) (newSize % dataBlockSize);
-        for (BTree.Entry<byte[], byte[]> entry : entriesFor(guid, EntryType.EXTENT_DATA)) {
+        for (BTree.Entry<byte[], byte[]> entry : entriesFrom(guid, EntryType.EXTENT_DATA, newSize)) {
             long start = offsetOf(entry.key);
             int blockCount = entry.value.length / Long.BYTES;
             long keepCount = start >= newSize ? 0 : Math.min(blockCount, blockCount(newSize - start));
@@ -516,11 +518,22 @@ public class FileTree {
     }
 
     private BTree.Entry<byte[], byte[]> findExtentEntry(ShortGuid guid, long blockStart, int blockSize) {
-        for (BTree.Entry<byte[], byte[]> entry : entriesFor(guid, EntryType.EXTENT_DATA)) {
+        byte[] target = key(guid, EntryType.EXTENT_DATA, blockStart);
+        Iterator<BTree.Entry<byte[], byte[]>> iterator = tree.floorOrLowestIterator(target);
+        while (iterator.hasNext()) {
+            BTree.Entry<byte[], byte[]> entry = iterator.next();
+            if (!hasPrefix(entry.key, guid, EntryType.EXTENT_DATA)) {
+                if (compareKeys(entry.key, target) > 0)
+                    return null;
+                continue;
+            }
             long entryStart = offsetOf(entry.key);
+            if (entryStart > blockStart)
+                return null;
             long entrySize = (long) (entry.value.length / Long.BYTES) * blockSize;
             if (blockStart >= entryStart && blockStart - entryStart < entrySize)
                 return entry;
+            return null;
         }
         return null;
     }
@@ -532,10 +545,16 @@ public class FileTree {
 
     private void clearData(ShortGuid guid) {
         List<byte[]> keys = new ArrayList<>();
-        for (BTree.Entry<byte[], byte[]> entry : entriesFor(guid, EntryType.INLINE_DATA))
+        Iterator<BTree.Entry<byte[], byte[]>> inlineEntries = entriesForIterator(guid, EntryType.INLINE_DATA);
+        while (inlineEntries.hasNext()) {
+            BTree.Entry<byte[], byte[]> entry = inlineEntries.next();
             keys.add(entry.key);
-        for (BTree.Entry<byte[], byte[]> entry : entriesFor(guid, EntryType.EXTENT_DATA))
+        }
+        Iterator<BTree.Entry<byte[], byte[]>> extentEntries = entriesForIterator(guid, EntryType.EXTENT_DATA);
+        while (extentEntries.hasNext()) {
+            BTree.Entry<byte[], byte[]> entry = extentEntries.next();
             keys.add(entry.key);
+        }
         keys.forEach(tree::remove);
     }
 
@@ -561,11 +580,16 @@ public class FileTree {
         tree.put(itemKey, encodeDirItem(item));
 
         long nextIndex = 0;
-        for (BTree.Entry<byte[], byte[]> index : entriesFor(parentId, EntryType.DIR_INDEX)) {
-            long indexOffset = offsetOf(index.key);
-            if (indexOffset < 0 || indexOffset == Long.MAX_VALUE)
-                throw new IllegalStateException("Directory index exhausted");
-            nextIndex = Math.max(nextIndex, indexOffset + 1);
+        byte[] lastIndexKey = key(parentId, EntryType.DIR_INDEX, Long.MAX_VALUE);
+        Iterator<BTree.Entry<byte[], byte[]>> indexes = tree.floorOrLowestIterator(lastIndexKey);
+        if (indexes.hasNext()) {
+            BTree.Entry<byte[], byte[]> index = indexes.next();
+            if (hasPrefix(index.key, parentId, EntryType.DIR_INDEX)) {
+                long indexOffset = offsetOf(index.key);
+                if (indexOffset < 0 || indexOffset == Long.MAX_VALUE)
+                    throw new IllegalStateException("Directory index exhausted");
+                nextIndex = indexOffset + 1;
+            }
         }
         tree.put(key(parentId, EntryType.DIR_INDEX, nextIndex), encodeDirectoryIndex(added));
         touchDirectory(parentId);
@@ -594,27 +618,47 @@ public class FileTree {
             tree.remove(itemKey);
         else
             tree.put(itemKey, encodeDirItem(item));
-        for (BTree.Entry<byte[], byte[]> index : entriesFor(parentId, EntryType.DIR_INDEX)) {
+        byte[] indexKey = null;
+        Iterator<BTree.Entry<byte[], byte[]>> indexes = entriesForIterator(parentId, EntryType.DIR_INDEX);
+        while (indexes.hasNext()) {
+            BTree.Entry<byte[], byte[]> index = indexes.next();
             DirectoryEntry indexed = decodeDirectoryIndex(index.value);
             if (indexed.name().equals(entry.name()) && sameGuid(indexed.guid(), entry.guid())) {
-                tree.remove(index.key);
+                indexKey = index.key;
                 break;
             }
         }
+        if (indexKey != null)
+            tree.remove(indexKey);
         touchDirectory(parentId);
     }
 
     private void ensureNameAvailable(ShortGuid parent, String name, ShortGuid except) {
-        for (DirectoryEntry entry : listDirectory(parent))
+        requireDirectory(parent);
+        Iterator<BTree.Entry<byte[], byte[]>> indexes = entriesForIterator(parent, EntryType.DIR_INDEX);
+        while (indexes.hasNext()) {
+            BTree.Entry<byte[], byte[]> indexed = indexes.next();
+            DirectoryEntry entry = decodeDirectoryIndex(indexed.value);
             if (entry.name().equals(name) && (except == null || !sameGuid(entry.guid(), except)))
                 throw new IllegalArgumentException("Directory entry already exists: " + name);
+        }
     }
 
     private DirectoryEntry findChild(ShortGuid parent, ShortGuid guid) {
-        for (DirectoryEntry entry : listDirectory(parent))
+        requireDirectory(parent);
+        Iterator<BTree.Entry<byte[], byte[]>> indexes = entriesForIterator(parent, EntryType.DIR_INDEX);
+        while (indexes.hasNext()) {
+            BTree.Entry<byte[], byte[]> indexed = indexes.next();
+            DirectoryEntry entry = decodeDirectoryIndex(indexed.value);
             if (sameGuid(entry.guid(), guid))
                 return entry;
+        }
         return null;
+    }
+
+    private void requireDirectory(ShortGuid guid) {
+        if (getHeader(guid, EntryType.DIR_HEADER) == null)
+            throw new IllegalArgumentException("Not a directory: " + formatGuid(guid));
     }
 
     private boolean isDescendant(ShortGuid candidate, ShortGuid ancestor) {
@@ -663,18 +707,31 @@ public class FileTree {
         return tree.get(key(guid, type, 0));
     }
 
-    private List<BTree.Entry<byte[], byte[]>> entriesFor(ShortGuid guid, EntryType type) {
-        byte[] start = key(guid, type, 0);
-        Iterator<BTree.Entry<byte[], byte[]>> iterator = tree.floorOrLowestIterator(start);
+    private List<BTree.Entry<byte[], byte[]>> entriesFrom(ShortGuid guid, EntryType type, long offset) {
+        byte[] start = key(guid, type, offset);
         List<BTree.Entry<byte[], byte[]>> result = new ArrayList<>();
-        while (iterator.hasNext()) {
-            BTree.Entry<byte[], byte[]> entry = iterator.next();
-            if (compareKeys(entry.key, start) < 0)
-                continue;
-            if (!hasPrefix(entry.key, guid, type))
-                break;
-            result.add(entry);
+        Iterator<BTree.Entry<byte[], byte[]>> floor = tree.floorIterator(start);
+        if (floor.hasNext()) {
+            BTree.Entry<byte[], byte[]> entry = floor.next();
+            if (hasPrefix(entry.key, guid, type) && compareKeys(entry.key, start) < 0)
+                result.add(entry);
         }
+        Iterator<BTree.Entry<byte[], byte[]>> iterator = tree.rangeIterator(start, keyAfterPrefix(guid, type));
+        while (iterator.hasNext()) {
+            result.add(iterator.next());
+        }
+        return result;
+    }
+
+    private Iterator<BTree.Entry<byte[], byte[]>> entriesForIterator(ShortGuid guid, EntryType type) {
+        byte[] start = key(guid, type, 0);
+        return tree.rangeIterator(start, keyAfterPrefix(guid, type));
+    }
+
+    private static byte[] keyAfterPrefix(ShortGuid guid, EntryType type) {
+        byte[] result = key(guid, type, 0);
+        result[GUID_SIZE] = (byte) (type.code + 1);
+        Arrays.fill(result, GUID_SIZE + 1, result.length, (byte) 0);
         return result;
     }
 

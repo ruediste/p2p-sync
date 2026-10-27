@@ -189,7 +189,7 @@ public class BTreeTest {
         storage.incrementRefCount(new BlockType.BlockRef(snapshotRoot, DataStorage.Area.META,
                 DataStorage.BYTE_ARRAY_BLOCK_TYPE));
         storage.commit();
-        assertEquals(1, storage.getRefCount(firstBlock));
+        assertEquals(1, storage.getRefPersistedCount(firstBlock));
 
         long secondBlock = storage.writeNewBlock(DataStorage.Area.DATA,
                 new byte[storage.blockSize(DataStorage.Area.DATA)]);
@@ -202,17 +202,17 @@ public class BTreeTest {
                 snapshotRoot);
         assertEquals(firstBlock, snapshot.get(1L));
         assertEquals(secondBlock, tree.get(1L));
-        assertEquals(1, storage.getRefCount(firstBlock));
-        assertEquals(1, storage.getRefCount(secondBlock));
+        assertEquals(1, storage.getRefPersistedCount(firstBlock));
+        assertEquals(1, storage.getRefPersistedCount(secondBlock));
 
         assertTrue(tree.remove(1L));
         storage.decrementRefCount(new BlockType.BlockRef(liveRoot, DataStorage.Area.META, nodeType));
         storage.commit();
-        assertEquals(0, storage.getRefCount(secondBlock));
-        assertEquals(1, storage.getRefCount(firstBlock));
+        assertEquals(0, storage.getRefPersistedCount(secondBlock));
+        assertEquals(1, storage.getRefPersistedCount(firstBlock));
         storage.decrementRefCount(new BlockType.BlockRef(snapshotRoot, DataStorage.Area.META, nodeType));
         storage.commit();
-        assertEquals(0, storage.getRefCount(firstBlock));
+        assertEquals(0, storage.getRefPersistedCount(firstBlock));
     }
 
     /**
@@ -240,7 +240,7 @@ public class BTreeTest {
                 DataStorage.BYTE_ARRAY_BLOCK_TYPE));
         storage.commit();
         for (long block : blocks)
-            assertEquals(1, storage.getRefCount(block));
+            assertEquals(1, storage.getRefPersistedCount(block));
     }
 
     private static BlockType<BTree.Entry<Long, Long>> referenceType() {
@@ -337,6 +337,37 @@ public class BTreeTest {
         assertEquals(1000, longOf(iterator.next().key));
         assertFalse(iterator.hasNext());
         assertFalse(newTree().floorIterator(key(0)).hasNext());
+    }
+
+    /**
+     * Verifies half-open range bounds across BTree leaves, including absent
+     * endpoints and empty or reversed ranges.
+     */
+    @Test
+    public void rangeIteratorHonorsHalfOpenBoundsAcrossLeaves() {
+        BTree<byte[], byte[]> tree = newTree();
+        for (int i = 0; i < 100; i++)
+            tree.put(key((i + 1) * 10), bytes("value-" + i));
+
+        Iterator<BTree.Entry<byte[], byte[]>> iterator = tree.rangeIterator(key(455), key(785));
+        List<Long> seen = new ArrayList<>();
+        while (iterator.hasNext())
+            seen.add(longOf(iterator.next().key));
+        List<Long> expected = new ArrayList<>();
+        for (int value = 460; value < 785; value += 10)
+            expected.add((long) value);
+        assertEquals(expected, seen);
+
+        iterator = tree.rangeIterator(key(450), key(800));
+        assertEquals(450, longOf(iterator.next().key));
+        long last = 0;
+        while (iterator.hasNext())
+            last = longOf(iterator.next().key);
+        assertEquals(790, last);
+
+        assertFalse(tree.rangeIterator(key(500), key(500)).hasNext());
+        assertFalse(tree.rangeIterator(key(600), key(500)).hasNext());
+        assertFalse(newTree().rangeIterator(key(0), key(100)).hasNext());
     }
 
     @Test
@@ -453,6 +484,7 @@ public class BTreeTest {
         assertArrayEquals(bytes("new-50"), tree.get(key(50)));
     }
 
+    /** Verifies balanced splits keep 1000 entries within a bounded tree size. */
     @Test
     public void blockCountIsReasonable() {
         BTree<byte[], byte[]> tree = newTree();
@@ -462,7 +494,9 @@ public class BTreeTest {
         storage.incrementRefCount(new BlockType.BlockRef(tree.rootOffset, DataStorage.Area.META,
                 DataStorage.BYTE_ARRAY_BLOCK_TYPE));
         storage.commit();
-        assertTrue(storage.refCountUpdates.entrySet().size() > 1);
+        var blocks = new java.util.HashSet<Long>();
+        tree.collectBlocks(blocks::add);
+        assertTrue(blocks.size() < 100);
     }
 
     private int count(BTree<byte[], byte[]> tree) {

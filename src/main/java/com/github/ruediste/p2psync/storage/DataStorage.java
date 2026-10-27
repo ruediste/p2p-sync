@@ -128,23 +128,33 @@ public class DataStorage implements Closeable {
         }
 
         @Override
-        public boolean isBlockModified(long blockOffset) {
-            return DataStorage.this.isBlockModified(blockOffset);
+        public long replaceBlock(long blockOffset, BTree.NodeBlock data, RefMode mode) {
+            return DataStorage.this.replaceBlock(blockOffset, area, data, mode);
         }
 
         @Override
-        public void writeBlock(long blockOffset, BTree.NodeBlock data) {
-            DataStorage.this.writeBlock(blockOffset, area, data);
+        public long writeNewBlock(BTree.NodeBlock data, RefMode mode) {
+            return DataStorage.this.writeNewBlock(area, data, mode);
         }
 
         @Override
-        public long writeNewBlock(BTree.NodeBlock data) {
-            return DataStorage.this.writeNewBlock(area, data);
+        public void retireExclusiveBlock(long blockOffset) {
+            DataStorage.this.retireExclusiveBlock(blockOffset, area);
+        }
+
+        @Override
+        public RefMode childRefMode(long blockOffset, RefMode mode) {
+            return DataStorage.this.childRefMode(blockOffset, mode);
+        }
+
+        @Override
+        public <T> T mutate(Supplier<T> mutation) {
+            return DataStorage.this.mutate(mutation);
         }
 
         @Override
         public boolean prepareFreeSpace(int blockCount) {
-            return !refillFreeBlocks(area, blockCount);
+            return refillFreeBlocks(area, blockCount);
         }
     }
 
@@ -394,12 +404,92 @@ public class DataStorage implements Closeable {
      * or reclaim it while its tree write is still being applied.
      */
     private long refCountBeingApplied;
+
+    private record RetiredExclusiveBlock(long offset, Area area) {
+    }
+
+    private int mutationDepth;
+
     /**
-     * Refcount-tree writes can split nodes before their parent links are updated.
-     * Reference callbacks must not read initial counts from that intermediate tree,
-     * so they are queued and replayed in order once the tree write is complete.
+     * Blocks which are being retired exclusively within the current mutation.
      */
-    private List<Runnable> deferredRefCountChanges;
+    private final java.util.ArrayDeque<RetiredExclusiveBlock> retiredExclusiveBlocks = new java.util.ArrayDeque<>();
+
+    /** Returns the current transaction's count, including unapplied changes. */
+    public long getRefCount(long blockOffset) {
+        var update = refCountUpdates.get(blockOffset);
+        return update == null ? getRefPersistedCount(blockOffset) : update.count;
+    }
+
+    /**
+     * Determines the ownership policy for a child of a block being changed.
+     * 
+     * @param blockOffset the offset of the parent block being changed
+     * @param mode        the reference mode for the modification of the parent
+     *                    block
+     * @return the effective reference mode for the child
+     */
+    public RefMode childRefMode(long blockOffset, RefMode mode) {
+        return switch (mode) {
+            case EXCLUSIVE -> RefMode.EXCLUSIVE;
+            case SHARE -> RefMode.SHARE;
+            // Surviving owners of a shared parent still need its original child path.
+            case TRANSFER -> getRefCount(blockOffset) > 1 ? RefMode.SHARE : RefMode.TRANSFER;
+        };
+    }
+
+    /**
+     * Runs a structural mutation. Currently only used by
+     * {@link #retireExclusiveBlock(long, Area)}.
+     * Reclamation runs after the outermost successful callback returns. A failed
+     * structural mutation must be abandoned by closing and reopening storage.
+     */
+    public <T> T mutate(Supplier<T> mutation) {
+        mutationDepth++;
+        boolean completed = false;
+        try {
+            T result = mutation.get();
+            completed = true;
+            return result;
+        } finally {
+            mutationDepth--;
+            if (completed && mutationDepth == 0)
+                drainRetiredExclusiveBlocks();
+        }
+    }
+
+    /**
+     * Queues retirement within {@link #mutate(Supplier)}. The children are not
+     * modified or reclaimed. It is the caller's responsibility to ensure that any
+     * child blocks are properly handled.
+     */
+    public void retireExclusiveBlock(long blockOffset, Area area) {
+        if (mutationDepth == 0)
+            throw new IllegalStateException("retireExclusiveBlock must be called within a mutate block");
+        retiredExclusiveBlocks.add(new RetiredExclusiveBlock(blockOffset, area));
+    }
+
+    private void drainRetiredExclusiveBlocks() {
+        while (!retiredExclusiveBlocks.isEmpty()) {
+            var block = retiredExclusiveBlocks.remove();
+            long blockOffset = block.offset;
+            Area area = block.area;
+            if (!modifiedBlocks.containsKey(blockOffset)) {
+                // The previous superblock can still reach this block until commit.
+                addToDeferredFreeBlocks(blockOffset, area);
+                continue;
+            }
+            modifiedBlocks.remove(blockOffset);
+            // In-flight removals must finish before reinsertion. Pending allocations
+            // are still in the free tree, so cancelling the reservation suffices.
+            if (blocksBeingRemovedFromFreeTree.get(area).contains(blockOffset))
+                putBackBlocksToFreeTree.get(area).add(blockOffset);
+            else if (pendingFreeTreeRemovals.get(area).remove(blockOffset))
+                freeBlocks.get(area).add(blockOffset);
+            else
+                addBlockToFreeTree(blockOffset, area);
+        }
+    }
 
     private void resetInMemoryState() {
         superBlock = null;
@@ -416,6 +506,8 @@ public class DataStorage implements Closeable {
         freeSpaceTrees.clear();
         freeSpaceAllocationOffset.clear();
         modifiedBlocks.clear();
+        retiredExclusiveBlocks.clear();
+        mutationDepth = 0;
         refCountUpdates.clear();
         refCountTree = null;
     }
@@ -466,10 +558,6 @@ public class DataStorage implements Closeable {
     public void incrementRefCount(BlockRef ref) {
         if (ref.blockOffset() == 0)
             return;
-        if (deferredRefCountChanges != null) {
-            deferredRefCountChanges.add(() -> incrementRefCount(ref));
-            return;
-        }
         var update = refCountUpdates.getOrCreate(ref.blockOffset(), ref.area());
         update.count = Math.incrementExact(update.count);
         if (ref.blockOffset() != refCountBeingApplied && update.count == update.initialCount)
@@ -479,10 +567,6 @@ public class DataStorage implements Closeable {
     public void decrementRefCount(BlockRef ref) {
         if (ref.blockOffset() == 0)
             return;
-        if (deferredRefCountChanges != null) {
-            deferredRefCountChanges.add(() -> decrementRefCount(ref));
-            return;
-        }
 
         var update = refCountUpdates.getOrCreate(ref.blockOffset(), ref.area());
 
@@ -661,25 +745,25 @@ public class DataStorage implements Closeable {
         // initialize the free space trees
         {
             var tree = new BTree<>(new BTreeStorage(Area.META), BTree.KeySerializer.bytes(BLOCK_OFFSET_SIZE),
-                    BTree.BYTE_ARRAY_ENTRY_TYPE);
+                    BTree.BYTE_ARRAY_ENTRY_TYPE, 0, RefMode.EXCLUSIVE);
             tree.put(u64(systemStart), u64(systemBytes));
             freeSpaceTrees.put(Area.SYSTEM, tree);
         }
         {
             var tree = new BTree<>(new BTreeStorage(Area.META), BTree.KeySerializer.bytes(BLOCK_OFFSET_SIZE),
-                    BTree.BYTE_ARRAY_ENTRY_TYPE);
+                    BTree.BYTE_ARRAY_ENTRY_TYPE, 0, RefMode.EXCLUSIVE);
             tree.put(u64(metaStart), u64(metaBytes));
             freeSpaceTrees.put(Area.META, tree);
         }
         {
             var tree = new BTree<>(new BTreeStorage(Area.META), BTree.KeySerializer.bytes(BLOCK_OFFSET_SIZE),
-                    BTree.BYTE_ARRAY_ENTRY_TYPE);
+                    BTree.BYTE_ARRAY_ENTRY_TYPE, 0, RefMode.EXCLUSIVE);
             tree.put(u64(dataStart), u64(dataBytes));
             freeSpaceTrees.put(Area.DATA, tree);
         }
 
         refCountTree = new BTree<>(new BTreeStorage(Area.META), BTree.KeySerializer.longs(),
-                BTree.entryType(LONG_BLOCK_TYPE));
+                BTree.entryType(LONG_BLOCK_TYPE), 0, RefMode.EXCLUSIVE);
 
         refreshPersistableBlockTypes();
 
@@ -785,12 +869,12 @@ public class DataStorage implements Closeable {
         for (Area area : Area.values()) {
             BTree.Storage storage = new BTreeStorage(Area.META);
             BTree<byte[], byte[]> tree = new BTree<>(storage, BTree.KeySerializer.bytes(BLOCK_OFFSET_SIZE),
-                    BTree.BYTE_ARRAY_ENTRY_TYPE, rootBlock.getFreeTreeRoot(area));
+                    BTree.BYTE_ARRAY_ENTRY_TYPE, rootBlock.getFreeTreeRoot(area), RefMode.EXCLUSIVE);
             freeSpaceTrees.put(area, tree);
         }
         refCountTree = new BTree<>(new BTreeStorage(Area.META), BTree.KeySerializer.longs(),
                 BTree.entryType(LONG_BLOCK_TYPE),
-                rootBlock.refCountTree.blockOffset);
+                rootBlock.refCountTree.blockOffset, RefMode.EXCLUSIVE);
 
         refreshPersistableBlockTypes();
     }
@@ -834,7 +918,8 @@ public class DataStorage implements Closeable {
 
     /**
      * Refill the free blocks for the given area up to the desired count. Returns
-     * true if the storage was extended.
+     * true if there were already enough free blocks, false if the storage had to be
+     * extended.
      * 
      * <ul>
      * <li>{@link Mod#REFCOUNT_UPDATE_FREE_TREE} (result && area ! = META),
@@ -848,14 +933,14 @@ public class DataStorage implements Closeable {
     private boolean refillFreeBlocks(Area area, int desiredFreeBlockCount) {
         var blocks = freeBlocks.get(area);
         if (desiredFreeBlockCount <= blocks.size())
-            return false;
+            return true;
 
         BTree<byte[], byte[]> tree = freeSpaceTrees.get(area);
         if (tree == null)
             throw new IllegalStateException("Free-space tree is not initialized for " + area);
 
         int blockSize = blockSize(area);
-        var extended = false;
+        var unchanged = true;
 
         while (true) {
             Long cursor = freeSpaceAllocationOffset.get(area);
@@ -919,12 +1004,12 @@ public class DataStorage implements Closeable {
             // If we have gathered enough free blocks, update the allocation offset and
             // return.
             if (blocks.size() >= desiredFreeBlockCount) {
-                return extended;
+                return unchanged;
             }
 
             // we iterated to the end of the current free-space extents without gathering
             // enough free blocks, so we need to extend the storage.
-            extended = true;
+            unchanged = false;
             extend(area);
         }
     }
@@ -985,6 +1070,72 @@ public class DataStorage implements Closeable {
      */
     public <T extends BlockInstance<T>> void writeBlock(long blockOffset, Area area, T data) {
         writeBlock(blockOffset, area, data, false);
+    }
+
+    /** Writes a transaction-local block under counted or structural ownership. */
+    public <T extends BlockInstance<T>> void writeBlock(long blockOffset, Area area, T data, RefMode mode) {
+        java.util.Objects.requireNonNull(mode);
+        if (mode != RefMode.EXCLUSIVE) {
+            writeBlock(blockOffset, area, data);
+            return;
+        }
+        if (!modifiedBlocks.containsKey(blockOffset))
+            throw new IllegalStateException("Exclusive block is not transaction-local: " + blockOffset);
+        // Structural children are managed by the caller, not by counted write
+        // callbacks.
+        ByteBuffer buffer = data.getBlockType().serialize(data);
+        byte[] bytes = new byte[buffer.remaining()];
+        buffer.get(bytes);
+        modifiedBlocks.put(blockOffset, new ModifiedBlock(bytes, List.of()));
+    }
+
+    /**
+     * Reuses an exclusively writable transaction-local block, or copies it.
+     * Counted incoming edges remain the caller's responsibility. Call within
+     * {@link #mutate(Supplier)} and publish the returned offset before returning.
+     */
+    public <T extends BlockInstance<T>> long replaceBlock(long blockOffset, Area area, T data, RefMode mode) {
+        java.util.Objects.requireNonNull(mode);
+        if (mutationDepth == 0)
+            throw new IllegalStateException("replaceBlock must be called within a mutate block");
+
+        if (blockOffset == 0) {
+            // No existing block: allocate the structure's first block.
+            return writeNewBlock(area, data, mode);
+        }
+
+        boolean overwriteInPlace = switch (mode) {
+            case SHARE -> {
+                // Preserve the source even if it is transaction-local.
+                yield false;
+            }
+            case EXCLUSIVE -> {
+                // Structural ownership needs no refcount check, but committed bytes
+                // must remain unchanged until the new superblock is published.
+                yield isBlockModified(blockOffset);
+            }
+            case TRANSFER -> {
+                // Committed bytes must survive until commit, regardless of ownership.
+                if (!isBlockModified(blockOffset))
+                    yield false;
+                // Move only one incoming reference; preserve the source for other owners.
+                if (getRefCount(blockOffset) > 1)
+                    yield false;
+                // Reuse a singly owned block, or a new block awaiting its first reference.
+                yield true;
+            }
+        };
+
+        if (overwriteInPlace) {
+            writeBlock(blockOffset, area, data, mode);
+            return blockOffset;
+        }
+        long replacement = writeNewBlock(area, data, mode);
+        // Exclusive blocks have no counted incoming edge to trigger reclamation.
+        // Counted sources instead follow the caller's incoming-reference update.
+        if (mode == RefMode.EXCLUSIVE)
+            retireExclusiveBlock(blockOffset, area);
+        return replacement;
     }
 
     /**
@@ -1050,6 +1201,20 @@ public class DataStorage implements Closeable {
         modifiedBlocks.put(off, null);
         writeBlock(off, area, data);
         return off;
+    }
+
+    /**
+     * Allocates under the supplied ownership policy; its parent supplies counted
+     * references.
+     */
+    public <T extends BlockInstance<T>> long writeNewBlock(Area area, T data, RefMode mode) {
+        java.util.Objects.requireNonNull(mode);
+        if (mode != RefMode.EXCLUSIVE)
+            return writeNewBlock(area, data);
+        // Keep allocator reservations, but do not create a refcount entry.
+        long offset = takeFreeBlockNoRefcount(area);
+        writeBlock(offset, area, data, mode);
+        return offset;
     }
 
     /**
@@ -1256,14 +1421,6 @@ public class DataStorage implements Closeable {
         }
     }
 
-    private static int areaCode(Area area) {
-        return switch (area) {
-            case SYSTEM -> 1;
-            case META -> 2;
-            case DATA -> 3;
-        };
-    }
-
     static Area areaFromCode(int code) {
         return switch (code) {
             case 1 -> Area.SYSTEM;
@@ -1396,26 +1553,7 @@ public class DataStorage implements Closeable {
     }
 
     private void applyRefCountUpdates() {
-        // In each iteration, referenced blocks are released, which will result in
-        // further refCountUpdates being added. In addition, the refCountTree is
-        // updated, which causes further updates and allocations from the meta
-        // space, which can in turn cause modifications to the meta free tree in case of
-        // meta space extensions. To detect when updates have stabilized, we
-        // separate updates from the meta free tree and the refCountTree from other
-        // updates..
-        int persistableOnly = 0;
         while (refCountUpdates.persistableCount() > 0 || refCountUpdates.nonPersistableCount() > 0) {
-
-            // return if there are no more updates and no management-only updates
-            // pending
-            if (refCountUpdates.nonPersistableCount() == 0 && persistableOnly > 2)
-                break;
-
-            if (refCountUpdates.nonPersistableCount() == 0)
-                persistableOnly++;
-            else
-                persistableOnly = 0;
-
             // update the root block to ensure it reflects the latest block references
             updateAndWriteRootBlock();
 
@@ -1424,12 +1562,8 @@ public class DataStorage implements Closeable {
                 var update = entry.getValue();
                 if (refCountUpdates.get(blockOffset) != update)
                     continue;
-                if (update.count == 0 && (refCountTree.rootOffset == blockOffset
-                        || freeSpaceTrees.values().stream().anyMatch(tree -> tree.rootOffset == blockOffset)))
-                    continue;
                 long count = update.count;
                 refCountBeingApplied = blockOffset;
-                deferredRefCountChanges = new ArrayList<>();
                 try {
                     if (count == 0)
                         refCountTree.remove(blockOffset);
@@ -1439,11 +1573,7 @@ public class DataStorage implements Closeable {
                         throw new IllegalStateException("Reference count for " + update.area + " block " + blockOffset
                                 + " went negative: " + count);
                     update.initialCount = count;
-                    var changes = deferredRefCountChanges;
-                    deferredRefCountChanges = null;
-                    changes.forEach(Runnable::run);
                 } finally {
-                    deferredRefCountChanges = null;
                     refCountBeingApplied = 0;
                 }
                 if (update.count != count)
@@ -1583,33 +1713,6 @@ public class DataStorage implements Closeable {
                 ByteBuffer::putLong, head -> rootBlock.pendingMetaFreeTreeRemovalList.value = head);
     }
 
-    private DeferredPersistor persistRefCountUpdateList() {
-        return persistListInMeta(
-                () -> refCountUpdates.entrySet(),
-                Long.BYTES + Long.BYTES + 2,
-                (buffer, entry) -> {
-                    long blockOffset = entry.getKey();
-                    RefCountUpdates.RefCountUpdate update = entry.getValue();
-                    int blockTypeCode = 0;
-                    if (update.count == 0 && update.blockType().isPresent()) {
-                        var persistableType = persistableBlockType(update.blockType().get())
-                                .orElseThrow(() -> new IllegalStateException(
-                                        "Block type is not registered for deferred refcount updates: "
-                                                + update.area + " block " + blockOffset + " (initial="
-                                                + update.initialCount + ", count=" + update.count + "): "
-                                                + update.blockType().get()));
-                        blockTypeCode = persistableType.code;
-                    }
-                    if (update.count == 0 && blockTypeCode == 0 && !modifiedBlocks.containsKey(blockOffset))
-                        throw new IllegalStateException(
-                                "Missing durable delete action for block " + blockOffset);
-                    buffer.putLong(blockOffset);
-                    buffer.putLong(update.count);
-                    buffer.put((byte) areaCode(update.area));
-                    buffer.put((byte) blockTypeCode);
-                }, head -> rootBlock.refCountUpdateList.value = head);
-    }
-
     /**
      * write the deferred free block heads and update the root block with their
      * offsets
@@ -1696,10 +1799,6 @@ public class DataStorage implements Closeable {
             decrementRefCount(new BlockRef(previousRootOffset, Area.SYSTEM, RootBlock.getBlockType(this)));
         }
 
-        // heavy lifting: apply refcount updates and remove pending free tree
-        // removals. Afterwards, only refcount updates of the refcount tree and the
-        // meta free tree, as well as pending removals from the meta free tree will
-        // remain.
         applyRefCountUpdatesAndRemovePendingFreeTreeRemovals();
 
         // Now all the heavy lifting is completed. We'll only touch the meta free tree
@@ -1708,8 +1807,7 @@ public class DataStorage implements Closeable {
         var persistors = new ArrayList<DeferredPersistor>();
         persistors.add(persistPendingMetaFreeTreeRemovalList());
         persistors.add(writeDeferredFreeBlockHeads());
-        var refCountPersistor = persistRefCountUpdateList();
-        persistors.add(refCountPersistor);
+        rootBlock.refCountUpdateList.value = 0;
         while (true) {
             updateAndWriteRootBlock();
             // All persistors might need new blocks allocated, but they should
@@ -1728,8 +1826,6 @@ public class DataStorage implements Closeable {
 
         // prepare and write the root block (already allocated)
         updateAndWriteRootBlock();
-
-        refCountPersistor.persist.run();
 
         // perform the commit
         flushModified();
@@ -1820,7 +1916,7 @@ public class DataStorage implements Closeable {
         }
     }
 
-    public long getRefCount(long blockOffset) {
+    public long getRefPersistedCount(long blockOffset) {
         var value = refCountTree.get(blockOffset);
         return value == null ? 0 : value;
     }
