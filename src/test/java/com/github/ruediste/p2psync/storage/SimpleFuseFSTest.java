@@ -221,6 +221,65 @@ class SimpleFuseFSTest {
     }
 
     /**
+     * Warms normalized paths before deleting and recreating entries, checking that
+     * cached IDs cannot outlive their files or directories or hide fresh metadata.
+     */
+    @Test
+    void cachedPathsTrackDeletionAndRecreation() {
+        try (var fs = new SimpleFuseFS(tempDir.resolve("files.db"))) {
+            assertEquals(0, fs.mkdir("/dir", 0755));
+            assertEquals(0, fs.create("/dir/file", 0644, null));
+            FileStat stat = new FileStat(Runtime.getSystemRuntime());
+            assertEquals(0, fs.getattr("/dir/./file", stat));
+            assertEquals(1, fs.write("/dir/file", buffer(new byte[] { 42 }), 1, 0, null));
+            assertEquals(0, fs.getattr("/dir/file", stat));
+            assertEquals(1, stat.st_size.longValue());
+            assertEquals(0, fs.unlink("/dir/./file"));
+            assertEquals(-ErrorCodes.ENOENT(), fs.open("/dir/file", null));
+            assertEquals(0, fs.rmdir("/dir"));
+            assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/dir", stat));
+            assertEquals(0, fs.create("/dir", 0644, null));
+            assertEquals(0, fs.open("/dir", null));
+            assertEquals(-ErrorCodes.ENOTDIR(), fs.open("/dir/file", null));
+            assertEquals(0, fs.unlink("/dir"));
+            assertEquals(0, fs.mkdir("/dir", 0755));
+            assertEquals(0, fs.create("/dir/file", 0644, null));
+            assertEquals(0, fs.getattr("/dir/file", stat));
+            assertEquals(0, stat.st_size.longValue());
+        }
+    }
+
+    /**
+     * Warms both sides of renames and verifies replacement IDs and descendant
+     * paths are refreshed while similarly prefixed sibling paths stay valid.
+     */
+    @Test
+    void cachedPathsTrackRenamesAndReplacements() {
+        try (var fs = new SimpleFuseFS(tempDir.resolve("files.db"))) {
+            assertEquals(0, fs.mkdir("/dir", 0755));
+            assertEquals(0, fs.mkdir("/dir/sub", 0755));
+            assertEquals(0, fs.create("/dir/sub/file", 0644, null));
+            assertEquals(1, fs.write("/dir/sub/file", buffer(new byte[] { 42 }), 1, 0, null));
+            assertEquals(0, fs.create("/dir-other", 0644, null));
+            assertEquals(0, fs.open("/dir-other", null));
+            assertEquals(0, fs.mkdir("/target", 0755));
+            assertEquals(0, fs.opendir("/target", null));
+            assertEquals(0, fs.rename("/dir", "/target"));
+            assertEquals(-ErrorCodes.ENOENT(), fs.open("/dir/sub/file", null));
+            Pointer result = buffer(new byte[1]);
+            assertEquals(1, fs.read("/target/sub/file", result, 1, 0, null));
+            assertEquals(42, result.getByte(0));
+            assertEquals(0, fs.open("/dir-other", null));
+            assertEquals(0, fs.create("/replacement", 0644, null));
+            assertEquals(0, fs.open("/replacement", null));
+            assertEquals(0, fs.rename("/target/sub/file", "/replacement"));
+            assertEquals(1, fs.read("/replacement", result, 1, 0, null));
+            assertEquals(42, result.getByte(0));
+            assertEquals(-ErrorCodes.ENOENT(), fs.open("/target/sub/file", null));
+        }
+    }
+
+    /**
      * Stops a full directory buffer and resumes from its cookie without duplicating
      * or omitting entries.
      */

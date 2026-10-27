@@ -2,11 +2,13 @@ package com.github.ruediste.p2psync.storage;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.UUID;
 import java.util.function.IntSupplier;
 
 import org.slf4j.Logger;
@@ -33,6 +35,7 @@ public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
             TREE_ROOT_HANDLE_ID, DataStorage.Area.META, FileTree.BLOCK_TYPE);
     private final FileTree tree;
     private final ShortGuid root = new ShortGuid();
+    private final Map<String, FileTree.DirectoryEntry> pathCache = new HashMap<>();
     private final int uid = POSIXFactory.getNativePOSIX().getuid();
     private final int gid = POSIXFactory.getNativePOSIX().getgid();
     private boolean closed;
@@ -122,15 +125,33 @@ public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
     }
 
     private FileTree.DirectoryEntry resolve(String path) {
+        String normalized = normalize(path);
+        var cached = pathCache.get(normalized);
+        if (cached != null)
+            return cached;
         var entry = new FileTree.DirectoryEntry(root, true, "");
-        for (String name : normalize(path).split("/")) {
+        String currentPath = "";
+        for (String name : normalized.split("/")) {
             if (name.isEmpty())
                 continue;
             require(entry.directory(), ErrorCodes.ENOTDIR());
-            entry = tree.lookup(entry.guid(), name);
-            require(entry != null, ErrorCodes.ENOENT());
+            currentPath += "/" + name;
+            var child = pathCache.get(currentPath);
+            if (child == null) {
+                child = tree.lookup(entry.guid(), name);
+                require(child != null, ErrorCodes.ENOENT());
+                pathCache.put(currentPath, child);
+            }
+            entry = child;
         }
+        pathCache.put(normalized, entry);
         return entry;
+    }
+
+    private void invalidatePath(String path) {
+        String normalized = normalize(path);
+        String prefix = normalized + "/";
+        pathCache.keySet().removeIf(cached -> cached.equals(normalized) || cached.startsWith(prefix));
     }
 
     private record Destination(FileTree.DirectoryEntry parent, String name) {
@@ -294,6 +315,7 @@ public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
     public int unlink(String path) {
         return execute(true, () -> {
             tree.delete(file(path).guid());
+            invalidatePath(path);
             return 0;
         });
     }
@@ -306,6 +328,7 @@ public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
             require(entry.directory(), ErrorCodes.ENOTDIR());
             require(tree.listDirectory(entry.guid()).isEmpty(), ErrorCodes.ENOTEMPTY());
             tree.delete(entry.guid());
+            invalidatePath(path);
             return 0;
         });
     }
@@ -336,6 +359,8 @@ public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
             tree.rename(source.guid(), temporaryName);
             tree.move(source.guid(), target.parent().guid());
             tree.rename(source.guid(), target.name());
+            invalidatePath(sourcePath);
+            invalidatePath(targetPath);
             return 0;
         });
     }
