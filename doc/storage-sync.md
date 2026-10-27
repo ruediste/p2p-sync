@@ -112,7 +112,18 @@ Pending reference-count updates store absolute counts. Newly allocated blocks st
 
 Internal tree blocks reference their child blocks; leaf blocks enumerate references through the entry's `BlockType`. Storage manages those references on block writes and releases, including copy-on-write snapshots. There is no entry-deletion callback, and callers must not separately increment references owned by entries.
 
-`FileTree` uses the entry-type code already present in the key to identify extent and directory spill references. Values have no redundant type prefix; the original storage format version 1 and B-tree layout are preserved.
+### Tree Ownership
+
+`BTree.put`, `remove`, and `removeFirst` accept a `RefMode`, which is propagated along the changed path. Constructors can select a default mode; existing constructors default to `TRANSFER`.
+
+- `EXCLUSIVE`: the tree owns its blocks structurally, without refcount entries. Retained child pointers transfer to replacement nodes. Replaced nodes, empty leaves, and collapsed roots are retired explicitly, without recursively releasing retained children.
+- `TRANSFER`: the caller replaces one counted root reference. A multiply referenced node passes `SHARE` to the changed child, so shared transaction-local blocks cannot be overwritten.
+- `SHARE`: the caller keeps the source root and publishes a separate replacement. Every changed path block is copied, including blocks allocated in the current transaction.
+
+For counted trees the caller remains responsible for publishing the resulting root and updating its incoming counted reference. Newly written counted nodes acquire their outgoing references; retiring the old owning edge releases its references through normal storage accounting.
+
+All three free-space trees and the reference-count tree default to `EXCLUSIVE`. Their root pointers are persisted in the root block but excluded from its counted references. Retirement callbacks are drained after the new tree root is published, so reclaiming a block cannot re-enter a half-updated allocator tree. A retired committed block goes onto the deferred-free list; a retired transaction-local block returns to its pending allocation pool or is put back after its in-flight removal batch. Consequently, allocator-tree updates generate allocations and frees, but no recursive refcount updates. `StorageCheck` traverses these trees independently, checking structural ownership, coverage, and the absence of refcount entries.
+
 
 ### Transaction and Block Management
 Changes to the data file are managed within transactions. During a transaction, blocks used by the previous transaction are never modified. All changes are written to newly allocated blocks. For efficient and correct block management, a few in-memory structures are maintained:
@@ -131,18 +142,7 @@ Changes to the data file are managed within transactions. During a transaction, 
 
     While a snapshot is being removed, its offsets remain marked as in-flight. If one becomes unreferenced during removal, it is reinserted into the free-space tree only after the batch completes; this avoids recursively editing the tree in the middle of removing that same batch.
 
-- `DeferredRefCountUpdates`: Copy-on-write changes to the META free-space tree and reference-count tree can themselves create reference-count updates. Those updates are deferred to the next commit to break the recursion; ordinary transaction updates are applied during the current commit. Deferred records are stored in a linked list of META blocks. Each list block has a `uint64_t` next-block offset and a `uint64_t` record count, followed by fixed-size records:
-
-    ```C
-    struct DeferredRefCountUpdate {
-            uint64_t blockOffset;
-            int64_t count;
-            uint8_t area;       // 1 SYSTEM, 2 META, 3 DATA
-            uint8_t blockType;  // 0 none, 1 META B-tree, 2 META free-tree list, 3 refcount list, 4 info, 5 raw bytes
-    };
-    ```
-
-    All fields use big-endian encoding. A block holds `floor((metaBlockSize - 16) / 18)` records. Each block offset appears at most once in a list. Counts must be nonnegative; a zero count requires a registered block type to release the block's children. A block-type code of 0 means no type is stored. Recovery validates the chain and records, then queues its absolute counts for application during the next commit. The list blocks' own deferred reference counts are included in the list. The old list chain is released while retiring its root block. The file version remains 1; no migration from the previous delta-based deferred records is provided.
+- Reference-count updates are fully drained during commit, including releases of counted descendants. Exclusive allocator trees do not create new counted work. Commits no longer write deferred refcount-update lists; their root field is zero. Pending META free-tree removals remain separately persisted to bound allocator self-updates. The file version remains 1; no migration from previously counted allocator trees is provided.
 
 - `DeferredFreeBlocks`: When a block is no longer referenced (refcount hits 0), it can be unallocated. However, care has to be taken not to reuse a block used in the previous transaction in the current transaction, as the block is still used by the last committed transaction. 
 

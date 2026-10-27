@@ -1,8 +1,8 @@
 package com.github.ruediste.p2psync.storage;
 
 /**
- * The reference mode is passed to a function modifying a certain block captures
- * how references to other blocks should be handled.
+ * Ownership policy passed down a block modification path. Exclusive allocator
+ * trees use structural ownership; ordinary trees use counted references.
  */
 public enum RefMode {
     /**

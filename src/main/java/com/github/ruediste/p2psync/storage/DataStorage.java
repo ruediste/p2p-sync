@@ -388,6 +388,11 @@ public class DataStorage implements Closeable {
      * immediately when their count becomes zero.
      */
     RefCountUpdates refCountUpdates = new RefCountUpdates(this);
+
+    /**
+     * The update currently being written; callbacks for this block must not cancel
+     * or reclaim it while its tree write is still being applied.
+     */
     private long refCountBeingApplied;
     /**
      * Refcount-tree writes can split nodes before their parent links are updated.
