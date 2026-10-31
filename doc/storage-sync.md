@@ -12,11 +12,6 @@ The system lives on devices, which are the physical hardware that runs the softw
 
 A node can be configured to replicate data for one or more users, and each user can have multiple nodes replicating their data. The nodes communicate with each other to synchronize the data and ensure that it is available even if some nodes go offline.
 
-During bootstrap, a node generates a node management key. This key can be used by users to encrypt and sign a `NodeUserConfiguration`, instructing the node to replicate the data of a user, optionally restricted by a quota. Updating the quotas is part of the normal user-data merge flow, ensuring that all participating nodes converge on the same allocation. When multiple users configure quotas for the same user, the most generous quotas take effect.
-
-The nodes periodically publish storage claims, containing information about the data blocks they have stored. This information is used, together with the node trusts of the respective user, to control data replication.
-
-
 ## Data Storage
 The system uses a custom storage system designed to provide crash protection and snapshot features. The whole system is designed around a single writer/multiple readers model. The system follows a copy-on-write approach, conceptually heavily inspired by btrfs. The main primitive used is a B+ tree with dynamic value size and shadowing.
 
@@ -165,8 +160,6 @@ Invariants:
 - `FreeBlocks` contains only offsets still represented as free in the corresponding free-space tree
 - Pending offsets are never returned by the allocator; after a removal batch starts, its in-flight offsets remain unavailable until removal or put-back handling completes
 
-
-
 ### Blob Data Storage
 For various purposes, data blobs need to be stored efficiently, either as inlined data for small blobs or in external blocks for larger blobs. This is accomplished by using keys with the following structure
 ```C
@@ -199,35 +192,6 @@ struct ExtentData {
 ```
 
 The number of block offsets is derived from the size of the data stored in the B-tree item. The end of the blob in the last block is determined by some metadata.
-
-### System KV Tree
-The system key value tree is a blob store for various system information. Typically, the values are JSON serialized. It is intended for relatively small values, loaded into memory in one batch. 
-
-The keys of all entries have the same size and structure:
-
-```C
-// meta space
-struct SystemKvTreeKey {
-    uint32_t id;    // blob id
-    uint8_t type;     // type of the entry, see FsTreeEntryType
-    uint32_t offset;  // depends on the type of the entry
-};
-
-enum SystemKvTreeEntryType {
-    BLOB_HEADER,  
-    INLINE_DATA, // inlined data of a blob
-    EXTENT_DATA,    // reference to blocks containing the blob data
-};
-```
-
-Every blob has exactly one header (`BLOB_HEADER`, offset 0) storing the basic metadata.
-```C
-struct BlobHeader {
-    uint64_t size;       // size of the file in bytes
-};
-```
-
-The data is stored in `INLINE_DATA` and `EXTENT_DATA` entries.
 
 ## Globally Unique Identifiers (GUID)
 When creating a new file or directory a globally unique identifier (GUID) has to be generated. We use the SHA-256 (32 bytes) hash of the public key of the node creating the entity, followed by a per node counter (64 bits, 8 bytes). This is the full GUID, consisting of 40 bytes in total.
@@ -509,6 +473,9 @@ enum OperationEntryType {
     RENAME, // rename a file or directory
 
     DELETE, // delete a file or directory
+
+    SNAPSHOT, // snapshot of the file system state
+
     INLINE_DATA, // store inline data for an operation
     EXTENT_DATA, // store data in external blocks for an operation
 };
@@ -568,19 +535,9 @@ struct Delete {
 };
 ```
 
-### Snapshot Tree
-In order to incorporate operations received from other nodes, the state of the file system has to be reversed to a state before the new operations are applied. This is achieved by periodically keeping snapshots of the file system.
-
-The key of each entry is an operation id. The value is the root block offset of the file system root block, representing the state of the file system AFTER applying the operation. 
-
-When a fresh file system is created, the lamport clock is set to 1, and an initial snapshot at operation 0 of the empty file system is created. This ensures that there is always a baseline snapshot to revert to when incorporating new operations.
-
+#### Snapshot Operation
 ```C
-struct SnapshotKey {
-    uint8_t operationId[40]; // the operation id corresponding to this snapshot
-};
-
-struct SnapshotValue {
-    uint64_t rootBlockOffset; // the root block offset of the file system root block
+struct Snapshot{
+    uint64_t blockOffset; // the block offset of the root of the file system tree representing this snapshot
 };
 ```

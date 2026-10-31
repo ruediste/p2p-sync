@@ -105,8 +105,8 @@ public class DataStorage implements Closeable {
         }
     }
 
-    final class BTreeStorage implements BTree.Storage {
-        private final Area area;
+    class BTreeStorage implements BTree.Storage {
+        protected final Area area;
 
         BTreeStorage(Area area) {
             this.area = area;
@@ -148,14 +148,63 @@ public class DataStorage implements Closeable {
         }
 
         @Override
-        public <T> T mutate(Supplier<T> mutation) {
-            return DataStorage.this.mutate(mutation);
-        }
-
-        @Override
         public boolean prepareFreeSpace(int blockCount) {
             return refillFreeBlocks(area, blockCount);
         }
+    }
+
+    class MetaFreeTreeBTreeStorage extends BTreeStorage {
+        private int mutationDepth;
+
+        /**
+         * Blocks which are being retired exclusively within the current mutation.
+         */
+        private final java.util.ArrayDeque<RetiredExclusiveBlock> retiredExclusiveBlocks = new java.util.ArrayDeque<>();
+
+        MetaFreeTreeBTreeStorage(Area area) {
+            super(area);
+        }
+
+        /**
+         * Runs a structural mutation. Currently only used by
+         * {@link #retireExclusiveBlock(long, Area)}.
+         * Reclamation runs after the outermost successful callback returns. A failed
+         * structural mutation must be abandoned by closing and reopening storage.
+         */
+        @Override
+        public <T> T mutate(Supplier<T> mutation) {
+            mutationDepth++;
+            boolean completed = false;
+            try {
+                T result = mutation.get();
+                completed = true;
+                return result;
+            } finally {
+                mutationDepth--;
+                if (completed && mutationDepth == 0)
+                    drainRetiredExclusiveBlocks();
+            }
+        }
+
+        /**
+         * Queues retirement within {@link #mutate(Supplier)}. The children are not
+         * modified or reclaimed. It is the caller's responsibility to ensure that any
+         * child blocks are properly handled.
+         */
+        @Override
+        public void retireExclusiveBlock(long blockOffset) {
+            if (mutationDepth == 0)
+                throw new IllegalStateException("retireExclusiveBlock must be called within a mutate block");
+            retiredExclusiveBlocks.add(new RetiredExclusiveBlock(blockOffset, area));
+        }
+
+        private void drainRetiredExclusiveBlocks() {
+            while (!retiredExclusiveBlocks.isEmpty()) {
+                var block = retiredExclusiveBlocks.remove();
+                DataStorage.this.retireExclusiveBlock(block.offset, block.area);
+            }
+        }
+
     }
 
     public enum Area {
@@ -408,13 +457,6 @@ public class DataStorage implements Closeable {
     private record RetiredExclusiveBlock(long offset, Area area) {
     }
 
-    private int mutationDepth;
-
-    /**
-     * Blocks which are being retired exclusively within the current mutation.
-     */
-    private final java.util.ArrayDeque<RetiredExclusiveBlock> retiredExclusiveBlocks = new java.util.ArrayDeque<>();
-
     /** Returns the current transaction's count, including unapplied changes. */
     public long getRefCount(long blockOffset) {
         var update = refCountUpdates.get(blockOffset);
@@ -438,57 +480,21 @@ public class DataStorage implements Closeable {
         };
     }
 
-    /**
-     * Runs a structural mutation. Currently only used by
-     * {@link #retireExclusiveBlock(long, Area)}.
-     * Reclamation runs after the outermost successful callback returns. A failed
-     * structural mutation must be abandoned by closing and reopening storage.
-     */
-    public <T> T mutate(Supplier<T> mutation) {
-        mutationDepth++;
-        boolean completed = false;
-        try {
-            T result = mutation.get();
-            completed = true;
-            return result;
-        } finally {
-            mutationDepth--;
-            if (completed && mutationDepth == 0)
-                drainRetiredExclusiveBlocks();
-        }
-    }
-
-    /**
-     * Queues retirement within {@link #mutate(Supplier)}. The children are not
-     * modified or reclaimed. It is the caller's responsibility to ensure that any
-     * child blocks are properly handled.
-     */
     public void retireExclusiveBlock(long blockOffset, Area area) {
-        if (mutationDepth == 0)
-            throw new IllegalStateException("retireExclusiveBlock must be called within a mutate block");
-        retiredExclusiveBlocks.add(new RetiredExclusiveBlock(blockOffset, area));
-    }
-
-    private void drainRetiredExclusiveBlocks() {
-        while (!retiredExclusiveBlocks.isEmpty()) {
-            var block = retiredExclusiveBlocks.remove();
-            long blockOffset = block.offset;
-            Area area = block.area;
-            if (!modifiedBlocks.containsKey(blockOffset)) {
-                // The previous superblock can still reach this block until commit.
-                addToDeferredFreeBlocks(blockOffset, area);
-                continue;
-            }
-            modifiedBlocks.remove(blockOffset);
-            // In-flight removals must finish before reinsertion. Pending allocations
-            // are still in the free tree, so cancelling the reservation suffices.
-            if (blocksBeingRemovedFromFreeTree.get(area).contains(blockOffset))
-                putBackBlocksToFreeTree.get(area).add(blockOffset);
-            else if (pendingFreeTreeRemovals.get(area).remove(blockOffset))
-                freeBlocks.get(area).add(blockOffset);
-            else
-                addBlockToFreeTree(blockOffset, area);
+        if (!modifiedBlocks.containsKey(blockOffset)) {
+            // The previous superblock can still reach this block until commit.
+            addToDeferredFreeBlocks(blockOffset, area);
+            return;
         }
+        modifiedBlocks.remove(blockOffset);
+        // In-flight removals must finish before reinsertion. Pending allocations
+        // are still in the free tree, so cancelling the reservation suffices.
+        if (blocksBeingRemovedFromFreeTree.get(area).contains(blockOffset))
+            putBackBlocksToFreeTree.get(area).add(blockOffset);
+        else if (pendingFreeTreeRemovals.get(area).remove(blockOffset))
+            freeBlocks.get(area).add(blockOffset);
+        else
+            addBlockToFreeTree(blockOffset, area);
     }
 
     private void resetInMemoryState() {
@@ -506,8 +512,6 @@ public class DataStorage implements Closeable {
         freeSpaceTrees.clear();
         freeSpaceAllocationOffset.clear();
         modifiedBlocks.clear();
-        retiredExclusiveBlocks.clear();
-        mutationDepth = 0;
         refCountUpdates.clear();
         refCountTree = null;
     }
@@ -750,7 +754,8 @@ public class DataStorage implements Closeable {
             freeSpaceTrees.put(Area.SYSTEM, tree);
         }
         {
-            var tree = new BTree<>(new BTreeStorage(Area.META), BTree.KeySerializer.bytes(BLOCK_OFFSET_SIZE),
+            var tree = new BTree<>(new MetaFreeTreeBTreeStorage(Area.META),
+                    BTree.KeySerializer.bytes(BLOCK_OFFSET_SIZE),
                     BTree.BYTE_ARRAY_ENTRY_TYPE, 0, RefMode.EXCLUSIVE);
             tree.put(u64(metaStart), u64(metaBytes));
             freeSpaceTrees.put(Area.META, tree);
@@ -867,7 +872,9 @@ public class DataStorage implements Closeable {
 
     private void loadSystemTrees() {
         for (Area area : Area.values()) {
-            BTree.Storage storage = new BTreeStorage(Area.META);
+            BTree.Storage storage = area == Area.META
+                    ? new MetaFreeTreeBTreeStorage(Area.META)
+                    : new BTreeStorage(Area.META);
             BTree<byte[], byte[]> tree = new BTree<>(storage, BTree.KeySerializer.bytes(BLOCK_OFFSET_SIZE),
                     BTree.BYTE_ARRAY_ENTRY_TYPE, rootBlock.getFreeTreeRoot(area), RefMode.EXCLUSIVE);
             freeSpaceTrees.put(area, tree);
@@ -1096,8 +1103,6 @@ public class DataStorage implements Closeable {
      */
     public <T extends BlockInstance<T>> long replaceBlock(long blockOffset, Area area, T data, RefMode mode) {
         java.util.Objects.requireNonNull(mode);
-        if (mutationDepth == 0)
-            throw new IllegalStateException("replaceBlock must be called within a mutate block");
 
         if (blockOffset == 0) {
             // No existing block: allocate the structure's first block.

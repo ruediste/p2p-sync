@@ -110,12 +110,10 @@ public class DataStorageTest {
         assertEquals(RefMode.TRANSFER, storage.childRefMode(offset, RefMode.TRANSFER));
         assertEquals(RefMode.SHARE, storage.childRefMode(offset, RefMode.SHARE));
         assertEquals(RefMode.EXCLUSIVE, storage.childRefMode(offset, RefMode.EXCLUSIVE));
-        assertEquals(offset, storage.mutate(
-                () -> storage.replaceBlock(offset, area, new ReferenceBlock(0), RefMode.TRANSFER)).longValue());
+        assertEquals(offset, storage.replaceBlock(offset, area, new ReferenceBlock(0), RefMode.TRANSFER));
 
         long child = storage.writeNewBlock(area, new ReferenceBlock(0));
-        long shared = storage.mutate(
-                () -> storage.replaceBlock(offset, area, new ReferenceBlock(child), RefMode.SHARE));
+        long shared = storage.replaceBlock(offset, area, new ReferenceBlock(child), RefMode.SHARE);
         assertNotEquals(offset, shared);
         assertEquals(0, storage.readBlock(offset, area, ReferenceBlock.TYPE).childOffset);
         assertEquals(child, storage.readBlock(shared, area, ReferenceBlock.TYPE).childOffset);
@@ -125,36 +123,25 @@ public class DataStorageTest {
         assertEquals(0, storage.getRefPersistedCount(offset));
         assertEquals(2, storage.getRefCount(offset));
         assertEquals(RefMode.SHARE, storage.childRefMode(offset, RefMode.TRANSFER));
-        long transferred = storage.mutate(
-                () -> storage.replaceBlock(offset, area, new ReferenceBlock(0), RefMode.TRANSFER));
+        long transferred = storage.replaceBlock(offset, area, new ReferenceBlock(0), RefMode.TRANSFER);
         assertNotEquals(offset, transferred);
     }
 
     /**
-     * Retires non-tree blocks in different areas inside nested scopes. Neither
-     * block may return to its allocation pool until the outer scope publishes.
+     * Retires transaction-local non-tree blocks in different areas and verifies
+     * their allocations return to the corresponding pools.
      */
     @Test
-    void nestedGenericMutationsDeferRetirementAcrossAreas() {
+    void genericRetirementAcrossAreasReturnsAllocationsToPools() {
         long data = storage.writeNewBlock(DataStorage.Area.DATA, new ReferenceBlock(0), RefMode.EXCLUSIVE);
         long system = storage.writeNewBlock(DataStorage.Area.SYSTEM, new ReferenceBlock(0), RefMode.EXCLUSIVE);
         assertTrue(!storage.refCountUpdates.containsKey(data));
         assertTrue(!storage.refCountUpdates.containsKey(system));
-        assertEquals(data, storage.mutate(() -> storage.replaceBlock(data, DataStorage.Area.DATA,
-                new ReferenceBlock(0), RefMode.EXCLUSIVE)).longValue());
+        assertEquals(data, storage.replaceBlock(data, DataStorage.Area.DATA,
+                new ReferenceBlock(0), RefMode.EXCLUSIVE));
 
-        storage.mutate(() -> {
-            storage.retireExclusiveBlock(data, DataStorage.Area.DATA);
-            storage.mutate(() -> {
-                storage.retireExclusiveBlock(system, DataStorage.Area.SYSTEM);
-                return null;
-            });
-            assertTrue(storage.modifiedBlocks.containsKey(data));
-            assertTrue(storage.modifiedBlocks.containsKey(system));
-            assertTrue(!storage.freeBlocks.get(DataStorage.Area.DATA).contains(data));
-            assertTrue(!storage.freeBlocks.get(DataStorage.Area.SYSTEM).contains(system));
-            return null;
-        });
+        storage.retireExclusiveBlock(data, DataStorage.Area.DATA);
+        storage.retireExclusiveBlock(system, DataStorage.Area.SYSTEM);
 
         assertTrue(!storage.modifiedBlocks.containsKey(data));
         assertTrue(!storage.modifiedBlocks.containsKey(system));
@@ -172,8 +159,7 @@ public class DataStorageTest {
         long original = storage.writeNewBlock(area, new ReferenceBlock(0), RefMode.EXCLUSIVE);
         storage.commit();
 
-        long replacement = storage.mutate(
-                () -> storage.replaceBlock(original, area, new ReferenceBlock(0), RefMode.EXCLUSIVE));
+        long replacement = storage.replaceBlock(original, area, new ReferenceBlock(0), RefMode.EXCLUSIVE);
         assertNotEquals(original, replacement);
         assertTrue(!containsBlock(storage.freeSpaceTrees.get(area), original));
         assertEquals(0, storage.readBlock(original, area, ReferenceBlock.TYPE).childOffset);

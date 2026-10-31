@@ -241,12 +241,18 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
 
         /**
          * Retire a node without releasing child ownership transferred to its
-         * replacement.
+         * replacement. Always called within
+         * {@link #mutate(java.util.function.Supplier)}.
          */
         void retireExclusiveBlock(long blockOffset);
 
-        /** Publish replacement pointers inside the callback before reclamation runs. */
-        <T> T mutate(java.util.function.Supplier<T> mutation);
+        /**
+         * Publish replacement pointers inside the callback before reclamation runs.
+         * Only required for MetaFreeTree
+         */
+        default <T> T mutate(java.util.function.Supplier<T> mutation) {
+            return mutation.get();
+        }
 
         /**
          * Ensure that there is enough free space to write the specified number of
