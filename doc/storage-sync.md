@@ -4,13 +4,19 @@
 
 ### User
 
-At its core, a user is an identity, represented by a cryptographic key pair. The public key is used as the unique identifier for the user, while the private key is used to sign modifications to the user data. The user data contains all the information about the user, such as their files, messages, and contacts. The user data is stored in a `StorageUserRoot` block on the storage layer, which is encrypted and replicated across nodes.
+For replication, a User is a SyncUnit: an independently replicated unit of data. A user also has a cryptographic identity represented by a key pair. The public key identifies the user, and the private key signs operations authored by that user. The identity authenticates the author; it does not by itself grant permission to modify every SyncUnit.
+
+A SyncUnit has its own operation history, materialized state, and membership/authorization rules. User, SharedFolder, TodoList, and MessageChannel are SyncUnit types. Each user maintains a participation list of SyncUnits. A node is configured with the users it synchronizes and synchronizes all units in those users' participation lists.
+
+Any user may create a SyncUnit and invite other users. A receiving node verifies the author's signature and checks authorization for the operation under that unit's membership and permission rules before accepting the operation. For example, a SharedFolder Editor may modify its contents, while a Viewer may only view them. Membership-change ordering and authorization of out-of-order operations are part of the SyncUnit authorization rules.
+
+Removing a participant removes the unit's replicated data from that participant's active local store. This cannot prevent the participant from retaining a copy made before removal. The current storage implementation is not encrypted at rest; this document's storage details describe the current implementation unless explicitly stated otherwise.
 
 ### Device and Node
 
 The system lives on devices, which are the physical hardware that runs the software. A device can be a laptop, a phone, or a home server. Each device runs a node, which is the software that manages the storage and replication of the user data. Similar to a user, a node is also identified by a key pair. Typically a node also allows the user to interact with the data, for example by providing a file system interface or a messaging interface.
 
-A node can be configured to replicate data for one or more users, and each user can have multiple nodes replicating their data. The nodes communicate with each other to synchronize the data and ensure that it is available even if some nodes go offline.
+A node can be configured to synchronize one or more users. It then synchronizes all SyncUnits in each configured user's participation list. Multiple nodes can synchronize the same user and units, communicating to keep their replicated state available when some nodes go offline.
 
 ## Data Storage
 The system uses a custom storage system designed to provide crash protection and snapshot features. The whole system is designed around a single writer/multiple readers model. The system follows a copy-on-write approach, conceptually heavily inspired by btrfs. The main primitive used is a B+ tree with dynamic value size and shadowing.
@@ -252,6 +258,15 @@ Whenever a node receives data from another peer, the lamport clock value of the 
 
 ## Synchronization Algorithm
 We use Kleppmanns approach for managing concurrent modifications and ensuring consistency across distributed nodes. All updates to the file system are represented in operations, which are totally ordered using the distributed lamport clock combined with the node key hash as a tie breaker. Each node seeks to obtain all operations from all other nodes. When all nodes have obtained all opertions, they converge to the same state.
+
+In the SyncUnit model, operation histories and materialized state are scoped to
+their SyncUnit. The ordering and transfer mechanisms described below apply to
+the relevant unit; a node synchronizes only units selected through its
+configured users' participation lists. Each received operation must be
+authenticated and authorized for its SyncUnit before it is accepted into that
+unit's history or applied to its materialized state. The file-system operation
+structures below describe the current User SyncUnit implementation; other unit
+types may define different operation and materialized-state structures.
 
 ### Active Nodes
 For various purposes, the system keeps track of the set of active nodes. This set includes all nodes that are currently participating in the network and are expected to contribute to the synchronization process. Note that this does not mean the nodes are currently operating or reachable. A node can go offline for days or weeks and still be considered active.

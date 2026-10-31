@@ -1,38 +1,42 @@
-Goal:
-- A SyncUnit is a unit of data that can be synchronized between nodes
-- A User is a Sync Unit
-- A SharedFolder is a Sync Unit
-- In the future, there can be other Sync units, such as Development Projects (Git, Issues, CI pipelines,...), Message Channels, or TODO lists
-- Each user defines which sync units they want to synchronize with their nodes (they want to participate in)
-- Each node has a set of users it synchronizes. A node also synchronizes all the sync units of those users.
+# Implementation Plan
 
-Shared Folder:
-- Permission levels: Viewer, Editor, Manager
-- A Viewer can only view the contents of the shared folder
-- An Editor can view and modify the contents of the shared folder
-- A Manager can in addition manage the membership of the shared folder, including inviting and removing users
+## Goals and Concepts
 
-Todo Lists:
-- same permissions as shared folders
+- A **SyncUnit** is an independently replicated unit of data.
+- For replication, a **User** is a SyncUnit. A user also has a cryptographic identity: its public key identifies it and its private key signs its operations.
+- A **SharedFolder**, **TodoList**, and **MessageChannel** are also SyncUnits. Other kinds may be added later.
+- A user has a participation list of SyncUnits. A node is configured with the users it synchronizes and synchronizes every SyncUnit in those users' participation lists.
+- Any user may create a SyncUnit and invite other users to participate in it. The receiving node verifies each operation's signature and checks that its author is authorized for that SyncUnit and operation. For example, only an Editor or Manager may modify a shared folder.
+- Removing a participant removes that SyncUnit's replicated data from the participant's active local store. This cannot prevent the participant from retaining a copy made before removal.
 
-Message Channels:
-- A Message Channel is a sync unit for group communication
-- Permissions system: only member / non members, not viewer/editor/manager distinction
-- Only members can view and send messages in the channel
-- Chat Messagesa
-- Messages with an attachment (like files, images, etc)
+## Permissions and Features
 
-Messaging System:
-- There is a general messaging system to exchange messages between users
-- The messages of a user are synchronized across all nodes that the user participates in
-- The nodes of the sending user try to deliver messages to the nodes of the receiving user
-- Once a message is successfully delivered to at least one node of the receiving user, it is considered delivered
-- If a message cannot be delivered to any node of the receiving user, it remains in the sending user's outbox until delivery is possible
-- There are different types of Messages 
-  - Chat Messages
-  - Mail Messages (like email: subject, body, attachments)
-  - Shared Folder Invitations
-  - Message Channel Invitations
-  - etc
+### Shared Folders and Todo Lists
 
-Out of Scope for now: Development Project (Git, Issues, CI pipelines,...)
+- **Viewer:** may view contents.
+- **Editor:** may view and modify contents.
+- **Manager:** may view and modify contents, and manage membership by inviting or removing users.
+- TodoLists use the same permission levels as SharedFolders.
+
+### Message Channels
+
+- A MessageChannel supports group communication. Access is limited to members; there is no Viewer/Editor/Manager distinction.
+- Members may view and send chat messages, including messages with file or image attachments.
+
+### Direct Messaging
+
+- Users exchange messages through their User SyncUnits. A user's messages synchronize to all nodes that synchronize that user.
+- Sending nodes automatically retry delivery to nodes of the recipient user. Each message receives a unique ID when created so duplicates can be detected.
+- A message is delivered once it has been stored on at least one recipient node. Until then, it remains in the sender's outbox.
+- Message types include chat and mail (subject, body, and attachments), plus invitations such as SharedFolder and MessageChannel invitations.
+
+## Milestones
+
+1. **Specify the SyncUnit and authorization model.** Define stable unit identity and type, participation and membership records, operation signatures, authorization checks, and how membership changes affect authorization. Document the distinction between a user's cryptographic identity and the User SyncUnit. Completion: the rules cover create, invite, accept, role change, removal, and an operation arriving out of order, with focused tests for authorization decisions.
+2. **Implement SyncUnit storage and replication boundaries.** Scope operation histories, snapshots, and synchronization state to a SyncUnit; validate author signatures and authorization before accepting incoming operations. Completion: tests show independent units do not share operation state and unauthorized or invalidly signed operations are rejected.
+3. **Implement participation and node selection.** Store each user's SyncUnit participation list and have a node synchronize all units of its configured users. Completion: tests show adding/removing a participating unit changes synchronization selection, while a node configured for another user is unaffected.
+4. **Deliver SharedFolder as the first shared-unit vertical slice.** Implement creation, invitation acceptance, Viewer/Editor/Manager operations, membership changes, and removal of the local replicated copy. Completion: multi-node tests cover role enforcement, invitation flow, replication, and removal; document that retained external copies cannot be recalled.
+5. **Add TodoLists and MessageChannels.** Reuse the SyncUnit and membership foundations, applying their specified permissions and channel message/attachment behavior. Completion: tests cover access checks and cross-node convergence for each unit type.
+6. **Implement direct messaging and reliable delivery.** Add unique message IDs, recipient-node storage acknowledgements, retry/outbox behavior, duplicate detection, and the defined invitation message types. Completion: tests cover retry after an unavailable recipient, duplicate delivery, and the delivered threshold of one recipient node storing the message.
+
+Development Projects (Git, issues, CI pipelines, and related data) are out of scope for now.

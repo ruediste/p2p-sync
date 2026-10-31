@@ -1,49 +1,73 @@
 # Users and Nodes
 
-This document describes the relationship between users, nodes, and the user data
-exposed by a node, along with the current implementation boundary.
+This document describes the relationship between users, SyncUnits, and nodes,
+along with the current implementation boundary.
 
 ## Identities and Names
 
-A **user** is an identity represented by a cryptographic key pair. The public
-key identifies the user across nodes; the private key authorizes operations on
-that user's data. A **node** is a running participant in the network, associated
-with its own peer identity and local storage. A node may host data for several
-users, and one user's data may be hosted by several nodes.
+A **user** has a cryptographic identity represented by a key pair. The public
+key identifies the user across nodes, and the private key signs operations
+authored by that user. For replication, a User is also a **SyncUnit**: the
+replicated unit containing that user's own data. Identity and replicated data
+are distinct concepts even though they are represented together in this model.
+
+A **SyncUnit** is an independently replicated unit of data, such as a User,
+SharedFolder, TodoList, or MessageChannel. A **node** is a running network
+participant with its own peer identity and local storage. A node may store
+multiple users' SyncUnits, and a SyncUnit may be stored on multiple nodes.
 
 A node-local user name is a display and filesystem label, not a network
 identity. The same user can have different names on different nodes. Names
 must be unique within a node so they can be used as directory names in a
 node-level filesystem view.
 
+## Participation and Authorization
+
+Each user maintains a list of SyncUnits they participate in. A node is
+configured with the users it synchronizes; it synchronizes every SyncUnit in
+those users' participation lists. Thus, unit participation is a user-level
+choice, while node selection is made by choosing users.
+
+Operations are authored and signed by users, even when a node relays or stores
+them. Before accepting an operation for a SyncUnit, a receiving node verifies
+the signature and checks that the author is authorized for that operation under
+the unit's membership and permission rules. For example, a shared-folder Editor
+may modify contents, while a Viewer may not. The rules for membership changes
+and operations arriving out of order must be specified by the SyncUnit
+authorization model.
+
+Removing a user's participation removes that SyncUnit's replicated data from
+their active local store. It cannot prevent the user from keeping a copy made
+before removal.
+
 ## User Data and Synchronization
 
-The intended design separates the replicated history of a user's data from the
-materialized file tree shown to local applications. For each user on a node,
-the design calls for:
+The intended design separates each SyncUnit's replicated operation history
+from its materialized view. The User SyncUnit's materialized view is the user's
+file tree. For each replicated unit, the design calls for:
 
-- **Main operation history:** the combined history of accepted operations from
-  all nodes participating in that user's data.
+- **Main operation history:** the combined history of accepted, authorized
+  operations for that SyncUnit.
 - **Local operation history:** operations authored on this node that have not
   yet been incorporated into the main history.
 - **Incoming staging area:** operations received from other nodes, held until
   they can be validated and reconciled.
-- **Materialized file tree:** the current local view of the user's files,
-  derived from the main history and exposed to applications.
+- **Materialized view:** the current local view derived from that unit's main
+  history. For a User SyncUnit, this is the user's file tree.
 
-detection, conflict resolution, and failure-recovery rules are part of the sync
-Local changes are signed operations ordered by Lamport clock and node hash.
-Incoming operations are staged and verified before reconciliation replays them
-in that total order. A stable snapshot can replace the prefix of the main log
-acknowledged by every active node. `doc/storage-sync.md` describes the transfer,
-membership, snapshot, and conflict rules.
+Local changes are signed operations ordered by Lamport clock and author identity.
+Incoming operations are verified and authorized before reconciliation replays
+them in the unit's operation order. A stable snapshot can replace the prefix of
+the main log acknowledged by every active node participating in that unit.
+`doc/storage-sync.md` describes the transfer, membership, snapshot, and conflict
+rules.
 
 ## Node Interface
 
 The intended user-facing interface provides a separate directory for each
 configured user, named with that node's local user name. Applications working
 in a user's directory see that user's materialized file tree, not the operation
-logs or staging data.
+logs or staging data. Other SyncUnit types may provide different interfaces.
 
 A node provides APIs for creating and joining a user, setting a unique local
 name, and reading redacted node and synchronization status. Its desktop console
@@ -55,7 +79,10 @@ separately password-protected.
 
 ## Current Implementation
 
-The current node implementation provides the following local-node mechanisms:
+The current node implementation still models synchronized data primarily as
+user data; generic SyncUnit participation, shared-unit authorization, and
+cross-user message delivery are planned work. Existing local-node mechanisms
+include:
 
 - [`Node`](../src/main/java/com/github/ruediste/p2psync/node/Node.java) identifies
   users by public key in a node-local map. `createNewUser()` generates an
