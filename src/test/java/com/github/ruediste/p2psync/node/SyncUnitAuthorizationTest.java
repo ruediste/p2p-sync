@@ -108,16 +108,19 @@ class SyncUnitAuthorizationTest {
         var removedManagerTriesToSend = operation(6, creator, SyncUnitAuthorization.Action.SEND_MESSAGE, null, null);
         var memberTriesToInvite = operation(7, editor, SyncUnitAuthorization.Action.INVITE, stranger,
                 SyncUnitAuthorization.Role.MANAGER);
+        var lastManagerTriesToLeave = operation(8, manager, SyncUnitAuthorization.Action.REMOVE_MEMBER,
+                manager, null);
 
         var state = SyncUnitAuthorization.replay(sharedUnitId, SyncUnitAuthorization.Type.MESSAGE_CHANNEL,
                 creator, List.of(inviteMember, acceptMember, inviteManager, acceptManager,
-                        managerRemovesOtherManager, removedManagerTriesToSend, memberTriesToInvite));
+                        managerRemovesOtherManager, removedManagerTriesToSend, memberTriesToInvite,
+                        lastManagerTriesToLeave));
 
         assertEquals(Map.of(editor, SyncUnitAuthorization.Role.MEMBER,
                 manager, SyncUnitAuthorization.Role.MANAGER), state.members());
         assertEquals(List.of(1L, 2L, 3L, 4L, 5L), state.acceptedOperations().stream()
                 .map(SyncUnitAuthorization.Operation::lamportClock).toList());
-        assertEquals(List.of(6L, 7L), state.rejectedOperations().stream()
+        assertEquals(List.of(6L, 7L, 8L), state.rejectedOperations().stream()
                 .map(SyncUnitAuthorization.Operation::lamportClock).toList());
     }
 

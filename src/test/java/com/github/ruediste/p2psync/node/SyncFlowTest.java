@@ -281,14 +281,14 @@ public class SyncFlowTest {
                 SyncUnitAuthorization.Role.MANAGER);
         first.acceptSyncUnitInvitation(channelId, member.data.userId());
         String messageId = first.sendChannelMessage(channelId, member.data.userId(),
-            Sync.SyncUnitMessage.newBuilder().setText("persisted message")
-                .addAttachments(Sync.SyncUnitAttachment.newBuilder()
-                    .setName("note.txt").setMediaType("text/plain")
-                    .setContent(com.google.protobuf.ByteString.copyFromUtf8("attachment")))
-                .build());
+                Sync.SyncUnitMessage.newBuilder().setText("persisted message")
+                        .addAttachments(Sync.SyncUnitAttachment.newBuilder()
+                                .setName("note.txt").setMediaType("text/plain")
+                                .setContent(com.google.protobuf.ByteString.copyFromUtf8("attachment")))
+                        .build());
         var folderId = first.createSyncUnit(owner.data.userId(), SyncUnitAuthorization.Type.SHARED_FOLDER);
         first.inviteToSyncUnit(folderId, owner.data.userId(), member.data.userId(),
-            SyncUnitAuthorization.Role.EDITOR);
+                SyncUnitAuthorization.Role.EDITOR);
         first.acceptSyncUnitInvitation(folderId, member.data.userId());
         first.putSharedFile(folderId, owner.data.userId(), "notes/readme.txt", "stored file".getBytes());
         var todoId = first.createSyncUnit(owner.data.userId(), SyncUnitAuthorization.Type.TODO_LIST);
@@ -303,7 +303,7 @@ public class SyncFlowTest {
         assertTrue(reopened.users.get(member.data.userId()).participatingSyncUnitIds.contains(channelId.toString()));
         assertTrue(reopened.users.get(member.data.userId()).participatingSyncUnitIds.contains(folderId.toString()));
         assertArrayEquals("stored file".getBytes(),
-            reopened.readSharedFile(folderId, member.data.userId(), "notes/readme.txt"));
+                reopened.readSharedFile(folderId, member.data.userId(), "notes/readme.txt"));
         assertArrayEquals("finish sync".getBytes(), reopened.readTodoItem(todoId, owner.data.userId(), "task-1"));
         var messages = reopened.getChannelMessages(channelId, member.data.userId());
         assertEquals(1, messages.size());
@@ -315,50 +315,154 @@ public class SyncFlowTest {
         reopened.close();
 
         var reopenedAfterRemoval = new Node(new Network(), dataFile);
-        assertFalse(reopenedAfterRemoval.getSyncUnitAuthorization(channelId).members().containsKey(member.data.userId()));
+        assertFalse(
+                reopenedAfterRemoval.getSyncUnitAuthorization(channelId).members().containsKey(member.data.userId()));
         assertFalse(reopenedAfterRemoval.users.get(member.data.userId()).participatingSyncUnitIds
-            .contains(channelId.toString()));
+                .contains(channelId.toString()));
         assertTrue(reopenedAfterRemoval.users.get(member.data.userId()).participatingSyncUnitIds
-            .contains(folderId.toString()));
+                .contains(folderId.toString()));
         reopenedAfterRemoval.close();
     }
 
-        /** Verifies invited SyncUnits replicate authorized content and revocation clears the member's local copy. */
-        @Test
-        public void sharedUnitsSyncContentAndRemoveRevokedCopies() {
+    /**
+     * Verifies invited SyncUnits replicate authorized content and revocation clears
+     * the member's local copy.
+     */
+    @Test
+    public void sharedUnitsSyncContentAndRemoveRevokedCopies() {
         var recipient = nodeB.createNewUser("recipient");
         var folderId = nodeA.createSyncUnit(handleA.data.userId(), SyncUnitAuthorization.Type.SHARED_FOLDER);
         nodeA.putSharedFile(folderId, handleA.data.userId(), "readme.txt", "before invite".getBytes());
         nodeA.inviteToSyncUnit(folderId, handleA.data.userId(), recipient.data.userId(),
-            SyncUnitAuthorization.Role.VIEWER);
+                SyncUnitAuthorization.Role.VIEWER);
         assertTrue(nodeB.syncUnits.containsKey(folderId));
         nodeB.joinSyncUnit(nodeA.peerId, folderId, recipient.data.userId());
         assertArrayEquals("before invite".getBytes(),
-            nodeB.readSharedFile(folderId, recipient.data.userId(), "readme.txt"));
+                nodeB.readSharedFile(folderId, recipient.data.userId(), "readme.txt"));
         assertThrows(IllegalArgumentException.class,
-            () -> nodeB.putSharedFile(folderId, recipient.data.userId(), "blocked.txt", new byte[0]));
+                () -> nodeB.putSharedFile(folderId, recipient.data.userId(), "blocked.txt", new byte[0]));
 
         var channelId = nodeA.createSyncUnit(handleA.data.userId(), SyncUnitAuthorization.Type.MESSAGE_CHANNEL);
         nodeA.inviteToSyncUnit(channelId, handleA.data.userId(), recipient.data.userId(),
-            SyncUnitAuthorization.Role.MEMBER);
+                SyncUnitAuthorization.Role.MEMBER);
         nodeB.joinSyncUnit(nodeA.peerId, channelId, recipient.data.userId());
         String messageId = nodeB.sendChannelMessage(channelId, recipient.data.userId(),
-            Sync.SyncUnitMessage.newBuilder().setText("hello channel").build());
-        nodeA.syncSyncUnitFrom(nodeB.peerId, channelId);
+                Sync.SyncUnitMessage.newBuilder().setText("hello channel").build());
+        nodeA.syncKnownPeers();
         assertEquals(messageId, nodeA.getChannelMessages(channelId, handleA.data.userId()).get(0).messageId());
 
         nodeA.changeSyncUnitRole(channelId, handleA.data.userId(), recipient.data.userId(),
-            SyncUnitAuthorization.Role.MANAGER);
-        nodeB.syncSyncUnitFrom(nodeA.peerId, channelId);
+                SyncUnitAuthorization.Role.MANAGER);
+        nodeB.syncKnownPeers();
         assertEquals(SyncUnitAuthorization.Role.MANAGER,
-            nodeB.getSyncUnitAuthorization(channelId).members().get(recipient.data.userId()));
+                nodeB.getSyncUnitAuthorization(channelId).members().get(recipient.data.userId()));
 
         nodeA.removeFromSyncUnit(channelId, handleA.data.userId(), recipient.data.userId());
         assertFalse(nodeB.syncUnits.containsKey(channelId));
         assertFalse(recipient.data.participatingSyncUnitIds.contains(channelId.toString()));
         assertThrows(IllegalArgumentException.class,
-            () -> nodeB.syncSyncUnitFrom(nodeA.peerId, channelId));
-        }
+                () -> nodeB.syncSyncUnitFrom(nodeA.peerId, channelId));
+    }
+
+    /**
+     * Verifies accepted-unit participation is replicated through the user's signed
+     * history to another node.
+     */
+    @Test
+    public void participationSelectionReplicatesAcrossUserNodes() {
+        var recipient = nodeB.createNewUser("recipient");
+        var recipientReplicaNode = new Node(network);
+        var recipientReplica = recipientReplicaNode.join(recipient.data.userKey, "recipient-replica");
+        var folderId = nodeA.createSyncUnit(handleA.data.userId(), SyncUnitAuthorization.Type.SHARED_FOLDER);
+        nodeA.putSharedFile(folderId, handleA.data.userId(), "shared.txt", "replicated participation".getBytes());
+        nodeA.inviteToSyncUnit(folderId, handleA.data.userId(), recipient.data.userId(),
+                SyncUnitAuthorization.Role.VIEWER);
+
+        nodeB.joinSyncUnit(nodeA.peerId, folderId, recipient.data.userId());
+        recipientReplica.syncFrom(nodeB.peerId);
+        assertTrue(recipientReplica.data.participatingSyncUnitIds.contains(folderId.toString()));
+        recipientReplica.getNode().syncKnownPeers();
+        assertArrayEquals("replicated participation".getBytes(),
+                recipientReplica.getNode().readSharedFile(folderId, recipient.data.userId(), "shared.txt"));
+        recipientReplicaNode.close();
+    }
+
+    /**
+     * Verifies unsent messages survive restart, retry when a recipient returns, and
+     * deduplicate on delivery.
+     */
+    @Test
+    public void directMessageRetriesAndDeduplicatesAcrossRestart() {
+        Path senderFile = tempDir.resolve("sender.db");
+        Path recipientFile = tempDir.resolve("recipient.db");
+        var firstNetwork = new Network();
+        var senderNode = new Node(firstNetwork, senderFile);
+        var recipientNode = new Node(firstNetwork, recipientFile);
+        var sender = senderNode.createNewUser("sender");
+        var recipient = recipientNode.createNewUser("recipient");
+        var recipientReplicaNode = new Node(firstNetwork);
+        recipientReplicaNode.join(recipient.data.userKey, "recipient-replica");
+        var recipientId = recipient.data.userId();
+        firstNetwork.nodes.remove(recipientNode.peerId);
+        firstNetwork.nodes.remove(recipientReplicaNode.peerId);
+        sender.sendChatMessage(recipientId, "queued while offline", List.of(
+                Sync.SyncUnitAttachment.newBuilder().setName("image.bin").setMediaType("application/octet-stream")
+                        .setContent(com.google.protobuf.ByteString.copyFrom(new byte[] { 1, 2, 3 })).build()));
+        assertEquals(1, senderNode.getOutboxMessages(sender.data.userId()).size());
+        senderNode.close();
+        recipientNode.close();
+        recipientReplicaNode.close();
+
+        var resumedNetwork = new Network();
+        var resumedSenderNode = new Node(resumedNetwork, senderFile);
+        var resumedSender = resumedSenderNode.getUserByName("sender");
+        assertEquals(1, resumedSenderNode.getOutboxMessages(resumedSender.data.userId()).size());
+        resumedSenderNode.syncKnownPeers();
+        var resumedRecipientNode = new Node(resumedNetwork, recipientFile);
+        var resumedRecipientReplicaNode = new Node(resumedNetwork);
+        var resumedRecipientReplica = resumedRecipientReplicaNode.join(
+                resumedRecipientNode.users.get(recipientId).userKey, "recipient-replica");
+        resumedSenderNode.syncKnownPeers();
+        resumedRecipientReplica.syncFrom(resumedRecipientNode.peerId);
+
+        assertTrue(resumedSenderNode.getOutboxMessages(resumedSender.data.userId()).isEmpty());
+        var inbox = resumedRecipientNode.getInboxMessages(recipientId);
+        assertEquals(1, inbox.size());
+        assertEquals("queued while offline", inbox.get(0).getBody());
+        assertEquals(3, inbox.get(0).getAttachments(0).getContent().size());
+        assertEquals(1, resumedRecipientReplicaNode.getInboxMessages(recipientId).size());
+        assertTrue(resumedRecipientReplica.data.allOperations().values().stream().anyMatch(operation -> {
+            try {
+                return Sync.UserOperation.parseFrom(operation.payload)
+                        .getKind() == Sync.UserOperation.Kind.RECEIVE_MESSAGE;
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw new IllegalStateException(e);
+            }
+        }));
+        resumedSenderNode.syncKnownPeers();
+        assertEquals(1, resumedRecipientNode.getInboxMessages(recipientId).size());
+
+        String mailId = resumedSender.sendMailMessage(recipientId, "subject", "mail body", List.of());
+        var channelId = resumedSenderNode.createSyncUnit(resumedSender.data.userId(),
+                SyncUnitAuthorization.Type.MESSAGE_CHANNEL);
+        resumedSenderNode.inviteToSyncUnit(channelId, resumedSender.data.userId(), recipientId,
+                SyncUnitAuthorization.Role.MEMBER);
+        String invitationId = resumedSender.sendMessage(recipientId,
+                Sync.UserMessage.Type.MESSAGE_CHANNEL_INVITATION, "channel invite", "join channel", List.of(),
+                channelId);
+        var receivedMessages = resumedRecipientNode.getInboxMessages(recipientId);
+        assertEquals(3, receivedMessages.size());
+        var mail = receivedMessages.stream().filter(message -> message.getMessageId().equals(mailId)).findFirst()
+                .orElseThrow();
+        assertEquals(Sync.UserMessage.Type.MAIL, mail.getType());
+        assertEquals("subject", mail.getSubject());
+        var invitation = receivedMessages.stream()
+                .filter(message -> message.getMessageId().equals(invitationId)).findFirst().orElseThrow();
+        assertEquals(channelId.bytes().length, invitation.getInvitedSyncUnitId().size());
+        resumedSenderNode.close();
+        resumedRecipientNode.close();
+        resumedRecipientReplicaNode.close();
+    }
 
     /** Verifies stable-log pruning retains a snapshot baseline for later joins. */
     @Test
@@ -395,13 +499,48 @@ public class SyncFlowTest {
             List<Multiaddr> addressesB = remoteB.startRemote("/ip4/127.0.0.1/tcp/0", false);
             remoteB.addRemoteAddress(remoteA.peerId, addressesA.get(0));
             var userB = remoteB.joinRemote(userA.data.userKey, "copy");
+            var recipient = remoteB.createNewUser("recipient");
+            remoteA.addRemoteAddress(remoteB.peerId, addressesB.get(0));
+
+            String messageId = userA.sendChatMessage(recipient.data.userId(), "delivered remotely", List.of(
+                    Sync.SyncUnitAttachment.newBuilder().setName("remote.txt").setMediaType("text/plain")
+                            .setContent(com.google.protobuf.ByteString.copyFromUtf8("remote attachment")).build()));
+            assertTrue(remoteA.getOutboxMessages(userA.data.userId()).isEmpty());
+            assertEquals(messageId, remoteB.getInboxMessages(recipient.data.userId()).get(0).getMessageId());
+            assertEquals("remote attachment", remoteB.getInboxMessages(recipient.data.userId()).get(0)
+                    .getAttachments(0).getContent().toStringUtf8());
+            remoteA.deliverPendingMessages();
+            assertEquals(1, remoteB.getInboxMessages(recipient.data.userId()).size());
+
+            var folderOwner = remoteA.createNewUser("folder-owner");
+            var folderId = remoteA.createSyncUnit(folderOwner.data.userId(), SyncUnitAuthorization.Type.SHARED_FOLDER);
+            remoteA.putSharedFile(folderId, folderOwner.data.userId(), "shared.txt", "from owner".getBytes());
+            remoteA.inviteToSyncUnit(folderId, folderOwner.data.userId(), recipient.data.userId(),
+                    SyncUnitAuthorization.Role.EDITOR);
+            var folderOwnerHandle = remoteA.getUserByName("folder-owner");
+            folderOwnerHandle.sendMessage(recipient.data.userId(),
+                    Sync.UserMessage.Type.SHARED_FOLDER_INVITATION, "folder invite", "open shared folder", List.of(),
+                    folderId);
+            assertTrue(remoteB.getInboxMessages(recipient.data.userId()).stream()
+                    .anyMatch(message -> message.getInvitedSyncUnitId()
+                            .equals(com.google.protobuf.ByteString.copyFrom(folderId.bytes()))));
+            remoteB.joinSyncUnit(remoteA.peerId, folderId, recipient.data.userId());
+            assertArrayEquals("from owner".getBytes(),
+                    remoteB.readSharedFile(folderId, recipient.data.userId(), "shared.txt"));
+            remoteB.putSharedFile(folderId, recipient.data.userId(), "reply.txt", "from editor".getBytes());
+            remoteA.syncKnownPeers();
+            assertArrayEquals("from editor".getBytes(),
+                    remoteA.readSharedFile(folderId, folderOwner.data.userId(), "reply.txt"));
+            remoteA.removeFromSyncUnit(folderId, folderOwner.data.userId(), recipient.data.userId());
+            assertFalse(remoteA.getSyncUnitAuthorization(folderId).members().containsKey(recipient.data.userId()));
+            remoteB.syncKnownPeers();
+            assertFalse(remoteB.syncUnits.containsKey(folderId));
 
             userA.modify(root -> root.userStatusMessage = "sent remotely");
             remoteB.syncKnownPeers();
             assertEquals("sent remotely", userB.read(root -> root.userStatusMessage));
 
             userB.modify(root -> root.userStatusMessage = "reply remotely");
-            remoteA.addRemoteAddress(remoteB.peerId, addressesB.get(0));
             remoteA.syncKnownPeers();
             assertEquals("reply remotely", userA.read(root -> root.userStatusMessage));
         } finally {

@@ -23,10 +23,12 @@ node-level filesystem view.
 
 ## Participation and Authorization
 
-Each user maintains a list of SyncUnits they participate in. A node is
-configured with the users it synchronizes; it synchronizes every SyncUnit in
-those users' participation lists. Thus, unit participation is a user-level
-choice, while node selection is made by choosing users.
+Each user maintains a list of SyncUnits they participate in. Participation
+changes are signed operations in the User SyncUnit, so the list can be
+replicated to the user's other nodes. A node is configured with the users it
+synchronizes; it synchronizes every SyncUnit in those users' participation
+lists. Thus, unit participation is a user-level choice, while node selection
+is made by choosing users.
 
 Operations are authored and signed by users, even when a node relays or stores
 them. Before accepting an operation for a SyncUnit, a receiving node verifies
@@ -37,8 +39,10 @@ and operations arriving out of order must be specified by the SyncUnit
 authorization model.
 
 Removing a user's participation removes that SyncUnit's replicated data from
-their active local store. It cannot prevent the user from keeping a copy made
-before removal.
+their active local store and records a leave operation in the User SyncUnit.
+Remote nodes remove their copy when they next synchronize and learn of the
+revocation. This cannot prevent the user from keeping a copy made before
+removal.
 
 ## User Data and Synchronization
 
@@ -79,10 +83,10 @@ separately password-protected.
 
 ## Current Implementation
 
-The current node implementation still models synchronized data primarily as
-user data; generic SyncUnit participation, shared-unit authorization, and
-cross-user message delivery are planned work. Existing local-node mechanisms
-include:
+The current implementation supports User, SharedFolder, TodoList, and
+MessageChannel SyncUnits. Unit metadata, signed membership/content operations,
+per-user participation, inboxes, and delivery acknowledgements are persisted
+in the node's DataStorage state. Existing mechanisms include:
 
 - [`Node`](../src/main/java/com/github/ruediste/p2psync/node/Node.java) identifies
   users by public key in a node-local map. `createNewUser()` generates an
@@ -93,7 +97,21 @@ include:
 - [`NodeUserHandle`](../src/main/java/com/github/ruediste/p2psync/node/NodeUserHandle.java)
   records signed status and filesystem operations, transfers them in per-origin
   order with resumable truncation, reconciles the main/local/staging histories,
-  and creates causally stable snapshots.
+  and creates causally stable snapshots. Participation changes and direct
+  messages are signed User SyncUnit operations; direct-message events are kept
+  out of stable-log truncation until message history is materialized elsewhere.
+- [`Node`](../src/main/java/com/github/ruediste/p2psync/node/Node.java) creates
+  and synchronizes shared units, applies role checks to file/todo/message
+  operations, removes revoked local unit copies, and persists the SyncUnit
+  registry and signed logs. Remote unit synchronization uses the existing
+  framed TCP, Noise, and Yamux protocol.
+- [`SyncUnitAuthorization`](../src/main/java/com/github/ruediste/p2psync/node/SyncUnitAuthorization.java)
+  replays signed membership operations in deterministic Lamport/node-hash
+  order. Channel Members can view and send; Managers can also manage other
+  members and Managers, with a last-Manager safeguard.
+- [`SyncUnitContentOperation`](../src/main/java/com/github/ruediste/p2psync/node/SyncUnitContentOperation.java)
+  signs and stores shared-file, todo-item, and channel-message content events,
+  including attachment bytes.
 - [`BlockStorage`](../src/main/java/com/github/ruediste/p2psync/node/BlockStorage.java)
   is a content-addressed adapter over `DataStorage`. Its hash index and typed
   chunk/manifest blocks are stored in the same file as the node catalog and

@@ -128,6 +128,10 @@ final class UserFileTree {
             case MOVE -> move(entityId, key(operation.getNewParentId().toByteArray()), operation.getNewName());
             case RENAME -> rename(entityId, operation.getNewName());
             case DELETE -> delete(entityId);
+            case DIRECT_MESSAGE -> {
+            }
+            case PARTICIPATE_SYNC_UNIT, LEAVE_SYNC_UNIT, RECEIVE_MESSAGE -> {
+            }
             case UNRECOGNIZED -> throw new IllegalArgumentException("Unknown user operation kind");
         }
     }

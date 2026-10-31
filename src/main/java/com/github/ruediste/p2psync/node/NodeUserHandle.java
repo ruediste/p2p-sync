@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.github.ruediste.p2psync.libp2p.core.PeerId;
+import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 import com.github.ruediste.p2psync.node.Node.NodeUserData;
 import com.github.ruediste.p2psync.proto.Sync;
 
@@ -44,6 +45,59 @@ public class NodeUserHandle {
         return action.apply(dataRoot);
     }
 
+    public String sendMessage(PubKey recipientUserId, Sync.UserMessage.Type type, String subject, String body,
+            java.util.List<Sync.SyncUnitAttachment> attachments, SyncUnitId invitedSyncUnitId) {
+        java.util.Objects.requireNonNull(recipientUserId);
+        java.util.Objects.requireNonNull(type);
+        if (type == Sync.UserMessage.Type.UNRECOGNIZED)
+            throw new IllegalArgumentException("Unknown user message type");
+        boolean invitation = type == Sync.UserMessage.Type.SHARED_FOLDER_INVITATION
+                || type == Sync.UserMessage.Type.MESSAGE_CHANNEL_INVITATION;
+        if (invitation != (invitedSyncUnitId != null))
+            throw new IllegalArgumentException("Invitation messages require exactly one SyncUnit ID");
+        if (invitation) {
+            var unit = node.syncUnits.get(invitedSyncUnitId);
+            var expectedType = type == Sync.UserMessage.Type.SHARED_FOLDER_INVITATION
+                    ? SyncUnitAuthorization.Type.SHARED_FOLDER
+                    : SyncUnitAuthorization.Type.MESSAGE_CHANNEL;
+            if (unit == null || unit.type != expectedType
+                    || !unit.authorization.pendingInvitations().containsKey(recipientUserId))
+                throw new IllegalArgumentException(
+                        "Invitation message requires a pending invitation for its recipient");
+            SyncUnitAuthorization.requireAuthorized(unit.type, unit.creator, unit.authorization.members(),
+                    data.userId(), SyncUnitAuthorization.Action.INVITE);
+        }
+        String messageId = UUID.randomUUID().toString();
+        var message = Sync.UserMessage.newBuilder()
+                .setMessageId(messageId)
+                .setSenderUserId(com.google.protobuf.ByteString.copyFrom(data.userId().bytes()))
+                .setRecipientUserId(com.google.protobuf.ByteString.copyFrom(recipientUserId.bytes()))
+                .setType(type)
+                .setSubject(subject == null ? "" : subject)
+                .setBody(body == null ? "" : body)
+                .addAllAttachments(attachments == null ? java.util.List.of() : attachments);
+        if (invitedSyncUnitId != null)
+            message.setInvitedSyncUnitId(com.google.protobuf.ByteString.copyFrom(invitedSyncUnitId.bytes()));
+        recordOperation(Sync.UserOperation.newBuilder()
+                .setKind(Sync.UserOperation.Kind.DIRECT_MESSAGE)
+                .setMessageId(messageId)
+                .setRecipientUserId(com.google.protobuf.ByteString.copyFrom(recipientUserId.bytes()))
+                .setMessagePayload(message.build().toByteString())
+                .build());
+        node.deliverPendingMessages();
+        return messageId;
+    }
+
+    public String sendChatMessage(PubKey recipientUserId, String body,
+            java.util.List<Sync.SyncUnitAttachment> attachments) {
+        return sendMessage(recipientUserId, Sync.UserMessage.Type.CHAT, "", body, attachments, null);
+    }
+
+    public String sendMailMessage(PubKey recipientUserId, String subject, String body,
+            java.util.List<Sync.SyncUnitAttachment> attachments) {
+        return sendMessage(recipientUserId, Sync.UserMessage.Type.MAIL, subject, body, attachments, null);
+    }
+
     public void syncFrom(PeerId otherId) {
         syncFrom(otherId, 100, 1_000_000);
     }
@@ -78,6 +132,7 @@ public class NodeUserHandle {
         data.activeNodeSet.mergeFrom(peerData.activeNodeSet, node.nodeKey(), node::nextClock);
         data.activeNodeSet.updateLeaving(node.nodeKey(), data.maxOperationClock, node::nextClock);
         data.activeNodeSet.lastSeen.put(peer.nodeKey(), System.currentTimeMillis());
+        node.deliverPendingMessages();
         node.persistState();
     }
 
@@ -116,6 +171,7 @@ public class NodeUserHandle {
         data.activeNodeSet.mergeFrom(activeNodeSet, node.nodeKey(), node::nextClock);
         data.activeNodeSet.updateLeaving(node.nodeKey(), data.maxOperationClock, node::nextClock);
         data.activeNodeSet.lastSeen.put(Node.nodeKeyFor(peerId), System.currentTimeMillis());
+        node.deliverPendingMessages();
         node.persistState();
     }
 
@@ -258,6 +314,8 @@ public class NodeUserHandle {
         data.operationTree.putAll(data.stagingTree);
         data.localOperationTree.clear();
         data.stagingTree.clear();
+        node.applyParticipationOperations(data);
+        node.rebuildInboxMessages(data);
         node.persistState();
     }
 
@@ -280,12 +338,23 @@ public class NodeUserHandle {
         }
         if (stable == null)
             return false;
-        var removable = new java.util.ArrayList<>(data.operationTree.headMap(stable, false).values());
+        var removable = new java.util.ArrayList<Node.Operation>();
+        for (var operation : data.operationTree.headMap(stable, false).values()) {
+            try {
+                var userOperation = Sync.UserOperation.parseFrom(operation.payload);
+                if (userOperation.getKind() != Sync.UserOperation.Kind.DIRECT_MESSAGE
+                        && userOperation.getKind() != Sync.UserOperation.Kind.PARTICIPATE_SYNC_UNIT
+                        && userOperation.getKind() != Sync.UserOperation.Kind.LEAVE_SYNC_UNIT)
+                    removable.add(operation);
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw new IllegalArgumentException("Invalid user operation payload", e);
+            }
+        }
         if (removable.isEmpty())
             return false;
         var snapshot = UserFileTree.replayFromState(data.snapshotState, removable);
         data.snapshotState = snapshot.serializeState();
-        data.operationTree.headMap(stable, false).clear();
+        removable.forEach(operation -> data.operationTree.remove(operation.id));
         rebuildCurrentState();
         return true;
     }

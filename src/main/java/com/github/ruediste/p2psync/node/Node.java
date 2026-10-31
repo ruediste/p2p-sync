@@ -222,6 +222,44 @@ public class Node implements AutoCloseable {
     private byte[] handleRemoteSyncRequest(byte[] bytes) {
         try {
             var request = Sync.RemoteSyncRequest.parseFrom(bytes);
+            if (request.hasDirectMessage()) {
+                var delivery = request.getDirectMessage();
+                var senderId = PubKey.from(delivery.getSenderUserId().toByteArray());
+                var stored = delivery.getOperation();
+                var operationId = new OperationId(stored.getLamportClock(), stored.getNodeHash().toByteArray());
+                var operation = new Operation(operationId, stored.getPayload().toByteArray(),
+                        stored.getSignature().toByteArray());
+                boolean messageStored = storeIncomingMessage(operation, senderId);
+                return Sync.RemoteSyncResponse.newBuilder().setNodeClock(clock)
+                        .setDirectMessageStored(messageStored).build().toByteArray();
+            }
+            if (!request.getSyncUnitId().isEmpty()) {
+                var id = SyncUnitId.fromBytes(request.getSyncUnitId().toByteArray());
+                var requesterId = PubKey.from(request.getRequesterUserPublicKey().toByteArray());
+                var unit = syncUnits.get(id);
+                boolean knownMember = unit != null
+                        && unit.authorization.members().containsKey(requesterId);
+                boolean invited = unit != null
+                        && unit.authorization.pendingInvitations().containsKey(requesterId);
+                if (unit == null)
+                    return Sync.RemoteSyncResponse.newBuilder().setNodeClock(clock).build().toByteArray();
+                if (!knownMember && !invited)
+                    return Sync.RemoteSyncResponse.newBuilder().setNodeClock(clock).setSyncUnitRevoked(true)
+                            .build().toByteArray();
+                if (request.hasSyncUnitUpdate()) {
+                    var update = deserializeSyncUnit(request.getSyncUnitUpdate());
+                    if (!update.id.equals(id) || update.type != unit.type || !update.creator.equals(unit.creator))
+                        throw new IllegalArgumentException("Remote SyncUnit update metadata does not match");
+                    mergeSyncUnit(update);
+                    unit = syncUnits.get(id);
+                    knownMember = unit.authorization.members().containsKey(requesterId);
+                }
+                return Sync.RemoteSyncResponse.newBuilder()
+                        .setNodeClock(clock)
+                        .setSyncUnitFound(true)
+                        .setSyncUnit(persist(unit, knownMember))
+                        .build().toByteArray();
+            }
             PubKey userId = PubKey.from(request.getUserId().toByteArray());
             NodeUserData data = users.get(userId);
             var response = Sync.RemoteSyncResponse.newBuilder().setUserFound(data != null).setNodeClock(clock);
@@ -305,6 +343,18 @@ public class Node implements AutoCloseable {
         }
     }
 
+    private static class UnknownSyncUnitException extends IllegalArgumentException {
+        UnknownSyncUnitException(String message) {
+            super(message);
+        }
+    }
+
+    private static class SyncUnitRevokedException extends IllegalArgumentException {
+        SyncUnitRevokedException(String message) {
+            super(message);
+        }
+    }
+
     public static class NodeUserData {
         public BlockId rootId;
         public JoinId joinId;
@@ -316,6 +366,8 @@ public class Node implements AutoCloseable {
         final TreeMap<OperationId, Operation> stagingTree = new TreeMap<>();
         final Map<String, PartialOperation> retrievalTree = new HashMap<>();
         final Map<String, Long> maxOperationClock = new HashMap<>();
+        final Set<String> deliveredMessageIds = new HashSet<>();
+        final Map<String, StoredUserMessage> inboxMessages = new java.util.TreeMap<>();
         ActiveNodeSet activeNodeSet = new ActiveNodeSet();
         byte[] rootDirectoryGuid;
         byte[] snapshotState;
@@ -421,6 +473,23 @@ public class Node implements AutoCloseable {
         }
     }
 
+    static final class StoredUserMessage {
+        final String messageId;
+        final OperationId operationId;
+        final byte[] operationPayload;
+        final byte[] signature;
+        final Sync.UserMessage message;
+
+        StoredUserMessage(String messageId, OperationId operationId, byte[] operationPayload, byte[] signature,
+                Sync.UserMessage message) {
+            this.messageId = messageId;
+            this.operationId = operationId;
+            this.operationPayload = operationPayload.clone();
+            this.signature = signature.clone();
+            this.message = message;
+        }
+    }
+
     static final class SyncUnitData {
         final SyncUnitId id;
         final SyncUnitAuthorization.Type type;
@@ -453,7 +522,7 @@ public class Node implements AutoCloseable {
                 var action = switch (operation.kind()) {
                     case SHARED_FILE_SET, SHARED_FILE_DELETE, TODO_SET, TODO_DELETE ->
                         SyncUnitAuthorization.Action.MODIFY;
-                    case CHANNEL_MESSAGE, DIRECT_MESSAGE -> SyncUnitAuthorization.Action.SEND_MESSAGE;
+                    case CHANNEL_MESSAGE -> SyncUnitAuthorization.Action.SEND_MESSAGE;
                 };
                 if (!contentKindMatchesType(type, operation.kind()))
                     throw new IllegalArgumentException("Content operation does not match SyncUnit type");
@@ -470,8 +539,6 @@ public class Node implements AutoCloseable {
                     case TODO_SET -> todoItems.put(operation.key(), operation.payload());
                     case TODO_DELETE -> todoItems.remove(operation.key());
                     case CHANNEL_MESSAGE -> channelMessages.add(operation);
-                    case DIRECT_MESSAGE -> throw new IllegalArgumentException(
-                            "Direct messaging is not implemented for generic SyncUnits");
                 }
             }
         }
@@ -487,7 +554,6 @@ public class Node implements AutoCloseable {
                 case SHARED_FILE_SET, SHARED_FILE_DELETE -> type == SyncUnitAuthorization.Type.SHARED_FOLDER;
                 case TODO_SET, TODO_DELETE -> type == SyncUnitAuthorization.Type.TODO_LIST;
                 case CHANNEL_MESSAGE -> type == SyncUnitAuthorization.Type.MESSAGE_CHANNEL;
-                case DIRECT_MESSAGE -> type == SyncUnitAuthorization.Type.USER;
             };
         }
     }
@@ -688,6 +754,187 @@ public class Node implements AutoCloseable {
         return requireSyncUnit(id).authorization;
     }
 
+    public List<Sync.UserMessage> getInboxMessages(PubKey userId) {
+        return requireConfiguredUser(userId).inboxMessages.values().stream()
+                .map(message -> message.message).toList();
+    }
+
+    public List<Sync.UserMessage> getOutboxMessages(PubKey userId) {
+        var user = requireConfiguredUser(userId);
+        var result = new java.util.TreeMap<String, Sync.UserMessage>();
+        for (var operation : user.allOperations().values()) {
+            var message = parseOutgoingMessage(user.userId(), operation);
+            if (message != null && !user.deliveredMessageIds.contains(message.getMessageId()))
+                result.put(message.getMessageId(), message);
+        }
+        return List.copyOf(result.values());
+    }
+
+    void deliverPendingMessages() {
+        for (var sender : List.copyOf(users.values())) {
+            for (var operation : sender.allOperations().values()) {
+                var message = parseOutgoingMessage(sender.userId(), operation);
+                if (message == null || sender.deliveredMessageIds.contains(message.getMessageId()))
+                    continue;
+                var recipientId = PubKey.from(message.getRecipientUserId().toByteArray());
+                for (var recipientNode : List.copyOf(network.nodes.values())) {
+                    if (!recipientNode.users.containsKey(recipientId)
+                            || !recipientNode.storeIncomingMessage(operation, sender.userId()))
+                        continue;
+                    sender.deliveredMessageIds.add(message.getMessageId());
+                    for (var recipientReplica : List.copyOf(network.nodes.values()))
+                        if (recipientReplica.users.containsKey(recipientId))
+                            recipientReplica.copyInboxMessage(recipientNode, recipientId, message.getMessageId());
+                    persistState();
+                    break;
+                }
+                if (sender.deliveredMessageIds.contains(message.getMessageId()))
+                    continue;
+                var remotePeers = new TreeSet<PeerId>(PeerId::compareTo);
+                remotePeers.addAll(remoteAddresses.keySet());
+                if (remoteHost != null)
+                    remotePeers.addAll(remoteHost.addressBook().getPeerIds());
+                remotePeers.remove(peerId);
+                for (var remotePeer : remotePeers) {
+                    if (network.nodes.containsKey(remotePeer))
+                        continue;
+                    try {
+                        var delivery = Sync.RemoteDirectMessageDelivery.newBuilder()
+                                .setSenderUserId(com.google.protobuf.ByteString.copyFrom(sender.userId().bytes()))
+                                .setOperation(persist(operation));
+                        var response = exchangeRemote(remotePeer, Sync.RemoteSyncRequest.newBuilder()
+                                .setDirectMessage(delivery).build());
+                        if (!response.getDirectMessageStored())
+                            continue;
+                        sender.deliveredMessageIds.add(message.getMessageId());
+                        persistState();
+                        break;
+                    } catch (RuntimeException unavailablePeer) {
+                        // Keep the message queued; the next sync retries delivery.
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean storeIncomingMessage(Operation operation, PubKey senderId) {
+        if (!verifyOperationSignature(senderId, operation.id, operation.payload, operation.signature))
+            throw new IllegalArgumentException("Invalid direct message operation signature");
+        Sync.UserOperation userOperation;
+        Sync.UserMessage message;
+        try {
+            userOperation = Sync.UserOperation.parseFrom(operation.payload);
+            if (userOperation.getKind() != Sync.UserOperation.Kind.DIRECT_MESSAGE)
+                throw new IllegalArgumentException("Operation is not a direct message");
+            message = Sync.UserMessage.parseFrom(userOperation.getMessagePayload());
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            throw new IllegalArgumentException("Invalid direct message payload", e);
+        }
+        var recipientId = PubKey.from(userOperation.getRecipientUserId().toByteArray());
+        if (!message.getMessageId().equals(userOperation.getMessageId())
+                || !message.getSenderUserId().equals(com.google.protobuf.ByteString.copyFrom(senderId.bytes()))
+                || !message.getRecipientUserId().equals(userOperation.getRecipientUserId()))
+            throw new IllegalArgumentException("Direct message identity does not match its signed operation");
+        var recipient = users.get(recipientId);
+        if (recipient == null)
+            return false;
+        var stored = new StoredUserMessage(message.getMessageId(), operation.id, operation.payload,
+                operation.signature, message);
+        var previous = recipient.inboxMessages.putIfAbsent(message.getMessageId(), stored);
+        if (previous != null && (!Arrays.equals(previous.operationPayload, operation.payload)
+                || !Arrays.equals(previous.signature, operation.signature)))
+            throw new IllegalArgumentException("Conflicting direct messages share an ID");
+        if (previous == null) {
+            var receipt = Sync.UserOperation.newBuilder()
+                    .setKind(Sync.UserOperation.Kind.RECEIVE_MESSAGE)
+                    .setMessageId(message.getMessageId())
+                    .setRecipientUserId(com.google.protobuf.ByteString.copyFrom(recipientId.bytes()))
+                    .setMessagePayload(userOperation.getMessagePayload())
+                    .setOriginalOperationPayload(com.google.protobuf.ByteString.copyFrom(operation.payload))
+                    .setOriginalOperationSignature(com.google.protobuf.ByteString.copyFrom(operation.signature))
+                    .setOriginalOperationLamportClock(operation.id.clock)
+                    .setOriginalOperationNodeHash(com.google.protobuf.ByteString.copyFrom(operation.id.nodeHash))
+                    .build();
+            recordLocalOperation(recipient, receipt.toByteArray());
+            new NodeUserHandle(this, recipient).rebuildCurrentState();
+            rebuildInboxMessages(recipient);
+        }
+        persistState();
+        return true;
+    }
+
+    void rebuildInboxMessages(NodeUserData user) {
+        for (var operation : user.allOperations().values()) {
+            Sync.UserOperation receipt;
+            try {
+                receipt = Sync.UserOperation.parseFrom(operation.payload);
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw new IllegalArgumentException("Invalid user operation payload", e);
+            }
+            if (receipt.getKind() != Sync.UserOperation.Kind.RECEIVE_MESSAGE)
+                continue;
+            var senderOperationId = new OperationId(receipt.getOriginalOperationLamportClock(),
+                    receipt.getOriginalOperationNodeHash().toByteArray());
+            byte[] senderOperationPayload = receipt.getOriginalOperationPayload().toByteArray();
+            byte[] senderSignature = receipt.getOriginalOperationSignature().toByteArray();
+            Sync.UserMessage receiptMessage;
+            try {
+                receiptMessage = Sync.UserMessage.parseFrom(receipt.getMessagePayload());
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw new IllegalArgumentException("Invalid recipient message receipt", e);
+            }
+            var message = parseOutgoingMessage(PubKey.from(receiptMessage.getSenderUserId().toByteArray()),
+                    new Operation(senderOperationId, senderOperationPayload, senderSignature));
+            if (message == null || !message.getMessageId().equals(receipt.getMessageId())
+                    || !message.equals(receiptMessage)
+                    || !message.getRecipientUserId()
+                            .equals(com.google.protobuf.ByteString.copyFrom(user.userId().bytes()))
+                    || !receipt.getRecipientUserId()
+                            .equals(com.google.protobuf.ByteString.copyFrom(user.userId().bytes())))
+                throw new IllegalArgumentException("Invalid recipient message receipt");
+            var stored = new StoredUserMessage(message.getMessageId(), senderOperationId,
+                    senderOperationPayload, senderSignature, message);
+            var previous = user.inboxMessages.putIfAbsent(message.getMessageId(), stored);
+            if (previous != null && (!Arrays.equals(previous.operationPayload, senderOperationPayload)
+                    || !Arrays.equals(previous.signature, senderSignature)))
+                throw new IllegalArgumentException("Conflicting direct messages share an ID");
+        }
+    }
+
+    private void copyInboxMessage(Node source, PubKey recipientId, String messageId) {
+        var sourceUser = source.users.get(recipientId);
+        var recipient = users.get(recipientId);
+        if (sourceUser == null || recipient == null)
+            return;
+        var message = sourceUser.inboxMessages.get(messageId);
+        if (message != null) {
+            recipient.inboxMessages.putIfAbsent(messageId, message);
+            persistState();
+        }
+    }
+
+    private static Sync.UserMessage parseOutgoingMessage(PubKey senderId, Operation operation) {
+        try {
+            var userOperation = Sync.UserOperation.parseFrom(operation.payload);
+            if (userOperation.getKind() != Sync.UserOperation.Kind.DIRECT_MESSAGE)
+                return null;
+            var message = Sync.UserMessage.parseFrom(userOperation.getMessagePayload());
+            if (message.getType() == Sync.UserMessage.Type.UNRECOGNIZED)
+                throw new IllegalArgumentException("Unknown user message type");
+            boolean invitation = message.getType() == Sync.UserMessage.Type.SHARED_FOLDER_INVITATION
+                    || message.getType() == Sync.UserMessage.Type.MESSAGE_CHANNEL_INVITATION;
+            if (userOperation.getMessageId().isBlank()
+                    || !message.getMessageId().equals(userOperation.getMessageId())
+                    || !message.getSenderUserId().equals(com.google.protobuf.ByteString.copyFrom(senderId.bytes()))
+                    || !message.getRecipientUserId().equals(userOperation.getRecipientUserId())
+                    || invitation != (message.getInvitedSyncUnitId().size() == 32))
+                throw new IllegalArgumentException("Direct message identity does not match its operation");
+            return message;
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            throw new IllegalArgumentException("Invalid direct message operation", e);
+        }
+    }
+
     public void inviteToSyncUnit(SyncUnitId id, PubKey actorId, PubKey inviteeId,
             SyncUnitAuthorization.Role role) {
         appendSyncUnitOperation(id, actorId, SyncUnitAuthorization.Action.INVITE, inviteeId, role);
@@ -703,7 +950,7 @@ public class Node implements AutoCloseable {
         appendSyncUnitOperation(id, inviteeId, SyncUnitAuthorization.Action.ACCEPT_INVITATION, inviteeId, null);
         var user = users.get(inviteeId);
         if (user != null)
-            user.participatingSyncUnitIds.add(id.toString());
+            recordSyncUnitParticipation(user, id, true);
         persistState();
         for (var peer : List.copyOf(network.nodes.values())) {
             if (peer == this || !peer.users.containsKey(inviteeId))
@@ -721,42 +968,84 @@ public class Node implements AutoCloseable {
         appendSyncUnitOperation(id, actorId, SyncUnitAuthorization.Action.REMOVE_MEMBER, subject, null);
         var user = users.get(subject);
         if (user != null)
-            user.participatingSyncUnitIds.remove(id.toString());
+            recordSyncUnitParticipation(user, id, false);
         persistState();
         for (var peer : List.copyOf(network.nodes.values())) {
             if (peer == this || !peer.users.containsKey(subject))
                 continue;
+            peer.recordSyncUnitParticipation(peer.users.get(subject), id, false);
             peer.syncUnits.remove(id);
-            peer.users.get(subject).participatingSyncUnitIds.remove(id.toString());
             peer.persistState();
         }
     }
 
     public void joinSyncUnit(PeerId sourcePeerId, SyncUnitId id, PubKey inviteeId) {
         var source = network.nodes.get(sourcePeerId);
-        if (source == null)
-            throw new IllegalArgumentException("Unknown peer " + sourcePeerId);
         requireConfiguredUser(inviteeId);
-        var sourceUnit = source.requireSyncUnit(id);
-        receiveSyncUnitInvitation(sourceUnit);
+        SyncUnitData sourceUnit;
+        if (source != null) {
+            sourceUnit = source.requireSyncUnit(id);
+            receiveSyncUnitInvitation(sourceUnit);
+        } else {
+            var result = requestRemoteSyncUnit(sourcePeerId, id, inviteeId, null);
+            sourceUnit = result.unit();
+            if (sourceUnit == null)
+                throw new UnknownSyncUnitException("Remote peer does not host an invitation to this SyncUnit");
+            syncUnits.putIfAbsent(id, sourceUnit);
+        }
         var localUnit = requireSyncUnit(id);
         if (!localUnit.authorization.pendingInvitations().containsKey(inviteeId))
             throw new IllegalArgumentException("User has no pending invitation to this SyncUnit");
         clock = Math.max(clock, maxSyncUnitClock(sourceUnit));
         acceptSyncUnitInvitation(id, inviteeId);
-        mergeSyncUnit(sourceUnit);
+        if (source != null)
+            mergeSyncUnit(sourceUnit);
+        else
+            syncSyncUnitFrom(sourcePeerId, id);
     }
 
     public void syncSyncUnitFrom(PeerId sourcePeerId, SyncUnitId id) {
         var source = network.nodes.get(sourcePeerId);
-        if (source == null)
-            throw new IllegalArgumentException("Unknown peer " + sourcePeerId);
         var unit = requireSyncUnit(id);
-        boolean localMember = users.values().stream()
-                .anyMatch(user -> unit.authorization.members().containsKey(user.userId()));
-        if (!localMember)
+        var localMember = users.values().stream()
+                .filter(user -> unit.authorization.members().containsKey(user.userId()))
+                .findFirst().orElseThrow(() -> new IllegalArgumentException(
+                        "No configured user participates in this SyncUnit"));
+        if (source == null) {
+            var result = requestRemoteSyncUnit(sourcePeerId, id, localMember.userId(), unit);
+            if (result.revoked()) {
+                syncUnits.remove(id);
+                recordSyncUnitParticipation(localMember, id, false);
+                persistState();
+                throw new SyncUnitRevokedException("SyncUnit membership was revoked");
+            }
+            if (result.unit() == null)
+                throw new UnknownSyncUnitException("Remote peer does not host this SyncUnit");
+            mergeSyncUnit(result.unit());
+            return;
+        }
+        if (!unit.authorization.members().containsKey(localMember.userId()))
             throw new IllegalArgumentException("No configured user participates in this SyncUnit");
-        mergeSyncUnit(source.requireSyncUnit(id));
+        var sourceUnit = source.syncUnits.get(id);
+        if (sourceUnit == null)
+            throw new UnknownSyncUnitException("Peer does not host this SyncUnit");
+        mergeSyncUnit(sourceUnit);
+    }
+
+    private record RemoteSyncUnitResult(SyncUnitData unit, boolean revoked) {
+    }
+
+    private RemoteSyncUnitResult requestRemoteSyncUnit(PeerId peerId, SyncUnitId id, PubKey requesterId,
+            SyncUnitData update) {
+        var request = Sync.RemoteSyncRequest.newBuilder()
+                .setSyncUnitId(com.google.protobuf.ByteString.copyFrom(id.bytes()))
+                .setRequesterUserPublicKey(com.google.protobuf.ByteString.copyFrom(requesterId.bytes()));
+        if (update != null)
+            request.setSyncUnitUpdate(persist(update));
+        var response = exchangeRemote(peerId, request.build());
+        return new RemoteSyncUnitResult(response.getSyncUnitFound()
+                ? deserializeSyncUnit(response.getSyncUnit())
+                : null, response.getSyncUnitRevoked());
     }
 
     private void receiveSyncUnitInvitation(SyncUnitData source) {
@@ -809,7 +1098,7 @@ public class Node implements AutoCloseable {
 
         var mergedUnit = local;
         boolean member = users.values().stream()
-            .anyMatch(user -> mergedUnit.authorization.members().containsKey(user.userId()));
+                .anyMatch(user -> mergedUnit.authorization.members().containsKey(user.userId()));
         if (!member)
             throw new IllegalArgumentException("This node is not a member of the SyncUnit");
         for (var entry : incoming.contentOperations.entrySet()) {
@@ -917,7 +1206,7 @@ public class Node implements AutoCloseable {
         var action = switch (kind) {
             case SHARED_FILE_SET, SHARED_FILE_DELETE, TODO_SET, TODO_DELETE ->
                 SyncUnitAuthorization.Action.MODIFY;
-            case CHANNEL_MESSAGE, DIRECT_MESSAGE -> SyncUnitAuthorization.Action.SEND_MESSAGE;
+            case CHANNEL_MESSAGE -> SyncUnitAuthorization.Action.SEND_MESSAGE;
         };
         requireSyncUnitAccess(unit, authorId, action);
         var operation = SyncUnitContentOperation.sign(id, nextClock(), nodeHash, author.userKey,
@@ -983,6 +1272,43 @@ public class Node implements AutoCloseable {
         var id = user.syncUnitId();
         syncUnits.putIfAbsent(id, new SyncUnitData(id, SyncUnitAuthorization.Type.USER, user.userId()));
         user.participatingSyncUnitIds.add(id.toString());
+        applyParticipationOperations(user);
+    }
+
+    void applyParticipationOperations(NodeUserData user) {
+        for (var operation : user.allOperations().values()) {
+            try {
+                var userOperation = Sync.UserOperation.parseFrom(operation.payload);
+                if (userOperation.getKind() != Sync.UserOperation.Kind.PARTICIPATE_SYNC_UNIT
+                        && userOperation.getKind() != Sync.UserOperation.Kind.LEAVE_SYNC_UNIT)
+                    continue;
+                var unitIdBytes = userOperation.getSyncUnitId().toByteArray();
+                if (unitIdBytes.length != 32)
+                    throw new IllegalArgumentException("Invalid SyncUnit participation operation");
+                var unitId = SyncUnitId.fromBytes(unitIdBytes).toString();
+                if (userOperation.getKind() == Sync.UserOperation.Kind.PARTICIPATE_SYNC_UNIT)
+                    user.participatingSyncUnitIds.add(unitId);
+                else
+                    user.participatingSyncUnitIds.remove(unitId);
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw new IllegalArgumentException("Invalid user operation payload", e);
+            }
+        }
+        user.participatingSyncUnitIds.add(user.syncUnitId().toString());
+    }
+
+    private void recordSyncUnitParticipation(NodeUserData user, SyncUnitId id, boolean participating) {
+        var operation = Sync.UserOperation.newBuilder()
+                .setKind(participating ? Sync.UserOperation.Kind.PARTICIPATE_SYNC_UNIT
+                        : Sync.UserOperation.Kind.LEAVE_SYNC_UNIT)
+                .setSyncUnitId(com.google.protobuf.ByteString.copyFrom(id.bytes()))
+                .build();
+        recordLocalOperation(user, operation.toByteArray());
+        if (participating)
+            user.participatingSyncUnitIds.add(id.toString());
+        else
+            user.participatingSyncUnitIds.remove(id.toString());
+        new NodeUserHandle(this, user).rebuildCurrentState();
     }
 
     public NodeUserHandle getUserByName(String localName) {
@@ -1088,6 +1414,24 @@ public class Node implements AutoCloseable {
                 handle.syncFrom(remotePeerId);
             }
         }
+        for (var user : List.copyOf(users.values())) {
+            for (String unitIdHex : List.copyOf(user.participatingSyncUnitIds)) {
+                var unitId = SyncUnitId.fromBytes(HexFormat.of().parseHex(unitIdHex));
+                var unit = syncUnits.get(unitId);
+                if (unit == null || unit.type == SyncUnitAuthorization.Type.USER)
+                    continue;
+                for (PeerId remotePeerId : peers) {
+                    Node localPeer = network.nodes.get(remotePeerId);
+                    if (localPeer != null && !localPeer.syncUnits.containsKey(unitId))
+                        continue;
+                    try {
+                        syncSyncUnitFrom(remotePeerId, unitId);
+                    } catch (UnknownSyncUnitException | SyncUnitRevokedException ignored) {
+                    }
+                }
+            }
+        }
+        deliverPendingMessages();
     }
 
     private void ensureNameAvailable(String localName, PubKey exceptUser) {
@@ -1185,6 +1529,15 @@ public class Node implements AutoCloseable {
                             .setSignature(com.google.protobuf.ByteString.copyFrom(partial.signature))));
             user.participatingSyncUnitIds.forEach(id -> storedUser.addParticipatingSyncUnitIds(
                     com.google.protobuf.ByteString.copyFrom(HexFormat.of().parseHex(id))));
+            user.deliveredMessageIds.forEach(storedUser::addDeliveredMessageIds);
+            user.inboxMessages.values().forEach(message -> storedUser.addInboxMessages(
+                    Sync.StoredUserMessage.newBuilder()
+                            .setMessageId(com.google.protobuf.ByteString.copyFromUtf8(message.messageId))
+                            .setSenderUserId(message.message.getSenderUserId())
+                            .setLamportClock(message.operationId.clock)
+                            .setNodeHash(com.google.protobuf.ByteString.copyFrom(message.operationId.nodeHash))
+                            .setOperationPayload(com.google.protobuf.ByteString.copyFrom(message.operationPayload))
+                            .setSignature(com.google.protobuf.ByteString.copyFrom(message.signature))));
             state.addUsers(storedUser);
         }
         syncUnits.values().forEach(unit -> state.addSyncUnits(persist(unit)));
@@ -1242,6 +1595,10 @@ public class Node implements AutoCloseable {
     }
 
     private static Sync.PersistedSyncUnit persist(SyncUnitData unit) {
+        return persist(unit, true);
+    }
+
+    private static Sync.PersistedSyncUnit persist(SyncUnitData unit, boolean includeContent) {
         var result = Sync.PersistedSyncUnit.newBuilder()
                 .setId(com.google.protobuf.ByteString.copyFrom(unit.id.bytes()))
                 .setType(unit.type.ordinal())
@@ -1257,16 +1614,17 @@ public class Node implements AutoCloseable {
                                 : com.google.protobuf.ByteString.copyFrom(operation.subject().bytes()))
                         .setRole(operation.role() == null ? 0 : operation.role().ordinal() + 1)
                         .setSignature(com.google.protobuf.ByteString.copyFrom(operation.signature()))));
-        unit.contentOperations.values().forEach(operation -> result.addContentOperations(
-                Sync.PersistedSyncUnitContentOperation.newBuilder()
-                        .setUnitId(com.google.protobuf.ByteString.copyFrom(operation.unitId().bytes()))
-                        .setLamportClock(operation.lamportClock())
-                        .setNodeHash(com.google.protobuf.ByteString.copyFrom(operation.nodeHash()))
-                        .setAuthorPublicKey(com.google.protobuf.ByteString.copyFrom(operation.author().bytes()))
-                        .setKind(operation.kind().ordinal())
-                        .setKey(operation.key())
-                        .setPayload(com.google.protobuf.ByteString.copyFrom(operation.payload()))
-                        .setSignature(com.google.protobuf.ByteString.copyFrom(operation.signature()))));
+        if (includeContent)
+            unit.contentOperations.values().forEach(operation -> result.addContentOperations(
+                    Sync.PersistedSyncUnitContentOperation.newBuilder()
+                            .setUnitId(com.google.protobuf.ByteString.copyFrom(operation.unitId().bytes()))
+                            .setLamportClock(operation.lamportClock())
+                            .setNodeHash(com.google.protobuf.ByteString.copyFrom(operation.nodeHash()))
+                            .setAuthorPublicKey(com.google.protobuf.ByteString.copyFrom(operation.author().bytes()))
+                            .setKind(operation.kind().ordinal())
+                            .setKey(operation.key())
+                            .setPayload(com.google.protobuf.ByteString.copyFrom(operation.payload()))
+                            .setSignature(com.google.protobuf.ByteString.copyFrom(operation.signature()))));
         return result.build();
     }
 
@@ -1327,9 +1685,16 @@ public class Node implements AutoCloseable {
                         throw new IllegalStateException("Invalid persisted SyncUnit ID");
                     user.participatingSyncUnitIds.add(SyncUnitId.fromBytes(participatingId.toByteArray()).toString());
                 }
+                user.deliveredMessageIds.addAll(storedUser.getDeliveredMessageIdsList());
+                for (var storedMessage : storedUser.getInboxMessagesList()) {
+                    var message = loadStoredUserMessage(storedMessage, user.userId());
+                    if (user.inboxMessages.putIfAbsent(message.messageId, message) != null)
+                        throw new IllegalStateException("Duplicate persisted inbox message ID");
+                }
                 user.fileSystem = UserFileTree.fromState(user.snapshotState);
                 users.put(user.userId(), user);
                 ensureUserSyncUnit(user);
+                rebuildInboxMessages(user);
                 if (!user.allOperations().isEmpty())
                     new NodeUserHandle(this, user).rebuildCurrentState();
             }
@@ -1349,6 +1714,12 @@ public class Node implements AutoCloseable {
     }
 
     private void loadSyncUnit(Sync.PersistedSyncUnit stored) {
+        var unit = deserializeSyncUnit(stored);
+        if (syncUnits.putIfAbsent(unit.id, unit) != null)
+            throw new IllegalStateException("Duplicate persisted SyncUnit ID");
+    }
+
+    private static SyncUnitData deserializeSyncUnit(Sync.PersistedSyncUnit stored) {
         if (stored.getType() < 0 || stored.getType() >= SyncUnitAuthorization.Type.values().length)
             throw new IllegalStateException("Invalid persisted SyncUnit type");
         var id = SyncUnitId.fromBytes(stored.getId().toByteArray());
@@ -1390,8 +1761,32 @@ public class Node implements AutoCloseable {
                 throw new IllegalStateException("Invalid persisted SyncUnit content operation");
         }
         unit.replayContent();
-        if (syncUnits.putIfAbsent(id, unit) != null)
-            throw new IllegalStateException("Duplicate persisted SyncUnit ID");
+        return unit;
+    }
+
+    private static StoredUserMessage loadStoredUserMessage(Sync.StoredUserMessage stored, PubKey recipientId) {
+        String messageId = stored.getMessageId().toStringUtf8();
+        var operationId = new OperationId(stored.getLamportClock(), stored.getNodeHash().toByteArray());
+        byte[] operationPayload = stored.getOperationPayload().toByteArray();
+        byte[] signature = stored.getSignature().toByteArray();
+        Sync.UserOperation userOperation;
+        Sync.UserMessage message;
+        try {
+            userOperation = Sync.UserOperation.parseFrom(operationPayload);
+            if (userOperation.getKind() != Sync.UserOperation.Kind.DIRECT_MESSAGE)
+                throw new IllegalStateException("Persisted inbox entry is not a direct message");
+            message = Sync.UserMessage.parseFrom(userOperation.getMessagePayload());
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            throw new IllegalStateException("Invalid persisted inbox message", e);
+        }
+        var senderId = PubKey.from(stored.getSenderUserId().toByteArray());
+        if (messageId.isBlank() || !messageId.equals(userOperation.getMessageId())
+                || !messageId.equals(message.getMessageId())
+                || !message.getRecipientUserId().equals(com.google.protobuf.ByteString.copyFrom(recipientId.bytes()))
+                || !message.getSenderUserId().equals(com.google.protobuf.ByteString.copyFrom(senderId.bytes()))
+                || !verifyOperationSignature(senderId, operationId, operationPayload, signature))
+            throw new IllegalStateException("Invalid persisted inbox message identity or signature");
+        return new StoredUserMessage(messageId, operationId, operationPayload, signature, message);
     }
 
     static void loadActiveNodeSet(Sync.ActiveNodeSetState stored, ActiveNodeSet target) {

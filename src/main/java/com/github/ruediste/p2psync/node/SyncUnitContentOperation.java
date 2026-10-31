@@ -16,8 +16,7 @@ public record SyncUnitContentOperation(SyncUnitId unitId, long lamportClock, byt
         SHARED_FILE_DELETE,
         TODO_SET,
         TODO_DELETE,
-        CHANNEL_MESSAGE,
-        DIRECT_MESSAGE
+        CHANNEL_MESSAGE
     }
 
     public SyncUnitContentOperation {

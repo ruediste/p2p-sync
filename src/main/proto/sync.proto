@@ -97,6 +97,10 @@ message UserOperation {
 		MOVE = 5;
 		RENAME = 6;
 		DELETE = 7;
+		DIRECT_MESSAGE = 8;
+		PARTICIPATE_SYNC_UNIT = 9;
+		LEAVE_SYNC_UNIT = 10;
+		RECEIVE_MESSAGE = 11;
 	}
 	Kind kind = 1;
 	bytes entityId = 2;
@@ -108,6 +112,14 @@ message UserOperation {
 	bytes data = 8;
 	uint64 size = 9;
 	string statusMessage = 10;
+	string messageId = 11;
+	bytes recipientUserId = 12;
+	bytes messagePayload = 13;
+	bytes syncUnitId = 14;
+	bytes originalOperationPayload = 15;
+	bytes originalOperationSignature = 16;
+	uint64 originalOperationLamportClock = 17;
+	bytes originalOperationNodeHash = 18;
 }
 
 message NodeState {
@@ -139,6 +151,34 @@ message NodeUserState {
 	repeated PartialOperationState retrievalTree = 12;
 	bytes snapshotState = 13;
 	repeated bytes participatingSyncUnitIds = 14;
+	repeated string deliveredMessageIds = 15;
+	repeated StoredUserMessage inboxMessages = 16;
+}
+
+message UserMessage {
+	enum Type {
+		CHAT = 0;
+		MAIL = 1;
+		SHARED_FOLDER_INVITATION = 2;
+		MESSAGE_CHANNEL_INVITATION = 3;
+	}
+	string messageId = 1;
+	bytes senderUserId = 2;
+	bytes recipientUserId = 3;
+	Type type = 4;
+	string subject = 5;
+	string body = 6;
+	repeated SyncUnitAttachment attachments = 7;
+	bytes invitedSyncUnitId = 8;
+}
+
+message StoredUserMessage {
+	bytes messageId = 1;
+	bytes senderUserId = 2;
+	uint64 lamportClock = 3;
+	bytes nodeHash = 4;
+	bytes operationPayload = 5;
+	bytes signature = 6;
 }
 
 message PersistedSyncUnit {
@@ -233,6 +273,15 @@ message RemoteSyncRequest {
 	uint32 byteBudget = 5;
 	bool includeHistory = 6;
 	string joiningNodeId = 7;
+	RemoteDirectMessageDelivery directMessage = 8;
+	bytes syncUnitId = 9;
+	bytes requesterUserPublicKey = 10;
+	PersistedSyncUnit syncUnitUpdate = 11;
+}
+
+message RemoteDirectMessageDelivery {
+	bytes senderUserId = 1;
+	PersistedOperation operation = 2;
 }
 
 message OperationOffset {
@@ -258,6 +307,10 @@ message RemoteSyncResponse {
 	ActiveNodeSetState activeNodeSet = 5;
 	repeated RemoteOperationTransfer transfers = 6;
 	uint64 nodeClock = 7;
+	bool directMessageStored = 8;
+	bool syncUnitFound = 9;
+	PersistedSyncUnit syncUnit = 10;
+	bool syncUnitRevoked = 11;
 }
 
 message NodeNrMap{

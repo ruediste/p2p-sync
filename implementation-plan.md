@@ -20,8 +20,9 @@
 
 ### Message Channels
 
-- A MessageChannel supports group communication. Access is limited to members; there is no Viewer/Editor/Manager distinction.
-- Members may view and send chat messages, including messages with file or image attachments.
+- A MessageChannel supports group communication with **Member** and **Manager** roles.
+- Both Members and Managers may view and send chat messages, including messages with file or image attachments.
+- Managers may invite, remove, or change the role of any member, including other Managers. At least one Manager must remain.
 
 ### Direct Messaging
 

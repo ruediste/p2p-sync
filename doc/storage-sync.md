@@ -6,11 +6,13 @@
 
 For replication, a User is a SyncUnit: an independently replicated unit of data. A user also has a cryptographic identity represented by a key pair. The public key identifies the user, and the private key signs operations authored by that user. The identity authenticates the author; it does not by itself grant permission to modify every SyncUnit.
 
-A SyncUnit has its own operation history, materialized state, and membership/authorization rules. User, SharedFolder, TodoList, and MessageChannel are SyncUnit types. Each user maintains a participation list of SyncUnits. A node is configured with the users it synchronizes and synchronizes all units in those users' participation lists.
+A SyncUnit has its own operation history, materialized state, and membership/authorization rules. User, SharedFolder, TodoList, and MessageChannel are SyncUnit types. Each user maintains a participation list of SyncUnits in signed User SyncUnit operations. A node is configured with the users it synchronizes and synchronizes all units in those users' participation lists.
 
 Any user may create a SyncUnit and invite other users. A receiving node verifies the author's signature and checks authorization for the operation under that unit's membership and permission rules before accepting the operation. For example, a SharedFolder Editor may modify its contents, while a Viewer may only view them. Membership-change ordering and authorization of out-of-order operations are part of the SyncUnit authorization rules.
 
 Removing a participant removes the unit's replicated data from that participant's active local store. This cannot prevent the participant from retaining a copy made before removal. The current storage implementation is not encrypted at rest; this document's storage details describe the current implementation unless explicitly stated otherwise.
+
+SharedFolder and TodoList roles are Viewer, Editor, and Manager. A MessageChannel uses Member and Manager roles: both may view and send, while Managers can invite, remove, or change the role of any member, including another Manager. The final Manager cannot be removed or demoted. SyncUnit metadata, signed authorization/content histories, user participation, message inboxes, and delivered IDs are persisted in node state.
 
 ### Device and Node
 
@@ -346,7 +348,7 @@ When a node requests operations from a peer, the peer responds with a list of op
 Incomplete operations are stored in the `OperationRetrievalTree`. It contains at most one incomplete operation per node. Additional requests are sent to the same or other peers, requesting the remaining data of the incomplete operation. Note that no additional operations from a node are retrieved until its incomplete operation has been fully retrieved.
 
 ### Log Truncation
-For log truncation, we need to determine the causally stable timestamp. This can easily be achieved by creating operation timestamps from the `maximumOperationClock` of the active node info (combined with the corresponding node id) and taking the minimum across all active nodes. Then a snapshot is created for that timestamp, and all operations older than the causally stable timestamp can be safely truncated.
+For log truncation, we need to determine the causally stable timestamp. This can easily be achieved by creating operation timestamps from the `maximumOperationClock` of the active node info (combined with the corresponding node id) and taking the minimum across all active nodes. Then a snapshot is created for that timestamp, and operations older than the causally stable timestamp can be truncated. Direct-message operations remain in the User SyncUnit log because they are the durable message history and outbox source; they must not be pruned until a materialized message snapshot replaces them.
 
 ## File System and Operation Storage
 This section describes how the file system state and the file system operations are managed and stored. The following data structures are used:
@@ -467,7 +469,7 @@ struct DirIndex {
 The length of the name is implicitly determined by the size of the tree item.
 
 ### Operation Tree
-The operations applied to the file system are stored in the operation tree. The key is the operation id followed by an entry type, ensuring that operations are ordered correctly according to the distributed Lamport clock and node identifier.
+The operations applied to the file system are stored in the User SyncUnit operation tree. The key is the operation id followed by an entry type, ensuring that operations are ordered correctly according to the distributed Lamport clock and node identifier. Direct-message and participation events also use this signed User history; they do not mutate the file-system view.
 
 ```C
 struct OperationKey {
