@@ -18,9 +18,13 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.BorderFactory;
@@ -40,6 +44,7 @@ import javax.swing.table.AbstractTableModel;
 
 /** Desktop management window and system-tray status for one local node. */
 public final class NodeDesktopApp implements AutoCloseable {
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(NodeDesktopApp.class);
     private static final Color INK = new Color(28, 38, 42);
     private static final Color PAPER = new Color(244, 247, 244);
     private static final Color GREEN = new Color(36, 124, 91);
@@ -50,6 +55,11 @@ public final class NodeDesktopApp implements AutoCloseable {
     private final Path mountPoint;
     private final Runnable shutdown;
     private final AtomicBoolean closed = new AtomicBoolean();
+    private final ScheduledExecutorService syncWorker = Executors.newSingleThreadScheduledExecutor(task -> {
+        Thread thread = new Thread(task, "p2p-sync-background-sync");
+        thread.setDaemon(true);
+        return thread;
+    });
     private final UserTableModel tableModel = new UserTableModel();
     private JFrame frame;
     private JTable table;
@@ -60,9 +70,14 @@ public final class NodeDesktopApp implements AutoCloseable {
     private JButton syncButton;
 
     public NodeDesktopApp(Node node, Path mountPoint, Runnable shutdown) {
+        this(node, mountPoint, shutdown, Duration.ofSeconds(4));
+    }
+
+    NodeDesktopApp(Node node, Path mountPoint, Runnable shutdown, Duration syncDelay) {
         this.node = java.util.Objects.requireNonNull(node);
         this.mountPoint = java.util.Objects.requireNonNull(mountPoint);
         this.shutdown = java.util.Objects.requireNonNull(shutdown);
+        syncWorker.scheduleWithFixedDelay(() -> runSync(false), 0, syncDelay.toMillis(), TimeUnit.MILLISECONDS);
     }
 
     public void showWindow() {
@@ -389,19 +404,35 @@ public final class NodeDesktopApp implements AutoCloseable {
     }
 
     private void synchronize() {
+        if (closed.get())
+            return;
         syncButton.setEnabled(false);
-        Thread sync = new Thread(() -> {
-            try {
-                node.syncKnownPeers();
-                SwingUtilities.invokeLater(this::refresh);
-            } catch (RuntimeException error) {
-                SwingUtilities.invokeLater(() -> showError(error));
-            } finally {
-                SwingUtilities.invokeLater(() -> syncButton.setEnabled(true));
-            }
-        }, "p2p-sync-manual-sync");
-        sync.setDaemon(true);
-        sync.start();
+        syncWorker.execute(() -> runSync(true));
+    }
+
+    private void runSync(boolean manual) {
+        if (closed.get())
+            return;
+        try {
+            node.syncKnownPeers();
+            SwingUtilities.invokeLater(() -> {
+                if (!closed.get() && frame != null)
+                    refresh();
+            });
+        } catch (RuntimeException error) {
+            LOG.warn("Synchronization failed; will retry on the next background round", error);
+            if (manual)
+                SwingUtilities.invokeLater(() -> {
+                    if (!closed.get())
+                        showError(error);
+                });
+        } finally {
+            if (manual)
+                SwingUtilities.invokeLater(() -> {
+                    if (!closed.get())
+                        syncButton.setEnabled(true);
+                });
+        }
     }
 
     private Node.UserStatus selectedUser() {
@@ -515,7 +546,8 @@ public final class NodeDesktopApp implements AutoCloseable {
             SystemTray.getSystemTray().remove(trayIcon);
         if (frame != null)
             frame.dispose();
-        shutdown.run();
+        syncWorker.execute(shutdown);
+        syncWorker.shutdown();
     }
 
     private static final class UserTableModel extends AbstractTableModel {
