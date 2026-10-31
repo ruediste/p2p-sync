@@ -6,4 +6,4 @@
 /bin/
 /mount/
 /mount2/
-/files.db
+/*.db
