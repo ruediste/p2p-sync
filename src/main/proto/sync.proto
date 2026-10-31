@@ -116,6 +116,7 @@ message NodeState {
 	uint64 guidCounter = 3;
 	repeated NodeUserState users = 4;
 	bytes peerPrivateKey = 5;
+	repeated PersistedSyncUnit syncUnits = 6;
 }
 
 message UserCredential {
@@ -137,6 +138,48 @@ message NodeUserState {
 	ActiveNodeSetState activeNodeSet = 11;
 	repeated PartialOperationState retrievalTree = 12;
 	bytes snapshotState = 13;
+	repeated bytes participatingSyncUnitIds = 14;
+}
+
+message PersistedSyncUnit {
+	bytes id = 1;
+	int32 type = 2;
+	bytes creatorPublicKey = 3;
+	repeated PersistedSyncUnitAuthorizationOperation authorizationOperations = 4;
+	repeated PersistedSyncUnitContentOperation contentOperations = 5;
+}
+
+message PersistedSyncUnitAuthorizationOperation {
+	bytes unitId = 1;
+	uint64 lamportClock = 2;
+	bytes nodeHash = 3;
+	bytes authorPublicKey = 4;
+	int32 action = 5;
+	bytes subjectPublicKey = 6;
+	int32 role = 7;
+	bytes signature = 8;
+}
+
+message PersistedSyncUnitContentOperation {
+	bytes unitId = 1;
+	uint64 lamportClock = 2;
+	bytes nodeHash = 3;
+	bytes authorPublicKey = 4;
+	int32 kind = 5;
+	string key = 6;
+	bytes payload = 7;
+	bytes signature = 8;
+}
+
+message SyncUnitMessage {
+	string text = 1;
+	repeated SyncUnitAttachment attachments = 2;
+}
+
+message SyncUnitAttachment {
+	string name = 1;
+	string mediaType = 2;
+	bytes content = 3;
 }
 
 message PersistedOperation {

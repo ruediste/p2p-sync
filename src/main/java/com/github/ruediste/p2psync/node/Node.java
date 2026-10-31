@@ -37,6 +37,7 @@ public class Node implements AutoCloseable {
     public DataStorage dataStorage;
     public BlockStorage storage;
     public Map<PubKey, NodeUserData> users = new HashMap<>();
+    final Map<SyncUnitId, SyncUnitData> syncUnits = new HashMap<>();
     public Network network;
     long clock;
     long guidCounter;
@@ -309,6 +310,7 @@ public class Node implements AutoCloseable {
         public JoinId joinId;
         public PrivKey userKey;
         public String localName;
+        final Set<String> participatingSyncUnitIds = new TreeSet<>();
         final TreeMap<OperationId, Operation> operationTree = new TreeMap<>();
         final TreeMap<OperationId, Operation> localOperationTree = new TreeMap<>();
         final TreeMap<OperationId, Operation> stagingTree = new TreeMap<>();
@@ -321,6 +323,10 @@ public class Node implements AutoCloseable {
 
         public PubKey userId() {
             return userKey.publicKey();
+        }
+
+        public SyncUnitId syncUnitId() {
+            return SyncUnitId.forUser(userId());
         }
 
         TreeMap<OperationId, Operation> allOperations() {
@@ -389,8 +395,9 @@ public class Node implements AutoCloseable {
                     }
                     if (payload.length != transfer.totalLength)
                         throw new IllegalArgumentException("Incomplete operation marked complete");
-                    if (!userKey.publicKey().verify(operationSigningBytes(transfer.id, payload), signature))
+                    if (!verifyOperationSignature(userKey.publicKey(), transfer.id, payload, signature))
                         throw new IllegalArgumentException("Invalid user operation signature");
+                    requireUserUnitModification(userKey.publicKey());
                     stagingTree.putIfAbsent(transfer.id, new Operation(transfer.id, payload, signature));
                     retrievalTree.remove(source);
                     maxOperationClock.merge(source, transfer.id.clock, Math::max);
@@ -411,6 +418,77 @@ public class Node implements AutoCloseable {
                     partial.receivedLength += transfer.bytes.length;
                 }
             }
+        }
+    }
+
+    static final class SyncUnitData {
+        final SyncUnitId id;
+        final SyncUnitAuthorization.Type type;
+        final PubKey creator;
+        final List<SyncUnitAuthorization.Operation> authorizationOperations = new java.util.ArrayList<>();
+        final TreeMap<OperationId, SyncUnitContentOperation> contentOperations = new TreeMap<>();
+        final Map<String, byte[]> files = new TreeMap<>();
+        final Map<String, byte[]> todoItems = new TreeMap<>();
+        final List<SyncUnitContentOperation> channelMessages = new java.util.ArrayList<>();
+        SyncUnitAuthorization.State authorization;
+
+        SyncUnitData(SyncUnitId id, SyncUnitAuthorization.Type type, PubKey creator) {
+            this.id = id;
+            this.type = type;
+            this.creator = creator;
+            authorization = SyncUnitAuthorization.replay(id, type, creator, authorizationOperations);
+        }
+
+        void replayAuthorization() {
+            authorization = SyncUnitAuthorization.replay(id, type, creator, authorizationOperations);
+        }
+
+        void replayContent() {
+            files.clear();
+            todoItems.clear();
+            channelMessages.clear();
+            for (var operation : contentOperations.values()) {
+                if (!operation.unitId().equals(id) || !operation.hasValidSignature())
+                    throw new IllegalArgumentException("Invalid SyncUnit content operation signature");
+                var action = switch (operation.kind()) {
+                    case SHARED_FILE_SET, SHARED_FILE_DELETE, TODO_SET, TODO_DELETE ->
+                        SyncUnitAuthorization.Action.MODIFY;
+                    case CHANNEL_MESSAGE, DIRECT_MESSAGE -> SyncUnitAuthorization.Action.SEND_MESSAGE;
+                };
+                if (!contentKindMatchesType(type, operation.kind()))
+                    throw new IllegalArgumentException("Content operation does not match SyncUnit type");
+                var operationId = new OperationId(operation.lamportClock(), operation.nodeHash());
+                var precedingAuthorization = authorizationOperations.stream()
+                        .filter(value -> compare(value, operationId) <= 0).toList();
+                var stateAtOperation = SyncUnitAuthorization.replay(id, type, creator, precedingAuthorization);
+                if (!SyncUnitAuthorization.isAuthorized(type, creator, stateAtOperation.members(),
+                        operation.author(), action))
+                    throw new IllegalArgumentException("User is not authorized for SyncUnit content operation");
+                switch (operation.kind()) {
+                    case SHARED_FILE_SET -> files.put(operation.key(), operation.payload());
+                    case SHARED_FILE_DELETE -> files.remove(operation.key());
+                    case TODO_SET -> todoItems.put(operation.key(), operation.payload());
+                    case TODO_DELETE -> todoItems.remove(operation.key());
+                    case CHANNEL_MESSAGE -> channelMessages.add(operation);
+                    case DIRECT_MESSAGE -> throw new IllegalArgumentException(
+                            "Direct messaging is not implemented for generic SyncUnits");
+                }
+            }
+        }
+
+        private static int compare(SyncUnitAuthorization.Operation left, OperationId right) {
+            int clockOrder = Long.compare(left.lamportClock(), right.clock);
+            return clockOrder != 0 ? clockOrder : Arrays.compareUnsigned(left.nodeHash(), right.nodeHash);
+        }
+
+        private static boolean contentKindMatchesType(SyncUnitAuthorization.Type type,
+                SyncUnitContentOperation.Kind kind) {
+            return switch (kind) {
+                case SHARED_FILE_SET, SHARED_FILE_DELETE -> type == SyncUnitAuthorization.Type.SHARED_FOLDER;
+                case TODO_SET, TODO_DELETE -> type == SyncUnitAuthorization.Type.TODO_LIST;
+                case CHANNEL_MESSAGE -> type == SyncUnitAuthorization.Type.MESSAGE_CHANNEL;
+                case DIRECT_MESSAGE -> type == SyncUnitAuthorization.Type.USER;
+            };
         }
     }
 
@@ -440,6 +518,7 @@ public class Node implements AutoCloseable {
         data.fileSystem = UserFileTree.empty(data.rootDirectoryGuid);
         data.snapshotState = data.fileSystem.serializeState();
         users.put(data.userId(), data);
+        ensureUserSyncUnit(data);
         var handle = new NodeUserHandle(this, data);
 
         var root = data.fileSystem.toDataUserRoot(storage);
@@ -489,6 +568,7 @@ public class Node implements AutoCloseable {
         root.nodeNrMapId = storage.store(Sync.NodeNrMap.newBuilder().build());
         data.rootId = storage.store(root.toProto());
         users.put(userId, data);
+        ensureUserSyncUnit(data);
         var handle = new NodeUserHandle(this, data);
         handle.syncFrom(peer);
         peerData.activeNodeSet.nodes.add(nodeKey);
@@ -555,8 +635,9 @@ public class Node implements AutoCloseable {
             var id = new OperationId(stored.getLamportClock(), stored.getNodeHash().toByteArray());
             var payload = stored.getPayload().toByteArray();
             var signature = stored.getSignature().toByteArray();
-            if (!userKey.publicKey().verify(operationSigningBytes(id, payload), signature))
+            if (!verifyOperationSignature(userKey.publicKey(), id, payload, signature))
                 throw new IllegalArgumentException("Remote history contains an invalid user signature");
+            requireUserUnitModification(userKey.publicKey());
             data.operationTree.put(id, new Operation(id, payload, signature));
         }
         for (var entry : response.getMaxOperationClockList()) {
@@ -573,6 +654,7 @@ public class Node implements AutoCloseable {
         storageRoot.nodeNrMapId = storage.store(Sync.NodeNrMap.newBuilder().build());
         data.rootId = storage.store(storageRoot.toProto());
         users.put(data.userId(), data);
+        ensureUserSyncUnit(data);
         persistState();
         return new NodeUserHandle(this, data);
     }
@@ -585,6 +667,322 @@ public class Node implements AutoCloseable {
         ensureNameAvailable(localName, userId);
         data.localName = localName;
         persistState();
+    }
+
+    public SyncUnitId createSyncUnit(PubKey creatorId, SyncUnitAuthorization.Type type) {
+        if (type == SyncUnitAuthorization.Type.USER)
+            throw new IllegalArgumentException("User SyncUnits are created with createNewUser");
+        var creator = requireConfiguredUser(creatorId);
+        SyncUnitId id;
+        do {
+            id = SyncUnitId.create();
+        } while (syncUnits.containsKey(id));
+        var unit = new SyncUnitData(id, type, creatorId);
+        syncUnits.put(id, unit);
+        creator.participatingSyncUnitIds.add(id.toString());
+        persistState();
+        return id;
+    }
+
+    public SyncUnitAuthorization.State getSyncUnitAuthorization(SyncUnitId id) {
+        return requireSyncUnit(id).authorization;
+    }
+
+    public void inviteToSyncUnit(SyncUnitId id, PubKey actorId, PubKey inviteeId,
+            SyncUnitAuthorization.Role role) {
+        appendSyncUnitOperation(id, actorId, SyncUnitAuthorization.Action.INVITE, inviteeId, role);
+        for (var peer : List.copyOf(network.nodes.values()))
+            if (peer != this && peer.users.containsKey(inviteeId))
+                peer.receiveSyncUnitInvitation(syncUnits.get(id));
+    }
+
+    public void acceptSyncUnitInvitation(SyncUnitId id, PubKey inviteeId) {
+        var unit = requireSyncUnit(id);
+        if (!unit.authorization.pendingInvitations().containsKey(inviteeId))
+            throw new IllegalArgumentException("User has no pending invitation to this SyncUnit");
+        appendSyncUnitOperation(id, inviteeId, SyncUnitAuthorization.Action.ACCEPT_INVITATION, inviteeId, null);
+        var user = users.get(inviteeId);
+        if (user != null)
+            user.participatingSyncUnitIds.add(id.toString());
+        persistState();
+        for (var peer : List.copyOf(network.nodes.values())) {
+            if (peer == this || !peer.users.containsKey(inviteeId))
+                continue;
+            peer.installSyncUnit(syncUnits.get(id), true);
+        }
+    }
+
+    public void changeSyncUnitRole(SyncUnitId id, PubKey actorId, PubKey subject,
+            SyncUnitAuthorization.Role role) {
+        appendSyncUnitOperation(id, actorId, SyncUnitAuthorization.Action.CHANGE_ROLE, subject, role);
+    }
+
+    public void removeFromSyncUnit(SyncUnitId id, PubKey actorId, PubKey subject) {
+        appendSyncUnitOperation(id, actorId, SyncUnitAuthorization.Action.REMOVE_MEMBER, subject, null);
+        var user = users.get(subject);
+        if (user != null)
+            user.participatingSyncUnitIds.remove(id.toString());
+        persistState();
+        for (var peer : List.copyOf(network.nodes.values())) {
+            if (peer == this || !peer.users.containsKey(subject))
+                continue;
+            peer.syncUnits.remove(id);
+            peer.users.get(subject).participatingSyncUnitIds.remove(id.toString());
+            peer.persistState();
+        }
+    }
+
+    public void joinSyncUnit(PeerId sourcePeerId, SyncUnitId id, PubKey inviteeId) {
+        var source = network.nodes.get(sourcePeerId);
+        if (source == null)
+            throw new IllegalArgumentException("Unknown peer " + sourcePeerId);
+        requireConfiguredUser(inviteeId);
+        var sourceUnit = source.requireSyncUnit(id);
+        receiveSyncUnitInvitation(sourceUnit);
+        var localUnit = requireSyncUnit(id);
+        if (!localUnit.authorization.pendingInvitations().containsKey(inviteeId))
+            throw new IllegalArgumentException("User has no pending invitation to this SyncUnit");
+        clock = Math.max(clock, maxSyncUnitClock(sourceUnit));
+        acceptSyncUnitInvitation(id, inviteeId);
+        mergeSyncUnit(sourceUnit);
+    }
+
+    public void syncSyncUnitFrom(PeerId sourcePeerId, SyncUnitId id) {
+        var source = network.nodes.get(sourcePeerId);
+        if (source == null)
+            throw new IllegalArgumentException("Unknown peer " + sourcePeerId);
+        var unit = requireSyncUnit(id);
+        boolean localMember = users.values().stream()
+                .anyMatch(user -> unit.authorization.members().containsKey(user.userId()));
+        if (!localMember)
+            throw new IllegalArgumentException("No configured user participates in this SyncUnit");
+        mergeSyncUnit(source.requireSyncUnit(id));
+    }
+
+    private void receiveSyncUnitInvitation(SyncUnitData source) {
+        var existing = syncUnits.get(source.id);
+        if (existing != null)
+            return;
+        var invitation = copySyncUnit(source, false);
+        syncUnits.put(invitation.id, invitation);
+        persistState();
+    }
+
+    private void installSyncUnit(SyncUnitData source, boolean includeContent) {
+        var copy = copySyncUnit(source, includeContent);
+        syncUnits.put(copy.id, copy);
+        for (var user : users.values())
+            if (copy.authorization.members().containsKey(user.userId()))
+                user.participatingSyncUnitIds.add(copy.id.toString());
+        persistState();
+    }
+
+    private static SyncUnitData copySyncUnit(SyncUnitData source, boolean includeContent) {
+        var copy = new SyncUnitData(source.id, source.type, source.creator);
+        copy.authorizationOperations.addAll(source.authorizationOperations);
+        copy.replayAuthorization();
+        if (includeContent)
+            copy.contentOperations.putAll(source.contentOperations);
+        copy.replayContent();
+        return copy;
+    }
+
+    private void mergeSyncUnit(SyncUnitData incoming) {
+        var local = syncUnits.get(incoming.id);
+        if (local == null) {
+            installSyncUnit(incoming, false);
+            local = requireSyncUnit(incoming.id);
+        }
+        if (local.type != incoming.type || !local.creator.equals(incoming.creator))
+            throw new IllegalArgumentException("SyncUnit identity metadata does not match");
+        var authorizationById = new java.util.HashMap<String, SyncUnitAuthorization.Operation>();
+        for (var operation : local.authorizationOperations)
+            authorizationById.put(authorizationOperationKey(operation), operation);
+        for (var operation : incoming.authorizationOperations) {
+            var previous = authorizationById.putIfAbsent(authorizationOperationKey(operation), operation);
+            if (previous != null && !sameAuthorizationOperation(previous, operation))
+                throw new IllegalArgumentException("Conflicting authorization operations share an ID");
+        }
+        local.authorizationOperations.clear();
+        local.authorizationOperations.addAll(authorizationById.values());
+        local.replayAuthorization();
+
+        var mergedUnit = local;
+        boolean member = users.values().stream()
+            .anyMatch(user -> mergedUnit.authorization.members().containsKey(user.userId()));
+        if (!member)
+            throw new IllegalArgumentException("This node is not a member of the SyncUnit");
+        for (var entry : incoming.contentOperations.entrySet()) {
+            var previous = local.contentOperations.putIfAbsent(entry.getKey(), entry.getValue());
+            if (previous != null && !sameContentOperation(previous, entry.getValue()))
+                throw new IllegalArgumentException("Conflicting content operations share an ID");
+        }
+        local.replayContent();
+        clock = Math.max(clock, maxSyncUnitClock(incoming));
+        installSyncUnit(local, true);
+    }
+
+    private static long maxSyncUnitClock(SyncUnitData unit) {
+        long result = 0;
+        for (var operation : unit.authorizationOperations)
+            result = Math.max(result, operation.lamportClock());
+        if (!unit.contentOperations.isEmpty())
+            result = Math.max(result, unit.contentOperations.lastKey().clock);
+        return result;
+    }
+
+    private static String authorizationOperationKey(SyncUnitAuthorization.Operation operation) {
+        return operation.lamportClock() + ":" + HexFormat.of().formatHex(operation.nodeHash());
+    }
+
+    private static boolean sameAuthorizationOperation(SyncUnitAuthorization.Operation left,
+            SyncUnitAuthorization.Operation right) {
+        return left.unitId().equals(right.unitId()) && left.author().equals(right.author())
+                && left.action() == right.action() && java.util.Objects.equals(left.subject(), right.subject())
+                && left.role() == right.role() && Arrays.equals(left.signature(), right.signature());
+    }
+
+    private static boolean sameContentOperation(SyncUnitContentOperation left,
+            SyncUnitContentOperation right) {
+        return left.unitId().equals(right.unitId()) && left.author().equals(right.author())
+                && left.kind() == right.kind() && left.key().equals(right.key())
+                && Arrays.equals(left.payload(), right.payload()) && Arrays.equals(left.signature(), right.signature());
+    }
+
+    public void putSharedFile(SyncUnitId id, PubKey authorId, String path, byte[] content) {
+        requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
+        recordSyncUnitContent(id, authorId, SyncUnitContentOperation.Kind.SHARED_FILE_SET,
+                validateSyncUnitKey(path), content);
+    }
+
+    public byte[] readSharedFile(SyncUnitId id, PubKey readerId, String path) {
+        var unit = requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
+        requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
+        byte[] content = unit.files.get(validateSyncUnitKey(path));
+        return content == null ? null : content.clone();
+    }
+
+    public void deleteSharedFile(SyncUnitId id, PubKey authorId, String path) {
+        requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
+        recordSyncUnitContent(id, authorId, SyncUnitContentOperation.Kind.SHARED_FILE_DELETE,
+                validateSyncUnitKey(path), new byte[0]);
+    }
+
+    public void putTodoItem(SyncUnitId id, PubKey authorId, String itemId, byte[] content) {
+        requireSyncUnitType(id, SyncUnitAuthorization.Type.TODO_LIST);
+        recordSyncUnitContent(id, authorId, SyncUnitContentOperation.Kind.TODO_SET,
+                validateSyncUnitKey(itemId), content);
+    }
+
+    public byte[] readTodoItem(SyncUnitId id, PubKey readerId, String itemId) {
+        var unit = requireSyncUnitType(id, SyncUnitAuthorization.Type.TODO_LIST);
+        requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
+        byte[] content = unit.todoItems.get(validateSyncUnitKey(itemId));
+        return content == null ? null : content.clone();
+    }
+
+    public void deleteTodoItem(SyncUnitId id, PubKey authorId, String itemId) {
+        requireSyncUnitType(id, SyncUnitAuthorization.Type.TODO_LIST);
+        recordSyncUnitContent(id, authorId, SyncUnitContentOperation.Kind.TODO_DELETE,
+                validateSyncUnitKey(itemId), new byte[0]);
+    }
+
+    public String sendChannelMessage(SyncUnitId id, PubKey authorId, Sync.SyncUnitMessage message) {
+        requireSyncUnitType(id, SyncUnitAuthorization.Type.MESSAGE_CHANNEL);
+        String messageId = java.util.UUID.randomUUID().toString();
+        recordSyncUnitContent(id, authorId, SyncUnitContentOperation.Kind.CHANNEL_MESSAGE,
+                messageId, message.toByteArray());
+        return messageId;
+    }
+
+    public List<ChannelMessageEntry> getChannelMessages(SyncUnitId id, PubKey readerId) {
+        var unit = requireSyncUnitType(id, SyncUnitAuthorization.Type.MESSAGE_CHANNEL);
+        requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
+        return unit.channelMessages.stream().map(operation -> {
+            try {
+                return new ChannelMessageEntry(operation.key(), Sync.SyncUnitMessage.parseFrom(operation.payload()));
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw new IllegalStateException("Invalid persisted channel message", e);
+            }
+        }).toList();
+    }
+
+    public record ChannelMessageEntry(String messageId, Sync.SyncUnitMessage message) {
+    }
+
+    private SyncUnitContentOperation recordSyncUnitContent(SyncUnitId id, PubKey authorId,
+            SyncUnitContentOperation.Kind kind, String key, byte[] payload) {
+        var unit = requireSyncUnit(id);
+        var author = requireConfiguredUser(authorId);
+        var action = switch (kind) {
+            case SHARED_FILE_SET, SHARED_FILE_DELETE, TODO_SET, TODO_DELETE ->
+                SyncUnitAuthorization.Action.MODIFY;
+            case CHANNEL_MESSAGE, DIRECT_MESSAGE -> SyncUnitAuthorization.Action.SEND_MESSAGE;
+        };
+        requireSyncUnitAccess(unit, authorId, action);
+        var operation = SyncUnitContentOperation.sign(id, nextClock(), nodeHash, author.userKey,
+                kind, key, payload);
+        unit.contentOperations.put(new OperationId(operation.lamportClock(), operation.nodeHash()), operation);
+        unit.replayContent();
+        persistState();
+        return operation;
+    }
+
+    private void requireSyncUnitAccess(SyncUnitData unit, PubKey userId, SyncUnitAuthorization.Action action) {
+        SyncUnitAuthorization.requireAuthorized(unit.type, unit.creator, unit.authorization.members(), userId, action);
+    }
+
+    private SyncUnitData requireSyncUnitType(SyncUnitId id, SyncUnitAuthorization.Type type) {
+        var unit = requireSyncUnit(id);
+        if (unit.type != type)
+            throw new IllegalArgumentException("Expected " + type + " SyncUnit, got " + unit.type);
+        return unit;
+    }
+
+    private static String validateSyncUnitKey(String key) {
+        if (key == null || key.isBlank() || key.indexOf('\0') >= 0)
+            throw new IllegalArgumentException("SyncUnit item key must not be blank or contain NUL");
+        for (String component : key.split("/"))
+            if (component.equals(".") || component.equals(".."))
+                throw new IllegalArgumentException("SyncUnit item key must not traverse directories");
+        return key;
+    }
+
+    private SyncUnitAuthorization.Operation appendSyncUnitOperation(SyncUnitId id, PubKey actorId,
+            SyncUnitAuthorization.Action action, PubKey subject, SyncUnitAuthorization.Role role) {
+        var unit = requireSyncUnit(id);
+        var actor = requireConfiguredUser(actorId);
+        var operation = SyncUnitAuthorization.Operation.sign(id, nextClock(), nodeHash, actor.userKey,
+                action, subject, role);
+        unit.authorizationOperations.add(operation);
+        unit.replayAuthorization();
+        if (unit.authorization.rejectedOperations().contains(operation)) {
+            unit.authorizationOperations.remove(unit.authorizationOperations.size() - 1);
+            unit.replayAuthorization();
+            throw new IllegalArgumentException("User is not authorized to " + action + " this " + unit.type);
+        }
+        persistState();
+        return operation;
+    }
+
+    private NodeUserData requireConfiguredUser(PubKey userId) {
+        var user = users.get(userId);
+        if (user == null)
+            throw new IllegalArgumentException("User is not configured on this node");
+        return user;
+    }
+
+    private SyncUnitData requireSyncUnit(SyncUnitId id) {
+        var unit = syncUnits.get(id);
+        if (unit == null)
+            throw new IllegalArgumentException("Unknown SyncUnit " + id);
+        return unit;
+    }
+
+    private void ensureUserSyncUnit(NodeUserData user) {
+        var id = user.syncUnitId();
+        syncUnits.putIfAbsent(id, new SyncUnitData(id, SyncUnitAuthorization.Type.USER, user.userId()));
+        user.participatingSyncUnitIds.add(id.toString());
     }
 
     public NodeUserHandle getUserByName(String localName) {
@@ -711,6 +1109,7 @@ public class Node implements AutoCloseable {
     }
 
     void recordLocalOperation(NodeUserData data, byte[] payload) {
+        requireUserUnitModification(data.userId());
         var id = new OperationId(++clock, nodeHash);
         byte[] signature = data.userKey.sign(operationSigningBytes(id, payload));
         data.localOperationTree.put(id, new Operation(id, payload, signature));
@@ -718,9 +1117,23 @@ public class Node implements AutoCloseable {
         persistState();
     }
 
+    private static void requireUserUnitModification(PubKey author) {
+        SyncUnitAuthorization.requireAuthorized(SyncUnitAuthorization.Type.USER, author, Map.of(), author,
+                SyncUnitAuthorization.Action.MODIFY);
+    }
+
     private static byte[] operationSigningBytes(OperationId id, byte[] payload) {
         return ByteBuffer.allocate(Long.BYTES + id.nodeHash.length + payload.length)
                 .putLong(id.clock).put(id.nodeHash).put(payload).array();
+    }
+
+    private static boolean verifyOperationSignature(PubKey author, OperationId id, byte[] payload,
+            byte[] signature) {
+        try {
+            return author.verify(operationSigningBytes(id, payload), signature);
+        } catch (RuntimeException invalidSignature) {
+            return false;
+        }
     }
 
     byte[] nextEntityId() {
@@ -770,8 +1183,11 @@ public class Node implements AutoCloseable {
                             .setReceivedBytes(com.google.protobuf.ByteString.copyFrom(partial.payload, 0,
                                     partial.receivedLength))
                             .setSignature(com.google.protobuf.ByteString.copyFrom(partial.signature))));
+            user.participatingSyncUnitIds.forEach(id -> storedUser.addParticipatingSyncUnitIds(
+                    com.google.protobuf.ByteString.copyFrom(HexFormat.of().parseHex(id))));
             state.addUsers(storedUser);
         }
+        syncUnits.values().forEach(unit -> state.addSyncUnits(persist(unit)));
         BlockId stateId = storage.store(state.build());
         stateRoot.write(new DataStorage.ByteArrayBlock(stateId.bytes()));
         storage.collectGarbage(collectReachableBlocks(stateId));
@@ -825,6 +1241,35 @@ public class Node implements AutoCloseable {
                 .build();
     }
 
+    private static Sync.PersistedSyncUnit persist(SyncUnitData unit) {
+        var result = Sync.PersistedSyncUnit.newBuilder()
+                .setId(com.google.protobuf.ByteString.copyFrom(unit.id.bytes()))
+                .setType(unit.type.ordinal())
+                .setCreatorPublicKey(com.google.protobuf.ByteString.copyFrom(unit.creator.bytes()));
+        unit.authorizationOperations.forEach(operation -> result.addAuthorizationOperations(
+                Sync.PersistedSyncUnitAuthorizationOperation.newBuilder()
+                        .setUnitId(com.google.protobuf.ByteString.copyFrom(operation.unitId().bytes()))
+                        .setLamportClock(operation.lamportClock())
+                        .setNodeHash(com.google.protobuf.ByteString.copyFrom(operation.nodeHash()))
+                        .setAuthorPublicKey(com.google.protobuf.ByteString.copyFrom(operation.author().bytes()))
+                        .setAction(operation.action().ordinal())
+                        .setSubjectPublicKey(operation.subject() == null ? com.google.protobuf.ByteString.EMPTY
+                                : com.google.protobuf.ByteString.copyFrom(operation.subject().bytes()))
+                        .setRole(operation.role() == null ? 0 : operation.role().ordinal() + 1)
+                        .setSignature(com.google.protobuf.ByteString.copyFrom(operation.signature()))));
+        unit.contentOperations.values().forEach(operation -> result.addContentOperations(
+                Sync.PersistedSyncUnitContentOperation.newBuilder()
+                        .setUnitId(com.google.protobuf.ByteString.copyFrom(operation.unitId().bytes()))
+                        .setLamportClock(operation.lamportClock())
+                        .setNodeHash(com.google.protobuf.ByteString.copyFrom(operation.nodeHash()))
+                        .setAuthorPublicKey(com.google.protobuf.ByteString.copyFrom(operation.author().bytes()))
+                        .setKind(operation.kind().ordinal())
+                        .setKey(operation.key())
+                        .setPayload(com.google.protobuf.ByteString.copyFrom(operation.payload()))
+                        .setSignature(com.google.protobuf.ByteString.copyFrom(operation.signature()))));
+        return result.build();
+    }
+
     private static Sync.ActiveNodeSetState persist(ActiveNodeSet activeNodeSet) {
         var result = Sync.ActiveNodeSetState.newBuilder();
         if (activeNodeSet.version != null)
@@ -860,6 +1305,8 @@ public class Node implements AutoCloseable {
         network.nodes.put(peerId, this);
         restoringState = true;
         try {
+            for (var storedUnit : state.getSyncUnitsList())
+                loadSyncUnit(storedUnit);
             for (var storedUser : state.getUsersList()) {
                 var user = new NodeUserData();
                 user.userKey = com.github.ruediste.p2psync.libp2p.crypto.Marshaling.unmarshalPrivateKey(
@@ -875,8 +1322,14 @@ public class Node implements AutoCloseable {
                     user.maxOperationClock.put(entry.getNodeId(), entry.getClock());
                 loadActiveNodeSet(storedUser.getActiveNodeSet(), user.activeNodeSet);
                 loadPartialOperations(storedUser.getRetrievalTreeList(), user.retrievalTree);
+                for (var participatingId : storedUser.getParticipatingSyncUnitIdsList()) {
+                    if (participatingId.size() != 32)
+                        throw new IllegalStateException("Invalid persisted SyncUnit ID");
+                    user.participatingSyncUnitIds.add(SyncUnitId.fromBytes(participatingId.toByteArray()).toString());
+                }
                 user.fileSystem = UserFileTree.fromState(user.snapshotState);
                 users.put(user.userId(), user);
+                ensureUserSyncUnit(user);
                 if (!user.allOperations().isEmpty())
                     new NodeUserHandle(this, user).rebuildCurrentState();
             }
@@ -893,6 +1346,52 @@ public class Node implements AutoCloseable {
             target.put(id, new Operation(id, operation.getPayload().toByteArray(),
                     operation.getSignature().toByteArray()));
         }
+    }
+
+    private void loadSyncUnit(Sync.PersistedSyncUnit stored) {
+        if (stored.getType() < 0 || stored.getType() >= SyncUnitAuthorization.Type.values().length)
+            throw new IllegalStateException("Invalid persisted SyncUnit type");
+        var id = SyncUnitId.fromBytes(stored.getId().toByteArray());
+        var unit = new SyncUnitData(id, SyncUnitAuthorization.Type.values()[stored.getType()],
+                PubKey.from(stored.getCreatorPublicKey().toByteArray()));
+        for (var storedOperation : stored.getAuthorizationOperationsList()) {
+            int action = storedOperation.getAction();
+            int role = storedOperation.getRole();
+            if (action < 0 || action >= SyncUnitAuthorization.Action.values().length
+                    || role < 0 || role > SyncUnitAuthorization.Role.values().length)
+                throw new IllegalStateException("Invalid persisted SyncUnit authorization operation");
+            var subjectBytes = storedOperation.getSubjectPublicKey().toByteArray();
+            var operation = new SyncUnitAuthorization.Operation(
+                    SyncUnitId.fromBytes(storedOperation.getUnitId().toByteArray()),
+                    storedOperation.getLamportClock(), storedOperation.getNodeHash().toByteArray(),
+                    PubKey.from(storedOperation.getAuthorPublicKey().toByteArray()),
+                    SyncUnitAuthorization.Action.values()[action],
+                    subjectBytes.length == 0 ? null : PubKey.from(subjectBytes),
+                    role == 0 ? null : SyncUnitAuthorization.Role.values()[role - 1],
+                    storedOperation.getSignature().toByteArray());
+            if (!operation.unitId().equals(id) || !operation.hasValidSignature())
+                throw new IllegalStateException("Invalid persisted SyncUnit authorization signature");
+            unit.authorizationOperations.add(operation);
+        }
+        unit.replayAuthorization();
+        for (var storedOperation : stored.getContentOperationsList()) {
+            int kind = storedOperation.getKind();
+            if (kind < 0 || kind >= SyncUnitContentOperation.Kind.values().length)
+                throw new IllegalStateException("Invalid persisted SyncUnit content operation");
+            var operation = new SyncUnitContentOperation(
+                    SyncUnitId.fromBytes(storedOperation.getUnitId().toByteArray()),
+                    storedOperation.getLamportClock(), storedOperation.getNodeHash().toByteArray(),
+                    PubKey.from(storedOperation.getAuthorPublicKey().toByteArray()),
+                    SyncUnitContentOperation.Kind.values()[kind], storedOperation.getKey(),
+                    storedOperation.getPayload().toByteArray(), storedOperation.getSignature().toByteArray());
+            var operationId = new OperationId(operation.lamportClock(), operation.nodeHash());
+            if (!operation.unitId().equals(id) || !operation.hasValidSignature()
+                    || unit.contentOperations.putIfAbsent(operationId, operation) != null)
+                throw new IllegalStateException("Invalid persisted SyncUnit content operation");
+        }
+        unit.replayContent();
+        if (syncUnits.putIfAbsent(id, unit) != null)
+            throw new IllegalStateException("Duplicate persisted SyncUnit ID");
     }
 
     static void loadActiveNodeSet(Sync.ActiveNodeSetState stored, ActiveNodeSet target) {

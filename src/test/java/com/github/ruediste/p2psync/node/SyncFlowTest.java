@@ -17,6 +17,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
 import com.github.ruediste.p2psync.node.Node.Network;
+import com.github.ruediste.p2psync.proto.Sync;
 
 public class SyncFlowTest {
     @TempDir
@@ -66,6 +67,7 @@ public class SyncFlowTest {
         handleA.modify(root -> root.userStatusMessage = "before join");
         var handleB = nodeB.join(handleA.data.userKey);
 
+        assertEquals(handleA.data.syncUnitId(), handleB.data.syncUnitId());
         assertEquals("before join", handleB.read(root -> root.userStatusMessage));
         handleB.modify(root -> root.userStatusMessage = "after join");
         handleA.syncFrom(nodeB.peerId);
@@ -89,6 +91,25 @@ public class SyncFlowTest {
         assertTrue(handleB.data.retrievalTree.isEmpty());
         assertEquals("x".repeat(128), handleB.read(root -> root.userStatusMessage));
         assertEquals(handleA.data.localOperationTree.keySet(), handleB.data.operationTree.keySet());
+    }
+
+    /**
+     * Verifies an incoming operation with an invalid user signature is rejected
+     * before staging.
+     */
+    @Test
+    public void invalidUserOperationSignatureIsRejectedBeforeStaging() {
+        var handleB = nodeB.join(handleA.data.userKey);
+        handleA.modify(root -> root.userStatusMessage = "authenticated");
+        var operation = handleA.data.localOperationTree.firstEntry().getValue();
+        byte[] invalidSignature = operation.signature.clone();
+        invalidSignature[0] ^= 1;
+
+        assertThrows(IllegalArgumentException.class, () -> handleB.data.receive(List.of(
+                new Node.Transfer(operation.id, operation.payload.length, 0, operation.payload,
+                        invalidSignature, true)),
+                nodeB));
+        assertTrue(handleB.data.stagingTree.isEmpty());
     }
 
     /**
@@ -244,6 +265,100 @@ public class SyncFlowTest {
                 restored.data.operationTree.size() + restored.data.localOperationTree.size());
         reopened.close();
     }
+
+    /**
+     * Verifies SyncUnit type, signed membership history, roles, and participation
+     * survive reopen/removal.
+     */
+    @Test
+    public void syncUnitMembershipAndParticipationPersistAcrossReopen() {
+        Path dataFile = tempDir.resolve("sync-units.db");
+        var first = new Node(new Network(), dataFile);
+        var owner = first.createNewUser("owner");
+        var member = first.createNewUser("member");
+        var channelId = first.createSyncUnit(owner.data.userId(), SyncUnitAuthorization.Type.MESSAGE_CHANNEL);
+        first.inviteToSyncUnit(channelId, owner.data.userId(), member.data.userId(),
+                SyncUnitAuthorization.Role.MANAGER);
+        first.acceptSyncUnitInvitation(channelId, member.data.userId());
+        String messageId = first.sendChannelMessage(channelId, member.data.userId(),
+            Sync.SyncUnitMessage.newBuilder().setText("persisted message")
+                .addAttachments(Sync.SyncUnitAttachment.newBuilder()
+                    .setName("note.txt").setMediaType("text/plain")
+                    .setContent(com.google.protobuf.ByteString.copyFromUtf8("attachment")))
+                .build());
+        var folderId = first.createSyncUnit(owner.data.userId(), SyncUnitAuthorization.Type.SHARED_FOLDER);
+        first.inviteToSyncUnit(folderId, owner.data.userId(), member.data.userId(),
+            SyncUnitAuthorization.Role.EDITOR);
+        first.acceptSyncUnitInvitation(folderId, member.data.userId());
+        first.putSharedFile(folderId, owner.data.userId(), "notes/readme.txt", "stored file".getBytes());
+        var todoId = first.createSyncUnit(owner.data.userId(), SyncUnitAuthorization.Type.TODO_LIST);
+        first.putTodoItem(todoId, owner.data.userId(), "task-1", "finish sync".getBytes());
+        first.close();
+
+        var reopened = new Node(new Network(), dataFile);
+        var authorization = reopened.getSyncUnitAuthorization(channelId);
+        assertEquals(SyncUnitAuthorization.Role.MANAGER, authorization.members().get(owner.data.userId()));
+        assertEquals(SyncUnitAuthorization.Role.MANAGER, authorization.members().get(member.data.userId()));
+        assertTrue(reopened.users.get(owner.data.userId()).participatingSyncUnitIds.contains(channelId.toString()));
+        assertTrue(reopened.users.get(member.data.userId()).participatingSyncUnitIds.contains(channelId.toString()));
+        assertTrue(reopened.users.get(member.data.userId()).participatingSyncUnitIds.contains(folderId.toString()));
+        assertArrayEquals("stored file".getBytes(),
+            reopened.readSharedFile(folderId, member.data.userId(), "notes/readme.txt"));
+        assertArrayEquals("finish sync".getBytes(), reopened.readTodoItem(todoId, owner.data.userId(), "task-1"));
+        var messages = reopened.getChannelMessages(channelId, member.data.userId());
+        assertEquals(1, messages.size());
+        assertEquals(messageId, messages.get(0).messageId());
+        assertEquals("persisted message", messages.get(0).message().getText());
+        assertEquals("attachment", messages.get(0).message().getAttachments(0).getContent().toStringUtf8());
+
+        reopened.removeFromSyncUnit(channelId, owner.data.userId(), member.data.userId());
+        reopened.close();
+
+        var reopenedAfterRemoval = new Node(new Network(), dataFile);
+        assertFalse(reopenedAfterRemoval.getSyncUnitAuthorization(channelId).members().containsKey(member.data.userId()));
+        assertFalse(reopenedAfterRemoval.users.get(member.data.userId()).participatingSyncUnitIds
+            .contains(channelId.toString()));
+        assertTrue(reopenedAfterRemoval.users.get(member.data.userId()).participatingSyncUnitIds
+            .contains(folderId.toString()));
+        reopenedAfterRemoval.close();
+    }
+
+        /** Verifies invited SyncUnits replicate authorized content and revocation clears the member's local copy. */
+        @Test
+        public void sharedUnitsSyncContentAndRemoveRevokedCopies() {
+        var recipient = nodeB.createNewUser("recipient");
+        var folderId = nodeA.createSyncUnit(handleA.data.userId(), SyncUnitAuthorization.Type.SHARED_FOLDER);
+        nodeA.putSharedFile(folderId, handleA.data.userId(), "readme.txt", "before invite".getBytes());
+        nodeA.inviteToSyncUnit(folderId, handleA.data.userId(), recipient.data.userId(),
+            SyncUnitAuthorization.Role.VIEWER);
+        assertTrue(nodeB.syncUnits.containsKey(folderId));
+        nodeB.joinSyncUnit(nodeA.peerId, folderId, recipient.data.userId());
+        assertArrayEquals("before invite".getBytes(),
+            nodeB.readSharedFile(folderId, recipient.data.userId(), "readme.txt"));
+        assertThrows(IllegalArgumentException.class,
+            () -> nodeB.putSharedFile(folderId, recipient.data.userId(), "blocked.txt", new byte[0]));
+
+        var channelId = nodeA.createSyncUnit(handleA.data.userId(), SyncUnitAuthorization.Type.MESSAGE_CHANNEL);
+        nodeA.inviteToSyncUnit(channelId, handleA.data.userId(), recipient.data.userId(),
+            SyncUnitAuthorization.Role.MEMBER);
+        nodeB.joinSyncUnit(nodeA.peerId, channelId, recipient.data.userId());
+        String messageId = nodeB.sendChannelMessage(channelId, recipient.data.userId(),
+            Sync.SyncUnitMessage.newBuilder().setText("hello channel").build());
+        nodeA.syncSyncUnitFrom(nodeB.peerId, channelId);
+        assertEquals(messageId, nodeA.getChannelMessages(channelId, handleA.data.userId()).get(0).messageId());
+
+        nodeA.changeSyncUnitRole(channelId, handleA.data.userId(), recipient.data.userId(),
+            SyncUnitAuthorization.Role.MANAGER);
+        nodeB.syncSyncUnitFrom(nodeA.peerId, channelId);
+        assertEquals(SyncUnitAuthorization.Role.MANAGER,
+            nodeB.getSyncUnitAuthorization(channelId).members().get(recipient.data.userId()));
+
+        nodeA.removeFromSyncUnit(channelId, handleA.data.userId(), recipient.data.userId());
+        assertFalse(nodeB.syncUnits.containsKey(channelId));
+        assertFalse(recipient.data.participatingSyncUnitIds.contains(channelId.toString()));
+        assertThrows(IllegalArgumentException.class,
+            () -> nodeB.syncSyncUnitFrom(nodeA.peerId, channelId));
+        }
 
     /** Verifies stable-log pruning retains a snapshot baseline for later joins. */
     @Test
