@@ -19,7 +19,27 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       // "args": ["${input:fuseBackingFile}", "${input:fuseMountDirectory}"]
-      "args": ["files.db"]
+      "args": ["node.db"]
+    },
+    {
+      "type": "java",
+      "name": "p2p-sync Node Desktop",
+      "request": "launch",
+      "mainClass": "com.github.ruediste.p2psync.node.NodeDesktopMain",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      // "args": ["${input:nodeDataDirectory}", "${input:nodeMountDirectory}"]
+      "args": ["node.db", "mount"]
+    },
+    {
+      "type": "java",
+      "name": "p2p-sync Node Desktop2",
+      "request": "launch",
+      "mainClass": "com.github.ruediste.p2psync.node.NodeDesktopMain",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      // "args": ["${input:nodeDataDirectory}", "${input:nodeMountDirectory}"]
+      "args": ["node2.db", "mount2"]
     }
   ],
   "inputs": [
@@ -34,6 +54,18 @@
       "type": "promptString",
       "description": "Existing empty FUSE mount directory",
       "default": "mount"
+    },
+    {
+      "id": "nodeDataDirectory",
+      "type": "promptString",
+      "description": "Persistent node data directory",
+      "default": "node-data"
+    },
+    {
+      "id": "nodeMountDirectory",
+      "type": "promptString",
+      "description": "Existing or new user filesystem mount directory",
+      "default": "node-mount"
     }
   ]
 }

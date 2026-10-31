@@ -1,6 +1,7 @@
 package com.github.ruediste.p2psync.libp2p.host;
 
 import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.github.ruediste.p2psync.libp2p.core.AddressBook;
@@ -20,6 +21,11 @@ public final class MemoryAddressBook implements AddressBook {
     @Override
     public Collection<Multiaddr> getAddrs(PeerId id) {
         return map.get(id);
+    }
+
+    @Override
+    public Set<PeerId> getPeerIds() {
+        return Set.copyOf(map.keySet());
     }
 
     @Override

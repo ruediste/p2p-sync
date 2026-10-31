@@ -44,7 +44,7 @@ public class DataStorage implements Closeable {
     public static final int SUPERBLOCK_SIZE = 4096;
     private static final int BLOCK_OFFSET_SIZE = Long.BYTES;
 
-    static final BlockType<ByteArrayBlock> BYTE_ARRAY_BLOCK_TYPE = new BlockType<>() {
+    public static final BlockType<ByteArrayBlock> BYTE_ARRAY_BLOCK_TYPE = new BlockType<>() {
         @Override
         public List<BlockRef> getReferencedBlocks(ByteArrayBlock value, DataStorage storage) {
             return List.of();
@@ -63,11 +63,15 @@ public class DataStorage implements Closeable {
         }
     };
 
-    static class ByteArrayBlock implements BlockInstance<ByteArrayBlock> {
+    public static class ByteArrayBlock implements BlockInstance<ByteArrayBlock> {
         final byte[] data;
 
-        ByteArrayBlock(byte[] data) {
+        public ByteArrayBlock(byte[] data) {
             this.data = data.clone();
+        }
+
+        public byte[] data() {
+            return data.clone();
         }
 
         @Override
@@ -105,10 +109,10 @@ public class DataStorage implements Closeable {
         }
     }
 
-    class BTreeStorage implements BTree.Storage {
+    public class BTreeStorage implements BTree.Storage {
         protected final Area area;
 
-        BTreeStorage(Area area) {
+        public BTreeStorage(Area area) {
             this.area = area;
         }
 

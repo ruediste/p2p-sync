@@ -1,6 +1,7 @@
 package com.github.ruediste.p2psync.libp2p.core;
 
 import java.util.Collection;
+import java.util.Set;
 
 import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
 
@@ -15,6 +16,8 @@ import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
 public interface AddressBook {
 
     Collection<Multiaddr> getAddrs(PeerId id);
+
+    Set<PeerId> getPeerIds();
 
     void setAddrs(PeerId id, long ttl, Multiaddr... addrs);
 

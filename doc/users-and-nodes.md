@@ -1,8 +1,7 @@
 # Users and Nodes
 
-This document describes the intended relationship between users, nodes, and the
-user data exposed by a node. It distinguishes that design from the current
-prototype, which does not yet implement the complete synchronization workflow.
+This document describes the relationship between users, nodes, and the user data
+exposed by a node, along with the current implementation boundary.
 
 ## Identities and Names
 
@@ -32,13 +31,12 @@ the design calls for:
 - **Materialized file tree:** the current local view of the user's files,
   derived from the main history and exposed to applications.
 
-Local changes are recorded as operations. Remote operations are first placed in
-the incoming staging area. A reconciliation step incorporates eligible local
-and incoming operations into the main history, then updates the materialized
-file tree. Local and staged entries can be cleared only after their operations
-are durably represented in the main history. The exact ordering, duplicate
 detection, conflict resolution, and failure-recovery rules are part of the sync
-protocol and must be specified there; this document does not prescribe them.
+Local changes are signed operations ordered by Lamport clock and node hash.
+Incoming operations are staged and verified before reconciliation replays them
+in that total order. A stable snapshot can replace the prefix of the main log
+acknowledged by every active node. `doc/storage-sync.md` describes the transfer,
+membership, snapshot, and conflict rules.
 
 ## Node Interface
 
@@ -47,16 +45,17 @@ configured user, named with that node's local user name. Applications working
 in a user's directory see that user's materialized file tree, not the operation
 logs or staging data.
 
-A node also needs a management interface for adding or joining user identities,
-configuring local names, and reporting node and synchronization status. Private
-keys should be handled as credentials and must not be exposed in ordinary
-status views. Mounting a filesystem or showing a desktop status indicator are
-deployment and interface choices; they are not prerequisites for the identity
-or synchronization model.
+A node provides APIs for creating and joining a user, setting a unique local
+name, and reading redacted node and synchronization status. Its desktop console
+shows those statuses, offers local user management, and places a status menu in
+the system tray when the desktop environment supports one. Node storage is not
+password-locked; private signing keys are stored in the local DataStorage file
+and are not included in status summaries. Portable credential exports are
+separately password-protected.
 
 ## Current Implementation
 
-The current node code is a prototype of the identity and root-data model:
+The current node implementation provides the following local-node mechanisms:
 
 - [`Node`](../src/main/java/com/github/ruediste/p2psync/node/Node.java) identifies
   users by public key in a node-local map. `createNewUser()` generates an
@@ -65,14 +64,27 @@ The current node code is a prototype of the identity and root-data model:
   contains block identifiers for user data structures. [`DataUserRoot`](../src/main/java/com/github/ruediste/p2psync/node/DataUserRoot.java)
   currently contains a status message and a root-directory identifier.
 - [`NodeUserHandle`](../src/main/java/com/github/ruediste/p2psync/node/NodeUserHandle.java)
-  provides prototype read and modify operations. Its synchronization method is
-  incomplete, and the node's [`BlockStorage`](../src/main/java/com/github/ruediste/p2psync/node/BlockStorage.java)
-  is currently in-memory storage.
-- The operation histories, incoming staging area, reconciliation process,
-  node-local user names, and multi-user filesystem view described above are not
-  implemented yet. [`SimpleFuseFS`](../src/main/java/com/github/ruediste/p2psync/storage/SimpleFuseFS.java)
-  is a standalone storage-backed filesystem prototype, not the per-user view.
+  records signed status and filesystem operations, transfers them in per-origin
+  order with resumable truncation, reconciles the main/local/staging histories,
+  and creates causally stable snapshots.
+- [`BlockStorage`](../src/main/java/com/github/ruediste/p2psync/node/BlockStorage.java)
+  is a content-addressed adapter over `DataStorage`. Its hash index and typed
+  chunk/manifest blocks are stored in the same file as the node catalog and
+  user roots. The node's own DataStorage file is not encrypted; exported user
+  credentials use password-derived AES-GCM encryption.
+- [`NodeFuseFS`](../src/main/java/com/github/ruediste/p2psync/node/NodeFuseFS.java)
+  exposes `/<local-user-name>/...` as isolated per-user trees.
+  [`NodeDesktopApp`](../src/main/java/com/github/ruediste/p2psync/node/NodeDesktopApp.java)
+  provides the management dashboard and optional tray status menu.
+- [`UserSyncProtocol`](../src/main/java/com/github/ruediste/p2psync/node/UserSyncProtocol.java)
+  carries framed protobuf sync requests over the existing TCP, Noise, and Yamux
+  host. The desktop launcher enables mDNS discovery; remote joins can probe known
+  peers for the imported user ID or use an explicit peer ID and optional listen
+  multiaddress with a password-protected user credential file. The dashboard can
+  initiate synchronization with known active peers and reports pending local and
+  incoming operation counts in both the table and tray menu.
 
-Consequently, the synchronization lifecycle and management interface above
-describe the intended architecture, not functionality available in the current
-prototype.
+The [`Node.Network`](../src/main/java/com/github/ruediste/p2psync/node/Node.java)
+in-process network remains for tests. The desktop console runs the real host and
+sync protocol for separate processes; peers must be reachable over the configured
+TCP multiaddress, and mDNS discovery is limited to the local network.

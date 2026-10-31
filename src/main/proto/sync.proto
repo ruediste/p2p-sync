@@ -45,6 +45,21 @@ message StorageBlock {
 message DataUserRoot {
 	string userStatusMessage = 1;
 	bytes rootDirectoryId=2;
+	bytes rootDirectoryGuid=3;
+}
+
+message UserTreeState {
+	bytes rootId = 1;
+	string statusMessage = 2;
+	repeated UserTreeEntry entries = 3;
+}
+
+message UserTreeEntry {
+	bytes entityId = 1;
+	bytes parentId = 2;
+	string name = 3;
+	bool directory = 4;
+	bytes content = 5;
 }
 
 
@@ -62,12 +77,144 @@ message DirectoryEntry{
 	VectorClock clock = 1;
 	string name=2;
 	bytes directoryId=3;
+	bytes entityId=4;
 }
 
 message FileEntry{
 	VectorClock clock = 1;
 	string name=2;
 	bytes dataBlockId=3;
+	bytes entityId=4;
+}
+
+message UserOperation {
+	enum Kind {
+		SET_STATUS = 0;
+		CREATE_DIRECTORY = 1;
+		CREATE_FILE = 2;
+		WRITE_FILE = 3;
+		TRUNCATE_FILE = 4;
+		MOVE = 5;
+		RENAME = 6;
+		DELETE = 7;
+	}
+	Kind kind = 1;
+	bytes entityId = 2;
+	bytes parentId = 3;
+	string name = 4;
+	bytes newParentId = 5;
+	string newName = 6;
+	uint64 offset = 7;
+	bytes data = 8;
+	uint64 size = 9;
+	string statusMessage = 10;
+}
+
+message NodeState {
+	bytes peerId = 1;
+	uint64 clock = 2;
+	uint64 guidCounter = 3;
+	repeated NodeUserState users = 4;
+	bytes peerPrivateKey = 5;
+}
+
+message UserCredential {
+	bytes ciphertext = 1;
+	bytes salt = 2;
+	bytes iv = 3;
+}
+
+message NodeUserState {
+	bytes userPrivateKey = 1;
+	reserved 2, 3;
+	string localName = 4;
+	bytes rootId = 5;
+	bytes rootDirectoryGuid = 6;
+	repeated PersistedOperation operationTree = 7;
+	repeated PersistedOperation localOperationTree = 8;
+	repeated PersistedOperation stagingTree = 9;
+	repeated OperationClock maxOperationClock = 10;
+	ActiveNodeSetState activeNodeSet = 11;
+	repeated PartialOperationState retrievalTree = 12;
+	bytes snapshotState = 13;
+}
+
+message PersistedOperation {
+	uint64 lamportClock = 1;
+	bytes nodeHash = 2;
+	bytes payload = 3;
+	bytes signature = 4;
+}
+
+message OperationClock {
+	string nodeId = 1;
+	uint64 clock = 2;
+}
+
+message PartialOperationState {
+	string sourceNodeId = 1;
+	uint64 lamportClock = 2;
+	bytes nodeHash = 3;
+	uint32 totalLength = 4;
+	bytes receivedBytes = 5;
+	bytes signature = 6;
+}
+
+message ActiveNodeSetState {
+	string versionNodeId = 1;
+	uint64 versionClock = 2;
+	repeated string nodeIds = 3;
+	repeated ActiveNodeLastSeen lastSeen = 4;
+	LeavingProcessState leavingProcess = 5;
+}
+
+message ActiveNodeLastSeen {
+	string nodeId = 1;
+	int64 timestamp = 2;
+}
+
+message LeavingProcessState {
+	int32 phase = 1;
+	string processId = 2;
+	string leavingNodeId = 3;
+	uint64 lastOperationClock = 4;
+	string lastOperationClockSourceNode = 5;
+	repeated string confirmedBy = 6;
+}
+
+message RemoteSyncRequest {
+	bytes userId = 1;
+	repeated OperationClock fromClock = 2;
+	repeated OperationOffset offsets = 3;
+	uint32 maxOperations = 4;
+	uint32 byteBudget = 5;
+	bool includeHistory = 6;
+	string joiningNodeId = 7;
+}
+
+message OperationOffset {
+	string nodeId = 1;
+	uint32 offset = 2;
+}
+
+message RemoteOperationTransfer {
+	uint64 lamportClock = 1;
+	bytes nodeHash = 2;
+	uint32 totalLength = 3;
+	uint32 offset = 4;
+	bytes bytes = 5;
+	bytes signature = 6;
+	bool complete = 7;
+}
+
+message RemoteSyncResponse {
+	bool userFound = 1;
+	bytes snapshotState = 2;
+	repeated PersistedOperation history = 3;
+	repeated OperationClock maxOperationClock = 4;
+	ActiveNodeSetState activeNodeSet = 5;
+	repeated RemoteOperationTransfer transfers = 6;
+	uint64 nodeClock = 7;
 }
 
 message NodeNrMap{

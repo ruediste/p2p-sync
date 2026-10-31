@@ -29,7 +29,7 @@ public abstract class BlockType<T> implements BlockSerializer<T> {
         }
     };
 
-    record BlockRef(long blockOffset, Area area, BlockType<?> type) {
+    public record BlockRef(long blockOffset, Area area, BlockType<?> type) {
     }
 
     public abstract List<BlockRef> getReferencedBlocks(T value, DataStorage storage);

@@ -15,7 +15,43 @@ mvn compile
 
 If protobuf code generation misbehaves, a `mvn clean` usually helps.
 
-## Simple FUSE filesystem
+## Desktop node and user filesystem
+
+`com.github.ruediste.p2psync.node.NodeDesktopMain` starts the node dashboard,
+system-tray status menu, and a FUSE mount exposing each configured user below
+its node-local name. On Linux, install the FUSE 2 compatibility library
+(`libfuse2` or `libfuse2t64`), mount tools, and make `/dev/fuse` available to
+your user.
+
+```bash
+mvn compile org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
+	-Dexec.mainClass=com.github.ruediste.p2psync.node.NodeDesktopMain \
+	-Dexec.args="/absolute/path/node-data /absolute/path/user-mount"
+```
+
+The mount directory is optional; when omitted, a sibling directory is created.
+The node stores its state, operation histories, and content-addressed blocks in
+`node.db` inside the data directory. Node storage is not password-locked; protect
+`node.db` with filesystem permissions. Run one process per node-data directory.
+A dashboard remains available when the desktop environment has no system tray.
+The tray uses Java AWT and requires legacy X11 tray support. On XFCE, add the
+`Status Tray Plugin` (or `Notification Area` on older versions) to the panel
+and ensure legacy tray icons are enabled. A StatusNotifier/AppIndicator-only
+tray does not suffice. Startup prints a warning when AWT tray support is unavailable
+or the icon cannot be registered.
+The launcher prints the node's peer ID and listen address. Export a protected
+user credential from the dashboard to join that user from another node; leave
+the peer ID blank to probe known mDNS/manual peers, or specify a peer ID and
+optional listen multiaddress. The credential file is required, but its
+passphrase may be empty. Imports try an empty passphrase first and prompt only
+when it does not unlock the credential.
+Use `Sync now` to reconcile with known active peers; the tray menu shows per-user
+pending operation counts.
+
+The node uses the existing TCP, Noise, Yamux, and mDNS stack for cross-process
+user synchronization. `Node.Network` remains as an in-process test transport.
+
+## Standalone storage FUSE prototype
 
 `com.github.ruediste.p2psync.storage.SimpleFuseMain` mounts a persistent `FileTree`
 using jnr-fuse. On Linux, install the FUSE 2 compatibility library (`libfuse2` or
