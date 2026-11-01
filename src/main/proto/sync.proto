@@ -161,6 +161,7 @@ message UserMessage {
 		MAIL = 1;
 		SHARED_FOLDER_INVITATION = 2;
 		MESSAGE_CHANNEL_INVITATION = 3;
+		TODO_LIST_INVITATION = 4;
 	}
 	string messageId = 1;
 	bytes senderUserId = 2;

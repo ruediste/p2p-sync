@@ -156,7 +156,7 @@ public final class NodeDesktopApp implements AutoCloseable {
         scroll.setBorder(BorderFactory.createLineBorder(LINE));
         center.add(scroll, BorderLayout.CENTER);
 
-        JPanel actions = new JPanel(new GridLayout(2, 5, 7, 7));
+        JPanel actions = new JPanel(new GridLayout(3, 4, 7, 7));
         actions.setBackground(PAPER);
         JButton add = button("Add user");
         add.addActionListener(event -> addUser());
@@ -170,8 +170,14 @@ public final class NodeDesktopApp implements AutoCloseable {
         export.addActionListener(event -> exportKey());
         JButton copy = button("Copy key");
         copy.addActionListener(event -> copyKeyToClipboard());
+        JButton copyUserId = button("Copy user ID");
+        copyUserId.setToolTipText("Copy the public user ID as hex for invitations");
+        copyUserId.addActionListener(event -> copyUserIdToClipboard());
         JButton open = button("Open folder");
         open.addActionListener(event -> openFolder());
+        JButton workspace = button("Units & messages");
+        workspace.setToolTipText("Manage SyncUnits and messages for the selected user");
+        workspace.addActionListener(event -> openWorkspace());
         JButton refresh = button("Refresh");
         refresh.addActionListener(event -> refresh());
         syncButton = button("Sync now");
@@ -182,7 +188,9 @@ public final class NodeDesktopApp implements AutoCloseable {
         actions.add(rename);
         actions.add(export);
         actions.add(copy);
+        actions.add(copyUserId);
         actions.add(open);
+        actions.add(workspace);
         actions.add(syncButton);
         actions.add(refresh);
         center.add(actions, BorderLayout.SOUTH);
@@ -278,6 +286,20 @@ public final class NodeDesktopApp implements AutoCloseable {
             showError(error);
         } finally {
             Arrays.fill(password, '\0');
+        }
+    }
+
+    private void copyUserIdToClipboard() {
+        Node.UserStatus selected = selectedUserForAction("Copy user ID");
+        if (selected == null)
+            return;
+        String userId = HexFormat.of().formatHex(selected.userId().bytes());
+        try {
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(userId), null);
+            JOptionPane.showMessageDialog(frame, "Public user ID copied as hex.", "p2p-sync",
+                    JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception error) {
+            showError(error);
         }
     }
 
@@ -403,6 +425,15 @@ public final class NodeDesktopApp implements AutoCloseable {
         }
     }
 
+    private void openWorkspace() {
+        Node.UserStatus selected = selectedUserForAction("Units & messages");
+        if (selected == null)
+            return;
+        var dialog = new NodeWorkspaceDialog(frame, node, selected, mountPoint, this::refresh);
+        dialog.setVisible(true);
+        refresh();
+    }
+
     private void synchronize() {
         if (closed.get())
             return;
@@ -449,15 +480,33 @@ public final class NodeDesktopApp implements AutoCloseable {
         if (tableModel.users.size() == 1)
             return tableModel.users.get(0);
         String message = tableModel.users.isEmpty()
-                ? "Add or join a user before copying a key."
-                : "Select a user row before copying a key.";
+            ? "Add or join a user before this action."
+            : "Select a user row before this action.";
         JOptionPane.showMessageDialog(frame, message, action, JOptionPane.INFORMATION_MESSAGE);
         return null;
     }
 
     private void refresh() {
+        com.github.ruediste.p2psync.libp2p.crypto.PubKey selectedUserId = null;
+        if (table != null) {
+            var selected = selectedUser();
+            if (selected != null)
+                selectedUserId = selected.userId();
+        }
         List<Node.UserStatus> users = node.listUsers();
         tableModel.setUsers(users);
+        if (table != null) {
+            if (selectedUserId == null) {
+                table.clearSelection();
+            } else {
+                int modelRow = tableModel.rowForUser(selectedUserId);
+                int viewRow = modelRow < 0 ? -1 : table.convertRowIndexToView(modelRow);
+                if (viewRow >= 0)
+                    table.setRowSelectionInterval(viewRow, viewRow);
+                else
+                    table.clearSelection();
+            }
+        }
         if (nodeLabel != null)
             nodeLabel.setText("Peer " + node.peerId.toBase58());
         int pending = users.stream().mapToInt(user -> user.pendingLocalOperationCount()
@@ -557,6 +606,13 @@ public final class NodeDesktopApp implements AutoCloseable {
         void setUsers(List<Node.UserStatus> users) {
             this.users = List.copyOf(users);
             fireTableDataChanged();
+        }
+
+        int rowForUser(com.github.ruediste.p2psync.libp2p.crypto.PubKey userId) {
+            for (int index = 0; index < users.size(); index++)
+                if (users.get(index).userId().equals(userId))
+                    return index;
+            return -1;
         }
 
         @Override

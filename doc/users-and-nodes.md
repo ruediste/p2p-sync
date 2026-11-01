@@ -120,7 +120,8 @@ in the node's DataStorage state. Existing mechanisms include:
 - [`NodeFuseFS`](../src/main/java/com/github/ruediste/p2psync/node/NodeFuseFS.java)
   exposes `/<local-user-name>/...` as isolated per-user trees.
   [`NodeDesktopApp`](../src/main/java/com/github/ruediste/p2psync/node/NodeDesktopApp.java)
-  provides the management dashboard and optional tray status menu.
+  provides the management dashboard, optional tray status menu, and a per-user
+  workspace for SyncUnit membership/content and inbox/outbox messages.
 - [`UserSyncProtocol`](../src/main/java/com/github/ruediste/p2psync/node/UserSyncProtocol.java)
   carries framed protobuf sync requests over the existing TCP, Noise, and Yamux
   host. The desktop launcher enables mDNS discovery; remote joins can probe known

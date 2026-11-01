@@ -52,14 +52,18 @@ public class NodeUserHandle {
         if (type == Sync.UserMessage.Type.UNRECOGNIZED)
             throw new IllegalArgumentException("Unknown user message type");
         boolean invitation = type == Sync.UserMessage.Type.SHARED_FOLDER_INVITATION
-                || type == Sync.UserMessage.Type.MESSAGE_CHANNEL_INVITATION;
+                || type == Sync.UserMessage.Type.MESSAGE_CHANNEL_INVITATION
+                || type == Sync.UserMessage.Type.TODO_LIST_INVITATION;
         if (invitation != (invitedSyncUnitId != null))
             throw new IllegalArgumentException("Invitation messages require exactly one SyncUnit ID");
         if (invitation) {
             var unit = node.syncUnits.get(invitedSyncUnitId);
-            var expectedType = type == Sync.UserMessage.Type.SHARED_FOLDER_INVITATION
-                    ? SyncUnitAuthorization.Type.SHARED_FOLDER
-                    : SyncUnitAuthorization.Type.MESSAGE_CHANNEL;
+            var expectedType = switch (type) {
+                case SHARED_FOLDER_INVITATION -> SyncUnitAuthorization.Type.SHARED_FOLDER;
+                case TODO_LIST_INVITATION -> SyncUnitAuthorization.Type.TODO_LIST;
+                case MESSAGE_CHANNEL_INVITATION -> SyncUnitAuthorization.Type.MESSAGE_CHANNEL;
+                default -> throw new IllegalArgumentException("Not a SyncUnit invitation message");
+            };
             if (unit == null || unit.type != expectedType
                     || !unit.authorization.pendingInvitations().containsKey(recipientUserId))
                 throw new IllegalArgumentException(

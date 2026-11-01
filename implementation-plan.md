@@ -29,7 +29,7 @@
 - Users exchange messages through their User SyncUnits. A user's messages synchronize to all nodes that synchronize that user.
 - Sending nodes automatically retry delivery to nodes of the recipient user. Each message receives a unique ID when created so duplicates can be detected.
 - A message is delivered once it has been stored on at least one recipient node. Until then, it remains in the sender's outbox.
-- Message types include chat and mail (subject, body, and attachments), plus invitations such as SharedFolder and MessageChannel invitations.
+- Message types include chat and mail (subject, body, and attachments), plus SharedFolder, TodoList, and MessageChannel invitations.
 
 ## Milestones
 

@@ -745,13 +745,44 @@ public class Node implements AutoCloseable {
         } while (syncUnits.containsKey(id));
         var unit = new SyncUnitData(id, type, creatorId);
         syncUnits.put(id, unit);
-        creator.participatingSyncUnitIds.add(id.toString());
-        persistState();
+        recordSyncUnitParticipation(creator, id, true);
         return id;
     }
 
     public SyncUnitAuthorization.State getSyncUnitAuthorization(SyncUnitId id) {
         return requireSyncUnit(id).authorization;
+    }
+
+    public record SyncUnitStatus(SyncUnitId id, SyncUnitAuthorization.Type type,
+            SyncUnitAuthorization.Role role, boolean pendingInvitation, int memberCount,
+            int pendingInvitationCount) {
+    }
+
+    public record SyncUnitMemberStatus(PubKey userId, SyncUnitAuthorization.Role role, boolean pendingInvitation) {
+    }
+
+    public List<SyncUnitStatus> listSyncUnits(PubKey userId) {
+        var user = requireConfiguredUser(userId);
+        return syncUnits.values().stream()
+                .filter(unit -> user.participatingSyncUnitIds.contains(unit.id.toString())
+                        || unit.authorization.pendingInvitations().containsKey(userId))
+                .map(unit -> new SyncUnitStatus(unit.id, unit.type, unit.authorization.members().get(userId),
+                        unit.authorization.pendingInvitations().containsKey(userId),
+                        unit.authorization.members().size(), unit.authorization.pendingInvitations().size()))
+                .sorted(Comparator.comparing((SyncUnitStatus status) -> status.type().ordinal())
+                        .thenComparing(status -> status.id().toString()))
+                .toList();
+    }
+
+    public List<SyncUnitMemberStatus> listSyncUnitMembers(SyncUnitId id) {
+        var unit = requireSyncUnit(id);
+        var result = new java.util.ArrayList<SyncUnitMemberStatus>();
+        unit.authorization.members()
+                .forEach((userId, role) -> result.add(new SyncUnitMemberStatus(userId, role, false)));
+        unit.authorization.pendingInvitations()
+                .forEach((userId, role) -> result.add(new SyncUnitMemberStatus(userId, role, true)));
+        result.sort(Comparator.comparing(member -> HexFormat.of().formatHex(member.userId().bytes())));
+        return List.copyOf(result);
     }
 
     public List<Sync.UserMessage> getInboxMessages(PubKey userId) {
@@ -922,7 +953,8 @@ public class Node implements AutoCloseable {
             if (message.getType() == Sync.UserMessage.Type.UNRECOGNIZED)
                 throw new IllegalArgumentException("Unknown user message type");
             boolean invitation = message.getType() == Sync.UserMessage.Type.SHARED_FOLDER_INVITATION
-                    || message.getType() == Sync.UserMessage.Type.MESSAGE_CHANNEL_INVITATION;
+                    || message.getType() == Sync.UserMessage.Type.MESSAGE_CHANNEL_INVITATION
+                    || message.getType() == Sync.UserMessage.Type.TODO_LIST_INVITATION;
             if (userOperation.getMessageId().isBlank()
                     || !message.getMessageId().equals(userOperation.getMessageId())
                     || !message.getSenderUserId().equals(com.google.protobuf.ByteString.copyFrom(senderId.bytes()))
@@ -1151,6 +1183,14 @@ public class Node implements AutoCloseable {
         return content == null ? null : content.clone();
     }
 
+    public Map<String, byte[]> listSharedFiles(SyncUnitId id, PubKey readerId) {
+        var unit = requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
+        requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
+        var result = new TreeMap<String, byte[]>();
+        unit.files.forEach((path, content) -> result.put(path, content.clone()));
+        return java.util.Collections.unmodifiableMap(result);
+    }
+
     public void deleteSharedFile(SyncUnitId id, PubKey authorId, String path) {
         requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
         recordSyncUnitContent(id, authorId, SyncUnitContentOperation.Kind.SHARED_FILE_DELETE,
@@ -1168,6 +1208,14 @@ public class Node implements AutoCloseable {
         requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
         byte[] content = unit.todoItems.get(validateSyncUnitKey(itemId));
         return content == null ? null : content.clone();
+    }
+
+    public Map<String, byte[]> listTodoItems(SyncUnitId id, PubKey readerId) {
+        var unit = requireSyncUnitType(id, SyncUnitAuthorization.Type.TODO_LIST);
+        requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
+        var result = new TreeMap<String, byte[]>();
+        unit.todoItems.forEach((itemId, content) -> result.put(itemId, content.clone()));
+        return java.util.Collections.unmodifiableMap(result);
     }
 
     public void deleteTodoItem(SyncUnitId id, PubKey authorId, String itemId) {
