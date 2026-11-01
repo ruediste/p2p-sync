@@ -388,6 +388,31 @@ public class SyncFlowTest {
     }
 
     /**
+     * Verifies the desktop message log retains delivered sent messages and that
+     * channel messages expose their author for chat rendering.
+     */
+    @Test
+    public void messageLogRetainsSentHistoryAndChannelAuthors() {
+        var recipient = nodeB.createNewUser("recipient");
+        String messageId = handleA.sendChatMessage(recipient.data.userId(), "delivered", List.of());
+
+        assertTrue(nodeA.getOutboxMessages(handleA.data.userId()).isEmpty());
+        var log = nodeA.getUserMessageLog(handleA.data.userId());
+        assertEquals(1, log.size());
+        assertEquals(messageId, log.get(0).message().getMessageId());
+        assertTrue(log.get(0).outgoing());
+        assertEquals(1, nodeB.getUserMessageLog(recipient.data.userId()).size());
+        assertFalse(nodeB.getUserMessageLog(recipient.data.userId()).get(0).outgoing());
+
+        var channelId = nodeA.createSyncUnit(handleA.data.userId(), SyncUnitAuthorization.Type.MESSAGE_CHANNEL);
+        nodeA.sendChannelMessage(channelId, handleA.data.userId(),
+                Sync.SyncUnitMessage.newBuilder().setText("channel hello").build());
+        var channel = nodeA.getChannelMessages(channelId, handleA.data.userId());
+        assertEquals(1, channel.size());
+        assertEquals(handleA.data.userId(), channel.get(0).author());
+    }
+
+    /**
      * Verifies unsent messages survive restart, retry when a recipient returns, and
      * deduplicate on delivery.
      */

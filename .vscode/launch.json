@@ -25,7 +25,7 @@
       "type": "java",
       "name": "p2p-sync Node Desktop",
       "request": "launch",
-      "mainClass": "com.github.ruediste.p2psync.node.NodeDesktopMain",
+      "mainClass": "com.github.ruediste.p2psync.ui.DesktopMain",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       // "args": ["${input:nodeDataDirectory}", "${input:nodeMountDirectory}"]
@@ -35,7 +35,7 @@
       "type": "java",
       "name": "p2p-sync Node Desktop2",
       "request": "launch",
-      "mainClass": "com.github.ruediste.p2psync.node.NodeDesktopMain",
+      "mainClass": "com.github.ruediste.p2psync.ui.DesktopMain",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       // "args": ["${input:nodeDataDirectory}", "${input:nodeMountDirectory}"]

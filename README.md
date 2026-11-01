@@ -17,15 +17,19 @@ If protobuf code generation misbehaves, a `mvn clean` usually helps.
 
 ## Desktop node and user filesystem
 
-`com.github.ruediste.p2psync.node.NodeDesktopMain` starts the node dashboard,
-system-tray status menu, and a FUSE mount exposing each configured user below
-its node-local name. On Linux, install the FUSE 2 compatibility library
+`com.github.ruediste.p2psync.ui.DesktopMain` starts the single-window desktop
+application, optional system-tray status menu, and a FUSE mount exposing each
+configured user below its node-local name. Users and workspace sections are
+selected in the left navigation. Chat, mail (an email-client style inbox/sent
+view), SyncUnits, and account settings stay in the main window; workflows use
+inline forms rather than modal dialogs. On Linux, install the FUSE 2
+compatibility library
 (`libfuse2` or `libfuse2t64`), mount tools, and make `/dev/fuse` available to
 your user.
 
 ```bash
 mvn compile org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
-	-Dexec.mainClass=com.github.ruediste.p2psync.node.NodeDesktopMain \
+	-Dexec.mainClass=com.github.ruediste.p2psync.ui.DesktopMain \
 	-Dexec.args="/absolute/path/node-data /absolute/path/user-mount"
 ```
 
@@ -33,18 +37,18 @@ The mount directory is optional; when omitted, a sibling directory is created.
 The node stores its state, operation histories, and content-addressed blocks in
 `node.db` inside the data directory. Node storage is not password-locked; protect
 `node.db` with filesystem permissions. Run one process per node-data directory.
-A dashboard remains available when the desktop environment has no system tray.
+The main window remains available when the desktop environment has no system tray.
 The tray uses Java AWT and requires legacy X11 tray support. On XFCE, add the
 `Status Tray Plugin` (or `Notification Area` on older versions) to the panel
 and ensure legacy tray icons are enabled. A StatusNotifier/AppIndicator-only
 tray does not suffice. Startup prints a warning when AWT tray support is unavailable
 or the icon cannot be registered.
 The launcher prints the node's peer ID and listen address. Export a protected
-user credential from the dashboard to join that user from another node; leave
+user credential from the Account section to join that user from another node; leave
 the peer ID blank to probe known mDNS/manual peers, or specify a peer ID and
-optional listen multiaddress. The credential file is required, but its
-passphrase may be empty. Imports try an empty passphrase first and prompt only
-when it does not unlock the credential.
+optional listen multiaddress. A credential file or pasted credential is required,
+but its passphrase may be empty. Import errors and other action results are shown in the
+window's status bar.
 Use `Sync now` to reconcile with known active peers; the tray menu shows per-user
 pending operation counts.
 

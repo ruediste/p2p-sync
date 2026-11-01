@@ -1,4 +1,4 @@
-package com.github.ruediste.p2psync.node;
+package com.github.ruediste.p2psync.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,7 +11,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 
-class NodeDesktopAppTest {
+import com.github.ruediste.p2psync.node.Node;
+
+class DesktopAppTest {
     /** Verifies background rounds repeat after failure without opening a window. */
     @Test
     void backgroundSyncRetriesAfterFailure() throws Exception {
@@ -26,7 +28,7 @@ class NodeDesktopAppTest {
                 repeated.countDown();
             }
         }) {
-            var app = new NodeDesktopApp(node, Path.of("."), stopped::countDown, Duration.ofMillis(10));
+            var app = new DesktopApp(node, Path.of("."), stopped::countDown, Duration.ofMillis(10));
             try {
                 assertTrue(repeated.await(5, TimeUnit.SECONDS));
                 assertTrue(rounds.get() >= 2);
@@ -57,7 +59,7 @@ class NodeDesktopAppTest {
                 }
             }
         }) {
-            var app = new NodeDesktopApp(node, Path.of("."), stopped::countDown, Duration.ofMillis(10));
+            var app = new DesktopApp(node, Path.of("."), stopped::countDown, Duration.ofMillis(10));
             try {
                 assertTrue(started.await(5, TimeUnit.SECONDS));
                 app.close();

@@ -790,6 +790,35 @@ public class Node implements AutoCloseable {
                 .map(message -> message.message).toList();
     }
 
+    /**
+     * A direct message together with its direction and the Lamport clock of the
+     * signed operation that created it. The clock gives the desktop UI a stable,
+     * causal ordering for a user's conversation history.
+     */
+    public record UserMessageEntry(Sync.UserMessage message, boolean outgoing, long lamportClock) {
+    }
+
+    /**
+     * Returns the complete local view of a user's direct messages: everything in
+     * the inbox plus every message authored by the user, delivered or still
+     * queued. This is what the chat and mail views need to show a full history,
+     * unlike {@link #getOutboxMessages(PubKey)} which only contains pending items.
+     */
+    public List<UserMessageEntry> getUserMessageLog(PubKey userId) {
+        var user = requireConfiguredUser(userId);
+        var result = new java.util.ArrayList<UserMessageEntry>();
+        for (var stored : user.inboxMessages.values())
+            result.add(new UserMessageEntry(stored.message, false, stored.operationId.clock));
+        for (var operation : user.allOperations().values()) {
+            var message = parseOutgoingMessage(user.userId(), operation);
+            if (message != null)
+                result.add(new UserMessageEntry(message, true, operation.id.clock));
+        }
+        result.sort(Comparator.comparingLong(UserMessageEntry::lamportClock)
+                .thenComparing(entry -> entry.message().getMessageId()));
+        return List.copyOf(result);
+    }
+
     public List<Sync.UserMessage> getOutboxMessages(PubKey userId) {
         var user = requireConfiguredUser(userId);
         var result = new java.util.TreeMap<String, Sync.UserMessage>();
@@ -1237,14 +1266,18 @@ public class Node implements AutoCloseable {
         requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
         return unit.channelMessages.stream().map(operation -> {
             try {
-                return new ChannelMessageEntry(operation.key(), Sync.SyncUnitMessage.parseFrom(operation.payload()));
+                return new ChannelMessageEntry(operation.key(), operation.author(), operation.lamportClock(),
+                        Sync.SyncUnitMessage.parseFrom(operation.payload()));
             } catch (com.google.protobuf.InvalidProtocolBufferException e) {
                 throw new IllegalStateException("Invalid persisted channel message", e);
             }
-        }).toList();
+        }).sorted(Comparator.comparingLong(ChannelMessageEntry::lamportClock)
+                .thenComparing(ChannelMessageEntry::messageId))
+                .toList();
     }
 
-    public record ChannelMessageEntry(String messageId, Sync.SyncUnitMessage message) {
+    public record ChannelMessageEntry(String messageId, PubKey author, long lamportClock,
+            Sync.SyncUnitMessage message) {
     }
 
     private SyncUnitContentOperation recordSyncUnitContent(SyncUnitId id, PubKey authorId,

@@ -1,19 +1,22 @@
-package com.github.ruediste.p2psync.node;
+package com.github.ruediste.p2psync.ui;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-public final class NodeDesktopMain {
-    private NodeDesktopMain() {
+import com.github.ruediste.p2psync.node.Node;
+import com.github.ruediste.p2psync.node.NodeFuseFS;
+
+/** Starts the single-window desktop application and its FUSE mount. */
+public final class DesktopMain {
+    private DesktopMain() {
     }
 
     public static void main(String[] args) {
         if (args.length < 1 || args.length > 2) {
-            System.err.println("Usage: NodeDesktopMain <node-db-file> [mount-directory]");
+            System.err.println("Usage: DesktopMain <node-db-file> [mount-directory]");
             System.exit(2);
             return;
         }
@@ -21,7 +24,7 @@ public final class NodeDesktopMain {
         Path dataFile = Path.of(args[0]).toAbsolutePath().normalize();
         Path mountDirectory = args.length == 2
                 ? Path.of(args[1]).toAbsolutePath().normalize()
-            : dataFile.resolveSibling(dataFile.getFileName() + "-mount");
+                : dataFile.resolveSibling(dataFile.getFileName() + "-mount");
         if (dataFile.startsWith(mountDirectory) || mountDirectory.startsWith(dataFile)) {
             System.err.println("The mount directory must not overlap the node database file");
             System.exit(2);
@@ -33,7 +36,7 @@ public final class NodeDesktopMain {
             Files.createDirectories(mountDirectory);
             node = new Node(new Node.Network(), dataFile);
         } catch (Exception error) {
-            showError("Could not open node storage", error);
+            System.err.println("Could not open node storage: " + error.getMessage());
             return;
         }
 
@@ -43,7 +46,7 @@ public final class NodeDesktopMain {
             addresses.forEach(address -> System.out.println("Listen address: " + address));
         } catch (RuntimeException error) {
             node.close();
-            showError("Could not start peer networking", error);
+            System.err.println("Could not start peer networking: " + error.getMessage());
             return;
         }
 
@@ -60,7 +63,7 @@ public final class NodeDesktopMain {
         };
         Runtime.getRuntime().addShutdownHook(new Thread(cleanup, "p2p-sync-shutdown-hook"));
 
-        NodeDesktopApp app = new NodeDesktopApp(node, mountDirectory, () -> {
+        DesktopApp app = new DesktopApp(node, mountDirectory, () -> {
             Thread shutdown = new Thread(() -> {
                 try {
                     cleanup.run();
@@ -77,17 +80,11 @@ public final class NodeDesktopMain {
             try {
                 filesystem.mount(mountDirectory, true, false, new String[] { "-o", "default_permissions" });
             } catch (RuntimeException error) {
-                SwingUtilities.invokeLater(() -> {
-                    showError("Could not mount the user filesystem", error);
-                    app.close();
-                });
+                SwingUtilities.invokeLater(() -> app.reportStatus(
+                        "Could not mount the user filesystem: " + error.getMessage()));
             }
         }, "p2p-sync-fuse-mount");
         mount.setDaemon(false);
         mount.start();
-    }
-
-    private static void showError(String title, Exception error) {
-        JOptionPane.showMessageDialog(null, error.getMessage(), title, JOptionPane.ERROR_MESSAGE);
     }
 }
