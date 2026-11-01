@@ -286,7 +286,7 @@ public class NodeUserHandle {
         var transfers = peerData.serve(fromClock, offsets, maxOperations, byteBudget);
         data.receive(transfers, node);
         mergeStaging();
-        data.activeNodeSet.mergeFrom(peerData.activeNodeSet, node.nodeKey(), node::nextClock);
+        data.activeNodeSet.mergeFrom(peerData.activeNodeSet, node.nodeKey(), peer.nodeKey(), node::nextClock);
         data.activeNodeSet.updateLeaving(node.nodeKey(), data.maxOperationClock, node::nextClock);
         data.activeNodeSet.lastSeen.put(peer.nodeKey(), System.currentTimeMillis());
         node.deliverPendingMessages();
@@ -325,7 +325,7 @@ public class NodeUserHandle {
         var activeNodeSet = new ActiveNodeSet();
         Node.loadActiveNodeSet(response.getActiveNodeSet(), activeNodeSet);
         mergeStaging();
-        data.activeNodeSet.mergeFrom(activeNodeSet, node.nodeKey(), node::nextClock);
+        data.activeNodeSet.mergeFrom(activeNodeSet, node.nodeKey(), Node.nodeKeyFor(peerId), node::nextClock);
         data.activeNodeSet.updateLeaving(node.nodeKey(), data.maxOperationClock, node::nextClock);
         data.activeNodeSet.lastSeen.put(Node.nodeKeyFor(peerId), System.currentTimeMillis());
         node.deliverPendingMessages();

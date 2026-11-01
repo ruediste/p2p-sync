@@ -35,21 +35,21 @@ root.
   user's active set without proof of control of that node key. A malformed value
   also makes `truncateStableLog` throw in `HexFormat.parseHex`
   (`Node.java:362-366`, `NodeUserHandle.java:493-496`).
-- [ ] **[high] Restrict `syncUnitUpdate` to members.** An invitee can currently
+- [x] **[high] Restrict `syncUnitUpdate` to members.** An invitee can currently
   push a full unit update, including clock, metadata, partial operations and the
   active-node set, before accepting the invitation. `mergeSyncUnit` also throws on
   invalid content, making this a denial-of-service path
   (`Node.java:288-304`, `Node.java:1414-1456`).
-- [ ] **[high] Validate active-node-set merges.** `ActiveNodeSet.mergeFrom` copies
+- [x] **[high] Validate active-node-set merges.** `ActiveNodeSet.mergeFrom` copies
   nodes, leaving state and `lastSeen` from any peer, and accepts higher phases
   without authentication. Removed nodes can be re-added and a peer can advance a
   leave process (`ActiveNodeSet.java:66-119`).
-- [ ] **[high] Verify persisted user operations on load.** `loadOperationTree` and
+- [x] **[high] Verify persisted user operations on load.** `loadOperationTree` and
   `loadOperations` copy every stored operation without checking its signature, and
   `restoreState` replays them into the file tree and contacts. A tampered
   `node.db` silently changes replicated state (`Node.java:2056-2072`,
   `Node.java:2403-2417`, `Node.java:2427-2433`).
-- [ ] **[medium] Do not expose unpublished operations during initial sync.**
+- [x] **[medium] Do not expose unpublished operations during initial sync.**
   `includeHistory` serves `data.allOperations()` (accepted plus local plus staging)
   while `doc/persistence.md` says the accepted history is transferred
   (`Node.java:342`, `Node.java:451-455`).

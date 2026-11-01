@@ -54,9 +54,9 @@ public class YamuxTest {
             // We still need to pass *something*; a non-null fails on first inbound SYN.
             // Instead, null means we don't handle inbound streams.
             connA = new YamuxSession(streamA.getIn(), streamA.getOut(), true,
-                    null);
+                    null, null);
             connB = new YamuxSession(streamB.getIn(), streamB.getOut(), false,
-                    null);
+                    null, null);
         }
 
         void close() {

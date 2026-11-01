@@ -264,6 +264,7 @@ message ActiveNodeSetState {
 	repeated string nodeIds = 3;
 	repeated ActiveNodeLastSeen lastSeen = 4;
 	LeavingProcessState leavingProcess = 5;
+	repeated string removedNodeIds = 6;
 }
 
 message ActiveNodeLastSeen {

@@ -252,7 +252,8 @@ public class NodeAlgorithmTest {
         // ---------- active node set merge ----------
 
         boolean mergeActiveNodeSet(ActiveNodeSet other) {
-            return activeNodeSet.mergeFrom(other, nodeId, () -> clock++);
+            String senderNodeId = other.nodes.isEmpty() ? nodeId : other.nodes.iterator().next();
+            return activeNodeSet.mergeFrom(other, nodeId, senderNodeId, () -> clock++);
         }
 
         // ---------- leaving ----------

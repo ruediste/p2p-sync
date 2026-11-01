@@ -47,7 +47,7 @@ class ActiveNodeSetTest {
         var remote = setWith("A", 5, "A", "B", "C");
         startProcess(remote, ActiveNodeSet.Phase.A, "p", "C", "C", 3);
 
-        assertFalse(local.mergeFrom(remote, "A", nextClock()));
+        assertFalse(local.mergeFrom(remote, "A", remote.version.nodeId, nextClock()));
         assertEquals(Set.of("A", "B"), local.nodes);
         assertNull(local.leavingProcess);
         assertEquals("A", local.version.nodeId);
@@ -60,7 +60,7 @@ class ActiveNodeSetTest {
         var local = setWith("A", 5, "A", "B");
         var remote = setWith("B", 9, "A", "B", "C");
 
-        assertTrue(local.mergeFrom(remote, "A", nextClock()));
+        assertTrue(local.mergeFrom(remote, "A", remote.version.nodeId, nextClock()));
         assertEquals(Set.of("A", "B", "C"), local.nodes);
         assertEquals("B", local.version.nodeId);
         assertEquals(9, local.version.clock);
@@ -72,7 +72,7 @@ class ActiveNodeSetTest {
         var local = setWith("A", 5, "A", "X");
         var remote = setWith("B", 9, "A", "B");
 
-        assertTrue(local.mergeFrom(remote, "A", nextClock()));
+        assertTrue(local.mergeFrom(remote, "A", remote.version.nodeId, nextClock()));
         assertEquals(Set.of("A", "B", "X"), local.nodes);
         assertEquals("A", local.version.nodeId);
         assertEquals(101, local.version.clock);
@@ -84,7 +84,7 @@ class ActiveNodeSetTest {
         var local = setWith("A", 5, "A", "B", "C");
         var remote = setWith("B", 9, "A");
 
-        assertFalse(local.mergeFrom(remote, "A", nextClock()));
+        assertFalse(local.mergeFrom(remote, "A", remote.version.nodeId, nextClock()));
         assertEquals(Set.of("A", "B", "C"), local.nodes);
         assertEquals("A", local.version.nodeId);
         assertEquals(5, local.version.clock);
@@ -98,7 +98,7 @@ class ActiveNodeSetTest {
         var remote = setWith("B", 9, "A", "B", "C");
         startProcess(remote, ActiveNodeSet.Phase.A, "process-10", "C", "C", 3);
 
-        assertTrue(local.mergeFrom(remote, "A", nextClock()));
+        assertTrue(local.mergeFrom(remote, "A", remote.version.nodeId, nextClock()));
         assertEquals("process-10", local.leavingProcess.processId);
         assertEquals(ActiveNodeSet.Phase.A, local.leavingProcess.phase);
     }
@@ -111,7 +111,7 @@ class ActiveNodeSetTest {
         var remote = setWith("B", 9, "A", "B");
         startProcess(remote, ActiveNodeSet.Phase.B, "p", "C", "C", 3);
 
-        assertTrue(local.mergeFrom(remote, "A", nextClock()));
+        assertTrue(local.mergeFrom(remote, "A", remote.version.nodeId, nextClock()));
         assertEquals(ActiveNodeSet.Phase.B, local.leavingProcess.phase);
         assertEquals(Set.of("A", "B"), local.nodes);
     }
@@ -124,7 +124,7 @@ class ActiveNodeSetTest {
         var remote = setWith("B", 9, "A", "B", "D");
         startProcess(remote, ActiveNodeSet.Phase.B, "p", "C", "A", 3);
 
-        assertFalse(local.mergeFrom(remote, "A", nextClock()));
+        assertFalse(local.mergeFrom(remote, "A", remote.version.nodeId, nextClock()));
         assertEquals(Set.of("A", "B"), local.nodes);
         assertEquals("A", local.version.nodeId);
         assertEquals(5, local.version.clock);
@@ -138,7 +138,7 @@ class ActiveNodeSetTest {
         var remote = setWith("B", 9, "A", "B", "C");
         startProcess(remote, ActiveNodeSet.Phase.A, "p", "C", "C", 3);
 
-        local.mergeFrom(remote, "A", nextClock());
+        local.mergeFrom(remote, "A", remote.version.nodeId, nextClock());
         assertEquals(ActiveNodeSet.Phase.I, local.leavingProcess.phase);
         assertEquals(Set.of("A", "B"), local.nodes);
         assertEquals("A", local.version.nodeId);
@@ -153,7 +153,7 @@ class ActiveNodeSetTest {
         var remote = setWith("B", 9, "A", "B", "D");
         startProcess(remote, ActiveNodeSet.Phase.A, "new", "D", "D", 3);
 
-        assertTrue(local.mergeFrom(remote, "A", nextClock()));
+        assertTrue(local.mergeFrom(remote, "A", remote.version.nodeId, nextClock()));
         assertEquals("new", local.leavingProcess.processId);
         assertEquals(ActiveNodeSet.Phase.A, local.leavingProcess.phase);
         assertEquals(Set.of("A", "B", "D"), local.nodes);
@@ -167,11 +167,11 @@ class ActiveNodeSetTest {
         var remote = setWith("B", 9, "A", "B");
         startProcess(remote, ActiveNodeSet.Phase.I, "old", "C", "A", 3);
 
-        assertFalse(local.mergeFrom(remote, "A", nextClock()));
+        assertFalse(local.mergeFrom(remote, "A", remote.version.nodeId, nextClock()));
         assertEquals("new", local.leavingProcess.processId);
         assertEquals(ActiveNodeSet.Phase.A, local.leavingProcess.phase);
 
-        assertTrue(remote.mergeFrom(local, "B", nextClock()));
+        assertTrue(remote.mergeFrom(local, "B", local.version.nodeId, nextClock()));
         assertEquals("new", remote.leavingProcess.processId);
         assertEquals(ActiveNodeSet.Phase.A, remote.leavingProcess.phase);
     }
@@ -184,7 +184,7 @@ class ActiveNodeSetTest {
         var remote = setWith("B", 9, "A", "B", "C");
         startProcess(remote, ActiveNodeSet.Phase.A, "p", "C", "C", 7, "B");
 
-        assertTrue(local.mergeFrom(remote, "A", nextClock()));
+        assertTrue(local.mergeFrom(remote, "A", remote.version.nodeId, nextClock()));
         assertEquals(Set.of("A", "B"), local.leavingProcess.confirmedBy);
     }
 
@@ -196,7 +196,7 @@ class ActiveNodeSetTest {
         var remote = setWith("B", 9, "A", "B", "C");
         startProcess(remote, ActiveNodeSet.Phase.A, "p", "C", "Y", 8, "B");
 
-        assertTrue(local.mergeFrom(remote, "A", nextClock()));
+        assertTrue(local.mergeFrom(remote, "A", remote.version.nodeId, nextClock()));
         assertEquals(8, local.leavingProcess.lastOperationClock);
         assertEquals("Y", local.leavingProcess.lastOperationClockSourceNode);
         assertEquals(Set.of("B"), local.leavingProcess.confirmedBy);
@@ -339,6 +339,74 @@ class ActiveNodeSetTest {
         assertFalse(set.updateLeaving("A", Map.of("C", 5L), nextClock()));
     }
 
+    /** Verifies that lastSeen is local state and never copied from a remote set. */
+    @Test
+    void lastSeenIsNotMergedFromRemote() {
+        var local = setWith("A", 5, "A", "B");
+        local.lastSeen.put("A", 1L);
+        var remote = setWith("B", 9, "A", "B");
+        remote.lastSeen.put("B", 99L);
+
+        local.mergeFrom(remote, "A", "B", nextClock());
+        assertEquals(Set.of("A"), local.lastSeen.keySet());
+        assertEquals(1L, local.lastSeen.get("A"));
+    }
+
+    /** Verifies that a node removed by a completed leave process is not re-added by a stale peer. */
+    @Test
+    void removedNodeCannotBeReAdded() {
+        var local = setWith("A", 5, "A", "B", "C");
+        startProcess(local, ActiveNodeSet.Phase.A, "p", "C", "C", 3);
+        local.updateLeaving("A", Map.of("C", 3L), nextClock());
+        local.updateLeaving("B", Map.of("C", 3L), nextClock());
+        assertEquals(ActiveNodeSet.Phase.B, local.leavingProcess.phase);
+        assertFalse(local.nodes.contains("C"));
+
+        var remote = setWith("B", 9, "A", "B", "C");
+        assertFalse(local.mergeFrom(remote, "A", "B", nextClock()));
+        assertFalse(local.nodes.contains("C"));
+        assertTrue(local.removedNodes.contains("C"));
+    }
+
+    /** Verifies that a set can only be merged when its sender belongs to the node set. */
+    @Test
+    void senderMustBelongToNodeSet() {
+        var local = setWith("A", 5, "A");
+        var remote = setWith("B", 9, "B", "C");
+
+        assertFalse(local.mergeFrom(remote, "A", "X", nextClock()));
+        assertEquals(Set.of("A"), local.nodes);
+        assertEquals(5, local.version.clock);
+
+        assertTrue(local.mergeFrom(remote, "A", "B", nextClock()));
+        assertEquals(Set.of("A", "B", "C"), local.nodes);
+    }
+
+    /** Verifies that an inconsistent leave process is dropped instead of copied. */
+    @Test
+    void inconsistentLeavingProcessIsIgnored() {
+        var local = setWith("A", 5, "A");
+        var remote = setWith("B", 9, "A", "B");
+        startProcess(remote, ActiveNodeSet.Phase.A, "p", "Z", "Z", 3);
+
+        assertTrue(local.mergeFrom(remote, "A", "B", nextClock()));
+        assertEquals(Set.of("A", "B"), local.nodes);
+        assertNull(local.leavingProcess);
+    }
+
+    /** Verifies that a peer cannot advance a leave process past the locally known clock. */
+    @Test
+    void higherPhaseCannotAdvancePastLocalClock() {
+        var local = setWith("A", 5, "A", "B", "C");
+        startProcess(local, ActiveNodeSet.Phase.A, "p", "C", "C", 10);
+        var remote = setWith("B", 9, "A", "B");
+        startProcess(remote, ActiveNodeSet.Phase.B, "p", "C", "C", 4);
+
+        assertFalse(local.mergeFrom(remote, "A", "B", nextClock()));
+        assertEquals(ActiveNodeSet.Phase.A, local.leavingProcess.phase);
+        assertTrue(local.nodes.contains("C"));
+    }
+
     /** Verifies that a copy owns its nodes, lastSeen entries, and leaving process. */
     @Test
     void copyIsIndependent() {
@@ -361,11 +429,13 @@ class ActiveNodeSetTest {
     void persistedStateRoundTrips() {
         var original = setWith("A", 5, "A", "B", "C");
         original.lastSeen.put("A", 11L);
+        original.removedNodes.add("D");
         startProcess(original, ActiveNodeSet.Phase.B, "p", "C", "A", 9, "A", "B");
 
         var loaded = new ActiveNodeSet();
         Node.loadActiveNodeSet(Node.persist(original), loaded);
 
+        assertEquals(Set.of("D"), loaded.removedNodes);
         assertEquals("A", loaded.version.nodeId);
         assertEquals(5, loaded.version.clock);
         assertEquals(Set.of("A", "B", "C"), loaded.nodes);

@@ -49,6 +49,7 @@ final class ActiveNodeSet {
     Version version;
     LeavingProcess leavingProcess;
     final Set<String> nodes = new TreeSet<>();
+    final Set<String> removedNodes = new TreeSet<>();
     final Map<String, Long> lastSeen = new HashMap<>();
 
     ActiveNodeSet copy() {
@@ -56,6 +57,7 @@ final class ActiveNodeSet {
         result.version = version;
         result.leavingProcess = leavingProcess == null ? null : leavingProcess.copy();
         result.nodes.addAll(nodes);
+        result.removedNodes.addAll(removedNodes);
         result.lastSeen.putAll(lastSeen);
         return result;
     }
@@ -64,13 +66,22 @@ final class ActiveNodeSet {
         version = new Version(nodeId, clock);
     }
 
-    boolean mergeFrom(ActiveNodeSet other, String localNodeId, LongSupplier nextClock) {
+    boolean mergeFrom(ActiveNodeSet other, String localNodeId, String senderNodeId, LongSupplier nextClock) {
+        if (senderNodeId == null || senderNodeId.isBlank())
+            return false;
+        if (!nodes.contains(senderNodeId) && !other.nodes.contains(senderNodeId))
+            return false;
         if (version != null && version.sameAs(other.version))
             return false;
 
         boolean changed = false;
         LeavingProcess mine = leavingProcess;
         LeavingProcess theirs = other.leavingProcess;
+        boolean removedByOtherProcess = theirs != null
+                && removedNodes.contains(theirs.leavingNodeId)
+                && (mine == null || !mine.processId.equals(theirs.processId));
+        if (theirs != null && (!isConsistentProcess(theirs, other.nodes) || removedByOtherProcess))
+            theirs = null;
         if (theirs != null) {
             if (mine == null) {
                 leavingProcess = theirs.copy();
@@ -88,8 +99,10 @@ final class ActiveNodeSet {
                     changed = true;
                 }
             } else if (theirs.phase.ordinal() > mine.phase.ordinal()) {
-                leavingProcess = theirs.copy();
-                changed = true;
+                if (theirs.lastOperationClock >= mine.lastOperationClock) {
+                    leavingProcess = theirs.copy();
+                    changed = true;
+                }
             } else if (theirs.phase == mine.phase) {
                 if (mine.confirmedBy.addAll(theirs.confirmedBy))
                     changed = true;
@@ -106,11 +119,17 @@ final class ActiveNodeSet {
         boolean strictSuperset = other.nodes.containsAll(nodes) && other.nodes.size() > nodes.size();
         LeavingProcess process = leavingProcess;
         boolean phaseB = process != null && process.phase == Phase.B;
-        if (!phaseB && nodes.addAll(other.nodes))
-            changed = true;
-        lastSeen.putAll(other.lastSeen);
-        if (process != null && process.phase != Phase.A && nodes.remove(process.leavingNodeId))
-            changed = true;
+        if (!phaseB) {
+            for (String node : other.nodes) {
+                if (!removedNodes.contains(node) && nodes.add(node))
+                    changed = true;
+            }
+        }
+        if (process != null && process.phase != Phase.A) {
+            removedNodes.add(process.leavingNodeId);
+            if (nodes.remove(process.leavingNodeId))
+                changed = true;
+        }
 
         if (changed) {
             if (strictSuperset && other.version != null && nodes.equals(other.nodes)
@@ -120,6 +139,30 @@ final class ActiveNodeSet {
                 setVersion(localNodeId, nextClock.getAsLong());
         }
         return changed;
+    }
+
+    private static boolean isConsistentProcess(LeavingProcess process, Set<String> otherNodes) {
+        if (process.processId == null || process.processId.isBlank()
+                || process.leavingNodeId == null || process.leavingNodeId.isBlank()
+                || process.lastOperationClockSourceNode == null
+                || process.lastOperationClockSourceNode.isBlank())
+            return false;
+        if (process.confirmedBy.contains(process.leavingNodeId))
+            return false;
+        if (!otherNodes.containsAll(process.confirmedBy))
+            return false;
+        switch (process.phase) {
+            case A -> {
+                return otherNodes.contains(process.leavingNodeId);
+            }
+            case B, I -> {
+                if (otherNodes.contains(process.leavingNodeId))
+                    return false;
+                return process.lastOperationClockSourceNode.equals(process.leavingNodeId)
+                        || otherNodes.contains(process.lastOperationClockSourceNode);
+            }
+        }
+        return false;
     }
 
     private static boolean sameProcess(LeavingProcess left, LeavingProcess right) {
@@ -135,6 +178,8 @@ final class ActiveNodeSet {
 
     boolean startLeaving(String leavingNodeId, String processId, Map<String, Long> maxOperationClock,
             String localNodeId, LongSupplier nextClock) {
+        if (removedNodes.contains(leavingNodeId))
+            return false;
         var existing = leavingProcess;
         if (existing != null && existing.phase != Phase.I && existing.processId.compareTo(processId) <= 0)
             return false;
@@ -183,6 +228,7 @@ final class ActiveNodeSet {
         if (process.confirmedBy.containsAll(required)) {
             if (process.phase == Phase.A) {
                 nodes.remove(process.leavingNodeId);
+                removedNodes.add(process.leavingNodeId);
                 process.phase = Phase.B;
                 process.confirmedBy.clear();
                 changed = true;
