@@ -1,5 +1,9 @@
 package com.github.ruediste.p2psync.node;
 
+import java.util.HexFormat;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -100,6 +104,131 @@ public class NodeUserHandle {
     public String sendMailMessage(PubKey recipientUserId, String subject, String body,
             java.util.List<Sync.SyncUnitAttachment> attachments) {
         return sendMessage(recipientUserId, Sync.UserMessage.Type.MAIL, subject, body, attachments, null);
+    }
+
+    public List<Contact> listContacts() {
+        return data.contacts.list();
+    }
+
+    public List<Contact> searchContacts(String query) {
+        return data.contacts.search(query);
+    }
+
+    public Optional<Contact> getContact(String contactId) {
+        return data.contacts.get(contactId);
+    }
+
+    public Optional<Contact> findContactByUserId(PubKey userId) {
+        Objects.requireNonNull(userId);
+        return data.contacts.findByUserId(userId);
+    }
+
+    public Contact createContact(PubKey userId, String firstName, String lastName, String email, String phone,
+            String notes) {
+        validateContactUserId(userId, null);
+        Contact contact = new Contact(HexFormat.of().formatHex(node.nextEntityId()), userId, trim(firstName),
+                trim(lastName), trim(email), trim(phone), trim(notes));
+        if (contact.isEmpty())
+            throw new IllegalArgumentException("A contact needs at least one field");
+        recordOperation(Sync.UserOperation.newBuilder()
+                .setKind(Sync.UserOperation.Kind.CONTACT_CREATE)
+                .setContact(ContactList.toProto(contact))
+                .build());
+        return data.contacts.get(contact.contactId())
+                .orElseThrow(() -> new IllegalStateException("Created contact is missing from the materialized state"));
+    }
+
+    public Contact createContactFromUser(PubKey userId) {
+        Objects.requireNonNull(userId);
+        var existing = data.contacts.findByUserId(userId);
+        if (existing.isPresent())
+            return existing.get();
+        return createContact(userId, "", "", "", "", "");
+    }
+
+    public Contact updateContact(String contactId, PubKey userId, String firstName, String lastName, String email,
+            String phone, String notes) {
+        Contact existing = data.contacts.get(contactId)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown contact " + contactId));
+        validateContactUserId(userId, contactId);
+        Contact updated = new Contact(contactId, userId, trim(firstName), trim(lastName), trim(email), trim(phone),
+                trim(notes));
+        if (updated.isEmpty())
+            throw new IllegalArgumentException("A contact needs at least one field");
+
+        var operations = new java.util.ArrayList<Sync.UserOperation>();
+        if (!Objects.equals(existing.userId(), updated.userId()))
+            operations.add(Sync.UserOperation.newBuilder()
+                    .setKind(Sync.UserOperation.Kind.CONTACT_UPDATE)
+                    .setContactId(com.google.protobuf.ByteString.copyFrom(HexFormat.of().parseHex(contactId)))
+                    .setContactField(ContactList.protoField(Contact.Field.USER_ID))
+                    .setContactUserId(updated.userId() == null ? com.google.protobuf.ByteString.EMPTY
+                            : com.google.protobuf.ByteString.copyFrom(updated.userId().bytes()))
+                    .build());
+        addTextUpdate(operations, contactId, Contact.Field.FIRST_NAME, existing.firstName(),
+                updated.firstName());
+        addTextUpdate(operations, contactId, Contact.Field.LAST_NAME, existing.lastName(), updated.lastName());
+        addTextUpdate(operations, contactId, Contact.Field.EMAIL, existing.email(), updated.email());
+        addTextUpdate(operations, contactId, Contact.Field.PHONE, existing.phone(), updated.phone());
+        addTextUpdate(operations, contactId, Contact.Field.NOTES, existing.notes(), updated.notes());
+        recordOperations(operations);
+        return data.contacts.get(contactId)
+                .orElseThrow(() -> new IllegalStateException("Updated contact is missing from the materialized state"));
+    }
+
+    public void deleteContact(String contactId) {
+        if (data.contacts.get(contactId).isEmpty())
+            return;
+        recordOperation(Sync.UserOperation.newBuilder()
+                .setKind(Sync.UserOperation.Kind.CONTACT_DELETE)
+                .setContactId(com.google.protobuf.ByteString.copyFrom(HexFormat.of().parseHex(contactId)))
+                .build());
+    }
+
+    public String contactLabel(PubKey userId) {
+        if (data.userId().equals(userId))
+            return "you";
+        var contact = data.contacts.findByUserId(userId);
+        if (contact.isPresent())
+            return contact.get().displayName();
+        var localUser = node.users.get(userId);
+        if (localUser != null)
+            return localUser.localName;
+        return "User " + ContactList.shortKey(userId);
+    }
+
+    private void addTextUpdate(List<Sync.UserOperation> operations, String contactId, Contact.Field field,
+            String previous, String value) {
+        if (Objects.equals(previous, value))
+            return;
+        operations.add(Sync.UserOperation.newBuilder()
+                .setKind(Sync.UserOperation.Kind.CONTACT_UPDATE)
+                .setContactId(com.google.protobuf.ByteString.copyFrom(HexFormat.of().parseHex(contactId)))
+                .setContactField(ContactList.protoField(field))
+                .setContactValue(value)
+                .build());
+    }
+
+    private void validateContactUserId(PubKey userId, String exceptContactId) {
+        if (userId == null)
+            return;
+        if (userId.equals(data.userId()))
+            throw new IllegalArgumentException("A contact cannot reference the owner");
+        var existing = data.contacts.findByUserId(userId);
+        if (existing.isPresent() && !existing.get().contactId().equals(exceptContactId))
+            throw new IllegalArgumentException("User is already linked to contact " + existing.get().displayName());
+    }
+
+    private static String trim(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private void recordOperations(List<Sync.UserOperation> operations) {
+        if (operations.isEmpty())
+            return;
+        for (var operation : operations)
+            node.recordLocalOperation(data, operation.toByteArray());
+        rebuildCurrentState();
     }
 
     public void syncFrom(PeerId otherId) {
@@ -308,12 +437,12 @@ public class NodeUserHandle {
         if (data.stagingTree.isEmpty() && data.localOperationTree.isEmpty())
             return;
         var merged = data.allOperations();
-        var fileSystem = UserFileTree.replayFromState(data.snapshotState, merged.values());
+        var state = UserState.replayFromState(data.snapshotState, data.userId(), merged.values());
         var root = StorageUserRoot.from(node.network.getBlock(data.rootId));
-        var dataRoot = fileSystem.toDataUserRoot(node.storage);
-        root.dataRootBlockId = node.storage.store(dataRoot.toProto());
+        root.dataRootBlockId = node.storage.store(state.toDataUserRoot(node.storage).toProto());
         data.rootId = node.storage.store(root.toProto());
-        data.fileSystem = fileSystem;
+        data.fileSystem = state.fileSystem;
+        data.contacts = state.contacts;
         data.operationTree.putAll(data.localOperationTree);
         data.operationTree.putAll(data.stagingTree);
         data.localOperationTree.clear();
@@ -324,11 +453,12 @@ public class NodeUserHandle {
     }
 
     void rebuildCurrentState() {
-        var fileSystem = UserFileTree.replayFromState(data.snapshotState, data.allOperations().values());
+        var state = UserState.replayFromState(data.snapshotState, data.userId(), data.allOperations().values());
         var root = StorageUserRoot.from(node.network.getBlock(data.rootId));
-        root.dataRootBlockId = node.storage.store(fileSystem.toDataUserRoot(node.storage).toProto());
+        root.dataRootBlockId = node.storage.store(state.toDataUserRoot(node.storage).toProto());
         data.rootId = node.storage.store(root.toProto());
-        data.fileSystem = fileSystem;
+        data.fileSystem = state.fileSystem;
+        data.contacts = state.contacts;
         node.persistState();
     }
 
@@ -356,7 +486,7 @@ public class NodeUserHandle {
         }
         if (removable.isEmpty())
             return false;
-        var snapshot = UserFileTree.replayFromState(data.snapshotState, removable);
+        var snapshot = UserState.replayFromState(data.snapshotState, data.userId(), removable);
         data.snapshotState = snapshot.serializeState();
         removable.forEach(operation -> data.operationTree.remove(operation.id));
         rebuildCurrentState();

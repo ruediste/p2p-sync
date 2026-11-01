@@ -10,7 +10,6 @@ import java.awt.event.KeyEvent;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +35,7 @@ import javax.swing.border.EmptyBorder;
 
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 import com.github.ruediste.p2psync.node.Node;
+import com.github.ruediste.p2psync.node.NodeUserHandle;
 import com.github.ruediste.p2psync.node.SyncUnitAuthorization;
 import com.github.ruediste.p2psync.node.SyncUnitId;
 import com.github.ruediste.p2psync.proto.Sync;
@@ -55,7 +55,7 @@ final class ChatPanel extends JPanel {
     private final JTextArea composer = Theme.textArea(3, 40);
     private final JPanel attachmentPanel = Theme.column();
     private final JButton sendButton = Theme.primaryButton("Send");
-    private final JTextField newChatKey = Theme.textField(12);
+    private final ContactPicker contactPicker;
 
     private final List<Sync.SyncUnitAttachment> attachments = new ArrayList<>();
     private Conversation selected;
@@ -66,6 +66,7 @@ final class ChatPanel extends JPanel {
         this.node = node;
         this.user = user;
         this.status = status;
+        this.contactPicker = new ContactPicker(node, user, status);
         setLayout(new BorderLayout());
         setBackground(Theme.PAPER);
         setBorder(new EmptyBorder(16, 18, 16, 18));
@@ -113,15 +114,14 @@ final class ChatPanel extends JPanel {
         JPanel newChat = Theme.column();
         newChat.setBorder(new EmptyBorder(8, 0, 0, 0));
         newChat.setBackground(Theme.CARD);
-        newChat.add(Theme.muted("New direct chat (recipient key, hex)"));
+        newChat.add(Theme.muted("New direct chat"));
         newChat.add(Box.createVerticalStrut(4));
-        JPanel newChatRow = Theme.row(6);
-        newChatRow.setBackground(Theme.CARD);
-        newChatRow.add(newChatKey);
+        newChat.add(contactPicker);
         JButton start = Theme.secondaryButton("Start");
+        start.setAlignmentX(Component.LEFT_ALIGNMENT);
         start.addActionListener(event -> startDirectChat());
-        newChatRow.add(start);
-        newChat.add(newChatRow);
+        newChat.add(Box.createVerticalStrut(4));
+        newChat.add(start);
         panel.add(newChat, BorderLayout.SOUTH);
         return panel;
     }
@@ -195,6 +195,7 @@ final class ChatPanel extends JPanel {
 
     void setUser(Node.UserStatus user) {
         this.user = user;
+        contactPicker.setUser(user);
     }
 
     void selectChannel(SyncUnitId id) {
@@ -238,8 +239,7 @@ final class ChatPanel extends JPanel {
     }
 
     private List<Conversation> conversations() {
-        Map<PubKey, String> localNames = new HashMap<>();
-        node.listUsers().forEach(item -> localNames.put(item.userId(), item.localName()));
+        NodeUserHandle handle = node.getUser(user.userId());
         List<Conversation> result = new ArrayList<>();
         for (var unit : node.listSyncUnits(user.userId())) {
             if (unit.type() == SyncUnitAuthorization.Type.MESSAGE_CHANNEL && !unit.pendingInvitation())
@@ -260,7 +260,7 @@ final class ChatPanel extends JPanel {
         if (pendingContact != null)
             contacts.putIfAbsent(HexFormat.of().formatHex(pendingContact.bytes()), pendingContact);
         for (PubKey contact : contacts.values()) {
-            String label = localNames.getOrDefault(contact, "User " + Theme.shortKey(contact));
+            String label = handle.contactLabel(contact);
             result.add(new Conversation(directKey(contact), label, "Direct chat", null, contact));
         }
         return result;
@@ -279,7 +279,7 @@ final class ChatPanel extends JPanel {
             composer.setEnabled(false);
             messagesPanel.removeAll();
             messagesPanel.add(Theme.emptyState("No conversation selected",
-                    "Pick a conversation on the left, or start a direct chat with a recipient key."));
+                    "Pick a conversation on the left, or start a direct chat with a contact."));
             messagesPanel.revalidate();
             messagesPanel.repaint();
             return;
@@ -354,11 +354,7 @@ final class ChatPanel extends JPanel {
     }
 
     private String senderLabel(PubKey key) {
-        return node.listUsers().stream()
-                .filter(item -> item.userId().equals(key))
-                .map(Node.UserStatus::localName)
-                .findFirst()
-                .orElse("User " + Theme.shortKey(key));
+        return node.getUser(user.userId()).contactLabel(key);
     }
 
     private static int longestLine(String text) {
@@ -379,20 +375,19 @@ final class ChatPanel extends JPanel {
     }
 
     private void startDirectChat() {
-        try {
-            PubKey contact = PubKey.from(HexFormat.of().parseHex(newChatKey.getText().trim()));
-            if (contact.equals(user.userId())) {
-                status.accept("A direct chat needs another user's key");
-                return;
-            }
-            pendingContact = contact;
-            selected = null;
-            newChatKey.setText("");
-            refresh();
-            status.accept("Started a new direct chat");
-        } catch (RuntimeException error) {
-            status.accept("Invalid recipient key: " + error.getMessage());
+        PubKey contact = contactPicker.selectedUserId();
+        if (contact == null) {
+            status.accept("Select a contact with a linked user ID, or link a user key first");
+            return;
         }
+        if (contact.equals(user.userId())) {
+            status.accept("A direct chat needs another user");
+            return;
+        }
+        pendingContact = contact;
+        selected = null;
+        refresh();
+        status.accept("Started a new direct chat");
     }
 
     private void attachFiles() {

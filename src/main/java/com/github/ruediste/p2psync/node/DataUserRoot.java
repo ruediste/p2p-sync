@@ -8,12 +8,14 @@ public class DataUserRoot {
     public String userStatusMessage;
     public BlockId rootDirectoryId;
     public byte[] rootDirectoryGuid;
+    public java.util.List<Contact> contacts = java.util.List.of();
 
     public Sync.DataUserRoot toProto() {
         return Sync.DataUserRoot.newBuilder()
                 .setUserStatusMessage(userStatusMessage)
                 .setRootDirectoryId(rootDirectoryId.toProto())
                 .setRootDirectoryGuid(ByteString.copyFrom(rootDirectoryGuid))
+                .addAllContacts(contacts.stream().map(ContactList::toProto).toList())
                 .build();
     }
 
@@ -22,6 +24,13 @@ public class DataUserRoot {
         res.userStatusMessage = proto.getUserStatusMessage();
         res.rootDirectoryId = BlockId.fromProto(proto.getRootDirectoryId());
         res.rootDirectoryGuid = proto.getRootDirectoryGuid().toByteArray();
+        res.contacts = proto.getContactsList().stream().map(contact -> {
+            try {
+                return ContactList.fromProto(contact);
+            } catch (RuntimeException invalidContact) {
+                return null;
+            }
+        }).filter(java.util.Objects::nonNull).toList();
         return res;
     }
 

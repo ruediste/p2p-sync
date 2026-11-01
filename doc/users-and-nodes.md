@@ -112,6 +112,10 @@ in the node's DataStorage state. Existing mechanisms include:
 - [`SyncUnitContentOperation`](../src/main/java/com/github/ruediste/p2psync/node/SyncUnitContentOperation.java)
   signs and stores shared-file, todo-item, and channel-message content events,
   including attachment bytes.
+- [`ContactList`](../src/main/java/com/github/ruediste/p2psync/node/ContactList.java)
+  materializes the per-user contact list from signed User SyncUnit operations
+  and snapshot state. [`contacts.md`](contacts.md) describes the contact
+  model, replication, conflict handling, and UI integration.
 - [`BlockStorage`](../src/main/java/com/github/ruediste/p2psync/node/BlockStorage.java)
   is a content-addressed adapter over `DataStorage`. Its hash index and typed
   chunk/manifest blocks are stored in the same file as the node catalog and

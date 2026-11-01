@@ -46,6 +46,32 @@ message DataUserRoot {
 	string userStatusMessage = 1;
 	bytes rootDirectoryId=2;
 	bytes rootDirectoryGuid=3;
+	repeated Contact contacts = 4;
+}
+
+message Contact {
+	bytes contactId = 1;
+	bytes userId = 2;
+	string firstName = 3;
+	string lastName = 4;
+	string email = 5;
+	string phone = 6;
+	string notes = 7;
+}
+
+enum ContactField {
+	CONTACT_FIELD_UNSPECIFIED = 0;
+	CONTACT_FIELD_USER_ID = 1;
+	CONTACT_FIELD_FIRST_NAME = 2;
+	CONTACT_FIELD_LAST_NAME = 3;
+	CONTACT_FIELD_EMAIL = 4;
+	CONTACT_FIELD_PHONE = 5;
+	CONTACT_FIELD_NOTES = 6;
+}
+
+message UserSnapshot {
+	bytes fileTreeState = 1;
+	repeated Contact contacts = 2;
 }
 
 message UserTreeState {
@@ -101,6 +127,9 @@ message UserOperation {
 		PARTICIPATE_SYNC_UNIT = 9;
 		LEAVE_SYNC_UNIT = 10;
 		RECEIVE_MESSAGE = 11;
+		CONTACT_CREATE = 12;
+		CONTACT_UPDATE = 13;
+		CONTACT_DELETE = 14;
 	}
 	Kind kind = 1;
 	bytes entityId = 2;
@@ -120,6 +149,11 @@ message UserOperation {
 	bytes originalOperationSignature = 16;
 	uint64 originalOperationLamportClock = 17;
 	bytes originalOperationNodeHash = 18;
+	Contact contact = 19;
+	ContactField contactField = 20;
+	string contactValue = 21;
+	bytes contactUserId = 22;
+	bytes contactId = 23;
 }
 
 message NodeState {

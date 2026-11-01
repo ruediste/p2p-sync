@@ -10,7 +10,6 @@ import java.awt.Font;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -522,18 +521,22 @@ final class UnitsPanel extends JPanel {
 
         JPanel invite = Theme.column();
         invite.setAlignmentX(LEFT_ALIGNMENT);
-        JLabel inviteLabel = Theme.muted("Invite by user key");
+        JLabel inviteLabel = Theme.muted("Invite a contact");
         inviteLabel.setAlignmentX(LEFT_ALIGNMENT);
         invite.add(inviteLabel);
+        ContactPicker invitee = new ContactPicker(node, user, status);
+        invite.add(invitee);
         JPanel inviteRow = Theme.row(6);
-        JTextField invitee = Theme.textField(14);
-        inviteRow.add(invitee);
         inviteRow.add(roleBox);
         JButton inviteButton = Theme.secondaryButton("Invite");
         inviteButton.setEnabled(canManage);
         inviteButton.addActionListener(event -> {
             try {
-                PubKey key = PubKey.from(HexFormat.of().parseHex(invitee.getText().trim()));
+                PubKey key = invitee.selectedUserId();
+                if (key == null) {
+                    status.accept("Select a contact with a linked user ID, or link a user key first");
+                    return;
+                }
                 SyncUnitAuthorization.Role role = (SyncUnitAuthorization.Role) roleBox.getSelectedItem();
                 node.inviteToSyncUnit(unit.id(), user.userId(), key, role);
                 var messageType = switch (unit.type()) {
@@ -546,7 +549,7 @@ final class UnitsPanel extends JPanel {
                     node.getUserByName(user.localName()).sendMessage(key, messageType, "SyncUnit invitation",
                             "You were invited to " + Theme.unitType(unit.type()).toLowerCase() + ".", List.of(),
                             unit.id());
-                invitee.setText("");
+                invitee.clearSelection();
                 model.setMembers(node.listSyncUnitMembers(unit.id()));
                 refreshWithoutDetailReset();
                 status.accept("Invitation sent");
@@ -745,7 +748,7 @@ final class UnitsPanel extends JPanel {
         }
     }
 
-    private static final class MemberTableModel extends AbstractTableModel {
+    private final class MemberTableModel extends AbstractTableModel {
         private static final String[] COLUMNS = { "User key", "Role", "Status" };
         private List<Node.SyncUnitMemberStatus> members = List.of();
 
@@ -773,7 +776,7 @@ final class UnitsPanel extends JPanel {
         public Object getValueAt(int row, int column) {
             var member = members.get(row);
             return switch (column) {
-                case 0 -> HexFormat.of().formatHex(member.userId().bytes(), 0, 8);
+                case 0 -> node.getUser(user.userId()).contactLabel(member.userId());
                 case 1 -> member.role().name().toLowerCase();
                 case 2 -> member.pendingInvitation() ? "Invited" : "Active";
                 default -> throw new IndexOutOfBoundsException(column);

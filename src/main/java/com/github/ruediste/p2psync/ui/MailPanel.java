@@ -7,7 +7,6 @@ import java.awt.Font;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -58,7 +57,7 @@ final class MailPanel extends JPanel {
     private final JLabel detailTitle = new JLabel();
     private final JLabel detailMeta = new JLabel();
 
-    private final JTextField composeRecipient = Theme.textField(26);
+    private final ContactPicker recipientPicker;
     private final JTextField composeSubject = Theme.textField(26);
     private final JTextArea composeBody = Theme.textArea(12, 48);
     private final JPanel composeAttachments = Theme.column();
@@ -75,6 +74,7 @@ final class MailPanel extends JPanel {
         this.node = node;
         this.user = user;
         this.status = status;
+        this.recipientPicker = new ContactPicker(node, user, status);
         setLayout(new BorderLayout());
         setBackground(Theme.PAPER);
         setBorder(new EmptyBorder(16, 18, 16, 18));
@@ -159,6 +159,7 @@ final class MailPanel extends JPanel {
 
     void setUser(Node.UserStatus user) {
         this.user = user;
+        recipientPicker.setUser(user);
     }
 
     void refresh() {
@@ -333,14 +334,14 @@ final class MailPanel extends JPanel {
     private void showCompose(PubKey recipient, String subject, String body) {
         composing = true;
         mailList.clearSelection();
-        composeRecipient.setText(recipient == null ? "" : HexFormat.of().formatHex(recipient.bytes()));
+        recipientPicker.setSelectedUserId(recipient);
         composeSubject.setText(subject);
         composeBody.setText(body);
         attachments.clear();
         renderAttachmentChips();
         detailTitle.setText("New mail");
-        detailMeta.setText("Recipient uses a hex-encoded public user key");
-        composeRecipient.requestFocusInWindow();
+        detailMeta.setText("Select a linked contact or link a user key");
+        recipientPicker.requestFocusInWindow();
         renderCompose();
     }
 
@@ -365,7 +366,7 @@ final class MailPanel extends JPanel {
         JPanel form = new JPanel();
         form.setBackground(Theme.PAPER);
         form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
-        form.add(Theme.formField("Recipient public key (hex)", composeRecipient));
+        form.add(Theme.formField("Recipient", recipientPicker));
         form.add(Box.createVerticalStrut(8));
         form.add(Theme.formField("Subject", composeSubject));
         form.add(Box.createVerticalStrut(8));
@@ -437,11 +438,9 @@ final class MailPanel extends JPanel {
     }
 
     private void send() {
-        PubKey recipient;
-        try {
-            recipient = PubKey.from(HexFormat.of().parseHex(composeRecipient.getText().trim()));
-        } catch (RuntimeException error) {
-            status.accept("Invalid recipient key: " + error.getMessage());
+        PubKey recipient = recipientPicker.selectedUserId();
+        if (recipient == null) {
+            status.accept("Select a contact with a linked user ID, or link a user key first");
             return;
         }
         try {
@@ -463,13 +462,7 @@ final class MailPanel extends JPanel {
     }
 
     private String contactLabel(PubKey key) {
-        if (key.equals(user.userId()))
-            return "you";
-        return node.listUsers().stream()
-                .filter(item -> item.userId().equals(key))
-                .map(Node.UserStatus::localName)
-                .findFirst()
-                .orElse("User " + Theme.shortKey(key));
+        return node.getUser(user.userId()).contactLabel(key);
     }
 
     private static String typeLabel(Sync.UserMessage.Type type) {

@@ -132,6 +132,8 @@ final class UserFileTree {
             }
             case PARTICIPATE_SYNC_UNIT, LEAVE_SYNC_UNIT, RECEIVE_MESSAGE -> {
             }
+            case CONTACT_CREATE, CONTACT_UPDATE, CONTACT_DELETE -> {
+            }
             case UNRECOGNIZED -> throw new IllegalArgumentException("Unknown user operation kind");
         }
     }

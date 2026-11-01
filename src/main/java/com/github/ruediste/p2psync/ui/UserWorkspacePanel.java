@@ -25,6 +25,7 @@ final class UserWorkspacePanel extends JPanel {
         OVERVIEW("Overview"),
         CHAT("Chat"),
         MAIL("Mail"),
+        CONTACTS("Contacts"),
         UNITS("Sync units"),
         ACCOUNT("Account");
 
@@ -48,6 +49,7 @@ final class UserWorkspacePanel extends JPanel {
 
     private final ChatPanel chat;
     private final MailPanel mail;
+    private final ContactsPanel contacts;
     private final UnitsPanel units;
     private final AccountPanel account;
     private final JPanel overview;
@@ -70,6 +72,7 @@ final class UserWorkspacePanel extends JPanel {
 
         chat = new ChatPanel(node, user, status);
         mail = new MailPanel(node, user, status);
+        contacts = new ContactsPanel(node, user, status);
         units = new UnitsPanel(node, user, mountPoint, status);
         account = new AccountPanel(node, user, mountPoint, status, onChanged);
         units.setOpenChannelHandler(id -> selectChannel(id));
@@ -79,6 +82,7 @@ final class UserWorkspacePanel extends JPanel {
         cardPanel.add(overview, Section.OVERVIEW.name());
         cardPanel.add(chat, Section.CHAT.name());
         cardPanel.add(mail, Section.MAIL.name());
+        cardPanel.add(contacts, Section.CONTACTS.name());
         cardPanel.add(units, Section.UNITS.name());
         cardPanel.add(account, Section.ACCOUNT.name());
 
@@ -137,6 +141,8 @@ final class UserWorkspacePanel extends JPanel {
         shortcuts.add(Box.createHorizontalStrut(12));
         shortcuts.add(shortcut("Mail", "Inbox, sent mail, invitations and attachments", Section.MAIL));
         shortcuts.add(Box.createHorizontalStrut(12));
+        shortcuts.add(shortcut("Contacts", "Address book for mail, chat and invitations", Section.CONTACTS));
+        shortcuts.add(Box.createHorizontalStrut(12));
         shortcuts.add(shortcut("Sync units", "Shared folders, todo lists and members", Section.UNITS));
         content.add(shortcuts);
         content.add(Box.createVerticalStrut(12));
@@ -194,6 +200,7 @@ final class UserWorkspacePanel extends JPanel {
         user = current;
         chat.setUser(user);
         mail.setUser(user);
+        contacts.setUser(user);
         units.setUser(user);
         account.setUser(user);
         updateHeader();
@@ -204,6 +211,7 @@ final class UserWorkspacePanel extends JPanel {
         user = current;
         chat.setUser(user);
         mail.setUser(user);
+        contacts.setUser(user);
         units.setUser(user);
         account.setUser(user);
         updateHeader();
@@ -215,6 +223,7 @@ final class UserWorkspacePanel extends JPanel {
             case OVERVIEW -> refreshOverview();
             case CHAT -> chat.refresh();
             case MAIL -> mail.refresh();
+            case CONTACTS -> contacts.refresh();
             case UNITS, ACCOUNT -> {
             }
         }
@@ -225,6 +234,7 @@ final class UserWorkspacePanel extends JPanel {
             case OVERVIEW -> refreshOverview();
             case CHAT -> chat.refresh();
             case MAIL -> mail.refresh();
+            case CONTACTS -> contacts.refresh();
             case UNITS -> units.refresh();
             case ACCOUNT -> account.setUser(user);
         }

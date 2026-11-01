@@ -21,8 +21,8 @@ If protobuf code generation misbehaves, a `mvn clean` usually helps.
 application, optional system-tray status menu, and a FUSE mount exposing each
 configured user below its node-local name. Users and workspace sections are
 selected in the left navigation. Chat, mail (an email-client style inbox/sent
-view), SyncUnits, and account settings stay in the main window; workflows use
-inline forms rather than modal dialogs. On Linux, install the FUSE 2
+view), contacts, SyncUnits, and account settings stay in the main window;
+workflows use inline forms rather than modal dialogs. On Linux, install the FUSE 2
 compatibility library
 (`libfuse2` or `libfuse2t64`), mount tools, and make `/dev/fuse` available to
 your user.

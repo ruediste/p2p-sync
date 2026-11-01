@@ -372,6 +372,7 @@ public class Node implements AutoCloseable {
         byte[] rootDirectoryGuid;
         byte[] snapshotState;
         UserFileTree fileSystem;
+        ContactList contacts;
 
         public PubKey userId() {
             return userKey.publicKey();
@@ -582,12 +583,13 @@ public class Node implements AutoCloseable {
         data.activeNodeSet.setVersion(nodeKey, nextClock());
         data.rootDirectoryGuid = nextEntityId();
         data.fileSystem = UserFileTree.empty(data.rootDirectoryGuid);
-        data.snapshotState = data.fileSystem.serializeState();
+        data.contacts = ContactList.empty(data.userId());
+        data.snapshotState = new UserState(data.fileSystem, data.contacts).serializeState();
         users.put(data.userId(), data);
         ensureUserSyncUnit(data);
         var handle = new NodeUserHandle(this, data);
 
-        var root = data.fileSystem.toDataUserRoot(storage);
+        var root = new UserState(data.fileSystem, data.contacts).toDataUserRoot(storage);
         var dataRootId = storage.store(root.toProto());
 
         var storageRoot = new StorageUserRoot();
@@ -625,12 +627,14 @@ public class Node implements AutoCloseable {
         data.stagingTree.putAll(peerData.stagingTree);
         data.stagingTree.putAll(peerData.localOperationTree);
         data.maxOperationClock.putAll(peerData.maxOperationClock);
-        data.fileSystem = UserFileTree.replayFromState(data.snapshotState, data.allOperations().values());
+        var state = UserState.replayFromState(data.snapshotState, userId, data.allOperations().values());
+        data.fileSystem = state.fileSystem;
+        data.contacts = state.contacts;
         data.activeNodeSet = peerData.activeNodeSet.copy();
         data.activeNodeSet.nodes.add(nodeKey);
         data.activeNodeSet.setVersion(nodeKey, nextClock());
         root.shardListId = storage.store(Sync.ShardList.newBuilder().build());
-        root.dataRootBlockId = storage.store(data.fileSystem.toDataUserRoot(storage).toProto());
+        root.dataRootBlockId = storage.store(state.toDataUserRoot(storage).toProto());
         root.nodeNrMapId = storage.store(Sync.NodeNrMap.newBuilder().build());
         data.rootId = storage.store(root.toProto());
         users.put(userId, data);
@@ -694,9 +698,10 @@ public class Node implements AutoCloseable {
         data.userKey = userKey;
         data.localName = localName;
         data.snapshotState = response.getSnapshotState().toByteArray();
-        var snapshot = UserFileTree.fromState(data.snapshotState);
-        data.rootDirectoryGuid = snapshot.rootId.clone();
-        data.fileSystem = snapshot;
+        var snapshot = UserState.from(data.snapshotState, userKey.publicKey());
+        data.rootDirectoryGuid = snapshot.fileSystem.rootId.clone();
+        data.fileSystem = snapshot.fileSystem;
+        data.contacts = snapshot.contacts;
         for (var stored : response.getHistoryList()) {
             var id = new OperationId(stored.getLamportClock(), stored.getNodeHash().toByteArray());
             var payload = stored.getPayload().toByteArray();
@@ -713,10 +718,12 @@ public class Node implements AutoCloseable {
         loadActiveNodeSet(response.getActiveNodeSet(), data.activeNodeSet);
         data.activeNodeSet.nodes.add(nodeKey);
         data.activeNodeSet.setVersion(nodeKey, nextClock());
-        data.fileSystem = UserFileTree.replayFromState(data.snapshotState, data.operationTree.values());
+        var state = UserState.replayFromState(data.snapshotState, userKey.publicKey(), data.operationTree.values());
+        data.fileSystem = state.fileSystem;
+        data.contacts = state.contacts;
         var storageRoot = new StorageUserRoot();
         storageRoot.shardListId = storage.store(Sync.ShardList.newBuilder().build());
-        storageRoot.dataRootBlockId = storage.store(data.fileSystem.toDataUserRoot(storage).toProto());
+        storageRoot.dataRootBlockId = storage.store(state.toDataUserRoot(storage).toProto());
         storageRoot.nodeNrMapId = storage.store(Sync.NodeNrMap.newBuilder().build());
         data.rootId = storage.store(storageRoot.toProto());
         users.put(data.userId(), data);
@@ -1398,6 +1405,10 @@ public class Node implements AutoCloseable {
                 .orElseThrow(() -> new IllegalArgumentException("Unknown local user name: " + localName));
     }
 
+    public NodeUserHandle getUser(PubKey userId) {
+        return new NodeUserHandle(this, requireConfiguredUser(userId));
+    }
+
     public void exportUserKey(PubKey userId, Path credentialFile, char[] password) {
         var user = users.get(userId);
         if (user == null)
@@ -1772,7 +1783,9 @@ public class Node implements AutoCloseable {
                     if (user.inboxMessages.putIfAbsent(message.messageId, message) != null)
                         throw new IllegalStateException("Duplicate persisted inbox message ID");
                 }
-                user.fileSystem = UserFileTree.fromState(user.snapshotState);
+                var snapshot = UserState.from(user.snapshotState, user.userId());
+                user.fileSystem = snapshot.fileSystem;
+                user.contacts = snapshot.contacts;
                 users.put(user.userId(), user);
                 ensureUserSyncUnit(user);
                 rebuildInboxMessages(user);
