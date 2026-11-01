@@ -20,11 +20,17 @@ public final class P2PStream implements Closeable {
     private final P2PInputStream in;
     private final P2POutputStream out;
     private final boolean initiator;
+    private final PeerId remotePeerId;
 
     public P2PStream(P2PInputStream in, P2POutputStream out, boolean initiator) {
+        this(in, out, initiator, null);
+    }
+
+    public P2PStream(P2PInputStream in, P2POutputStream out, boolean initiator, PeerId remotePeerId) {
         this.in = in;
         this.out = out;
         this.initiator = initiator;
+        this.remotePeerId = remotePeerId;
     }
 
     public P2PInputStream getIn() {
@@ -33,6 +39,14 @@ public final class P2PStream implements Closeable {
 
     public P2POutputStream getOut() {
         return out;
+    }
+
+    /**
+     * The authenticated remote peer identity, or {@code null} for streams that
+     * have not yet completed a security handshake (e.g. raw transport streams).
+     */
+    public PeerId getRemotePeerId() {
+        return remotePeerId;
     }
 
     /**

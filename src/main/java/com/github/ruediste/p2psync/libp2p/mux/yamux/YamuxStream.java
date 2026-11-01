@@ -63,7 +63,7 @@ public final class YamuxStream {
     }
 
     public P2PStream asP2PStream(boolean initiator) {
-        return new P2PStream(inputStream, outputStream, initiator);
+        return new P2PStream(inputStream, outputStream, initiator, connection.getRemotePeerId());
     }
 
     // ---- read side ----

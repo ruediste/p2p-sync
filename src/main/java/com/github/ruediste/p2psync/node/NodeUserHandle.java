@@ -491,8 +491,14 @@ public class NodeUserHandle {
     public boolean truncateStableLog() {
         Node.OperationId stable = null;
         for (String source : data.activeNodeSet.nodes) {
-            var candidate = new Node.OperationId(data.maxOperationClock.getOrDefault(source, 0L),
-                    java.util.HexFormat.of().parseHex(source));
+            byte[] sourceBytes;
+            try {
+                sourceBytes = java.util.HexFormat.of().parseHex(source);
+            } catch (IllegalArgumentException e) {
+                // TODO 3: Skip malformed node IDs instead of throwing
+                continue;
+            }
+            var candidate = new Node.OperationId(data.maxOperationClock.getOrDefault(source, 0L), sourceBytes);
             if (stable == null || candidate.compareTo(stable) < 0)
                 stable = candidate;
         }

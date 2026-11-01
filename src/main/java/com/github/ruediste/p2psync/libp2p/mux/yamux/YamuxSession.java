@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.github.ruediste.p2psync.libp2p.core.P2PInputStream;
 import com.github.ruediste.p2psync.libp2p.core.P2POutputStream;
 import com.github.ruediste.p2psync.libp2p.core.P2PStream;
+import com.github.ruediste.p2psync.libp2p.core.PeerId;
 import com.github.ruediste.p2psync.libp2p.multistream.Multistream;
 import com.github.ruediste.p2psync.libp2p.multistream.ProtocolBinding;
 import com.github.ruediste.p2psync.libp2p.mux.MuxerSession;
@@ -36,16 +37,22 @@ public final class YamuxSession implements MuxerSession {
     private volatile boolean closed;
 
     private final Multistream<?, ?> appMultistream;
+    private final PeerId remotePeerId;
 
     public YamuxSession(P2PInputStream in, P2POutputStream out, boolean initiator,
-            Multistream<?, ?> appMultistream) {
+            Multistream<?, ?> appMultistream, PeerId remotePeerId) {
         this.in = in;
         this.out = out;
         this.initiator = initiator;
         this.idGenerator = new YamuxStreamIdGenerator(initiator);
         this.appMultistream = appMultistream;
+        this.remotePeerId = remotePeerId;
 
         Thread.ofVirtual().name("yamux-reader").start(this::readerLoop);
+    }
+
+    public PeerId getRemotePeerId() {
+        return remotePeerId;
     }
 
     public boolean isInitiator() {

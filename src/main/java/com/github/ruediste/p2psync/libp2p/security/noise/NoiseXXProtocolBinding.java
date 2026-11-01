@@ -57,7 +57,7 @@ public final class NoiseXXProtocolBinding implements ProtocolBinding<SecureSessi
                 result.getInboundCipher());
         NoiseXXFramedOutputStream framedOut = new NoiseXXFramedOutputStream(stream.getOut(),
                 result.getOutboundCipher());
-        P2PStream securedStream = new P2PStream(framedIn, framedOut, initiator);
+        P2PStream securedStream = new P2PStream(framedIn, framedOut, initiator, result.getRemoteId());
 
         return new SecureSession(result.getLocalId(), result.getRemoteId(), result.getRemotePubKey(),
                 securedStream);

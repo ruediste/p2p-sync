@@ -36,11 +36,13 @@ public final class YamuxProtocolBinding implements ProtocolBinding<MuxerSession,
 
     @Override
     public MuxerSession initInitiator(P2PStream stream, String selectedProtocol) {
-        return new YamuxSession(stream.getIn(), stream.getOut(), true, inboundMultistream);
+        return new YamuxSession(stream.getIn(), stream.getOut(), true, inboundMultistream,
+                stream.getRemotePeerId());
     }
 
     @Override
     public MuxerSession initResponder(P2PStream stream, String selectedProtocol) {
-        return new YamuxSession(stream.getIn(), stream.getOut(), false, inboundMultistream);
+        return new YamuxSession(stream.getIn(), stream.getOut(), false, inboundMultistream,
+                stream.getRemotePeerId());
     }
 }

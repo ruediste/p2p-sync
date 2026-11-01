@@ -21,17 +21,17 @@ root.
 
 ### Security and authorization
 
-- [ ] **[high] Authenticate remote sync requests.** `Node.handleRemoteSyncRequest`
+- [x] **[high] Authenticate remote sync requests.** `Node.handleRemoteSyncRequest`
   trusts `request.getUserId()` / `request.getRequesterUserPublicKey()` and never
   checks the Noise-authenticated remote peer. Anyone who knows a user's public key
   can fetch contacts, history and file-tree entries. Bind the request to the peer
   identity or sign it (`Node.java:286-342`, `UserSyncProtocol.java:37-45`).
-- [ ] **[high] Stop broadcasting direct messages to unrelated peers.**
+- [x] **[high] Stop broadcasting direct messages to unrelated peers.**
   `deliverPendingMessages` sends the full message (body and attachments) to every
   configured/address-book peer until one reports `directMessageStored`; peers that
   do not host the recipient still receive the plaintext. Resolve the recipient's
   peers first, or encrypt to the recipient (`Node.java:1067-1089`).
-- [ ] **[high] Do not trust `joiningNodeId`.** The joining node id is added to the
+- [x] **[high] Do not trust `joiningNodeId`.** The joining node id is added to the
   user's active set without proof of control of that node key. A malformed value
   also makes `truncateStableLog` throw in `HexFormat.parseHex`
   (`Node.java:362-366`, `NodeUserHandle.java:493-496`).

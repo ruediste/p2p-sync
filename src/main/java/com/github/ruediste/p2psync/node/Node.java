@@ -278,9 +278,23 @@ public class Node implements AutoCloseable {
         }
     }
 
-    private byte[] handleRemoteSyncRequest(byte[] bytes) {
+    private byte[] handleRemoteSyncRequest(PeerId remotePeerId, byte[] bytes) {
         try {
             var request = Sync.RemoteSyncRequest.parseFrom(bytes);
+            String remoteNodeKey = nodeKeyFor(remotePeerId);
+
+            // TODO 3: Validate joiningNodeId against the authenticated peer identity
+            if (!request.getJoiningNodeId().isEmpty()) {
+                try {
+                    java.util.HexFormat.of().parseHex(request.getJoiningNodeId());
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("Malformed joiningNodeId", e);
+                }
+                if (!request.getJoiningNodeId().equals(remoteNodeKey)) {
+                    throw new IllegalArgumentException("joiningNodeId does not match authenticated peer");
+                }
+            }
+
             if (request.hasDirectMessage()) {
                 var delivery = request.getDirectMessage();
                 var senderId = PubKey.from(delivery.getSenderUserId().toByteArray());
@@ -302,7 +316,13 @@ public class Node implements AutoCloseable {
                         && unit.authorization.pendingInvitations().containsKey(requesterId);
                 if (unit == null)
                     return Sync.RemoteSyncResponse.newBuilder().setNodeClock(clock).build().toByteArray();
-                if (!knownMember && !invited)
+                // TODO 1: Authenticate requester against the Noise-authenticated peer
+                boolean authorized = false;
+                var requesterData = users.get(requesterId);
+                if (requesterData != null) {
+                    authorized = requesterData.activeNodeSet.nodes.contains(remoteNodeKey);
+                }
+                if (!authorized && !knownMember && !invited)
                     return Sync.RemoteSyncResponse.newBuilder().setNodeClock(clock).setSyncUnitRevoked(true)
                             .build().toByteArray();
                 if (request.hasSyncUnitUpdate()) {
@@ -335,6 +355,10 @@ public class Node implements AutoCloseable {
             var response = Sync.RemoteSyncResponse.newBuilder().setUserFound(data != null).setNodeClock(clock);
             if (data == null)
                 return response.build().toByteArray();
+            // TODO 1: Authenticate user sync request against the Noise-authenticated peer
+            if (!data.activeNodeSet.nodes.contains(remoteNodeKey)) {
+                return Sync.RemoteSyncResponse.newBuilder().setNodeClock(clock).setUserFound(false).build().toByteArray();
+            }
             response.setActiveNodeSet(persist(data.activeNodeSet));
             if (data.homeSyncUnitId != null)
                 response.setHomeSyncUnitId(com.google.protobuf.ByteString.copyFrom(data.homeSyncUnitId.bytes()));
@@ -1075,9 +1099,8 @@ public class Node implements AutoCloseable {
                 if (sender.deliveredMessageIds.contains(message.getMessageId()))
                     continue;
                 var remotePeers = new TreeSet<PeerId>(PeerId::compareTo);
-                remotePeers.addAll(remoteAddresses.keySet());
-                if (remoteHost != null)
-                    remotePeers.addAll(remoteHost.addressBook().getPeerIds());
+                // TODO 2: Resolve the recipient's peers first instead of broadcasting to all address-book peers
+                remotePeers.addAll(network.getPeersForUser(recipientId));
                 remotePeers.remove(peerId);
                 for (var remotePeer : remotePeers) {
                     if (network.nodes.containsKey(remotePeer))

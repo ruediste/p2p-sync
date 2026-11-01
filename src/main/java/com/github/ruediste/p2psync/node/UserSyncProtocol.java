@@ -2,11 +2,12 @@ package com.github.ruediste.p2psync.node;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import com.github.ruediste.p2psync.libp2p.core.P2PInputStream;
 import com.github.ruediste.p2psync.libp2p.core.P2POutputStream;
 import com.github.ruediste.p2psync.libp2p.core.P2PStream;
+import com.github.ruediste.p2psync.libp2p.core.PeerId;
 import com.github.ruediste.p2psync.libp2p.multistream.ProtocolBinding;
 import com.github.ruediste.p2psync.libp2p.multistream.ProtocolDescriptor;
 
@@ -17,9 +18,9 @@ final class UserSyncProtocol implements ProtocolBinding<UserSyncProtocol.Control
     static final String PROTOCOL = "/p2p-sync/user-sync/1.0.0";
     private static final int MAX_MESSAGE_SIZE = 128 * 1024 * 1024;
 
-    private final Function<byte[], byte[]> requestHandler;
+    private final BiFunction<PeerId, byte[], byte[]> requestHandler;
 
-    UserSyncProtocol(Function<byte[], byte[]> requestHandler) {
+    UserSyncProtocol(BiFunction<PeerId, byte[], byte[]> requestHandler) {
         this.requestHandler = Objects.requireNonNull(requestHandler);
     }
 
@@ -38,7 +39,8 @@ final class UserSyncProtocol implements ProtocolBinding<UserSyncProtocol.Control
         Thread.ofVirtual().name("user-sync-responder").start(() -> {
             try (stream) {
                 byte[] request = readFrame(stream.getIn());
-                writeFrame(stream.getOut(), requestHandler.apply(request));
+                PeerId remotePeerId = stream.getRemotePeerId();
+                writeFrame(stream.getOut(), requestHandler.apply(remotePeerId, request));
             } catch (RuntimeException ignored) {
                 stream.close();
             }
