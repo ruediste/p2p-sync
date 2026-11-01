@@ -1,5 +1,8 @@
 # Storage and Synchronization
 
+> `doc/persistence.md` describes which parts of this design are implemented today
+> and how the data is actually laid out and persisted on disk.
+
 ## Main Concepts
 
 ### User

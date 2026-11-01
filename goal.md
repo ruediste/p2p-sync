@@ -1,2 +1,0 @@
-# Goal
-Currently, persistence ha
