@@ -1104,10 +1104,18 @@ public class DataStorage implements Closeable {
             throw new IllegalStateException("Exclusive block is not transaction-local: " + blockOffset);
         // Structural children are managed by the caller, not by counted write
         // callbacks.
-        ByteBuffer buffer = data.getBlockType().serialize(data);
-        byte[] bytes = new byte[buffer.remaining()];
-        buffer.get(bytes);
-        modifiedBlocks.put(blockOffset, new ModifiedBlock(bytes, List.of()));
+        modifiedBlocks.put(blockOffset, new ModifiedBlock(serializeBlock(area, data), List.of()));
+    }
+
+    private <T extends BlockInstance<T>> byte[] serializeBlock(Area area, T data) {
+        ByteBuffer serialized = data.getBlockType().serialize(data);
+        int size = blockSize(area);
+        if (serialized.remaining() > size)
+            throw new IllegalArgumentException(
+                    "block size mismatch: expected at most " + size + " got " + serialized.remaining());
+        byte[] bytes = new byte[size];
+        serialized.get(bytes, 0, serialized.remaining());
+        return bytes;
     }
 
     /**
@@ -1192,16 +1200,15 @@ public class DataStorage implements Closeable {
     private <T extends BlockInstance<T>> void writeBlock(long blockOffset, Area area, T data, boolean direct) {
         if (!modifiedBlocks.containsKey(blockOffset))
             throw new IllegalStateException("Block " + blockOffset + " has not been allocated in this transaction");
-        byte[] bytes = data.getBlockType().serialize(data).array();
         var type = data.getBlockType();
+        byte[] bytes = serializeBlock(area, data);
         List<BlockRef> references = List.copyOf(type.getReferencedBlocks(data, this));
         references.forEach(this::incrementRefCount);
         var existing = modifiedBlocks.put(blockOffset, new ModifiedBlock(direct ? null : bytes, references));
         if (existing != null)
             existing.references().forEach(this::decrementRefCount);
-        if (refCountUpdates.containsKey(blockOffset))
-            if (direct)
-                writeToDisk(blockOffset, bytes);
+        if (direct)
+            writeToDisk(blockOffset, bytes);
     }
 
     /**
@@ -1359,7 +1366,12 @@ public class DataStorage implements Closeable {
             long offset = rootBlock.getDeferredFreeListHead(area);
             rootBlock.setDeferredFreeListHead(area, 0);
 
+            Set<Long> visited = new HashSet<>();
             while (offset != 0) {
+                validateBlockOffset(offset, blockSize(Area.META), "deferred free list block");
+                if (!visited.add(offset))
+                    throw new IllegalStateException("Cycle in deferred free list");
+
                 // free the list block itself first
                 addToDeferredFreeBlocks(offset, Area.META);
 
@@ -1878,7 +1890,11 @@ public class DataStorage implements Closeable {
     }
 
     private void addListBlocksToDeferredFreeBlocks(long offset, Area area) {
+        Set<Long> visited = new HashSet<>();
         while (offset != 0) {
+            validateBlockOffset(offset, blockSize(area), "deferred list block");
+            if (!visited.add(offset))
+                throw new IllegalStateException("Cycle in deferred list");
             var block = ByteBuffer.wrap(readBlock(offset, area));
             addToDeferredFreeBlocks(offset, area);
 

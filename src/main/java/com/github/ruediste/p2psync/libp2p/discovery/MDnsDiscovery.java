@@ -251,10 +251,11 @@ public final class MDnsDiscovery implements Discoverer {
         if (listenIp instanceof Inet4Address != ifaceIp instanceof Inet4Address) {
             return false;
         }
-        if (listenIp.isAnyLocalAddress()) {
-            return true;
-        }
-        return listenIp.equals(ifaceIp);
+        return isWildcardAddress(listenIp) || listenIp.equals(ifaceIp);
+    }
+
+    private static boolean isWildcardAddress(InetAddress address) {
+        return address.isAnyLocalAddress();
     }
 
     /**
@@ -402,25 +403,8 @@ String peerIdStr = peerId.toBase58();
     }
 
     public static boolean isWildcard(Multiaddr addr) {
-        String s = addr.toString();
-        if (s.contains("/::/")) {
-            return true;
-        }
-        MultiaddrComponent ip6 = addr.getFirstComponent(Protocol.IP6);
-        // This project's Multiaddr renders IPv6 via InetAddress.getHostAddress(), which
-        // expands "::" to "0:0:0:0:0:0:0:0", so detect the wildcard from the bytes.
-        if (ip6 != null) {
-            byte[] v = ip6.getValue();
-            if (v != null) {
-                for (byte b : v) {
-                    if (b != 0) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
+        InetAddress ip = firstIp(addr);
+        return ip != null && isWildcardAddress(ip);
     }
 
     static int listenPort(List<Multiaddr> listenAddresses) {

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static com.github.ruediste.p2psync.libp2p.test.TestStreams.readExact;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -417,19 +418,6 @@ public class NoiseXXTest {
         java.lang.reflect.Field nonceField = NoiseXXHandshake.CipherState.class.getDeclaredField("nonce");
         nonceField.setAccessible(true);
         return nonceField.getLong(cipher);
-    }
-
-    private static byte[] readExact(P2PInputStream in, int n) {
-        byte[] buf = new byte[n];
-        int pos = 0;
-        while (pos < n) {
-            int r = in.read(buf, pos, n - pos);
-            if (r < 0) {
-                throw new RuntimeException("Unexpected EOF after " + pos + " of " + n + " bytes");
-            }
-            pos += r;
-        }
-        return buf;
     }
 
     private static byte[] randomData(int size) {

@@ -118,7 +118,7 @@ public final class NetworkImpl implements Network {
         return CompletableFuture.supplyAsync(() -> {
             // Reuse existing connection to this peer if present
             for (Connection conn : connections) {
-                if (conn.getRemotePeerId() != null && id.equals(conn.getRemotePeerId())) {
+                if (conn.secureSession().getRemoteId() != null && id.equals(conn.secureSession().getRemoteId())) {
                     return conn;
                 }
             }
@@ -140,12 +140,12 @@ public final class NetworkImpl implements Network {
                             connections.add(conn);
                             connectionEstablishedListener.handleConnection(conn);
                             // Verify the remote peer identity matches what we expect
-                            if (!id.equals(conn.getRemotePeerId())) {
+                            if (!id.equals(conn.secureSession().getRemoteId())) {
                                 conn.close();
                                 connections.remove(conn);
                                 throw new RuntimeException(
                                         "Remote peer identity mismatch: expected " + id
-                                                + ", got " + conn.getRemotePeerId());
+                                                + ", got " + conn.secureSession().getRemoteId());
                             }
                             return conn;
                         } catch (Exception e) {

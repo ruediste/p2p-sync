@@ -74,7 +74,7 @@ final class UserWorkspacePanel extends JPanel {
         chat = new ChatPanel(node, user, status);
         mail = new MailPanel(node, user, status);
         contacts = new ContactsPanel(node, user, status);
-        units = new UnitsPanel(node, user, mountPoint, status);
+        units = new UnitsPanel(node, user, status);
         account = new AccountPanel(node, user, mountPoint, status, onChanged);
         units.setOpenChannelHandler(id -> selectChannel(id));
         overview = buildOverview();

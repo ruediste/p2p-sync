@@ -128,13 +128,13 @@ root.
 
 ### Storage layer
 
-- [ ] **[high] Enforce block size on typed writes.** `writeBlock(..., T)` uses
+- [x] **[high] Enforce block size on typed writes.** `writeBlock(..., T)` uses
   `serialize(data).array()` without checking `remaining()` or the area block size,
   while the byte[] overload does check exactly. A short block is stored short and
   read back as a full block; an oversized one overwrites the next block
   (`DataStorage.java:1192-1205`, `DataStorage.java:1069-1075`,
   `DataStorage.java:1051-1055`).
-- [ ] **[high] Fix `writeBlockDirect` for blocks without refcount updates.**
+- [x] **[high] Fix `writeBlockDirect` for blocks without refcount updates.**
   The typed direct path only calls `writeToDisk` when the block has a refcount
   update; structurally owned blocks are silently left unwritten
   (`DataStorage.java:1177-1179`, `DataStorage.java:1202-1204`,
@@ -144,7 +144,7 @@ root.
   fixed 96-byte payload plus 10 bytes per ref handle. A root with several handles
   can overflow the SYSTEM block (`DataStorage.java:559,815-817`,
   `RootBlock.java:70-89`).
-- [ ] **[high] Detect cycles in deferred-free lists.** `addDeferredFreeBlocksToFreeTree`
+- [x] **[high] Detect cycles in deferred-free lists.** `addDeferredFreeBlocksToFreeTree`
   and `addListBlocksToDeferredFreeBlocks` follow `next` in unbounded loops without
   visited sets, contrary to the documented open-time cycle validation
   (`DataStorage.java:1357-1375,1880-1888`, `doc/persistence.md:273-275`).
@@ -169,7 +169,7 @@ root.
   `StorageCheck.run` collects pending META removals in a `TreeSet`, silently
   deduplicating records that the open path explicitly rejects
   (`StorageCheck.java:186-188`, `DataStorage.java:1390-1393`).
-- [ ] **[medium] Fix `StorageCheckMain` for node files.** The tool registers only
+- [x] **[medium] Fix `StorageCheckMain` for node files.** The tool registers only
   handle 1 as `FileTree.BLOCK_TYPE` and cannot read `node.db`, where handle 1 is
   the `BlobStorage` index and handle 2 is `UnitRootStore`
   (`StorageCheckMain.java:24-26`, `Node.java:192-194`,
@@ -282,7 +282,7 @@ root.
 
 ### UI and launcher
 
-- [ ] **[high] Fix ContactPicker default and stale selections.**
+- [x] **[high] Fix ContactPicker default and stale selections.**
   `clearSelection` selects index 0, and `setSelectedUserId` leaves a previous
   selection when the requested user is not in the list. New mail, reply, chat and
   invitation paths can therefore target the wrong contact
@@ -402,7 +402,7 @@ root.
 
 ### Dead code, duplication and test gaps
 
-- [ ] **[low] Remove or wire up dead code.** `App` (Hello World), `StorageShard`,
+- [x] **[low] Remove or wire up dead code.** `App` (Hello World), `StorageShard`,
   `JoinId`, `Node.guidCounter`, `RemoteSyncResponse.snapshotState`,
   `UserMessage.sharedFolderLabel` (the label-restore branch is unreachable),
   `SocketP2PInputStream/OutputStream`, `Stream`/`StreamHandler`,
@@ -410,23 +410,24 @@ root.
   (`App.java:7-12`, `StorageShard.java`, `JoinId.java`, `Node.java:46,2081`,
   `sync.proto:326`, `Node.java:1231-1237`, `SocketUtils.java:16-19`,
   `ContactPicker.java:95-102`, `UnitsPanel.java:42,57`).
-- [ ] **[low] Deduplicate shared utilities.** `CryptoUtils` duplicates the Noise
+- [x] **[low] Deduplicate shared utilities.** `CryptoUtils` duplicates the Noise
   handshake's SHA-256/HMAC helpers, stream-close logic is duplicated in
   `YamuxStream`/`StreamOutput`, mDNS wildcard logic is split between
   `isWildcard` and `covers`, and `Connection.getRemotePeerId` duplicates
   `SecureSession.getRemoteId` (`CryptoUtils.java:15-31`,
   `NoiseXXHandshake.java:696-712`, `YamuxStream.java:185-224`,
   `MDnsDiscovery.java:250-258,404-424`, `Connection.java:13-15`).
+- [x] **[low] Add missing regression tests.** Add an IPv4 wildcard mDNS test,
+  typed-block-size/direct-write storage tests, a deferred-free-list cycle test, a
+  node-file `StorageCheckMain` test, and a ContactPicker misselection test
+  (`MDnsDiscoveryTest.java:33-43`, `DataStorageAllocatorTest.java`,
+  `StorageCheckTest.java`, `ContactPickerTest.java`).
+- [x] **[low] Replace busy polling and duplicated test helpers.** `YamuxTest`
+  waits for remote streams with `Thread.sleep(10)` loops, and `readExact` is
+  duplicated across Yamux, Noise and end-to-end tests
+  (`YamuxTest.java:226-265`, `NoiseXXTest.java:422-433`).
+
 - [ ] **[medium] Replace the mock active-node test.** `NodeAlgorithmTest` defines
   its own active-set implementation with a two-phase leave process and
   `leavingProcess = null`, so it cannot catch the production three-phase protocol
   bugs (`NodeAlgorithmTest.java:366-422`, `ActiveNodeSet.java:138-184`).
-- [ ] **[low] Add missing regression tests.** Add an IPv4 wildcard mDNS test,
-  typed-block-size/direct-write storage tests, a deferred-free-list cycle test, a
-  node-file `StorageCheckMain` test, and a ContactPicker misselection test
-  (`MDnsDiscoveryTest.java:33-43`, `DataStorageAllocatorTest.java`,
-  `SimpleFuseFSTest.java`, `ContactPicker.java:109-131`).
-- [ ] **[low] Replace busy polling and duplicated test helpers.** `YamuxTest`
-  waits for remote streams with `Thread.sleep(10)` loops, and `readExact` is
-  duplicated across Yamux, Noise and end-to-end tests
-  (`YamuxTest.java:226-265`, `NoiseXXTest.java:422-433`).

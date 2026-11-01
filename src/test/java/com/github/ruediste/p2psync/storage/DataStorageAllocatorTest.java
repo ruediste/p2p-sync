@@ -1,6 +1,7 @@
 package com.github.ruediste.p2psync.storage;
 
 import static com.github.ruediste.p2psync.storage.DataStorageTestUtils.containsBlock;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -396,6 +397,96 @@ class DataStorageAllocatorTest {
         try (var reopened = new DataStorage()) {
             var exception = assertThrows(IllegalStateException.class, () -> reopened.open(path.toString()));
             assertEquals("Cycle in deferred ref-count update list", exception.getMessage());
+        }
+    }
+
+    /**
+     * Rejects a typed block whose serialized payload is larger than its area's
+     * block size, which would otherwise overwrite the next block.
+     */
+    @Test
+    void rejectsTypedBlocksLargerThanTheAreaBlockSize() {
+        try (var storage = newPersistentStorage(tempDir.resolve("typed-oversize.db"))) {
+            int blockSize = storage.blockSize(DataStorage.Area.DATA);
+            var oversized = new DataStorage.ByteArrayBlock(new byte[blockSize + 1]);
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> storage.writeNewBlock(DataStorage.Area.DATA, oversized));
+        }
+    }
+
+    /**
+     * Pads a short typed block to the full area block size, so the following
+     * bytes cannot contain stale data from a previous block generation.
+     */
+    @Test
+    void padsTypedBlocksSmallerThanTheAreaBlockSize() {
+        int blockSize = 4096;
+        try (var storage = newPersistentStorage(tempDir.resolve("typed-short.db"))) {
+            long offset = storage.writeNewBlock(DataStorage.Area.DATA,
+                    new DataStorage.ByteArrayBlock(new byte[] { 1, 2, 3 }));
+
+            byte[] stored = storage.readBlock(offset, DataStorage.Area.DATA);
+            assertEquals(blockSize, stored.length);
+            assertArrayEquals(new byte[] { 1, 2, 3 }, java.util.Arrays.copyOf(stored, 3));
+            assertArrayEquals(new byte[blockSize - 3], java.util.Arrays.copyOfRange(stored, 3, blockSize));
+        }
+    }
+
+    /**
+     * Verifies the direct typed write path persists immediately even when the
+     * block has no refcount update (structurally owned blocks).
+     */
+    @Test
+    void directTypedWritePersistsStructurallyOwnedBlocks() throws IOException {
+        int blockSize = 4096;
+        try (var storage = newPersistentStorage(tempDir.resolve("direct-typed.db"))) {
+            long offset = storage.writeNewBlock(DataStorage.Area.DATA,
+                    new DataStorage.ByteArrayBlock(new byte[blockSize]), RefMode.EXCLUSIVE);
+            assertFalse(storage.refCountUpdates.containsKey(offset));
+
+            byte[] updated = new byte[blockSize];
+            updated[0] = 42;
+            updated[blockSize - 1] = 7;
+            storage.writeBlockDirect(offset, DataStorage.Area.DATA, new DataStorage.ByteArrayBlock(updated));
+
+            byte[] onDisk = new byte[blockSize];
+            storage.file.seek(offset);
+            storage.file.readFully(onDisk);
+            assertArrayEquals(updated, onDisk);
+        }
+    }
+
+    /**
+     * Creates a persisted deferred-free-list self-cycle and verifies that opening
+     * the file rejects the malformed chain instead of looping forever.
+     */
+    @Test
+    void rejectsCyclicDeferredFreeList() throws IOException {
+        Path path = tempDir.resolve("deferred-free-cycle.db");
+        long listBlock;
+        try (var storage = newPersistentStorage(path)) {
+            listBlock = storage.writeNewBlock(DataStorage.Area.META,
+                    new byte[storage.blockSize(DataStorage.Area.META)]);
+            storage.incrementRefCount(new BlockType.BlockRef(listBlock, DataStorage.Area.META,
+                    DataStorage.BYTE_ARRAY_BLOCK_TYPE));
+            storage.commit();
+
+            long rootOffset = storage.superBlock.rootBlock;
+            byte[] rootBytes = storage.readBlock(rootOffset, DataStorage.Area.SYSTEM);
+            var rootType = RootBlock.getBlockType(storage);
+            var rootBlock = rootType.deserialize(ByteBuffer.wrap(rootBytes));
+            rootBlock.dataDeferredFreeBlockList.value = listBlock;
+            ByteBuffer.wrap(rootBytes).put(rootType.serialize(rootBlock));
+            storage.file.seek(listBlock);
+            storage.file.writeLong(listBlock);
+            storage.file.seek(rootOffset);
+            storage.file.write(rootBytes);
+        }
+
+        try (var reopened = new DataStorage()) {
+            var exception = assertThrows(IllegalStateException.class, () -> reopened.open(path.toString()));
+            assertEquals("Cycle in deferred free list", exception.getMessage());
         }
     }
 

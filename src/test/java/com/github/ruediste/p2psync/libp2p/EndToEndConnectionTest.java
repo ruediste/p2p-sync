@@ -76,13 +76,13 @@ public class EndToEndConnectionTest {
     public void twoNodesConnectAndExchangeData() throws Exception {
         assertNotNull(conn.secureSession(), "secureSession should be present");
         assertNotNull(conn.muxerSession(), "muxerSession should be present");
-        assertEquals(nodeA.peerId(), conn.getRemotePeerId(), "remote peer id should match node A");
+        assertEquals(nodeA.peerId(), conn.secureSession().getRemoteId(), "remote peer id should match node A");
 
         assertEquals(1, connectionsOnA.size(), "nodeA should have 1 connection");
         assertEquals(1, connectionsOnB.size(), "nodeB should have 1 connection");
 
-        assertEquals(nodeB.peerId(), connectionsOnA.get(0).getRemotePeerId());
-        assertEquals(nodeA.peerId(), connectionsOnB.get(0).getRemotePeerId());
+        assertEquals(nodeB.peerId(), connectionsOnA.get(0).secureSession().getRemoteId());
+        assertEquals(nodeA.peerId(), connectionsOnB.get(0).secureSession().getRemoteId());
     }
 
     @Test

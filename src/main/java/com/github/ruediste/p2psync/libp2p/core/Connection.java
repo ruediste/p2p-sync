@@ -10,10 +10,6 @@ import com.github.ruediste.p2psync.libp2p.security.SecureSession;
 public record Connection(RawConnection rawConnection, MuxerSession muxerSession,
         SecureSession secureSession) {
 
-    public final PeerId getRemotePeerId() {
-        return secureSession.getRemoteId();
-    };
-
     public void close() {
         muxerSession.close();
         rawConnection.stream().close();

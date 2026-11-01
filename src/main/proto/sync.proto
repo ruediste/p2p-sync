@@ -113,7 +113,7 @@ message UserOperation {
 message NodeState {
 	bytes peerId = 1;
 	uint64 clock = 2;
-	uint64 guidCounter = 3;
+	reserved 3;
 	repeated NodeUserState users = 4;
 	bytes peerPrivateKey = 5;
 	repeated PersistedSyncUnit syncUnits = 6;
@@ -166,7 +166,7 @@ message UserMessage {
 	string body = 6;
 	repeated SyncUnitAttachment attachments = 7;
 	bytes invitedSyncUnitId = 8;
-	string sharedFolderLabel = 9;
+	reserved 9;
 }
 
 message StoredUserMessage {
@@ -323,7 +323,7 @@ message RemoteOperationTransfer {
 
 message RemoteSyncResponse {
 	bool userFound = 1;
-	bytes snapshotState = 2;
+	reserved 2;
 	repeated PersistedOperation history = 3;
 	repeated OperationClock maxOperationClock = 4;
 	ActiveNodeSetState activeNodeSet = 5;

@@ -39,7 +39,6 @@ import com.github.ruediste.p2psync.proto.Sync;
 /** Inline management of shared folders, todo lists and message channels. */
 final class UnitsPanel extends JPanel {
     private final Node node;
-    private final Path mountPoint;
     private final Consumer<String> status;
     private Consumer<SyncUnitId> openChannel = id -> {
     };
@@ -51,10 +50,9 @@ final class UnitsPanel extends JPanel {
     private boolean refreshing;
     private SyncUnitId selectedId;
 
-    UnitsPanel(Node node, Node.UserStatus user, Path mountPoint, Consumer<String> status) {
+    UnitsPanel(Node node, Node.UserStatus user, Consumer<String> status) {
         this.node = node;
         this.user = user;
-        this.mountPoint = mountPoint;
         this.status = status;
         setLayout(new BorderLayout());
         setBackground(Theme.PAPER);

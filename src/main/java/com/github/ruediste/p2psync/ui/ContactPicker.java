@@ -92,15 +92,6 @@ final class ContactPicker extends JPanel {
         rebuild();
     }
 
-    void refresh() {
-        rebuild();
-    }
-
-    Contact selectedContact() {
-        Option option = (Option) matches.getSelectedItem();
-        return option == null ? null : option.contact();
-    }
-
     PubKey selectedUserId() {
         Option option = (Option) matches.getSelectedItem();
         return option == null ? null : option.userId();
@@ -118,6 +109,7 @@ final class ContactPicker extends JPanel {
                 return;
             }
         }
+        matches.setSelectedItem(null);
         linkKey.setText(HexFormat.of().formatHex(userId.bytes()));
         status.accept("No contact for this user yet. Add it with the Link key button.");
     }
@@ -125,9 +117,8 @@ final class ContactPicker extends JPanel {
     void clearSelection() {
         search.setText("");
         linkKey.setText("");
+        matches.setSelectedItem(null);
         rebuild();
-        if (matches.getItemCount() > 0)
-            matches.setSelectedIndex(0);
     }
 
     private void linkKey() {
@@ -156,14 +147,18 @@ final class ContactPicker extends JPanel {
         try {
             List<Option> options = options();
             matches.setModel(new DefaultComboBoxModel<>(options.toArray(Option[]::new)));
+            boolean restored = false;
             if (selected != null) {
                 for (int index = 0; index < matches.getItemCount(); index++) {
                     if (selected.equals(matches.getItemAt(index).userId())) {
                         matches.setSelectedIndex(index);
+                        restored = true;
                         break;
                     }
                 }
             }
+            if (!restored)
+                matches.setSelectedItem(null);
         } finally {
             refreshing = false;
         }

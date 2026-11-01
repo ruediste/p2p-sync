@@ -31,6 +31,8 @@ import com.github.ruediste.p2psync.storage.DataStorage;
 
 public class Node implements AutoCloseable {
     private static final String USER_KEY_CLIPBOARD_PREFIX = "p2p-sync-user-key:v1:";
+    private static final int BLOB_ROOT_HANDLE_ID = 1;
+    private static final int SYNC_UNIT_COUNTER_HANDLE_ID = 3;
     public PeerId peerId;
     private PrivKey peerPrivateKey;
     public DataStorage dataStorage;
@@ -43,7 +45,6 @@ public class Node implements AutoCloseable {
     final Map<SyncUnitId, SyncUnitData> syncUnits = new HashMap<>();
     public Network network;
     long clock;
-    long guidCounter;
     private byte[] nodeHash;
     private String nodeKey;
     private Path temporaryDataFile;
@@ -181,6 +182,16 @@ public class Node implements AutoCloseable {
         this(network, requireDataFile(dataFile), false);
     }
 
+    /**
+     * Registers the root handles of a node data file on the given storage, so
+     * that read-only inspection tools can traverse its contents.
+     */
+    public static void registerStorageCheckHandles(DataStorage storage) {
+        new BlobStorage(storage, BLOB_ROOT_HANDLE_ID);
+        new UnitRootStore(storage);
+        storage.getRootLongHandle(SYNC_UNIT_COUNTER_HANDLE_ID);
+    }
+
     private Node(Network network, Path dataFile, boolean temporary) {
         this.network = java.util.Objects.requireNonNull(network);
         peerPrivateKey = Ed25519PrivateKey.generateKeyPair();
@@ -189,9 +200,9 @@ public class Node implements AutoCloseable {
         nodeKey = HexFormat.of().formatHex(nodeHash);
         temporaryDataFile = temporary ? dataFile : null;
         dataStorage = new DataStorage();
-        storage = new BlobStorage(dataStorage, 1);
+        storage = new BlobStorage(dataStorage, BLOB_ROOT_HANDLE_ID);
         unitRoots = new UnitRootStore(dataStorage);
-        syncUnitCounter = dataStorage.getRootLongHandle(3);
+        syncUnitCounter = dataStorage.getRootLongHandle(SYNC_UNIT_COUNTER_HANDLE_ID);
         try {
             dataStorage.open(dataFile.toString());
             storage.restoreRoot();
@@ -255,7 +266,7 @@ public class Node implements AutoCloseable {
             throw new IllegalArgumentException("No known address for remote peer " + peerId);
         Multiaddr[] dialAddresses = addresses.toArray(Multiaddr[]::new);
         Connection connection = remoteHost.network().connections().stream()
-                .filter(existing -> existing.getRemotePeerId().equals(peerId))
+                .filter(existing -> existing.secureSession().getRemoteId().equals(peerId))
                 .findFirst()
                 .orElseGet(() -> remoteHost.network().connect(peerId, dialAddresses).join());
         try (var controller = remoteHost.newStream(List.of(remoteSyncProtocol), connection)) {
@@ -406,7 +417,6 @@ public class Node implements AutoCloseable {
     }
 
     public static class NodeUserData {
-        public JoinId joinId;
         public PrivKey userKey;
         public String localName;
         final Set<String> participatingSyncUnitIds = new TreeSet<>();
@@ -1228,14 +1238,6 @@ public class Node implements AutoCloseable {
         var user = users.get(inviteeId);
         if (user != null) {
             recordSyncUnitParticipation(user, id, true);
-            for (var stored : user.inboxMessages.values()) {
-                if (stored.message.getInvitedSyncUnitId().equals(
-                        com.google.protobuf.ByteString.copyFrom(id.bytes()))
-                        && !stored.message.getSharedFolderLabel().isBlank()) {
-                    setSharedFolderLabel(user, id, stored.message.getSharedFolderLabel());
-                    break;
-                }
-            }
         }
         persistState();
         for (var peer : List.copyOf(network.nodes.values())) {
@@ -2078,7 +2080,6 @@ public class Node implements AutoCloseable {
                 .setPeerId(com.google.protobuf.ByteString.copyFrom(peerId.getBytes()))
                 .setPeerPrivateKey(com.google.protobuf.ByteString.copyFrom(peerPrivateKey.bytes()))
                 .setClock(clock)
-                .setGuidCounter(guidCounter)
                 .setSharedFolderNextNodeId(sharedFolderNextNodeId);
         for (var user : users.values()) {
             var storedUser = Sync.NodeUserState.newBuilder()
@@ -2358,7 +2359,6 @@ public class Node implements AutoCloseable {
         nodeHash = CryptoUtils.sha256(peerId.getBytes());
         nodeKey = HexFormat.of().formatHex(nodeHash);
         clock = state.getClock();
-        guidCounter = state.getGuidCounter();
         sharedFolderNextNodeId = state.getSharedFolderNextNodeId();
         network.nodes.put(peerId, this);
         restoringState = true;

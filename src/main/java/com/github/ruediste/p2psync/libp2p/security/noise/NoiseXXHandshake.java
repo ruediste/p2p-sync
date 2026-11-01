@@ -8,8 +8,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.NamedParameterSpec;
@@ -19,7 +17,6 @@ import java.util.Arrays;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyAgreement;
-import javax.crypto.Mac;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -30,6 +27,7 @@ import com.github.ruediste.p2psync.libp2p.core.PeerId;
 import com.github.ruediste.p2psync.libp2p.crypto.PrivKey;
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 import com.github.ruediste.p2psync.libp2p.security.CantDecryptInboundException;
+import com.github.ruediste.p2psync.libp2p.security.CryptoUtils;
 import com.github.ruediste.p2psync.libp2p.security.InvalidRemotePubKeyException;
 import com.github.ruediste.p2psync.libp2p.security.MalformedNoiseHandshakeException;
 import com.github.ruediste.p2psync.proto.Noise.NoiseHandshakePayload;
@@ -426,14 +424,14 @@ public final class NoiseXXHandshake {
             if (protocolName.length <= 32) {
                 h = Arrays.copyOf(protocolName, 32);
             } else {
-                h = Crypto.sha256(protocolName);
+                h = CryptoUtils.sha256(protocolName);
             }
             ck = h.clone();
             cipher = new CipherState(null);
         }
 
         void mixHash(byte[] data) {
-            h = Crypto.sha256(concat(h, data));
+            h = CryptoUtils.sha256(concat(h, data));
         }
 
         void mixKey(byte[] inputKeyMaterial) {
@@ -693,37 +691,19 @@ public final class NoiseXXHandshake {
         private Crypto() {
         }
 
-        static byte[] sha256(byte[] data) {
-            try {
-                return MessageDigest.getInstance("SHA-256").digest(data);
-            } catch (NoSuchAlgorithmException e) {
-                throw new IllegalStateException("SHA-256 unavailable", e);
-            }
-        }
-
-        static byte[] hmac(byte[] key, byte[] data) {
-            try {
-                Mac mac = Mac.getInstance("HmacSHA256");
-                mac.init(new SecretKeySpec(key, "HmacSHA256"));
-                return mac.doFinal(data);
-            } catch (GeneralSecurityException e) {
-                throw new IllegalStateException("HMAC-SHA-256 failed", e);
-            }
-        }
-
         /**
          * Noise HKDF (RFC 5869 variant with zero-length info), returning
          * {@code numOutputs} keys.
          */
         static byte[][] hkdf(byte[] chainingKey, byte[] inputKeyMaterial, int numOutputs) {
-            byte[] tempKey = hmac(chainingKey, inputKeyMaterial);
+            byte[] tempKey = CryptoUtils.hmac(chainingKey, inputKeyMaterial);
             byte[][] outputs = new byte[numOutputs][];
             byte[] previous = EMPTY;
             for (int i = 1; i <= numOutputs; i++) {
                 byte[] input = new byte[previous.length + 1];
                 System.arraycopy(previous, 0, input, 0, previous.length);
                 input[previous.length] = (byte) i;
-                byte[] output = hmac(tempKey, input);
+                byte[] output = CryptoUtils.hmac(tempKey, input);
                 outputs[i - 1] = output;
                 previous = output;
             }

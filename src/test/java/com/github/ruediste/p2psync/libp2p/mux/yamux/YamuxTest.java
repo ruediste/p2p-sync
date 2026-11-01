@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static com.github.ruediste.p2psync.libp2p.test.TestStreams.readExact;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -15,7 +15,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.ruediste.p2psync.libp2p.core.P2PInputStream;
 import com.github.ruediste.p2psync.libp2p.core.P2PStream;
 import com.github.ruediste.p2psync.libp2p.test.BytePipe;
 
@@ -78,7 +77,7 @@ public class YamuxTest {
         MuxerPair pair = new MuxerPair();
         try {
             YamuxStream streamA = openStream(pair.connA, pair.connB);
-            YamuxStream streamB = waitForRemoteStream(pair.connB);
+            YamuxStream streamB = awaitRemoteStream(pair.connB);
 
             assertNotNull(streamB);
 
@@ -104,7 +103,7 @@ public class YamuxTest {
         MuxerPair pair = new MuxerPair();
         try {
             YamuxStream streamA = openStream(pair.connA, pair.connB);
-            YamuxStream streamB = waitForRemoteStream(pair.connB);
+            YamuxStream streamB = awaitRemoteStream(pair.connB);
             assertNotNull(streamB);
 
             // Send data larger than the initial window (256KB)
@@ -133,7 +132,9 @@ public class YamuxTest {
                 streamsA[i] = openStream(pair.connA, pair.connB);
             }
 
-            List<YamuxStream> bList = waitForRemoteStreams(pair.connB, streamCount);
+            List<YamuxStream> bList = pair.connB.awaitStreams(streamCount,
+                    TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS));
+            assertEquals(streamCount, bList.size(), "timed out waiting for remote streams");
 
             for (int i = 0; i < streamCount; i++) {
                 streamsB[i] = bList.get(i);
@@ -171,7 +172,7 @@ public class YamuxTest {
         MuxerPair pair = new MuxerPair();
         try {
             YamuxStream streamA = openStream(pair.connA, pair.connB);
-            YamuxStream streamB = waitForRemoteStream(pair.connB);
+            YamuxStream streamB = awaitRemoteStream(pair.connB);
             assertNotNull(streamB);
 
             byte[] data = random(100);
@@ -199,7 +200,7 @@ public class YamuxTest {
         MuxerPair pair = new MuxerPair();
         try {
             YamuxStream streamA = openStream(pair.connA, pair.connB);
-            YamuxStream streamB = waitForRemoteStream(pair.connB);
+            YamuxStream streamB = awaitRemoteStream(pair.connB);
             assertNotNull(streamB);
 
             // Reset the stream from A's side
@@ -223,45 +224,9 @@ public class YamuxTest {
      * Waits for a stream to appear on the given connection (inserted by the
      * remote side's SYN), with a timeout.
      */
-    private static YamuxStream waitForRemoteStream(YamuxSession conn) throws Exception {
-        long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS);
-        while (System.currentTimeMillis() < deadline) {
-            if (!conn.streams.isEmpty()) {
-                return conn.streams.values().stream().findFirst().orElse(null);
-            }
-            Thread.sleep(10);
-        }
-        return null;
-    }
-
-    private static List<YamuxStream> waitForRemoteStreams(YamuxSession conn, int count) throws Exception {
-        long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS);
-        List<YamuxStream> result = new ArrayList<>();
-        while (System.currentTimeMillis() < deadline) {
-            for (YamuxStream s : conn.streams.values()) {
-                if (!result.contains(s)) {
-                    result.add(s);
-                    if (result.size() >= count) {
-                        return result;
-                    }
-                }
-            }
-            Thread.sleep(10);
-        }
-        throw new RuntimeException("Timed out waiting for " + count + " streams, got " + result.size());
-    }
-
-    private static byte[] readExact(P2PInputStream in, int n) {
-        byte[] buf = new byte[n];
-        int pos = 0;
-        while (pos < n) {
-            int r = in.read(buf, pos, n - pos);
-            if (r < 0) {
-                throw new RuntimeException("Unexpected EOF after " + pos + " of " + n + " bytes");
-            }
-            pos += r;
-        }
-        return buf;
+    private static YamuxStream awaitRemoteStream(YamuxSession conn) throws InterruptedException {
+        List<YamuxStream> streams = conn.awaitStreams(1, TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS));
+        return streams.isEmpty() ? null : streams.get(0);
     }
 
     private static byte[] random(int size) {

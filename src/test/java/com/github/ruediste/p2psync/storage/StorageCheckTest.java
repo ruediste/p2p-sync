@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -12,6 +14,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import com.github.ruediste.p2psync.node.Node;
+import com.github.ruediste.p2psync.node.SyncUnitAuthorization;
 import com.github.ruediste.p2psync.storage.BlockType.BlockRef;
 import com.github.ruediste.p2psync.storage.DataStorage.Area;
 
@@ -136,6 +140,27 @@ class StorageCheckTest {
         storage.commit();
         storage.close();
         assertCheckPasses(file, handleCount);
+    }
+
+    /**
+     * Verifies the standalone checker recognizes a node data file and registers
+     * both node root handles (blob index and unit-root registry), rather than
+     * misreading it as a SimpleFuseFS file.
+     */
+    @Test
+    void storageCheckMainAcceptsNodeFiles() throws Exception {
+        Path file = tempDir.resolve("node.db");
+        try (var node = new Node(new Node.Network(), file)) {
+            var handle = node.createNewUser("alice");
+            node.createSyncUnit(handle.data.userId(), SyncUnitAuthorization.Type.SHARED_FOLDER);
+            node.createSyncUnit(handle.data.userId(), SyncUnitAuthorization.Type.TODO_LIST);
+        }
+
+        var out = new ByteArrayOutputStream();
+        int exitCode = StorageCheckMain.run(file, new PrintStream(out), new PrintStream(out));
+
+        assertEquals(0, exitCode, out::toString);
+        assertTrue(out.toString().contains("Check passed"), out::toString);
     }
 
     private static void assertCheckPasses(Path file, int handleCount) {

@@ -36,6 +36,11 @@ public class MDnsDiscoveryTest {
     }
 
     @Test
+    public void isWildcardDetectsIp4Wildcard() {
+        assertTrue(MDnsDiscovery.isWildcard(new Multiaddr("/ip4/0.0.0.0/tcp/4001")));
+    }
+
+    @Test
     public void isWildcardFalseForConcreteAddresses() {
         assertFalse(MDnsDiscovery.isWildcard(new Multiaddr("/ip4/127.0.0.1/tcp/4000")));
         assertFalse(MDnsDiscovery.isWildcard(new Multiaddr("/ip4/10.2.7.1/tcp/9999")));
@@ -80,6 +85,17 @@ public class MDnsDiscoveryTest {
         for (Multiaddr m : out) {
             assertTrue(m.toString().endsWith("/tcp/4001"), m.toString());
             assertTrue(m.has(Protocol.IP4) || m.has(Protocol.IP6));
+        }
+    }
+
+    @Test
+    public void expandWildcardIp4ListsOnlyIpv4InterfaceAddresses() {
+        MDnsDiscovery d = new MDnsDiscovery(PeerId.random(), List.of());
+        List<Multiaddr> out = d.expandWildcardAddresses(new Multiaddr("/ip4/0.0.0.0/tcp/4001"));
+        assertFalse(out.isEmpty(), "wildcard should expand to at least one interface address");
+        for (Multiaddr m : out) {
+            assertTrue(m.toString().endsWith("/tcp/4001"), m.toString());
+            assertTrue(m.has(Protocol.IP4), m.toString());
         }
     }
 

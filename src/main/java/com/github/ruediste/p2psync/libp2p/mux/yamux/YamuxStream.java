@@ -184,10 +184,7 @@ public final class YamuxStream {
 
         @Override
         public void close() {
-            if (!closedForWriting && !reset) {
-                closeForWriting();
-            }
-            connection.doCloseStream(YamuxStream.this);
+            YamuxStream.this.close();
         }
     }
 

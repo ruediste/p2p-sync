@@ -30,6 +30,7 @@ public final class YamuxSession implements MuxerSession {
 
     private final YamuxStreamIdGenerator idGenerator;
     final ConcurrentHashMap<Long, YamuxStream> streams = new ConcurrentHashMap<>();
+    private final Object streamMonitor = new Object();
 
     final ReentrantLock writerLock = new ReentrantLock();
     private volatile boolean closed;
@@ -115,6 +116,7 @@ public final class YamuxSession implements MuxerSession {
         }
         YamuxStream stream = new YamuxStream(frame.streamId, this, false);
         streams.put(frame.streamId, stream);
+        notifyStreamsChanged();
 
         writeFrameLocked(new YamuxFrame(frame.streamId, YamuxType.WINDOW_UPDATE, YamuxFlag.ACK.asSet(), 0));
 
@@ -224,8 +226,33 @@ public final class YamuxSession implements MuxerSession {
         long id = idGenerator.next();
         YamuxStream stream = new YamuxStream(id, this, true);
         streams.put(id, stream);
+        notifyStreamsChanged();
         writeFrameLocked(new YamuxFrame(id, YamuxType.DATA, YamuxFlag.SYN.asSet(), 0));
         return stream;
+    }
+
+    private void notifyStreamsChanged() {
+        synchronized (streamMonitor) {
+            streamMonitor.notifyAll();
+        }
+    }
+
+    /**
+     * Waits until at least {@code count} streams are known on this session and
+     * returns a snapshot. Returns early with fewer streams when the timeout
+     * expires.
+     */
+    List<YamuxStream> awaitStreams(int count, long timeoutMillis) throws InterruptedException {
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
+        synchronized (streamMonitor) {
+            while (streams.size() < count) {
+                long remaining = deadline - System.nanoTime();
+                if (remaining <= 0)
+                    break;
+                java.util.concurrent.TimeUnit.NANOSECONDS.timedWait(streamMonitor, remaining);
+            }
+            return List.copyOf(streams.values());
+        }
     }
 
     void doCloseForWriting(YamuxStream stream) {
