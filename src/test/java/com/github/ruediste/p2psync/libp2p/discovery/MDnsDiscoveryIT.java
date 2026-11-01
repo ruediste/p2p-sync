@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import com.github.ruediste.p2psync.libp2p.core.Host;
@@ -25,6 +26,7 @@ import com.github.ruediste.p2psync.libp2p.host.HostBuilder;
  * machine, so they take several seconds each; they run only in the {@code it}
  * profile ({@code mvn test -Pit}), not in the default {@code mvn test} run.
  */
+@Tag("integration")
 public class MDnsDiscoveryIT {
 
     private static final String TEST_TAG = "_ipfs-test._udp.local.";

@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -514,6 +515,7 @@ public class SyncFlowTest {
     }
 
     /** Verifies remote join and operation transfer over TCP, Noise, and Yamux. */
+    @Tag("integration")
     @Test
     public void remoteNodesJoinAndSyncOverLibp2p() {
         var remoteA = new Node(new Network(), tempDir.resolve("remote-a"));

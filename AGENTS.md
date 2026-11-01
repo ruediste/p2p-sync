@@ -1,8 +1,5 @@
-This is a p2p file storage and synchronization project. It is based on IPFS, but does not use an existing library. Instead it ports parts of jvm-libp2p (`../upstream/jvm-libp2p`) from Kotlin to java, and extends it with functionality from nabu (`../upstream/nabu`). These projects are available for reference in the upstream folder.
-
+This is a p2p file storage and synchronization project. It is based on IPFS, but does not use an existing library.
 The project documentation lives in `doc`.
-
-Read `ImplementationPlan.md` if the user seems to reference to it (it might not exist), for example for implementation of a milestone.
 
 If there is an issue with generating the protobuf java files, a `mvn clean` sometimes helps.
 
@@ -10,7 +7,7 @@ If there is an issue with generating the protobuf java files, a `mvn clean` some
 When writing a test, add a short description of the test's purpose and how it verifies the expected behavior.
 
 Running:
-- `mvn test` runs the fast unit tests only. Integration tests (`*IT.java`, currently the slow mDNS loopback tests `MDnsDiscoveryIT` and `MDnsWireUpIT`) are excluded by default.
+- `mvn test` runs the fast unit tests only. Integration tests (`*IT.java` and tests tagged `@Tag("integration")`, currently the slow mDNS loopback tests `MDnsDiscoveryIT` and `MDnsWireUpIT` plus any test method taking longer than one second) are excluded by default.
 - `mvn test -Pit` runs only the integration tests. They require working multicast networking and take several seconds each; they skip automatically (JUnit assumptions) when multicast is unavailable.
 - When changing test wiring, verify both: `mvn test` and `mvn test -Pit`.
 

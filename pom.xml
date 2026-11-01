@@ -116,11 +116,12 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.6.0</version>
         <configuration>
-          <!-- Integration tests (*IT.java, slow mDNS loopback tests) run in the
-            'it' profile: mvn test -Pit -->
+          <!-- Integration tests (*IT.java and tests tagged 'integration') run in
+            the 'it' profile: mvn test -Pit -->
           <excludes>
             <exclude>**/*IT.java</exclude>
           </excludes>
+          <excludedGroups>integration</excludedGroups>
         </configuration>
       </plugin>
       <plugin>
@@ -154,9 +155,12 @@
             <version>3.6.0</version>
             <configuration>
               <excludes combine.self="override" />
+              <excludedGroups combine.self="override" />
               <includes>
+                <include>**/*Test.java</include>
                 <include>**/*IT.java</include>
               </includes>
+              <groups>integration</groups>
             </configuration>
           </plugin>
         </plugins>

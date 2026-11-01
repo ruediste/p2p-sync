@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -312,6 +313,7 @@ class SimpleFuseFSTest {
      * Verifies close discards uncommitted changes and flush, fsync, and the timer
      * each publish successful mutations.
      */
+    @Tag("integration")
     @Test
     void commitsOnFlushFsyncAndPeriodically() throws InterruptedException {
         Path backing = tempDir.resolve("commit-triggers.db");

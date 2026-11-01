@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import com.github.ruediste.p2psync.libp2p.core.Host;
@@ -22,6 +23,7 @@ import com.github.ruediste.p2psync.libp2p.core.multiaddr.Protocol;
  * {@code /ip4/127.0.0.1/tcp/<port>} address in their address book, without any
  * manual dialing. Runs only in the {@code it} profile ({@code mvn test -Pit}).
  */
+@Tag("integration")
 public class MDnsWireUpIT {
 
     private static final long TIMEOUT_MILLIS = 25_000;

@@ -19,6 +19,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import com.github.ruediste.p2psync.libp2p.core.P2PInputStream;
@@ -205,6 +206,7 @@ public class NoiseXXTest {
         bSession.getStream().close();
     }
 
+    @Tag("integration")
     @Test
     public void initiatorRejectsWrongRemotePeerId() throws Throwable {
         Ed25519PrivateKey privA = Ed25519PrivateKey.generateKeyPair();
