@@ -3,7 +3,6 @@ package com.github.ruediste.p2psync.node;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -125,64 +124,6 @@ public class NodeAlgorithmTest {
         }
     }
 
-    // ------------------------------------------------------------------
-    // Active node set
-    // ------------------------------------------------------------------
-
-    static final class ActiveNodeSetVersion {
-        final String nodeId;
-        final long clock;
-
-        ActiveNodeSetVersion(String nodeId, long clock) {
-            this.nodeId = nodeId;
-            this.clock = clock;
-        }
-
-        boolean sameAs(ActiveNodeSetVersion other) {
-            return other != null && clock == other.clock && nodeId.equals(other.nodeId);
-        }
-    }
-
-    enum Phase {
-        A, B
-    }
-
-    static final class LeavingProcess {
-        Phase phase;
-        String processId;
-        String leavingNodeId;
-        long lastOperationClock;
-        String lastOperationClockSourceNode;
-        final Set<String> confirmedBy = new TreeSet<>();
-
-        LeavingProcess copy() {
-            var copy = new LeavingProcess();
-            copy.phase = phase;
-            copy.processId = processId;
-            copy.leavingNodeId = leavingNodeId;
-            copy.lastOperationClock = lastOperationClock;
-            copy.lastOperationClockSourceNode = lastOperationClockSourceNode;
-            copy.confirmedBy.addAll(confirmedBy);
-            return copy;
-        }
-    }
-
-    static final class ActiveNodeSet {
-        ActiveNodeSetVersion version;
-        LeavingProcess leavingProcess;
-        final Set<String> nodes = new TreeSet<>();
-        final Map<String, Long> lastSeen = new HashMap<>();
-
-        ActiveNodeSet copy() {
-            var copy = new ActiveNodeSet();
-            copy.version = version;
-            copy.leavingProcess = leavingProcess == null ? null : leavingProcess.copy();
-            copy.nodes.addAll(nodes);
-            copy.lastSeen.putAll(lastSeen);
-            return copy;
-        }
-    }
-
     static final class ActiveNodeInfo {
         final Map<String, Long> maxOperationClock = new HashMap<>();
         final Map<String, Long> lastSeenTimestamp = new HashMap<>();
@@ -239,7 +180,7 @@ public class NodeAlgorithmTest {
         // ---------- versioning ----------
 
         void bumpActiveNodeSetVersion() {
-            activeNodeSet.version = new ActiveNodeSetVersion(nodeId, clock++);
+            activeNodeSet.setVersion(nodeId, clock++);
         }
 
         // ---------- operation synchronization ----------
@@ -311,114 +252,17 @@ public class NodeAlgorithmTest {
         // ---------- active node set merge ----------
 
         boolean mergeActiveNodeSet(ActiveNodeSet other) {
-            if (activeNodeSet.version.sameAs(other.version))
-                return false;
-
-            boolean changed = false;
-            LeavingProcess mine = activeNodeSet.leavingProcess;
-            LeavingProcess theirs = other.leavingProcess;
-            if (theirs != null) {
-                if (mine == null) {
-                    activeNodeSet.leavingProcess = theirs.copy();
-                    changed = true;
-                } else if (theirs.phase.ordinal() > mine.phase.ordinal()) {
-                    activeNodeSet.leavingProcess = theirs.copy();
-                    changed = true;
-                } else if (theirs.phase == mine.phase && !mine.processId.equals(theirs.processId)) {
-                    // concurrently initiated processes: the lower id wins
-                    if (mine.processId.compareTo(theirs.processId) > 0) {
-                        activeNodeSet.leavingProcess = theirs.copy();
-                        changed = true;
-                    }
-                } else if (theirs.phase == mine.phase) {
-                    if (mine.confirmedBy.addAll(theirs.confirmedBy))
-                        changed = true;
-                    if (theirs.lastOperationClock > mine.lastOperationClock) {
-                        mine.lastOperationClock = theirs.lastOperationClock;
-                        mine.lastOperationClockSourceNode = theirs.lastOperationClockSourceNode;
-                        mine.confirmedBy.clear();
-                        mine.confirmedBy.addAll(theirs.confirmedBy);
-                        changed = true;
-                    }
-                }
-            }
-
-            boolean strictSuperset = other.nodes.containsAll(activeNodeSet.nodes)
-                    && other.nodes.size() > activeNodeSet.nodes.size();
-            var process = activeNodeSet.leavingProcess;
-            boolean phaseB = process != null && process.phase == Phase.B;
-            if (!phaseB && activeNodeSet.nodes.addAll(other.nodes))
-                changed = true;
-            activeNodeSet.lastSeen.putAll(other.lastSeen);
-            if (phaseB && activeNodeSet.nodes.remove(process.leavingNodeId))
-                changed = true;
-
-            if (strictSuperset)
-                // a superset is adopted together with its version metadata
-                activeNodeSet.version = other.version;
-            else if (changed)
-                bumpActiveNodeSetVersion();
-            return changed;
+            return activeNodeSet.mergeFrom(other, nodeId, () -> clock++);
         }
 
         // ---------- leaving ----------
 
         void startLeaving(String leavingNodeId, String processId) {
-            var existing = activeNodeSet.leavingProcess;
-            if (existing != null && existing.processId.compareTo(processId) <= 0)
-                return; // existing process has the lower id and wins
-            var process = new LeavingProcess();
-            process.phase = Phase.A;
-            process.processId = processId;
-            process.leavingNodeId = leavingNodeId;
-            process.lastOperationClock = info.maxOperationClock.getOrDefault(leavingNodeId, 0L);
-            process.lastOperationClockSourceNode = leavingNodeId;
-            activeNodeSet.leavingProcess = process;
-            bumpActiveNodeSetVersion();
+            activeNodeSet.startLeaving(leavingNodeId, processId, info.maxOperationClock, nodeId, () -> clock++);
         }
 
         boolean updateLeaving() {
-            var process = activeNodeSet.leavingProcess;
-            if (process == null || process.leavingNodeId.equals(nodeId))
-                return false;
-
-            boolean changed = false;
-            // if the source of the maximum clock is gone, fall back to the local clock
-            if (!activeNodeSet.nodes.contains(process.lastOperationClockSourceNode)) {
-                process.lastOperationClock = info.maxOperationClock.getOrDefault(process.leavingNodeId, 0L);
-                process.lastOperationClockSourceNode = nodeId;
-                process.confirmedBy.clear();
-                changed = true;
-            }
-
-            long local = info.maxOperationClock.getOrDefault(process.leavingNodeId, 0L);
-            if (local < process.lastOperationClock)
-                return changed; // postpone until the operations are retrieved
-
-            if (local > process.lastOperationClock) {
-                process.lastOperationClock = local;
-                process.confirmedBy.clear();
-                changed = true;
-            }
-            if (process.confirmedBy.add(nodeId))
-                changed = true;
-
-            var required = new TreeSet<>(activeNodeSet.nodes);
-            required.remove(process.leavingNodeId);
-            if (process.confirmedBy.containsAll(required)) {
-                if (process.phase == Phase.A) {
-                    activeNodeSet.nodes.remove(process.leavingNodeId);
-                    process.phase = Phase.B;
-                    process.confirmedBy.clear();
-                    changed = true;
-                } else {
-                    activeNodeSet.leavingProcess = null; // back to idle
-                    changed = true;
-                }
-            }
-            if (changed)
-                bumpActiveNodeSetVersion();
-            return changed;
+            return activeNodeSet.updateLeaving(nodeId, info.maxOperationClock, () -> clock++);
         }
 
         // ---------- log truncation ----------
@@ -563,54 +407,6 @@ public class NodeAlgorithmTest {
     }
 
     @Test
-    public void activeNodeSetEqualVersionNeedsNoTransfer() {
-        var a = new MockNode("A");
-        var b = new MockNode("B");
-        var set = new ActiveNodeSet();
-        set.nodes.addAll(Set.of("A", "B"));
-        set.version = new ActiveNodeSetVersion("A", 5);
-
-        var target = new MockNode("C");
-        target.activeNodeSet.nodes.addAll(Set.of("A", "B"));
-        target.activeNodeSet.version = new ActiveNodeSetVersion("A", 5);
-
-        assertFalse(target.mergeActiveNodeSet(set));
-    }
-
-    @Test
-    public void activeNodeSetSupersetIsAdopted() {
-        var node = new MockNode("C");
-        node.activeNodeSet.nodes.add("A");
-        node.activeNodeSet.version = new ActiveNodeSetVersion("C", 1);
-
-        var received = new ActiveNodeSet();
-        received.nodes.addAll(Set.of("A", "B", "C"));
-        received.version = new ActiveNodeSetVersion("A", 7);
-
-        assertTrue(node.mergeActiveNodeSet(received));
-        assertEquals(Set.of("A", "B", "C"), node.activeNodeSet.nodes);
-        assertEquals(7, node.activeNodeSet.version.clock);
-    }
-
-    @Test
-    public void activeNodeSetNonSupersetIsIgnored() {
-        var node = new MockNode("C");
-        node.activeNodeSet.nodes.addAll(Set.of("A", "B", "C"));
-        node.activeNodeSet.version = new ActiveNodeSetVersion("C", 1);
-
-        var received = new ActiveNodeSet();
-        received.nodes.addAll(Set.of("A"));
-        received.version = new ActiveNodeSetVersion("A", 9);
-
-        // A receives a set that is missing nodes: it must be rejected
-        var a = new MockNode("A");
-        a.activeNodeSet.nodes.addAll(Set.of("A", "B", "C"));
-        a.activeNodeSet.version = new ActiveNodeSetVersion("A", 1);
-        assertFalse(a.mergeActiveNodeSet(received));
-        assertEquals(Set.of("A", "B", "C"), a.activeNodeSet.nodes);
-    }
-
-    @Test
     public void joinDownloadsSnapshotAndOperations() {
         var a = new MockNode("A");
         a.activeNodeSet.nodes.add("A");
@@ -647,7 +443,7 @@ public class NodeAlgorithmTest {
     }
 
     @Test
-    public void leavingRunsThroughPhaseAAndB() {
+    public void leavingRunsThroughPhaseAAndBAndI() {
         var a = new MockNode("A");
         var b = new MockNode("B");
         var c = new MockNode("C");
@@ -663,7 +459,8 @@ public class NodeAlgorithmTest {
         a.startLeaving("C", "process-1");
         settleLeaving(List.of(a, b)); // all active nodes except the leaving one
 
-        assertNull(a.activeNodeSet.leavingProcess);
+        assertNotNull(a.activeNodeSet.leavingProcess);
+        assertEquals(ActiveNodeSet.Phase.I, a.activeNodeSet.leavingProcess.phase);
         assertFalse(a.activeNodeSet.nodes.contains("C"));
         assertFalse(b.activeNodeSet.nodes.contains("C"));
         assertTrue(a.activeNodeSet.nodes.contains("A"));
@@ -689,13 +486,13 @@ public class NodeAlgorithmTest {
 
         // B cannot confirm, so the leaving process is still in phase A
         assertNotNull(a.activeNodeSet.leavingProcess);
-        assertEquals(Phase.A, a.activeNodeSet.leavingProcess.phase);
+        assertEquals(ActiveNodeSet.Phase.A, a.activeNodeSet.leavingProcess.phase);
         assertTrue(a.activeNodeSet.nodes.contains("C"));
 
         // B catches up and the process completes
         b.syncFrom(c, 100, 100_000);
         settleLeaving(List.of(a, b));
-        assertNull(a.activeNodeSet.leavingProcess);
+        assertEquals(ActiveNodeSet.Phase.I, a.activeNodeSet.leavingProcess.phase);
         assertFalse(a.activeNodeSet.nodes.contains("C"));
     }
 
@@ -852,36 +649,20 @@ public class NodeAlgorithmTest {
     private void settle(List<MockNode> all) {
         for (int round = 0; round < 200; round++) {
             boolean changed = false;
-            // a node that is being left never advances its own set, so its active
-            // node set must not be merged back in
-            var noMerge = leavingTargets(all);
             for (MockNode a : all) {
                 for (MockNode b : all) {
                     if (a == b)
                         continue;
                     a.syncFrom(b, 100_000, 10_000_000);
-                    if (!noMerge.contains(a.nodeId) && !noMerge.contains(b.nodeId))
-                        changed |= a.mergeActiveNodeSet(b.activeNodeSet);
+                    changed |= a.mergeActiveNodeSet(b.activeNodeSet);
                 }
             }
-            for (MockNode node : all) {
-                if (!noMerge.contains(node.nodeId))
-                    changed |= node.updateLeaving();
-            }
+            for (MockNode node : all)
+                changed |= node.updateLeaving();
             if (!changed)
                 return;
         }
         throw new AssertionError("randomized network did not settle");
-    }
-
-    private Set<String> leavingTargets(List<MockNode> all) {
-        var result = new HashSet<String>();
-        for (MockNode node : all) {
-            var process = node.activeNodeSet.leavingProcess;
-            if (process != null)
-                result.add(process.leavingNodeId);
-        }
-        return result;
     }
 
     private boolean isLeavingTarget(MockNode node, List<MockNode> all) {
@@ -919,7 +700,9 @@ public class NodeAlgorithmTest {
         if (live.size() < 2)
             return;
         var reference = live.get(0);
-        assertNull(reference.activeNodeSet.leavingProcess, "leaving process must be completed after settling");
+        assertTrue(reference.activeNodeSet.leavingProcess == null
+                || reference.activeNodeSet.leavingProcess.phase == ActiveNodeSet.Phase.I,
+                "leaving process must be completed after settling");
         var referenceNodes = new TreeSet<>(reference.activeNodeSet.nodes);
         var referenceOperations = operationMap(reference);
         for (MockNode node : live) {

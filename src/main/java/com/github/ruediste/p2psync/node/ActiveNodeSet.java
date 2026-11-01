@@ -2,6 +2,7 @@ package com.github.ruediste.p2psync.node;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.LongSupplier;
@@ -74,22 +75,21 @@ final class ActiveNodeSet {
             if (mine == null) {
                 leavingProcess = theirs.copy();
                 changed = true;
-            } else if (mine.phase == Phase.I && theirs.phase == Phase.A
-                    && !mine.processId.equals(theirs.processId)) {
-                leavingProcess = theirs.copy();
-                changed = true;
-            } else if (mine.processId.equals(theirs.processId)
-                    && theirs.phase.ordinal() > mine.phase.ordinal()) {
-                leavingProcess = theirs.copy();
-                changed = true;
-            } else if (theirs.phase.ordinal() > mine.phase.ordinal()) {
-                leavingProcess = theirs.copy();
-                changed = true;
-            } else if (theirs.phase == mine.phase && !mine.processId.equals(theirs.processId)) {
-                if (mine.processId.compareTo(theirs.processId) > 0) {
+            } else if (!mine.processId.equals(theirs.processId)) {
+                boolean newProcessSupersedesTombstone = mine.phase == Phase.A && theirs.phase == Phase.I;
+                if (mine.phase == Phase.I && theirs.phase == Phase.A) {
+                    leavingProcess = theirs.copy();
+                    changed = true;
+                } else if (!newProcessSupersedesTombstone && theirs.phase.ordinal() > mine.phase.ordinal()) {
+                    leavingProcess = theirs.copy();
+                    changed = true;
+                } else if (theirs.phase == mine.phase && mine.processId.compareTo(theirs.processId) > 0) {
                     leavingProcess = theirs.copy();
                     changed = true;
                 }
+            } else if (theirs.phase.ordinal() > mine.phase.ordinal()) {
+                leavingProcess = theirs.copy();
+                changed = true;
             } else if (theirs.phase == mine.phase) {
                 if (mine.confirmedBy.addAll(theirs.confirmedBy))
                     changed = true;
@@ -109,14 +109,28 @@ final class ActiveNodeSet {
         if (!phaseB && nodes.addAll(other.nodes))
             changed = true;
         lastSeen.putAll(other.lastSeen);
-        if (phaseB && nodes.remove(process.leavingNodeId))
+        if (process != null && process.phase != Phase.A && nodes.remove(process.leavingNodeId))
             changed = true;
 
-        if (strictSuperset)
-            version = other.version;
-        else if (changed)
-            setVersion(localNodeId, nextClock.getAsLong());
+        if (changed) {
+            if (strictSuperset && other.version != null && nodes.equals(other.nodes)
+                    && sameProcess(leavingProcess, other.leavingProcess))
+                version = other.version;
+            else
+                setVersion(localNodeId, nextClock.getAsLong());
+        }
         return changed;
+    }
+
+    private static boolean sameProcess(LeavingProcess left, LeavingProcess right) {
+        if (left == null || right == null)
+            return left == right;
+        return left.phase == right.phase
+                && Objects.equals(left.processId, right.processId)
+                && Objects.equals(left.leavingNodeId, right.leavingNodeId)
+                && left.lastOperationClock == right.lastOperationClock
+                && Objects.equals(left.lastOperationClockSourceNode, right.lastOperationClockSourceNode)
+                && left.confirmedBy.equals(right.confirmedBy);
     }
 
     boolean startLeaving(String leavingNodeId, String processId, Map<String, Long> maxOperationClock,

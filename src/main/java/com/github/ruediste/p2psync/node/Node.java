@@ -2328,7 +2328,7 @@ public class Node implements AutoCloseable {
         return result.build();
     }
 
-    private static Sync.ActiveNodeSetState persist(ActiveNodeSet activeNodeSet) {
+    static Sync.ActiveNodeSetState persist(ActiveNodeSet activeNodeSet) {
         var result = Sync.ActiveNodeSetState.newBuilder();
         if (activeNodeSet.version != null)
             result.setVersionNodeId(activeNodeSet.version.nodeId).setVersionClock(activeNodeSet.version.clock);

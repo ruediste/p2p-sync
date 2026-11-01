@@ -427,7 +427,7 @@ root.
   duplicated across Yamux, Noise and end-to-end tests
   (`YamuxTest.java:226-265`, `NoiseXXTest.java:422-433`).
 
-- [ ] **[medium] Replace the mock active-node test.** `NodeAlgorithmTest` defines
+- [x] **[medium] Replace the mock active-node test.** `NodeAlgorithmTest` defines
   its own active-set implementation with a two-phase leave process and
   `leavingProcess = null`, so it cannot catch the production three-phase protocol
   bugs (`NodeAlgorithmTest.java:366-422`, `ActiveNodeSet.java:138-184`).
