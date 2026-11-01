@@ -87,9 +87,13 @@ public class FileTree {
     }
 
     public FileTree(DataStorage storage, long rootOffset) {
+        this(storage, rootOffset, RefMode.TRANSFER);
+    }
+
+    public FileTree(DataStorage storage, long rootOffset, RefMode refMode) {
         this.storage = java.util.Objects.requireNonNull(storage);
         tree = new BTree<>(storage.new BTreeStorage(DataStorage.Area.META), BTree.KeySerializer.bytes(KEY_SIZE),
-                ENTRY_TYPE, rootOffset);
+                ENTRY_TYPE, rootOffset, refMode);
     }
 
     public long getRootOffset() {

@@ -19,6 +19,8 @@ import org.junit.jupiter.api.io.TempDir;
 import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
 import com.github.ruediste.p2psync.node.Node.Network;
 import com.github.ruediste.p2psync.proto.Sync;
+import com.github.ruediste.p2psync.storage.DataStorage;
+import com.github.ruediste.p2psync.storage.StorageCheck;
 
 public class SyncFlowTest {
     @TempDir
@@ -266,6 +268,127 @@ public class SyncFlowTest {
                 restored.data.operationTree.size() + restored.data.localOperationTree.size());
         reopened.close();
     }
+
+    /**
+     * Verifies the persisted user snapshot references the FileTree root instead of
+     * embedding the file contents a second time.
+     */
+    @Test
+    public void userSnapshotReferencesFileTreeRoot() throws Exception {
+        handleA.createFile("/note.txt");
+        handleA.writeFile("/note.txt", 0, "snapshot".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        var snapshot = Sync.UserSnapshot.parseFrom(handleA.data.snapshotState);
+        assertTrue(snapshot.getFileTreeRootOffset() != 0, "snapshot must reference a FileTree root");
+        var treeState = Sync.UserTreeState.parseFrom(snapshot.getFileTreeState());
+        assertEquals(0, treeState.getEntriesCount(), "snapshot must not embed tree entries");
+        assertEquals(new String(handleA.readFile("/note.txt"), java.nio.charset.StandardCharsets.UTF_8),
+                "snapshot");
+    }
+
+    /**
+     * Verifies nextNodeId is persisted in the same commit that advances it, so a
+     * crash right after creating a user cannot reuse short node ids.
+     */
+    @Test
+    public void nextNodeIdIsPersistedWithTheMappingsItCovers() {
+        Path dataFile = tempDir.resolve("next-node-id.db");
+        var isolatedNetwork = new Network();
+        var node = new Node(isolatedNetwork, dataFile);
+        var handle = node.createNewUser("crash");
+        var userId = handle.data.userId();
+        long expectedNextNodeId = handle.data.nextNodeId;
+        assertTrue(expectedNextNodeId > 0, "creating a user must allocate a short node id");
+
+        // Simulate a crash: close the storage without running Node.close(), which
+        // would persist the state a second time.
+        node.dataStorage.close();
+
+        var reopened = new Node(isolatedNetwork, dataFile);
+        try {
+            assertEquals(expectedNextNodeId, reopened.getUser(userId).data.nextNodeId);
+        } finally {
+            reopened.close();
+        }
+    }
+
+    /**
+     * Verifies an exhausted byte budget produces no zero-length partial operation
+     * segment; the requester simply retries with a fresh budget.
+     */
+    @Test
+    public void exhaustedByteBudgetProducesNoEmptySegments() {
+        handleA.createFile("/budget.txt");
+        handleA.writeFile("/budget.txt", 0, "payload".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        var transfers = handleA.data.serve(
+                java.util.Map.of(nodeA.nodeKey(), 0L), java.util.Map.of(), 10, 0);
+
+        assertTrue(transfers.isEmpty(), "an empty budget must not create a zero-length transfer");
+    }
+
+    /**
+     * Verifies truncated file operations are captured in the snapshot tree, which
+     * survives a reopen and is still extended by operations recorded after the
+     * checkpoint.
+     */
+    @Test
+    public void fileSnapshotSurvivesTruncationAndReopen() {
+        Path dataFile = tempDir.resolve("snapshot-restart.db");
+        var first = new Network();
+        var firstNode = new Node(first, dataFile);
+        var handle = firstNode.createNewUser("snapshot");
+        var userId = handle.data.userId();
+        var otherNode = new Node(first);
+        var otherHandle = otherNode.join(handle.data.userKey);
+        handle.createFile("/a.txt");
+        handle.writeFile("/a.txt", 0, "hello".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        handle.createFile("/b.txt");
+        handle.writeFile("/b.txt", 0, "world".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        otherHandle.syncFrom(firstNode.peerId);
+        otherHandle.modify(root -> root.userStatusMessage = "after files");
+        handle.syncFrom(otherNode.peerId);
+        assertTrue(handle.truncateStableLog());
+        handle.writeFile("/a.txt", 0, "HELLO".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        otherNode.close();
+        firstNode.close();
+
+        var checkStorage = new DataStorage();
+        Node.registerStorageCheckHandles(checkStorage);
+        var report = StorageCheck.check(checkStorage, dataFile.toString());
+        assertTrue(report.isOk(), () -> "storage check failed: " + report.errors);
+
+        var reopened = new Node(new Network(), dataFile);
+        try {
+            var restored = reopened.getUser(userId);
+            assertEquals("HELLO", new String(restored.readFile("/a.txt"),
+                    java.nio.charset.StandardCharsets.UTF_8));
+            assertEquals("world", new String(restored.readFile("/b.txt"),
+                    java.nio.charset.StandardCharsets.UTF_8));
+        } finally {
+            reopened.close();
+        }
+    }
+
+
+    /**
+     * Verifies a local join replays history against the peer's base snapshot, so a
+     * deleted path whose name was reused does not break the replay.
+     */
+    @Test
+    public void joinReplaysHistoryWithReusedNames() {
+        handleA.createFile("/reused.txt");
+        handleA.writeFile("/reused.txt", 0, "old".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        handleA.delete("/reused.txt");
+        handleA.createFile("/reused.txt");
+        handleA.writeFile("/reused.txt", 0, "new".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        var joined = nodeB.join(handleA.data.userKey);
+
+        assertEquals("new", new String(joined.readFile("/reused.txt"),
+                java.nio.charset.StandardCharsets.UTF_8));
+    }
+
 
     /**
      * Verifies SyncUnit type, signed membership history, roles, and participation

@@ -28,10 +28,15 @@ final class UserFileTree {
     String statusMessage = "initial";
 
     UserFileTree(DataStorage storage, GuidMapper mapper, byte[] rootId, long rootOffset) {
+        this(storage, mapper, rootId, rootOffset, com.github.ruediste.p2psync.storage.RefMode.TRANSFER);
+    }
+
+    private UserFileTree(DataStorage storage, GuidMapper mapper, byte[] rootId, long rootOffset,
+            com.github.ruediste.p2psync.storage.RefMode refMode) {
         this.storage = storage;
         this.mapper = mapper;
         this.rootId = rootId.clone();
-        this.tree = new FileTree(storage, rootOffset);
+        this.tree = new FileTree(storage, rootOffset, refMode);
         this.root = mapper.toShort(rootId);
         if (rootOffset == 0)
             tree.createDirectory(root, root, "root", new FileTree.FileMeta());
@@ -80,22 +85,23 @@ final class UserFileTree {
         }
     }
 
+    static UserFileTree fromRoot(DataStorage storage, GuidMapper mapper, byte[] state, long rootOffset) {
+        try {
+            var stored = Sync.UserTreeState.parseFrom(state);
+            var result = new UserFileTree(storage, mapper, stored.getRootId().toByteArray(), rootOffset,
+                    com.github.ruediste.p2psync.storage.RefMode.SHARE);
+            result.statusMessage = stored.getStatusMessage();
+            if (result.tree.getDirectoryMeta(result.root) == null)
+                throw new IllegalArgumentException("Persisted user tree root is missing");
+            return result;
+        } catch (InvalidProtocolBufferException e) {
+            throw new IllegalArgumentException("Invalid persisted user tree", e);
+        }
+    }
+
     static UserFileTree replay(DataStorage storage, GuidMapper mapper, byte[] rootId,
             Iterable<Node.Operation> operations) {
         var result = new UserFileTree(storage, mapper, rootId, 0);
-        for (var operation : operations) {
-            try {
-                result.apply(Sync.UserOperation.parseFrom(operation.payload));
-            } catch (InvalidProtocolBufferException e) {
-                throw new IllegalArgumentException("Invalid user operation payload", e);
-            }
-        }
-        return result;
-    }
-
-    static UserFileTree replayFromState(DataStorage storage, GuidMapper mapper, byte[] baseState,
-            Iterable<Node.Operation> operations) {
-        var result = fromState(storage, mapper, baseState);
         for (var operation : operations) {
             try {
                 result.apply(Sync.UserOperation.parseFrom(operation.payload));
@@ -302,6 +308,13 @@ final class UserFileTree {
                 .setStatusMessage(statusMessage);
         addEntries(state, root);
         return state.build().toByteArray();
+    }
+
+    byte[] serializeShallowState() {
+        return Sync.UserTreeState.newBuilder()
+                .setRootId(ByteString.copyFrom(rootId))
+                .setStatusMessage(statusMessage)
+                .build().toByteArray();
     }
 
     private void addEntries(Sync.UserTreeState.Builder state, ShortGuid directory) {

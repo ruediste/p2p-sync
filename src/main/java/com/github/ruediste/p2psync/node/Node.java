@@ -238,7 +238,7 @@ public class Node implements AutoCloseable {
         return remoteHost.network().listenAddresses();
     }
 
-    public void addRemoteAddress(PeerId peerId, Multiaddr address) {
+    public synchronized void addRemoteAddress(PeerId peerId, Multiaddr address) {
         if (remoteHost == null)
             throw new IllegalStateException("Start remote networking before adding peer addresses");
         remoteAddresses.compute(peerId, (key, previous) -> {
@@ -250,7 +250,7 @@ public class Node implements AutoCloseable {
         });
     }
 
-    public void addRemotePeer(PeerId peerId) {
+    public synchronized void addRemotePeer(PeerId peerId) {
         if (remoteHost == null)
             throw new IllegalStateException("Start remote networking before adding peers");
         remoteAddresses.putIfAbsent(peerId, List.of());
@@ -279,6 +279,14 @@ public class Node implements AutoCloseable {
     }
 
     private byte[] handleRemoteSyncRequest(PeerId remotePeerId, byte[] bytes) {
+        Sync.RemoteSyncResponse response;
+        synchronized (this) {
+            response = buildRemoteSyncResponse(remotePeerId, bytes);
+        }
+        return response.toByteArray();
+    }
+
+    private Sync.RemoteSyncResponse buildRemoteSyncResponse(PeerId remotePeerId, byte[] bytes) {
         try {
             var request = Sync.RemoteSyncRequest.parseFrom(bytes);
             String remoteNodeKey = nodeKeyFor(remotePeerId);
@@ -304,7 +312,7 @@ public class Node implements AutoCloseable {
                         stored.getSignature().toByteArray());
                 boolean messageStored = storeIncomingMessage(operation, senderId);
                 return Sync.RemoteSyncResponse.newBuilder().setNodeClock(clock)
-                        .setDirectMessageStored(messageStored).build().toByteArray();
+                        .setDirectMessageStored(messageStored).build();
             }
             if (!request.getSyncUnitId().isEmpty()) {
                 var id = SyncUnitId.fromBytes(request.getSyncUnitId().toByteArray());
@@ -315,7 +323,7 @@ public class Node implements AutoCloseable {
                 boolean invited = unit != null
                         && unit.authorization.pendingInvitations().containsKey(requesterId);
                 if (unit == null)
-                    return Sync.RemoteSyncResponse.newBuilder().setNodeClock(clock).build().toByteArray();
+                    return Sync.RemoteSyncResponse.newBuilder().setNodeClock(clock).build();
                 // TODO 1: Authenticate requester against the Noise-authenticated peer
                 boolean authorized = false;
                 var requesterData = users.get(requesterId);
@@ -324,7 +332,7 @@ public class Node implements AutoCloseable {
                 }
                 if (!authorized && !knownMember && !invited)
                     return Sync.RemoteSyncResponse.newBuilder().setNodeClock(clock).setSyncUnitRevoked(true)
-                            .build().toByteArray();
+                            .build();
                 if (request.hasSyncUnitUpdate()) {
                     if (authorized && knownMember) {
                         try {
@@ -353,16 +361,16 @@ public class Node implements AutoCloseable {
                     unit.serveContent(fromClock, contentOffsets, contentBudget)
                             .forEach(transfer -> response.addContentTransfers(toProto(transfer)));
                 }
-                return response.build().toByteArray();
+                return response.build();
             }
             PubKey userId = PubKey.from(request.getUserId().toByteArray());
             NodeUserData data = users.get(userId);
             var response = Sync.RemoteSyncResponse.newBuilder().setUserFound(data != null).setNodeClock(clock);
             if (data == null)
-                return response.build().toByteArray();
+                return response.build();
             // TODO 1: Authenticate user sync request against the Noise-authenticated peer
             if (!data.activeNodeSet.nodes.contains(remoteNodeKey)) {
-                return Sync.RemoteSyncResponse.newBuilder().setNodeClock(clock).setUserFound(false).build().toByteArray();
+                return Sync.RemoteSyncResponse.newBuilder().setNodeClock(clock).setUserFound(false).build();
             }
             response.setActiveNodeSet(persist(data.activeNodeSet));
             if (data.homeSyncUnitId != null)
@@ -404,7 +412,7 @@ public class Node implements AutoCloseable {
                 data.activeNodeSet.setVersion(nodeKey, nextClock());
                 persistState();
             }
-            return response.build().toByteArray();
+            return response.build();
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
             throw new IllegalArgumentException("Invalid remote sync request", e);
         }
@@ -425,7 +433,7 @@ public class Node implements AutoCloseable {
     }
 
     public static class Network {
-        public Map<PeerId, Node> nodes = new HashMap<>();
+        public Map<PeerId, Node> nodes = new java.util.concurrent.ConcurrentHashMap<>();
 
         public Set<PeerId> getPeersForUser(PubKey userId) {
             return nodes.values().stream().filter(x -> x.users.containsKey(userId)).map(x -> x.peerId)
@@ -473,6 +481,8 @@ public class Node implements AutoCloseable {
         SyncUnitId homeSyncUnitId;
         final Map<String, String> sharedFolderLabels = new TreeMap<>();
         long nextNodeId;
+        long persistedFileTreeRootOffset = -1;
+        long persistedSnapshotRootOffset = -1;
         GuidMapper guidMapper;
 
         public PubKey userId() {
@@ -518,6 +528,8 @@ public class Node implements AutoCloseable {
                     int available = byteBudget - bytesSent;
                     int count = Math.min(operation.payload.length - offset, available);
                     boolean complete = offset + count == operation.payload.length;
+                    if (count == 0 && !complete)
+                        return result;
                     result.add(new Transfer(operation.id, operation.payload.length, offset,
                             Arrays.copyOfRange(operation.payload, offset, offset + count), operation.signature,
                             complete));
@@ -672,6 +684,8 @@ public class Node implements AutoCloseable {
                 int available = Math.max(0, byteBudget - bytesSent);
                 int count = Math.min(payload.length - offset, available);
                 boolean complete = offset + count == payload.length;
+                if (count == 0 && !complete)
+                    return result;
                 result.add(new ContentTransfer(id, operationId, operation.author(), operation.kind(),
                         operation.key(), payload.length, offset,
                         Arrays.copyOfRange(payload, offset, offset + count), operation.signature(), complete));
@@ -765,17 +779,17 @@ public class Node implements AutoCloseable {
             int pendingLocalOperationCount, int pendingIncomingOperationCount) {
     }
 
-    public NodeUserHandle createNewUser() {
+    public synchronized NodeUserHandle createNewUser() {
 
         var userKey = Ed25519PrivateKey.generateKeyPair();
         return createNewUser(userKey, defaultUserName(userKey));
     }
 
-    public NodeUserHandle createNewUser(String localName) {
+    public synchronized NodeUserHandle createNewUser(String localName) {
         return createNewUser(Ed25519PrivateKey.generateKeyPair(), localName);
     }
 
-    private NodeUserHandle createNewUser(PrivKey userKey, String localName) {
+    private synchronized NodeUserHandle createNewUser(PrivKey userKey, String localName) {
         validateLocalName(localName);
         ensureNameAvailable(localName, null);
         var data = new NodeUserData();
@@ -796,11 +810,11 @@ public class Node implements AutoCloseable {
         return handle;
     }
 
-    public NodeUserHandle join(PrivKey userKey) {
+    public synchronized NodeUserHandle join(PrivKey userKey) {
         return join(userKey, defaultUserName(userKey));
     }
 
-    public NodeUserHandle join(PrivKey userKey, String localName) {
+    public synchronized NodeUserHandle join(PrivKey userKey, String localName) {
         validateLocalName(localName);
         ensureNameAvailable(localName, null);
         var userId = userKey.publicKey();
@@ -817,7 +831,8 @@ public class Node implements AutoCloseable {
         data.localName = localName;
         data.rootDirectoryGuid = peerData.rootDirectoryGuid.clone();
         data.homeSyncUnitId = peerData.homeSyncUnitId;
-        data.snapshotState = peerData.snapshotState.clone();
+        data.snapshotState = UserState.transferableSnapshot(peerNode.dataStorage, peerData.guidMapper, userId,
+                peerData.snapshotState);
         data.operationTree.putAll(peerData.operationTree);
         data.stagingTree.putAll(peerData.stagingTree);
         data.stagingTree.putAll(peerData.localOperationTree);
@@ -830,6 +845,8 @@ public class Node implements AutoCloseable {
         ensureUserSyncUnit(data);
         ensureHomeUnit(data);
         data.guidMapper = new GuidMapper(dataStorage, unitRoots, data.fileUnitId(), 0);
+        data.snapshotState = UserState.materializeSnapshot(dataStorage, data.guidMapper, userId,
+                data.snapshotState);
         var state = UserState.replayFromState(dataStorage, data.guidMapper, data.snapshotState, userId,
                 data.allOperations().values());
         data.fileSystem = state.fileSystem;
@@ -843,7 +860,8 @@ public class Node implements AutoCloseable {
         return handle;
     }
 
-    public NodeUserHandle joinRemote(PrivKey userKey, String localName, PeerId remotePeerId, Multiaddr address) {
+    public synchronized NodeUserHandle joinRemote(PrivKey userKey, String localName, PeerId remotePeerId,
+            Multiaddr address) {
         addRemoteAddress(remotePeerId, address);
         return joinRemote(userKey, localName, remotePeerId);
     }
@@ -875,61 +893,67 @@ public class Node implements AutoCloseable {
     }
 
     public NodeUserHandle joinRemote(PrivKey userKey, String localName, PeerId remotePeerId) {
-        validateLocalName(localName);
-        ensureNameAvailable(localName, null);
-        if (users.containsKey(userKey.publicKey()))
-            throw new IllegalArgumentException("User is already configured on this node");
+        synchronized (this) {
+                validateLocalName(localName);
+                ensureNameAvailable(localName, null);
+                if (users.containsKey(userKey.publicKey()))
+                    throw new IllegalArgumentException("User is already configured on this node");
+        }
         addRemotePeer(remotePeerId);
         var response = exchangeRemote(remotePeerId, Sync.RemoteSyncRequest.newBuilder()
                 .setUserId(com.google.protobuf.ByteString.copyFrom(userKey.publicKey().bytes()))
                 .setIncludeHistory(true)
                 .setJoiningNodeId(nodeKey)
                 .build());
-        if (!response.getUserFound())
-            throw new IllegalArgumentException("Remote peer does not host this user");
-        clock = Math.max(clock, response.getNodeClock());
+        synchronized (this) {
+            if (!response.getUserFound())
+                throw new IllegalArgumentException("Remote peer does not host this user");
+            clock = Math.max(clock, response.getNodeClock());
 
-        var data = new NodeUserData();
-        data.userKey = userKey;
-        data.localName = localName;
-        data.snapshotState = UserState.snapshotWithFileTree(response.getContactsList(),
-                response.getFileTreeRootId().toByteArray(), response.getFileTreeStatus(),
-                response.getFileTreeEntriesList());
-        if (response.getFileTreeRootId().isEmpty())
-            throw new IllegalArgumentException("Remote user history has no file-tree root");
-        data.rootDirectoryGuid = response.getFileTreeRootId().toByteArray();
-        if (!response.getHomeSyncUnitId().isEmpty())
-            data.homeSyncUnitId = SyncUnitId.fromBytes(response.getHomeSyncUnitId().toByteArray());
-        for (var stored : response.getHistoryList()) {
-            var id = new OperationId(stored.getLamportClock(), stored.getNodeHash().toByteArray());
-            var payload = stored.getPayload().toByteArray();
-            var signature = stored.getSignature().toByteArray();
-            if (!verifyOperationSignature(userKey.publicKey(), id, payload, signature))
-                throw new IllegalArgumentException("Remote history contains an invalid user signature");
-            requireUserUnitModification(userKey.publicKey());
-            data.operationTree.put(id, new Operation(id, payload, signature));
+            var data = new NodeUserData();
+            data.userKey = userKey;
+            data.localName = localName;
+            data.snapshotState = UserState.snapshotWithFileTree(response.getContactsList(),
+                    response.getFileTreeRootId().toByteArray(), response.getFileTreeStatus(),
+                    response.getFileTreeEntriesList());
+            if (response.getFileTreeRootId().isEmpty())
+                throw new IllegalArgumentException("Remote user history has no file-tree root");
+            data.rootDirectoryGuid = response.getFileTreeRootId().toByteArray();
+            if (!response.getHomeSyncUnitId().isEmpty())
+                data.homeSyncUnitId = SyncUnitId.fromBytes(response.getHomeSyncUnitId().toByteArray());
+            for (var stored : response.getHistoryList()) {
+                var id = new OperationId(stored.getLamportClock(), stored.getNodeHash().toByteArray());
+                var payload = stored.getPayload().toByteArray();
+                var signature = stored.getSignature().toByteArray();
+                if (!verifyOperationSignature(userKey.publicKey(), id, payload, signature))
+                    throw new IllegalArgumentException("Remote history contains an invalid user signature");
+                requireUserUnitModification(userKey.publicKey());
+                data.operationTree.put(id, new Operation(id, payload, signature));
+            }
+            for (var entry : response.getMaxOperationClockList()) {
+                data.maxOperationClock.put(entry.getNodeId(), entry.getClock());
+                data.clock = Math.max(data.clock, entry.getClock());
+                clock = Math.max(clock, entry.getClock());
+            }
+            loadActiveNodeSet(response.getActiveNodeSet(), data.activeNodeSet);
+            data.activeNodeSet.nodes.add(nodeKey);
+            data.activeNodeSet.setVersion(nodeKey, nextClock());
+            users.put(data.userId(), data);
+            ensureUserSyncUnit(data);
+            ensureHomeUnit(data);
+            data.guidMapper = new GuidMapper(dataStorage, unitRoots, data.fileUnitId(), 0);
+            data.snapshotState = UserState.materializeSnapshot(dataStorage, data.guidMapper, userKey.publicKey(),
+                    data.snapshotState);
+            var state = UserState.replayFromState(dataStorage, data.guidMapper, data.snapshotState,
+                    userKey.publicKey(), data.operationTree.values());
+            data.fileSystem = state.fileSystem;
+            data.contacts = state.contacts;
+            persistState();
+            return new NodeUserHandle(this, data);
         }
-        for (var entry : response.getMaxOperationClockList()) {
-            data.maxOperationClock.put(entry.getNodeId(), entry.getClock());
-            data.clock = Math.max(data.clock, entry.getClock());
-            clock = Math.max(clock, entry.getClock());
-        }
-        loadActiveNodeSet(response.getActiveNodeSet(), data.activeNodeSet);
-        data.activeNodeSet.nodes.add(nodeKey);
-        data.activeNodeSet.setVersion(nodeKey, nextClock());
-        users.put(data.userId(), data);
-        ensureUserSyncUnit(data);
-        ensureHomeUnit(data);
-        data.guidMapper = new GuidMapper(dataStorage, unitRoots, data.fileUnitId(), 0);
-        var state = UserState.replayFromState(dataStorage, data.guidMapper, data.snapshotState,
-                userKey.publicKey(), data.operationTree.values());
-        data.fileSystem = state.fileSystem;
-        data.contacts = state.contacts;
-        persistState();
-        return new NodeUserHandle(this, data);
     }
 
-    public void renameUser(PubKey userId, String localName) {
+    public synchronized void renameUser(PubKey userId, String localName) {
         validateLocalName(localName);
         var data = users.get(userId);
         if (data == null)
@@ -939,7 +963,7 @@ public class Node implements AutoCloseable {
         persistState();
     }
 
-    public void setSharedFolderLabel(PubKey userId, SyncUnitId unitId, String label) {
+    public synchronized void setSharedFolderLabel(PubKey userId, SyncUnitId unitId, String label) {
         var user = requireConfiguredUser(userId);
         requireSyncUnitType(unitId, SyncUnitAuthorization.Type.SHARED_FOLDER);
         setSharedFolderLabel(user, unitId, label);
@@ -984,7 +1008,7 @@ public class Node implements AutoCloseable {
         return List.copyOf(result);
     }
 
-    public SyncUnitId createSyncUnit(PubKey creatorId, SyncUnitAuthorization.Type type) {
+    public synchronized SyncUnitId createSyncUnit(PubKey creatorId, SyncUnitAuthorization.Type type) {
         if (type == SyncUnitAuthorization.Type.USER)
             throw new IllegalArgumentException("User SyncUnits are created with createNewUser");
         var creator = requireConfiguredUser(creatorId);
@@ -1084,24 +1108,26 @@ public class Node implements AutoCloseable {
     }
 
     void deliverPendingMessages() {
-        for (var sender : List.copyOf(users.values())) {
-            for (var operation : sender.allOperations().values()) {
+        for (var sender : userSnapshot()) {
+            var delivered = deliveredMessages(sender);
+            for (var operation : messageOperations(sender)) {
                 var message = parseOutgoingMessage(sender.userId(), operation);
-                if (message == null || sender.deliveredMessageIds.contains(message.getMessageId()))
+                if (message == null || delivered.contains(message.getMessageId()))
                     continue;
                 var recipientId = PubKey.from(message.getRecipientUserId().toByteArray());
                 for (var recipientNode : List.copyOf(network.nodes.values())) {
                     if (!recipientNode.users.containsKey(recipientId)
                             || !recipientNode.storeIncomingMessage(operation, sender.userId()))
                         continue;
-                    sender.deliveredMessageIds.add(message.getMessageId());
+                    markMessageDelivered(sender, message.getMessageId());
+                    delivered.add(message.getMessageId());
                     for (var recipientReplica : List.copyOf(network.nodes.values()))
                         if (recipientReplica.users.containsKey(recipientId))
                             recipientReplica.copyInboxMessage(recipientNode, recipientId, message.getMessageId());
                     persistState();
                     break;
                 }
-                if (sender.deliveredMessageIds.contains(message.getMessageId()))
+                if (delivered.contains(message.getMessageId()))
                     continue;
                 var remotePeers = new TreeSet<PeerId>(PeerId::compareTo);
                 // TODO 2: Resolve the recipient's peers first instead of broadcasting to all address-book peers
@@ -1111,14 +1137,11 @@ public class Node implements AutoCloseable {
                     if (network.nodes.containsKey(remotePeer))
                         continue;
                     try {
-                        var delivery = Sync.RemoteDirectMessageDelivery.newBuilder()
-                                .setSenderUserId(com.google.protobuf.ByteString.copyFrom(sender.userId().bytes()))
-                                .setOperation(persist(operation));
-                        var response = exchangeRemote(remotePeer, Sync.RemoteSyncRequest.newBuilder()
-                                .setDirectMessage(delivery).build());
+                        var response = exchangeRemote(remotePeer, directMessageRequest(sender, operation));
                         if (!response.getDirectMessageStored())
                             continue;
-                        sender.deliveredMessageIds.add(message.getMessageId());
+                        markMessageDelivered(sender, message.getMessageId());
+                        delivered.add(message.getMessageId());
                         persistState();
                         break;
                     } catch (RuntimeException unavailablePeer) {
@@ -1129,7 +1152,30 @@ public class Node implements AutoCloseable {
         }
     }
 
-    private boolean storeIncomingMessage(Operation operation, PubKey senderId) {
+    private synchronized List<NodeUserData> userSnapshot() {
+        return List.copyOf(users.values());
+    }
+
+    private synchronized java.util.Collection<Operation> messageOperations(NodeUserData sender) {
+        return sender.allOperations().values();
+    }
+
+    private synchronized java.util.Set<String> deliveredMessages(NodeUserData sender) {
+        return new HashSet<>(sender.deliveredMessageIds);
+    }
+
+    private synchronized void markMessageDelivered(NodeUserData sender, String messageId) {
+        sender.deliveredMessageIds.add(messageId);
+    }
+
+    private synchronized Sync.RemoteSyncRequest directMessageRequest(NodeUserData sender, Operation operation) {
+        var delivery = Sync.RemoteDirectMessageDelivery.newBuilder()
+                .setSenderUserId(com.google.protobuf.ByteString.copyFrom(sender.userId().bytes()))
+                .setOperation(persist(operation));
+        return Sync.RemoteSyncRequest.newBuilder().setDirectMessage(delivery).build();
+    }
+
+    private synchronized boolean storeIncomingMessage(Operation operation, PubKey senderId) {
         if (!verifyOperationSignature(senderId, operation.id, operation.payload, operation.signature))
             throw new IllegalArgumentException("Invalid direct message operation signature");
         Sync.UserOperation userOperation;
@@ -1175,7 +1221,7 @@ public class Node implements AutoCloseable {
         return true;
     }
 
-    void rebuildInboxMessages(NodeUserData user) {
+    synchronized void rebuildInboxMessages(NodeUserData user) {
         for (var operation : user.allOperations().values()) {
             Sync.UserOperation receipt;
             try {
@@ -1213,7 +1259,7 @@ public class Node implements AutoCloseable {
         }
     }
 
-    private void copyInboxMessage(Node source, PubKey recipientId, String messageId) {
+    private synchronized void copyInboxMessage(Node source, PubKey recipientId, String messageId) {
         var sourceUser = source.users.get(recipientId);
         var recipient = users.get(recipientId);
         if (sourceUser == null || recipient == null)
@@ -1248,7 +1294,7 @@ public class Node implements AutoCloseable {
         }
     }
 
-    public void inviteToSyncUnit(SyncUnitId id, PubKey actorId, PubKey inviteeId,
+    public synchronized void inviteToSyncUnit(SyncUnitId id, PubKey actorId, PubKey inviteeId,
             SyncUnitAuthorization.Role role) {
         if (requireSyncUnit(id).home)
             throw new IllegalArgumentException("The home SyncUnit cannot be shared");
@@ -1258,7 +1304,7 @@ public class Node implements AutoCloseable {
                 peer.receiveSyncUnitInvitation(syncUnits.get(id));
     }
 
-    public void acceptSyncUnitInvitation(SyncUnitId id, PubKey inviteeId) {
+    public synchronized void acceptSyncUnitInvitation(SyncUnitId id, PubKey inviteeId) {
         var unit = requireSyncUnit(id);
         if (!unit.authorization.pendingInvitations().containsKey(inviteeId))
             throw new IllegalArgumentException("User has no pending invitation to this SyncUnit");
@@ -1275,12 +1321,12 @@ public class Node implements AutoCloseable {
         }
     }
 
-    public void changeSyncUnitRole(SyncUnitId id, PubKey actorId, PubKey subject,
+    public synchronized void changeSyncUnitRole(SyncUnitId id, PubKey actorId, PubKey subject,
             SyncUnitAuthorization.Role role) {
         appendSyncUnitOperation(id, actorId, SyncUnitAuthorization.Action.CHANGE_ROLE, subject, role);
     }
 
-    public void removeFromSyncUnit(SyncUnitId id, PubKey actorId, PubKey subject) {
+    public synchronized void removeFromSyncUnit(SyncUnitId id, PubKey actorId, PubKey subject) {
         appendSyncUnitOperation(id, actorId, SyncUnitAuthorization.Action.REMOVE_MEMBER, subject, null);
         var user = users.get(subject);
         if (user != null)
@@ -1300,56 +1346,71 @@ public class Node implements AutoCloseable {
     public void joinSyncUnit(PeerId sourcePeerId, SyncUnitId id, PubKey inviteeId) {
         var source = network.nodes.get(sourcePeerId);
         requireConfiguredUser(inviteeId);
-        SyncUnitData sourceUnit;
         if (source != null) {
-            sourceUnit = source.requireSyncUnit(id);
-            receiveSyncUnitInvitation(sourceUnit);
-        } else {
-            var result = requestRemoteSyncUnit(sourcePeerId, id, inviteeId, null);
-            sourceUnit = result.unit();
+            synchronized (this) {
+                joinLocalSyncUnit(source, id, inviteeId);
+            }
+            return;
+        }
+        Sync.RemoteSyncRequest request;
+        synchronized (this) {
+            request = buildRemoteSyncUnitRequest(id, inviteeId, null);
+        }
+        var response = exchangeRemote(sourcePeerId, request);
+        synchronized (this) {
+            var result = applyRemoteSyncUnitResponse(response, null);
+            var sourceUnit = result.unit();
             if (sourceUnit == null)
                 throw new UnknownSyncUnitException("Remote peer does not host an invitation to this SyncUnit");
             syncUnits.putIfAbsent(id, sourceUnit);
+            var localUnit = requireSyncUnit(id);
+            if (!localUnit.authorization.pendingInvitations().containsKey(inviteeId))
+                throw new IllegalArgumentException("User has no pending invitation to this SyncUnit");
+            localUnit.clock = Math.max(localUnit.clock, maxSyncUnitClock(sourceUnit));
+            clock = Math.max(clock, maxSyncUnitClock(sourceUnit));
+            acceptSyncUnitInvitation(id, inviteeId);
         }
+        syncSyncUnitFrom(sourcePeerId, id);
+    }
+
+    private void joinLocalSyncUnit(Node source, SyncUnitId id, PubKey inviteeId) {
+        var sourceUnit = source.requireSyncUnit(id);
+        receiveSyncUnitInvitation(sourceUnit);
         var localUnit = requireSyncUnit(id);
         if (!localUnit.authorization.pendingInvitations().containsKey(inviteeId))
             throw new IllegalArgumentException("User has no pending invitation to this SyncUnit");
         localUnit.clock = Math.max(localUnit.clock, maxSyncUnitClock(sourceUnit));
         clock = Math.max(clock, maxSyncUnitClock(sourceUnit));
         acceptSyncUnitInvitation(id, inviteeId);
-        if (source != null)
-            mergeSyncUnit(sourceUnit, source.nodeKey());
-        else
-            syncSyncUnitFrom(sourcePeerId, id);
+        mergeSyncUnit(sourceUnit, source.nodeKey());
     }
 
     public void syncSyncUnitFrom(PeerId sourcePeerId, SyncUnitId id) {
         var source = network.nodes.get(sourcePeerId);
-        var unit = requireSyncUnit(id);
-        var localMember = users.values().stream()
-                .filter(user -> unit.authorization.members().containsKey(user.userId()))
-                .findFirst().orElseThrow(() -> new IllegalArgumentException(
-                        "No configured user participates in this SyncUnit"));
-        if (source == null) {
-            var result = requestRemoteSyncUnit(sourcePeerId, id, localMember.userId(), unit);
-            if (result.revoked()) {
-                var removed = syncUnits.remove(id);
-                if (removed != null && removed.type == SyncUnitAuthorization.Type.SHARED_FOLDER)
-                    deleteSharedFolderUnit(id);
-                recordSyncUnitParticipation(localMember, id, false);
-                persistState();
-                throw new SyncUnitRevokedException("SyncUnit membership was revoked");
+        if (source != null) {
+            synchronized (this) {
+                syncLocalSyncUnit(source, id);
             }
-            if (result.unit() == null)
-                throw new UnknownSyncUnitException("Remote peer does not host this SyncUnit");
-            mergeSyncUnit(result.unit(), nodeKeyFor(sourcePeerId));
-            var localUnit = requireSyncUnit(id);
-            localUnit.partialContentOperations.keySet().removeAll(result.unit().contentOperations.keySet());
-            localUnit.partialContentOperations.putAll(result.unit().partialContentOperations);
-            persistState();
             return;
         }
-        if (!unit.authorization.members().containsKey(localMember.userId()))
+        Sync.RemoteSyncRequest request;
+        SyncUnitData update;
+        PubKey localMember;
+        synchronized (this) {
+            update = requireSyncUnit(id);
+            localMember = localMemberId(update);
+            request = buildRemoteSyncUnitRequest(id, localMember, update);
+        }
+        var response = exchangeRemote(sourcePeerId, request);
+        synchronized (this) {
+            applyRemoteSyncUnitResponseAndMerge(sourcePeerId, id, response, update, localMember);
+        }
+    }
+
+    private void syncLocalSyncUnit(Node source, SyncUnitId id) {
+        var unit = requireSyncUnit(id);
+        var localMember = localMemberId(unit);
+        if (!unit.authorization.members().containsKey(localMember))
             throw new IllegalArgumentException("No configured user participates in this SyncUnit");
         var sourceUnit = source.syncUnits.get(id);
         if (sourceUnit == null)
@@ -1357,10 +1418,40 @@ public class Node implements AutoCloseable {
         mergeSyncUnit(sourceUnit, source.nodeKey());
     }
 
+    private PubKey localMemberId(SyncUnitData unit) {
+        return users.values().stream()
+                .filter(user -> unit.authorization.members().containsKey(user.userId()))
+                .findFirst().orElseThrow(() -> new IllegalArgumentException(
+                        "No configured user participates in this SyncUnit"))
+                .userId();
+    }
+
+    private void applyRemoteSyncUnitResponseAndMerge(PeerId sourcePeerId, SyncUnitId id,
+            Sync.RemoteSyncResponse response, SyncUnitData update, PubKey localMember) {
+        var result = applyRemoteSyncUnitResponse(response, update);
+        if (result.revoked()) {
+            var removed = syncUnits.remove(id);
+            if (removed != null && removed.type == SyncUnitAuthorization.Type.SHARED_FOLDER)
+                deleteSharedFolderUnit(id);
+            var localUser = users.get(localMember);
+            if (localUser != null)
+                recordSyncUnitParticipation(localUser, id, false);
+            persistState();
+            throw new SyncUnitRevokedException("SyncUnit membership was revoked");
+        }
+        if (result.unit() == null)
+            throw new UnknownSyncUnitException("Remote peer does not host this SyncUnit");
+        mergeSyncUnit(result.unit(), nodeKeyFor(sourcePeerId));
+        var localUnit = requireSyncUnit(id);
+        localUnit.partialContentOperations.keySet().removeAll(result.unit().contentOperations.keySet());
+        localUnit.partialContentOperations.putAll(result.unit().partialContentOperations);
+        persistState();
+    }
+
     private record RemoteSyncUnitResult(SyncUnitData unit, boolean revoked) {
     }
 
-    private RemoteSyncUnitResult requestRemoteSyncUnit(PeerId peerId, SyncUnitId id, PubKey requesterId,
+    private Sync.RemoteSyncRequest buildRemoteSyncUnitRequest(SyncUnitId id, PubKey requesterId,
             SyncUnitData update) {
         var request = Sync.RemoteSyncRequest.newBuilder()
                 .setSyncUnitId(com.google.protobuf.ByteString.copyFrom(id.bytes()))
@@ -1377,7 +1468,11 @@ public class Node implements AutoCloseable {
                         .setOffset(partial.receivedLength));
             }
         }
-        var response = exchangeRemote(peerId, request.build());
+        return request.build();
+    }
+
+    private RemoteSyncUnitResult applyRemoteSyncUnitResponse(Sync.RemoteSyncResponse response,
+            SyncUnitData update) {
         SyncUnitData unit = response.getSyncUnitFound()
                 ? deserializeSyncUnit(response.getSyncUnit())
                 : null;
@@ -1526,7 +1621,7 @@ public class Node implements AutoCloseable {
                 && Arrays.equals(left.payload(), right.payload()) && Arrays.equals(left.signature(), right.signature());
     }
 
-    public void putSharedFile(SyncUnitId id, PubKey authorId, String path, byte[] content) {
+    public synchronized void putSharedFile(SyncUnitId id, PubKey authorId, String path, byte[] content) {
         requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
         recordSyncUnitContent(id, authorId, SyncUnitContentOperation.Kind.SHARED_FILE_SET,
                 validateSyncUnitKey(path), content);
@@ -1594,13 +1689,13 @@ public class Node implements AutoCloseable {
         SharedFolderPersistence.deleteUnit(dataStorage, unitRoots, sharedFolderMapper, id.toString());
     }
 
-    public void deleteSharedFile(SyncUnitId id, PubKey authorId, String path) {
+    public synchronized void deleteSharedFile(SyncUnitId id, PubKey authorId, String path) {
         requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
         recordSyncUnitContent(id, authorId, SyncUnitContentOperation.Kind.SHARED_FILE_DELETE,
                 validateSyncUnitKey(path), new byte[0]);
     }
 
-    public void putTodoItem(SyncUnitId id, PubKey authorId, String itemId, byte[] content) {
+    public synchronized void putTodoItem(SyncUnitId id, PubKey authorId, String itemId, byte[] content) {
         requireSyncUnitType(id, SyncUnitAuthorization.Type.TODO_LIST);
         recordSyncUnitContent(id, authorId, SyncUnitContentOperation.Kind.TODO_SET,
                 validateSyncUnitKey(itemId), content);
@@ -1621,13 +1716,13 @@ public class Node implements AutoCloseable {
         return java.util.Collections.unmodifiableMap(result);
     }
 
-    public void deleteTodoItem(SyncUnitId id, PubKey authorId, String itemId) {
+    public synchronized void deleteTodoItem(SyncUnitId id, PubKey authorId, String itemId) {
         requireSyncUnitType(id, SyncUnitAuthorization.Type.TODO_LIST);
         recordSyncUnitContent(id, authorId, SyncUnitContentOperation.Kind.TODO_DELETE,
                 validateSyncUnitKey(itemId), new byte[0]);
     }
 
-    public String sendChannelMessage(SyncUnitId id, PubKey authorId, Sync.SyncUnitMessage message) {
+    public synchronized String sendChannelMessage(SyncUnitId id, PubKey authorId, Sync.SyncUnitMessage message) {
         requireSyncUnitType(id, SyncUnitAuthorization.Type.MESSAGE_CHANNEL);
         String messageId = java.util.UUID.randomUUID().toString();
         recordSyncUnitContent(id, authorId, SyncUnitContentOperation.Kind.CHANNEL_MESSAGE,
@@ -1761,7 +1856,7 @@ public class Node implements AutoCloseable {
         applyParticipationOperations(user);
     }
 
-    void applyParticipationOperations(NodeUserData user) {
+    synchronized void applyParticipationOperations(NodeUserData user) {
         for (var operation : user.allOperations().values()) {
             try {
                 var userOperation = Sync.UserOperation.parseFrom(operation.payload);
@@ -1903,7 +1998,7 @@ public class Node implements AutoCloseable {
         if (remoteHost != null)
             peers.addAll(remoteHost.addressBook().getPeerIds());
         peers.remove(peerId);
-        for (var user : List.copyOf(users.values())) {
+        for (var user : userSnapshot()) {
             var handle = new NodeUserHandle(this, user);
             for (PeerId remotePeerId : peers) {
                 if (!user.activeNodeSet.nodes.contains(nodeKeyFor(remotePeerId)))
@@ -1914,11 +2009,11 @@ public class Node implements AutoCloseable {
                 handle.syncFrom(remotePeerId);
             }
         }
-        for (var user : List.copyOf(users.values())) {
+        for (var user : userSnapshot()) {
             for (String unitIdHex : List.copyOf(user.participatingSyncUnitIds)) {
                 var unitId = SyncUnitId.fromBytes(HexFormat.of().parseHex(unitIdHex));
                 var unit = syncUnits.get(unitId);
-                if (unit == null || unit.type == SyncUnitAuthorization.Type.USER)
+                if (unit == null || unit.type == SyncUnitAuthorization.Type.USER || unit.home)
                     continue;
                 boolean restrictToActiveNodes = unit.activeNodeSet.nodes.size() > 1;
                 for (PeerId remotePeerId : peers) {
@@ -1955,7 +2050,7 @@ public class Node implements AutoCloseable {
         return "user-" + HexFormat.of().formatHex(digest, 0, 4);
     }
 
-    void recordLocalOperation(NodeUserData data, byte[] payload) {
+    synchronized void recordLocalOperation(NodeUserData data, byte[] payload) {
         requireUserUnitModification(data.userId());
         var id = new OperationId(++data.clock, nodeHash);
         clock = Math.max(clock, data.clock);
@@ -1987,7 +2082,7 @@ public class Node implements AutoCloseable {
         }
     }
 
-    byte[] nextEntityId(NodeUserData user) {
+    synchronized byte[] nextEntityId(NodeUserData user) {
         return ByteBuffer.allocate(nodeHash.length + Long.BYTES)
                 .put(nodeHash).putLong(++user.entityCounter).array();
     }
@@ -2008,9 +2103,24 @@ public class Node implements AutoCloseable {
         for (var user : users.values()) {
             if (user.guidMapper == null)
                 user.guidMapper = new GuidMapper(dataStorage, unitRoots, user.fileUnitId(), user.nextNodeId);
-            unitRoots.put(user.fileUnitId(), UnitRootStore.FILE_TREE, user.fileSystem.rootOffset());
+            long fileTreeRoot = user.fileSystem.rootOffset();
+            if (fileTreeRoot != user.persistedFileTreeRootOffset) {
+                unitRoots.put(user.fileUnitId(), UnitRootStore.FILE_TREE, fileTreeRoot);
+                user.persistedFileTreeRootOffset = fileTreeRoot;
+            }
+            long snapshotRoot = UserState.snapshotRootOffset(user.snapshotState);
+            if (snapshotRoot != user.persistedSnapshotRootOffset) {
+                unitRoots.put(user.fileUnitId(), UnitRootStore.SNAPSHOT_FILE_TREE, snapshotRoot);
+                user.persistedSnapshotRootOffset = snapshotRoot;
+            }
             user.nextNodeId = user.guidMapper.nextNodeId();
             user.guidMapper.flush();
+        }
+        for (var unit : syncUnits.values()) {
+            if (unit.guidMapper == null)
+                continue;
+            unit.nextNodeId = unit.guidMapper.nextNodeId();
+            unit.guidMapper.flush();
         }
         ensureSharedFolderMapper();
         sharedFolderNextNodeId = sharedFolderMapper.nextNodeId();
@@ -2116,9 +2226,10 @@ public class Node implements AutoCloseable {
         }
     }
 
-    void persistState() {
+    synchronized void persistState() {
         if (restoringState)
             return;
+        persistUserFileTrees();
         var state = Sync.NodeState.newBuilder()
                 .setPeerId(com.google.protobuf.ByteString.copyFrom(peerId.getBytes()))
                 .setPeerPrivateKey(com.google.protobuf.ByteString.copyFrom(peerPrivateKey.bytes()))
@@ -2165,7 +2276,6 @@ public class Node implements AutoCloseable {
             state.addUsers(storedUser);
         }
         persistUserOperationTrees();
-        persistUserFileTrees();
         persistSyncUnitOperationTrees();
         syncUnits.values().forEach(unit -> state.addSyncUnits(persistMetadata(unit)));
         storage.put(BlobStorage.NODE_STATE_ID, state.build());
@@ -2406,6 +2516,7 @@ public class Node implements AutoCloseable {
         sharedFolderNextNodeId = state.getSharedFolderNextNodeId();
         network.nodes.put(peerId, this);
         restoringState = true;
+        boolean rebuiltFileTree = false;
         try {
             for (var storedUnit : state.getSyncUnitsList())
                 loadSyncUnit(storedUnit);
@@ -2449,9 +2560,11 @@ public class Node implements AutoCloseable {
                 if (fileTreeRoot != 0)
                     user.fileSystem = new UserFileTree(dataStorage, user.guidMapper,
                             user.rootDirectoryGuid, fileTreeRoot);
-                else
-                    user.fileSystem = UserFileTree.replayFromState(dataStorage, user.guidMapper,
-                            user.snapshotState, user.allOperations().values());
+                else {
+                    user.fileSystem = UserState.replayFromState(dataStorage, user.guidMapper,
+                            user.snapshotState, user.userId(), user.allOperations().values()).fileSystem;
+                    rebuiltFileTree = true;
+                }
                 rebuildInboxMessages(user);
                 if (!user.allOperations().isEmpty()) {
                     var replayed = UserState.contactsFromState(user.snapshotState, user.userId());
@@ -2465,7 +2578,8 @@ public class Node implements AutoCloseable {
         } finally {
             restoringState = false;
         }
-        persistState();
+        if (rebuiltFileTree)
+            persistState();
     }
 
     private void loadSyncUnit(Sync.PersistedSyncUnit stored) {
@@ -2591,7 +2705,7 @@ public class Node implements AutoCloseable {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         persistState();
         if (remoteHost != null)
             remoteHost.stop().join();

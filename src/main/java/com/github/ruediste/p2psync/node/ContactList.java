@@ -80,7 +80,9 @@ final class ContactList {
                 default -> {
                 }
             }
-        } catch (RuntimeException invalidOperation) {
+        } catch (IllegalArgumentException invalidOperation) {
+            // A malformed remote operation is skipped; state corruption and genuine
+            // bugs surface as other exception types and are not swallowed here.
         }
     }
 

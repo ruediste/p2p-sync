@@ -56,7 +56,7 @@ root.
 
 ### Data integrity and crash safety
 
-- [ ] **[high] Persist `nextNodeId` after it has been updated.** `persistState`
+- [x] **[high] Persist `nextNodeId` after it has been updated.** `persistState`
   builds `NodeState` with the old `user.nextNodeId`/`sharedFolderNextNodeId`, then
   `persistUserFileTrees` advances them. After a crash the persisted value is one
   generation behind, and `GuidMapper` trusts any non-zero value, so node ids can be
@@ -64,37 +64,38 @@ root.
   collapses two paths onto one `ShortGuid`
   (`Node.java:2082,2089` vs. `Node.java:1970-1981`, `GuidMapper.java:31-41`,
   `SharedFolderPersistence.java:225-230`).
-- [ ] **[high] Serialize node mutations.** `UserSyncProtocol` starts a virtual
+- [x] **[high] Serialize node mutations.** `UserSyncProtocol` starts a virtual
   thread per incoming stream, while the UI and sync worker call `Node` and
   `DataStorage.commit()` concurrently. `persistState`, `commit` and the data
   structures they mutate are not synchronized, despite the single-writer design
   (`UserSyncProtocol.java:37-45`, `Node.java:1921-1932`, `DataStorage.java:1806`).
-- [ ] **[medium] Avoid unconditional persist on open.** `restoreState` ends with
+- [x] **[medium] Avoid unconditional persist on open.** `restoreState` ends with
   `persistState()`, rewriting the whole node document immediately after loading it
   (`Node.java:2424`).
-- [ ] **[medium] Reduce duplicate persists.** Several operations persist and then
+- [x] **[medium] Reduce duplicate persists.** Several operations persist and then
   call `rebuildCurrentState()`, which persists again; `syncFrom` persists in
   `mergeStaging` and again after message delivery. The documentation only mentions
   at most two commits per user write, but paths can do more
   (`NodeUserHandle.java:322-333`, `NodeUserHandle.java:468-489`).
-- [ ] **[medium] Avoid zero-length operation segments.** When the byte budget is
+- [x] **[medium] Avoid zero-length operation segments.** When the byte budget is
   exhausted, `NodeUserData.serve` and `SyncUnitData.serveContent` emit an incomplete
   transfer with zero bytes. This creates a meaningless partial-operation state and
   an extra round trip (`Node.java:479-487`, `Node.java:619-641`).
-- [ ] **[medium] Do not sync units twice.** The home unit is added to
+- [x] **[medium] Do not sync units twice.** The home unit is added to
   `participatingSyncUnitIds` and then synchronized both through the user path and
   the generic non-USER unit path. Two local users in the same shared unit sync it
   twice (`Node.java:1707`, `Node.java:1880-1899`).
-- [ ] **[medium] Make `DataUserRoot.modify()` handle contacts.** `modify` compares
+- [x] **[medium] Make `DataUserRoot.modify()` handle contacts.** `modify` compares
   only status and root id, so edits to `root.contacts` are silently discarded
   (`NodeUserHandle.java:29-44`, `DataUserRoot.java:3-12`).
-- [ ] **[medium] Stop swallowing all contact-replay errors.** `ContactList.apply`
+- [x] **[medium] Stop swallowing all contact-replay errors.** `ContactList.apply`
   catches every `RuntimeException`; corrupt snapshot state and genuine bugs are
   silently ignored, not just malformed operations (`ContactList.java:74-85`).
-- [ ] **[medium] Reconsider `snapshotState` content duplication.** The local
+- [x] **[medium] Reconsider `snapshotState` content duplication.** The local
   snapshot contains every file's bytes and is rewritten on every persist, so file
   data is stored both in `FileTree` and in the `NodeState` blob
-  (`UserFileTree.java:299-326`, `Node.java:2088`).
+  (`UserFileTree.java:299-326`, `Node.java:2088`). Only keep data in the File Tree.
+  Use a reference to the File Tree root block for snapshots.
 
 ### Synchronization semantics
 

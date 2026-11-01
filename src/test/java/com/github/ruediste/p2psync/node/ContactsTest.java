@@ -104,6 +104,30 @@ class ContactsTest {
 
 
     /**
+     * Verifies that the mutable root view used by {@code modify} also applies
+     * contact additions, edits and removals instead of silently discarding them.
+     */
+    @Test
+    void modifyAppliesContactChanges() {
+        var contact = handleA.createContact(null, "Ada", "Lovelace", "", "", "");
+        String newContactId = java.util.HexFormat.of().formatHex(nodeA.nextEntityId(handleA.data));
+
+        handleA.modify(root -> root.contacts = List.of(
+                contact.withField(Contact.Field.FIRST_NAME, "Grace", null),
+                new Contact(newContactId, null, "New", "", "", "", "")));
+
+        assertEquals(List.of("Grace Lovelace", "New"),
+                handleA.listContacts().stream().map(Contact::displayName).sorted().toList());
+
+        handleA.modify(root -> root.contacts = List.of(contact.withField(Contact.Field.FIRST_NAME, "Grace", null)));
+        assertEquals(1, handleA.listContacts().size());
+
+        handleA.modify(root -> root.contacts = List.of());
+        assertTrue(handleA.listContacts().isEmpty());
+    }
+
+
+    /**
      * Verifies replaying the same contact operations does not duplicate or otherwise
      * change the materialized list.
      */

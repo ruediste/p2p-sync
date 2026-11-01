@@ -18,6 +18,8 @@ final class GuidMapper {
     private final GuidTree forward;
     private final GuidTree reverse;
     private long nextNodeId;
+    private boolean nextNodeIdComputed;
+    private boolean dirty;
 
     GuidMapper(DataStorage dataStorage, UnitRootStore unitRoots, SyncUnitId unitId, long nextNodeId) {
         this.dataStorage = dataStorage;
@@ -29,14 +31,15 @@ final class GuidMapper {
     }
 
     long nextNodeId() {
-        if (nextNodeId == 0) {
+        if (!nextNodeIdComputed) {
             long max = -1;
             for (byte[] hash : reverse.nodeHashes()) {
                 // The reverse tree uses the short node id as its key.
                 long id = ByteBuffer.wrap(hash).getLong(0);
                 max = Math.max(max, id);
             }
-            nextNodeId = max + 1;
+            nextNodeId = Math.max(nextNodeId, max + 1);
+            nextNodeIdComputed = true;
         }
         return nextNodeId;
     }
@@ -55,6 +58,7 @@ final class GuidMapper {
             nextNodeId = next + 1;
             forward.put(nodeHash, nodeId);
             reverse.putReverse(nodeId, nodeHash);
+            dirty = true;
         }
         ShortGuid result = new ShortGuid();
         result.nodeId = (int) nodeId;
@@ -70,8 +74,11 @@ final class GuidMapper {
     }
 
     void flush() {
+        if (!dirty)
+            return;
         unitRoots.put(unitId, UnitRootStore.GUID_FORWARD, forward.rootOffset());
         unitRoots.put(unitId, UnitRootStore.GUID_REVERSE, reverse.rootOffset());
+        dirty = false;
     }
 
     static byte[] fullId(byte[] nodeHash, long counter) {

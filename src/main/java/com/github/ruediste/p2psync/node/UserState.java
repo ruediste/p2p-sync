@@ -32,10 +32,17 @@ final class UserState {
             Iterable<Node.Operation> operations) {
         try {
             var stored = Sync.UserSnapshot.parseFrom(state);
-            var fileSystem = UserFileTree.replayFromState(storage, mapper,
-                    stored.getFileTreeState().toByteArray(), operations);
+            var operationsList = new java.util.ArrayList<Node.Operation>();
+            for (var operation : operations)
+                operationsList.add(operation);
+            long rootOffset = stored.getFileTreeRootOffset();
+            var fileSystem = rootOffset != 0
+                    ? UserFileTree.fromRoot(storage, mapper, stored.getFileTreeState().toByteArray(), rootOffset)
+                    : UserFileTree.fromState(storage, mapper, stored.getFileTreeState().toByteArray());
+            for (var operation : operationsList)
+                applyOperation(fileSystem, operation);
             var contacts = ContactList.from(owner, stored.getContactsList());
-            for (var operation : operations) {
+            for (var operation : operationsList) {
                 try {
                     contacts.apply(Sync.UserOperation.parseFrom(operation.payload));
                 } catch (InvalidProtocolBufferException invalidOperation) {
@@ -43,6 +50,57 @@ final class UserState {
                 }
             }
             return new UserState(fileSystem, contacts);
+        } catch (InvalidProtocolBufferException e) {
+            throw new IllegalArgumentException("Invalid user snapshot", e);
+        }
+    }
+
+    private static void applyOperation(UserFileTree fileSystem, Node.Operation operation) {
+        try {
+            fileSystem.apply(Sync.UserOperation.parseFrom(operation.payload));
+        } catch (InvalidProtocolBufferException e) {
+            throw new IllegalArgumentException("Invalid user operation payload", e);
+        }
+    }
+
+    static byte[] transferableSnapshot(DataStorage storage, GuidMapper mapper, PubKey owner, byte[] state) {
+        try {
+            var stored = Sync.UserSnapshot.parseFrom(state);
+            if (stored.getFileTreeRootOffset() == 0)
+                return state.clone();
+            var base = UserFileTree.fromRoot(storage, mapper, stored.getFileTreeState().toByteArray(),
+                    stored.getFileTreeRootOffset());
+            return transferableSnapshot(ContactList.from(owner, stored.getContactsList()), base);
+        } catch (InvalidProtocolBufferException e) {
+            throw new IllegalArgumentException("Invalid user snapshot", e);
+        }
+    }
+
+    static byte[] transferableSnapshot(ContactList contacts, UserFileTree tree) {
+        return Sync.UserSnapshot.newBuilder()
+                .setFileTreeState(ByteString.copyFrom(tree.serializeState()))
+                .addAllContacts(contacts.toProto())
+                .build().toByteArray();
+    }
+
+    static byte[] materializeSnapshot(DataStorage storage, GuidMapper mapper, PubKey owner, byte[] state) {
+        try {
+            var stored = Sync.UserSnapshot.parseFrom(state);
+            if (stored.getFileTreeRootOffset() != 0)
+                return state;
+            var tree = UserFileTree.fromState(storage, mapper, stored.getFileTreeState().toByteArray());
+            var contacts = ContactList.from(owner, stored.getContactsList());
+            return new UserState(tree, contacts).serializeState();
+        } catch (InvalidProtocolBufferException e) {
+            throw new IllegalArgumentException("Invalid user snapshot", e);
+        }
+    }
+
+    static long snapshotRootOffset(byte[] state) {
+        if (state == null)
+            return 0;
+        try {
+            return Sync.UserSnapshot.parseFrom(state).getFileTreeRootOffset();
         } catch (InvalidProtocolBufferException e) {
             throw new IllegalArgumentException("Invalid user snapshot", e);
         }
@@ -71,7 +129,8 @@ final class UserState {
 
     byte[] serializeState() {
         return Sync.UserSnapshot.newBuilder()
-                .setFileTreeState(ByteString.copyFrom(fileSystem.serializeState()))
+                .setFileTreeState(ByteString.copyFrom(fileSystem.serializeShallowState()))
+                .setFileTreeRootOffset(fileSystem.rootOffset())
                 .addAllContacts(contacts.toProto())
                 .build().toByteArray();
     }

@@ -226,7 +226,9 @@ final class SharedFolderPersistence {
         byte[] unit = SHARED_FOLDER_UNIT_ID.bytes();
         byte[] suffix = name.getBytes(StandardCharsets.UTF_8);
         byte[] input = ByteBuffer.allocate(unit.length + suffix.length).put(unit).put(suffix).array();
-        return ByteBuffer.allocate(40).put(CryptoUtils.sha256(input)).putLong(0).array();
+        byte[] counterInput = ByteBuffer.allocate(input.length + Long.BYTES).put(input).putLong(1).array();
+        long counter = ByteBuffer.wrap(CryptoUtils.sha256(counterInput)).getLong();
+        return ByteBuffer.allocate(40).put(CryptoUtils.sha256(input)).putLong(counter).array();
     }
 
     private static byte[] filled(byte value) {

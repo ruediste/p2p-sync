@@ -46,6 +46,7 @@ enum ContactField {
 message UserSnapshot {
 	bytes fileTreeState = 1;
 	repeated Contact contacts = 2;
+	uint64 fileTreeRootOffset = 3;
 }
 
 message UserTreeState {

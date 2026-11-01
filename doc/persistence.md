@@ -32,7 +32,12 @@ channels use Member and Manager, where Managers manage membership and the final
 Manager cannot be removed.
 
 A node is single-writer. All persisted state for a node lives in one
-`DataStorage` file, so one process must own it.
+`DataStorage` file, so one process must own it. `Node` serializes its
+state-mutating sections (including remote request handling on virtual threads) on
+the node instance, so the in-memory state and `DataStorage.commit()` are never
+touched by two writers at once. Network round trips happen outside that lock; a
+sync applies the request and the response in separate locked sections, so two
+nodes syncing each other cannot deadlock.
 
 ### Identity and ordering
 
@@ -381,6 +386,7 @@ from those blocks when loaded.
 | accepted/local/staging operations | `OperationTree` |
 | authorization/content operations | `OperationTree` |
 | file tree | `FileTree` |
+| snapshot file tree | `FileTree` |
 | forward/reverse GUID mapping | `GuidTree` |
 
 Every entry declares its referenced root block in `getReferencedBlocks`, so root
@@ -390,7 +396,10 @@ ownership and `StorageCheck` continue to work.
 
 - forward key: full node hash (`SHA-256(PeerId bytes)`) → unsigned 32-bit node id
 - reverse key: node id → full node hash
-- next node id is persisted in `NodeUserState.nextNodeId`
+- next node id is persisted in `NodeUserState.nextNodeId` (and in
+  `PersistedSyncUnit.nextNodeId` for shared-folder units) in the same commit that
+  flushes the mapping trees; the mapper also takes the maximum mapped id into
+  account before allocating a new one
 
 Full entity IDs remain `nodeHash[32] | counter[8]`; `FileTree` and `GuidTree` use
 `ShortGuid(nodeId[4] | counter[8])`. Short GUIDs never leave the node. A full ID
@@ -400,10 +409,13 @@ The user-visible `UserFileTree` is now backed directly by `FileTree`: path
 lookups, directory listings, writes, truncations, moves and deletes operate on
 the B-tree, and file contents are read on demand. Reopening a node uses the
 persisted `FILE_TREE` root without first materializing the tree in memory.
-`snapshotState` is still a full protobuf image of the tree, used locally for
-stable-log checkpoints and for restoring a node before replaying operations. It is
-no longer part of initial remote synchronization; peers transfer the entry list
-plus contacts instead.
+`snapshotState` stores the root id, status message and contacts, plus a reference
+to the snapshot `FileTree` root block (`UserSnapshot.fileTreeRootOffset`). The file
+contents live only in the `FileTree`. It is used locally for stable-log checkpoints
+and for restoring a node before replaying operations. It is no longer part of
+initial remote synchronization; peers transfer the entry list plus contacts
+instead, and a joining node materializes that entry list once into its own
+`FileTree` and then stores an offset-based snapshot.
 
 Directory iteration is streamed through `FileTree.forEachDirectory`,
 `UserFileTree.forEachDirectory`, `NodeUserHandle.forEachDirectory` and the FUSE
@@ -427,7 +439,8 @@ is materialized.
 
 Initial remote sync transfers the file-tree snapshot as a list of
 `(entityId, parentId, name, directory, content)` entries plus the contact list.
-`snapshotState` is not sent.
+The local `snapshotState` blob is not sent; the receiver materializes the entries
+into its own `FileTree`.
 
 ### 6.3 SyncUnit histories
 
@@ -515,7 +528,8 @@ Initial user synchronization transfers the accepted operation history plus a
 file-tree snapshot as `(entityId, parentId, name, directory, content)` entries and
 the contact list. The receiver reconstructs the local `FileTree` from those
 entries and replays/merges operations. The local `snapshotState` remains the
-baseline for stable-log checkpoints but is not transferred.
+baseline for stable-log checkpoints but is not transferred; after materialization
+it is stored as a reference to the local `FileTree` root.
 
 ### 7.4 Log truncation
 
@@ -529,7 +543,6 @@ in the USER log until a materialized message snapshot replaces them.
 | Trigger | What is written |
 | --- | --- |
 | any local user operation (`recordLocalOperation`: FUSE create/write/truncate/rename/delete, status change, message send) | operation B-tree, `FileTree`, `NodeState` metadata, `DataStorage.commit()` |
-| `rebuildCurrentState()` after an operation | a second `persistState()` |
 | receiving/staging/merging remote operations, SyncUnit joins, invitations, role changes | `persistState()` |
 | sync with peers (`Sync now`) | `persistState()` after each ingested batch |
 | stable-log truncation (`truncateStableLog`) | new `snapshotState` + `persistState()` |
@@ -539,8 +552,9 @@ in the USER log until a materialized message snapshot replaces them.
 The node writes new tree roots and rewrites the `NodeState` metadata blob on
 every persist. The shared-folder tree is updated in place by accepted content
 operations and its root handle is committed with the rest of the node state;
-user file trees are updated copy-on-write. One user-visible write can still cause
-two commits of the node document.
+user file trees are updated copy-on-write. The state is already written when an
+operation is recorded; derived state is rebuilt in memory without an extra
+commit, and a sync batch commits once at its end.
 
 ## 9. Security properties of the stored data
 

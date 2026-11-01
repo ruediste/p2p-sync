@@ -26,6 +26,7 @@ final class UnitRootStore {
     static final int FILE_TREE = 5;
     static final int GUID_FORWARD = 6;
     static final int GUID_REVERSE = 7;
+    static final int SNAPSHOT_FILE_TREE = 8;
 
     private record RootRef(long offset) {
     }
@@ -59,7 +60,7 @@ final class UnitRootStore {
         return switch (kind) {
             case ACCEPTED_OPERATIONS, LOCAL_OPERATIONS, STAGING_OPERATIONS,
                     AUTHORIZATION_OPERATIONS, CONTENT_OPERATIONS -> OperationTree.BLOCK_TYPE;
-            case FILE_TREE -> FileTree.BLOCK_TYPE;
+            case FILE_TREE, SNAPSHOT_FILE_TREE -> FileTree.BLOCK_TYPE;
             case GUID_FORWARD, GUID_REVERSE -> GuidTree.BLOCK_TYPE;
             default -> throw new IllegalStateException("Unknown unit root kind " + kind);
         };
