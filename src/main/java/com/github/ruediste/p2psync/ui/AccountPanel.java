@@ -75,10 +75,12 @@ final class AccountPanel extends JPanel {
         rename.add(save);
         identity.add(rename);
         identity.add(Box.createVerticalStrut(8));
-        JButton open = Theme.secondaryButton("Open mounted folder");
+        JButton open = Theme.secondaryButton("Open root view");
         open.setAlignmentX(LEFT_ALIGNMENT);
         open.addActionListener(event -> openFolder());
         identity.add(open);
+        identity.add(Box.createVerticalStrut(4));
+        identity.add(Theme.muted("The mounted user directory contains the home tree and labeled shared folders."));
         content.add(identity);
         content.add(Box.createVerticalStrut(12));
 

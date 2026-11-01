@@ -124,6 +124,55 @@ public class Node implements AutoCloseable {
         }
     }
 
+    static final class ContentTransfer {
+        final SyncUnitId unitId;
+        final OperationId id;
+        final PubKey author;
+        final SyncUnitContentOperation.Kind kind;
+        final String key;
+        final int totalLength;
+        final int offset;
+        final byte[] bytes;
+        final byte[] signature;
+        final boolean complete;
+
+        ContentTransfer(SyncUnitId unitId, OperationId id, PubKey author, SyncUnitContentOperation.Kind kind,
+                String key, int totalLength, int offset, byte[] bytes, byte[] signature, boolean complete) {
+            this.unitId = unitId;
+            this.id = id;
+            this.author = author;
+            this.kind = kind;
+            this.key = key;
+            this.totalLength = totalLength;
+            this.offset = offset;
+            this.bytes = bytes.clone();
+            this.signature = signature.clone();
+            this.complete = complete;
+        }
+    }
+
+    static final class PartialContentOperation {
+        final SyncUnitId unitId;
+        final OperationId id;
+        final PubKey author;
+        final SyncUnitContentOperation.Kind kind;
+        final String key;
+        final byte[] payload;
+        final byte[] signature;
+        int receivedLength;
+
+        PartialContentOperation(SyncUnitId unitId, OperationId id, PubKey author,
+                SyncUnitContentOperation.Kind kind, String key, int totalLength, byte[] signature) {
+            this.unitId = unitId;
+            this.id = id;
+            this.author = author;
+            this.kind = kind;
+            this.key = key;
+            this.payload = new byte[totalLength];
+            this.signature = signature.clone();
+        }
+    }
+
     public Node(Network network) {
         this(network, createTemporaryDataFile(), true);
     }
@@ -255,12 +304,20 @@ public class Node implements AutoCloseable {
                 }
                 var fromClock = new TreeMap<String, Long>();
                 request.getFromClockList().forEach(entry -> fromClock.merge(entry.getNodeId(), entry.getClock(), Math::max));
+                var contentOffsets = new HashMap<String, Integer>();
+                request.getContentOffsetsList().forEach(
+                        entry -> contentOffsets.put(entry.getNodeId() + ":" + entry.getLamportClock(),
+                                entry.getOffset()));
                 int contentBudget = request.getByteBudget() <= 0 ? 1_000_000 : request.getByteBudget();
-                return Sync.RemoteSyncResponse.newBuilder()
+                var response = Sync.RemoteSyncResponse.newBuilder()
                         .setNodeClock(clock)
                         .setSyncUnitFound(true)
-                        .setSyncUnit(persist(unit, knownMember, fromClock, contentBudget))
-                        .build().toByteArray();
+                        .setSyncUnit(persist(unit));
+                if (knownMember) {
+                    unit.serveContent(fromClock, contentOffsets, contentBudget)
+                            .forEach(transfer -> response.addContentTransfers(toProto(transfer)));
+                }
+                return response.build().toByteArray();
             }
             PubKey userId = PubKey.from(request.getUserId().toByteArray());
             NodeUserData data = users.get(userId);
@@ -273,7 +330,7 @@ public class Node implements AutoCloseable {
             data.maxOperationClock.forEach((source, clock) -> response.addMaxOperationClock(
                     Sync.OperationClock.newBuilder().setNodeId(source).setClock(clock)));
             if (request.getIncludeHistory()) {
-                response.setSnapshotState(com.google.protobuf.ByteString.copyFrom(data.snapshotState));
+                response.addAllContacts(data.contacts.toProto());
                 try {
                     var treeState = Sync.UserTreeState.parseFrom(data.fileSystem.serializeState());
                     response.setFileTreeRootId(treeState.getRootId())
@@ -507,13 +564,13 @@ public class Node implements AutoCloseable {
         final PubKey creator;
         final List<SyncUnitAuthorization.Operation> authorizationOperations = new java.util.ArrayList<>();
         final TreeMap<OperationId, SyncUnitContentOperation> contentOperations = new TreeMap<>();
+        final Map<OperationId, PartialContentOperation> partialContentOperations = new TreeMap<>();
         long clock;
         long entityCounter;
         boolean home;
         long nextNodeId;
         GuidMapper guidMapper;
         ActiveNodeSet activeNodeSet = new ActiveNodeSet();
-        final Map<String, byte[]> files = new TreeMap<>();
         final Map<String, byte[]> todoItems = new TreeMap<>();
         final List<SyncUnitContentOperation> channelMessages = new java.util.ArrayList<>();
         SyncUnitAuthorization.State authorization;
@@ -530,7 +587,6 @@ public class Node implements AutoCloseable {
         }
 
         void replayContent() {
-            files.clear();
             todoItems.clear();
             channelMessages.clear();
             for (var operation : contentOperations.values()) {
@@ -551,13 +607,104 @@ public class Node implements AutoCloseable {
                         operation.author(), action))
                     throw new IllegalArgumentException("User is not authorized for SyncUnit content operation");
                 switch (operation.kind()) {
-                    case SHARED_FILE_SET -> files.put(operation.key(), operation.payload());
-                    case SHARED_FILE_DELETE -> files.remove(operation.key());
+                    case SHARED_FILE_SET, SHARED_FILE_DELETE -> {
+                    }
                     case TODO_SET -> todoItems.put(operation.key(), operation.payload());
                     case TODO_DELETE -> todoItems.remove(operation.key());
                     case CHANNEL_MESSAGE -> channelMessages.add(operation);
                 }
             }
+        }
+
+        java.util.List<ContentTransfer> serveContent(Map<String, Long> fromClock, Map<String, Integer> offsets,
+                int byteBudget) {
+            var result = new java.util.ArrayList<ContentTransfer>();
+            int bytesSent = 0;
+            for (var entry : contentOperations.entrySet()) {
+                var operationId = entry.getKey();
+                var operation = entry.getValue();
+                String source = "c:" + HexFormat.of().formatHex(operationId.nodeHash);
+                if (operationId.clock <= fromClock.getOrDefault(source, 0L))
+                    continue;
+                byte[] payload = operation.payload();
+                int offset = offsets.getOrDefault(contentOffsetKey(operationId), 0);
+                if (offset < 0 || offset > payload.length)
+                    throw new IllegalArgumentException("Invalid SyncUnit content transfer offset");
+                int available = Math.max(0, byteBudget - bytesSent);
+                int count = Math.min(payload.length - offset, available);
+                boolean complete = offset + count == payload.length;
+                result.add(new ContentTransfer(id, operationId, operation.author(), operation.kind(),
+                        operation.key(), payload.length, offset,
+                        Arrays.copyOfRange(payload, offset, offset + count), operation.signature(), complete));
+                bytesSent += count;
+                if (!complete)
+                    return result;
+            }
+            return result;
+        }
+
+        void receiveContent(java.util.List<ContentTransfer> transfers) {
+            boolean completedAny = false;
+            for (var transfer : transfers) {
+                if (!transfer.unitId.equals(id))
+                    throw new IllegalArgumentException("SyncUnit content transfer has a mismatched unit");
+                if (transfer.totalLength < 0 || transfer.offset < 0
+                        || transfer.offset + transfer.bytes.length > transfer.totalLength)
+                    throw new IllegalArgumentException("Invalid SyncUnit content transfer");
+                var partial = partialContentOperations.get(transfer.id);
+                if (transfer.complete) {
+                    byte[] payload;
+                    byte[] signature;
+                    if (transfer.offset == 0) {
+                        payload = transfer.bytes.clone();
+                        signature = transfer.signature.clone();
+                    } else {
+                        if (partial == null || !partial.id.equals(transfer.id)
+                                || !partial.unitId.equals(transfer.unitId)
+                                || !partial.author.equals(transfer.author) || partial.kind != transfer.kind
+                                || !partial.key.equals(transfer.key)
+                                || partial.payload.length != transfer.totalLength
+                                || partial.receivedLength != transfer.offset
+                                || !Arrays.equals(partial.signature, transfer.signature))
+                            throw new IllegalArgumentException(
+                                    "SyncUnit content transfer does not continue partial data");
+                        System.arraycopy(transfer.bytes, 0, partial.payload, transfer.offset,
+                                transfer.bytes.length);
+                        payload = partial.payload;
+                        signature = partial.signature;
+                    }
+                    if (payload.length != transfer.totalLength)
+                        throw new IllegalArgumentException("Incomplete SyncUnit content operation marked complete");
+                    var operation = new SyncUnitContentOperation(transfer.unitId, transfer.id.clock,
+                            transfer.id.nodeHash, transfer.author, transfer.kind, transfer.key, payload, signature);
+                    if (!operation.hasValidSignature())
+                        throw new IllegalArgumentException("Invalid SyncUnit content operation signature");
+                    var previous = contentOperations.putIfAbsent(transfer.id, operation);
+                    if (previous != null && !sameContentOperation(previous, operation))
+                        throw new IllegalArgumentException("Conflicting SyncUnit content operations share an ID");
+                    partialContentOperations.remove(transfer.id);
+                    completedAny = true;
+                } else {
+                    if (partial == null || !partial.id.equals(transfer.id)
+                            || !partial.unitId.equals(transfer.unitId)
+                            || !partial.author.equals(transfer.author) || partial.kind != transfer.kind
+                            || !partial.key.equals(transfer.key)
+                            || partial.payload.length != transfer.totalLength) {
+                        if (transfer.offset != 0)
+                            throw new IllegalArgumentException("Missing initial SyncUnit content transfer segment");
+                        partial = new PartialContentOperation(transfer.unitId, transfer.id, transfer.author,
+                                transfer.kind, transfer.key, transfer.totalLength, transfer.signature);
+                        partialContentOperations.put(transfer.id, partial);
+                    }
+                    if (partial.receivedLength != transfer.offset
+                            || !Arrays.equals(partial.signature, transfer.signature))
+                        throw new IllegalArgumentException("SyncUnit content transfer segment is out of order");
+                    System.arraycopy(transfer.bytes, 0, partial.payload, transfer.offset, transfer.bytes.length);
+                    partial.receivedLength += transfer.bytes.length;
+                }
+            }
+            if (completedAny)
+                replayContent();
         }
 
         private static int compare(SyncUnitAuthorization.Operation left, OperationId right) {
@@ -706,12 +853,12 @@ public class Node implements AutoCloseable {
         var data = new NodeUserData();
         data.userKey = userKey;
         data.localName = localName;
-        data.snapshotState = response.getSnapshotState().toByteArray();
-        if (response.getFileTreeEntriesCount() > 0)
-            data.snapshotState = UserState.snapshotWithFileTree(data.snapshotState,
-                    response.getFileTreeRootId().toByteArray(), response.getFileTreeStatus(),
-                    response.getFileTreeEntriesList());
-        data.rootDirectoryGuid = UserState.rootIdFromState(data.snapshotState);
+        data.snapshotState = UserState.snapshotWithFileTree(response.getContactsList(),
+                response.getFileTreeRootId().toByteArray(), response.getFileTreeStatus(),
+                response.getFileTreeEntriesList());
+        if (response.getFileTreeRootId().isEmpty())
+            throw new IllegalArgumentException("Remote user history has no file-tree root");
+        data.rootDirectoryGuid = response.getFileTreeRootId().toByteArray();
         if (!response.getHomeSyncUnitId().isEmpty())
             data.homeSyncUnitId = SyncUnitId.fromBytes(response.getHomeSyncUnitId().toByteArray());
         for (var stored : response.getHistoryList()) {
@@ -760,8 +907,9 @@ public class Node implements AutoCloseable {
     }
 
     private void setSharedFolderLabel(NodeUserData user, SyncUnitId unitId, String label) {
-        if (label == null || label.isBlank() || label.equals("home") || label.indexOf('/') >= 0
-                || label.indexOf('\0') >= 0)
+        if (label == null || label.isBlank() || label.equals("home") || label.equals(".")
+                || label.equals("..") || label.indexOf('/') >= 0
+                || label.indexOf('\\') >= 0 || label.indexOf('\0') >= 0)
             throw new IllegalArgumentException("Invalid shared-folder label");
         var operation = Sync.UserOperation.newBuilder()
                 .setKind(Sync.UserOperation.Kind.SET_SHARED_FOLDER_LABEL)
@@ -1093,7 +1241,7 @@ public class Node implements AutoCloseable {
         for (var peer : List.copyOf(network.nodes.values())) {
             if (peer == this || !peer.users.containsKey(inviteeId))
                 continue;
-            peer.installSyncUnit(syncUnits.get(id), true);
+            peer.installSyncUnit(syncUnits.get(id), true, false);
         }
     }
 
@@ -1112,7 +1260,9 @@ public class Node implements AutoCloseable {
             if (peer == this || !peer.users.containsKey(subject))
                 continue;
             peer.recordSyncUnitParticipation(peer.users.get(subject), id, false);
-            peer.syncUnits.remove(id);
+            var removed = peer.syncUnits.remove(id);
+            if (removed != null && removed.type == SyncUnitAuthorization.Type.SHARED_FOLDER)
+                peer.deleteSharedFolderUnit(id);
             peer.persistState();
         }
     }
@@ -1153,7 +1303,9 @@ public class Node implements AutoCloseable {
         if (source == null) {
             var result = requestRemoteSyncUnit(sourcePeerId, id, localMember.userId(), unit);
             if (result.revoked()) {
-                syncUnits.remove(id);
+                var removed = syncUnits.remove(id);
+                if (removed != null && removed.type == SyncUnitAuthorization.Type.SHARED_FOLDER)
+                    deleteSharedFolderUnit(id);
                 recordSyncUnitParticipation(localMember, id, false);
                 persistState();
                 throw new SyncUnitRevokedException("SyncUnit membership was revoked");
@@ -1161,6 +1313,10 @@ public class Node implements AutoCloseable {
             if (result.unit() == null)
                 throw new UnknownSyncUnitException("Remote peer does not host this SyncUnit");
             mergeSyncUnit(result.unit());
+            var localUnit = requireSyncUnit(id);
+            localUnit.partialContentOperations.keySet().removeAll(result.unit().contentOperations.keySet());
+            localUnit.partialContentOperations.putAll(result.unit().partialContentOperations);
+            persistState();
             return;
         }
         if (!unit.authorization.members().containsKey(localMember.userId()))
@@ -1184,11 +1340,26 @@ public class Node implements AutoCloseable {
             for (var clock : maxOperationClocks(update).entrySet())
                 request.addFromClock(Sync.OperationClock.newBuilder()
                         .setNodeId(clock.getKey()).setClock(clock.getValue()));
+            for (var partial : update.partialContentOperations.values()) {
+                request.addContentOffsets(Sync.SyncUnitContentOffset.newBuilder()
+                        .setNodeId(HexFormat.of().formatHex(partial.id.nodeHash))
+                        .setLamportClock(partial.id.clock)
+                        .setOffset(partial.receivedLength));
+            }
         }
         var response = exchangeRemote(peerId, request.build());
-        return new RemoteSyncUnitResult(response.getSyncUnitFound()
+        SyncUnitData unit = response.getSyncUnitFound()
                 ? deserializeSyncUnit(response.getSyncUnit())
-                : null, response.getSyncUnitRevoked());
+                : null;
+        if (unit != null && update != null)
+            unit.partialContentOperations.putAll(update.partialContentOperations);
+        if (unit != null && response.getContentTransfersCount() > 0) {
+            var transfers = new java.util.ArrayList<ContentTransfer>();
+            for (var transfer : response.getContentTransfersList())
+                transfers.add(fromProto(transfer));
+            unit.receiveContent(transfers);
+        }
+        return new RemoteSyncUnitResult(unit, response.getSyncUnitRevoked());
     }
 
     private void receiveSyncUnitInvitation(SyncUnitData source) {
@@ -1201,7 +1372,11 @@ public class Node implements AutoCloseable {
     }
 
     private void installSyncUnit(SyncUnitData source, boolean includeContent) {
-        var copy = copySyncUnit(source, includeContent);
+        installSyncUnit(source, includeContent, includeContent);
+    }
+
+    private void installSyncUnit(SyncUnitData source, boolean includeContent, boolean includePartialContent) {
+        var copy = copySyncUnit(source, includeContent, includePartialContent);
         if (!copy.id.equals(SyncUnitId.forUser(copy.creator))) {
             copy.activeNodeSet.nodes.add(nodeKey);
             copy.activeNodeSet.setVersion(nodeKey, ++copy.clock);
@@ -1215,6 +1390,11 @@ public class Node implements AutoCloseable {
     }
 
     private static SyncUnitData copySyncUnit(SyncUnitData source, boolean includeContent) {
+        return copySyncUnit(source, includeContent, includeContent);
+    }
+
+    private static SyncUnitData copySyncUnit(SyncUnitData source, boolean includeContent,
+            boolean includePartialContent) {
         var copy = new SyncUnitData(source.id, source.type, source.creator);
         copy.clock = source.clock;
         copy.entityCounter = source.entityCounter;
@@ -1225,6 +1405,8 @@ public class Node implements AutoCloseable {
         copy.replayAuthorization();
         if (includeContent)
             copy.contentOperations.putAll(source.contentOperations);
+        if (includePartialContent)
+            copy.partialContentOperations.putAll(source.partialContentOperations);
         copy.replayContent();
         return copy;
     }
@@ -1254,18 +1436,23 @@ public class Node implements AutoCloseable {
                 .anyMatch(user -> mergedUnit.authorization.members().containsKey(user.userId()));
         if (!member)
             throw new IllegalArgumentException("This node is not a member of the SyncUnit");
+        var newContent = new java.util.ArrayList<SyncUnitContentOperation>();
         for (var entry : incoming.contentOperations.entrySet()) {
             var previous = local.contentOperations.putIfAbsent(entry.getKey(), entry.getValue());
             if (previous != null && !sameContentOperation(previous, entry.getValue()))
                 throw new IllegalArgumentException("Conflicting content operations share an ID");
+            if (previous == null)
+                newContent.add(entry.getValue());
         }
         local.replayContent();
+        if (local.type == SyncUnitAuthorization.Type.SHARED_FOLDER)
+            newContent.forEach(this::applySharedFolderContent);
         local.clock = Math.max(local.clock, incoming.clock);
         var targetUnit = local;
         if (!targetUnit.id.equals(SyncUnitId.forUser(targetUnit.creator)))
             targetUnit.activeNodeSet.mergeFrom(incoming.activeNodeSet, nodeKey, () -> ++targetUnit.clock);
         clock = Math.max(clock, maxSyncUnitClock(incoming));
-        installSyncUnit(local, true);
+        installSyncUnit(local, true, true);
     }
 
     private static Map<String, Long> maxOperationClocks(SyncUnitData unit) {
@@ -1313,14 +1500,8 @@ public class Node implements AutoCloseable {
         requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
         ensureSharedFolderMapper();
         long root = unitRoots.get(SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, UnitRootStore.FILE_TREE);
-        if (root != 0) {
-            byte[] content = SharedFolderPersistence.readFile(dataStorage, sharedFolderMapper, root,
-                    id.toString(), validateSyncUnitKey(path));
-            if (content != null)
-                return content;
-        }
-        byte[] content = unit.files.get(validateSyncUnitKey(path));
-        return content == null ? null : content.clone();
+        return SharedFolderPersistence.readFile(dataStorage, sharedFolderMapper, root, id.toString(),
+                validateSyncUnitKey(path));
     }
 
     public void forEachSharedFile(SyncUnitId id, PubKey readerId,
@@ -1329,11 +1510,7 @@ public class Node implements AutoCloseable {
         requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
         ensureSharedFolderMapper();
         long root = unitRoots.get(SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, UnitRootStore.FILE_TREE);
-        if (root != 0) {
-            SharedFolderPersistence.forEachFile(dataStorage, sharedFolderMapper, root, id.toString(), consumer);
-            return;
-        }
-        unit.files.forEach((path, content) -> consumer.accept(path, (long) content.length));
+        SharedFolderPersistence.forEachFile(dataStorage, sharedFolderMapper, root, id.toString(), consumer);
     }
 
     public List<SharedFileInfo> listSharedFileInfos(SyncUnitId id, PubKey readerId) {
@@ -1343,21 +1520,41 @@ public class Node implements AutoCloseable {
         return List.copyOf(result);
     }
 
-    public record SharedFileInfo(String path, long size) {
-    }
-
-    public Map<String, byte[]> listSharedFiles(SyncUnitId id, PubKey readerId) {
+    long sharedFileSize(SyncUnitId id, PubKey readerId, String path) {
         var unit = requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
         requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
-        var result = new TreeMap<String, byte[]>();
-        unit.files.forEach((path, content) -> result.put(path, content.clone()));
-        return java.util.Collections.unmodifiableMap(result);
+        ensureSharedFolderMapper();
+        long root = unitRoots.get(SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, UnitRootStore.FILE_TREE);
+        return SharedFolderPersistence.fileSize(dataStorage, sharedFolderMapper, root, id.toString(),
+                validateSyncUnitKey(path));
+    }
+
+    public record SharedFileInfo(String path, long size) {
     }
 
     private void ensureSharedFolderMapper() {
         if (sharedFolderMapper == null)
             sharedFolderMapper = new GuidMapper(dataStorage, unitRoots,
                     SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, sharedFolderNextNodeId);
+    }
+
+    private void applySharedFolderContent(SyncUnitContentOperation operation) {
+        if (operation.kind() != SyncUnitContentOperation.Kind.SHARED_FILE_SET
+                && operation.kind() != SyncUnitContentOperation.Kind.SHARED_FILE_DELETE)
+            return;
+        ensureSharedFolderMapper();
+        switch (operation.kind()) {
+            case SHARED_FILE_SET -> SharedFolderPersistence.putFile(dataStorage, unitRoots, sharedFolderMapper,
+                    operation.unitId().toString(), operation.key(), operation.payload());
+            case SHARED_FILE_DELETE -> SharedFolderPersistence.deleteFile(dataStorage, unitRoots,
+                    sharedFolderMapper, operation.unitId().toString(), operation.key());
+            default -> throw new IllegalStateException("Not a shared-folder content operation");
+        }
+    }
+
+    private void deleteSharedFolderUnit(SyncUnitId id) {
+        ensureSharedFolderMapper();
+        SharedFolderPersistence.deleteUnit(dataStorage, unitRoots, sharedFolderMapper, id.toString());
     }
 
     public void deleteSharedFile(SyncUnitId id, PubKey authorId, String path) {
@@ -1434,6 +1631,8 @@ public class Node implements AutoCloseable {
                 kind, key, payload);
         unit.contentOperations.put(new OperationId(operation.lamportClock(), operation.nodeHash()), operation);
         unit.replayContent();
+        if (unit.type == SyncUnitAuthorization.Type.SHARED_FOLDER)
+            applySharedFolderContent(operation);
         persistState();
         return operation;
     }
@@ -1776,43 +1975,10 @@ public class Node implements AutoCloseable {
             user.nextNodeId = user.guidMapper.nextNodeId();
             user.guidMapper.flush();
         }
-        if (sharedFolderMapper == null)
-            sharedFolderMapper = new GuidMapper(dataStorage, unitRoots,
-                    SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, sharedFolderNextNodeId);
-        var allFiles = new TreeMap<String, byte[]>();
-        for (var unit : syncUnits.values()) {
-            if (unit.type != SyncUnitAuthorization.Type.SHARED_FOLDER || unit.home)
-                continue;
-            unit.files.forEach((path, content) -> allFiles.put(unit.id.toString() + "/" + path, content));
-        }
-        SharedFolderPersistence.write(dataStorage, unitRoots, sharedFolderMapper, allFiles);
+        ensureSharedFolderMapper();
         sharedFolderNextNodeId = sharedFolderMapper.nextNodeId();
         sharedFolderMapper.flush();
     }
-
-    private void loadSharedFolderFilesFromTree() {
-        if (sharedFolderMapper == null)
-            sharedFolderMapper = new GuidMapper(dataStorage, unitRoots,
-                    SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, sharedFolderNextNodeId);
-        long root = unitRoots.get(SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, UnitRootStore.FILE_TREE);
-        if (root == 0)
-            return;
-        var allFiles = SharedFolderPersistence.read(dataStorage, sharedFolderMapper, root);
-        for (var unit : syncUnits.values())
-            if (unit.type == SyncUnitAuthorization.Type.SHARED_FOLDER && !unit.home)
-                unit.files.clear();
-        allFiles.forEach((path, content) -> {
-            int separator = path.indexOf('/');
-            if (separator < 0)
-                return;
-            var unitId = SyncUnitId.fromBytes(HexFormat.of().parseHex(path.substring(0, separator)));
-            var unit = syncUnits.get(unitId);
-            if (unit != null)
-                unit.files.put(path.substring(separator + 1), content);
-        });
-    }
-
-
 
     private static Sync.UserOperation parseUserOperation(Operation operation) {
         try {
@@ -1972,8 +2138,40 @@ public class Node implements AutoCloseable {
                 .build();
     }
 
+    private static Sync.RemoteSyncUnitContentTransfer toProto(ContentTransfer transfer) {
+        return Sync.RemoteSyncUnitContentTransfer.newBuilder()
+                .setUnitId(com.google.protobuf.ByteString.copyFrom(transfer.unitId.bytes()))
+                .setLamportClock(transfer.id.clock)
+                .setNodeHash(com.google.protobuf.ByteString.copyFrom(transfer.id.nodeHash))
+                .setAuthorPublicKey(com.google.protobuf.ByteString.copyFrom(transfer.author.bytes()))
+                .setKind(transfer.kind.ordinal())
+                .setKey(transfer.key)
+                .setTotalLength(transfer.totalLength)
+                .setOffset(transfer.offset)
+                .setBytes(com.google.protobuf.ByteString.copyFrom(transfer.bytes))
+                .setSignature(com.google.protobuf.ByteString.copyFrom(transfer.signature))
+                .setComplete(transfer.complete)
+                .build();
+    }
+
+    private static ContentTransfer fromProto(Sync.RemoteSyncUnitContentTransfer transfer) {
+        int kind = transfer.getKind();
+        if (kind < 0 || kind >= SyncUnitContentOperation.Kind.values().length)
+            throw new IllegalArgumentException("Invalid SyncUnit content transfer kind");
+        return new ContentTransfer(SyncUnitId.fromBytes(transfer.getUnitId().toByteArray()),
+                new OperationId(transfer.getLamportClock(), transfer.getNodeHash().toByteArray()),
+                PubKey.from(transfer.getAuthorPublicKey().toByteArray()),
+                SyncUnitContentOperation.Kind.values()[kind], transfer.getKey(), transfer.getTotalLength(),
+                transfer.getOffset(), transfer.getBytes().toByteArray(), transfer.getSignature().toByteArray(),
+                transfer.getComplete());
+    }
+
+    private static String contentOffsetKey(OperationId id) {
+        return HexFormat.of().formatHex(id.nodeHash) + ":" + id.clock;
+    }
+
     private static Sync.PersistedSyncUnit persistMetadata(SyncUnitData unit) {
-        return Sync.PersistedSyncUnit.newBuilder()
+        var result = Sync.PersistedSyncUnit.newBuilder()
                 .setId(com.google.protobuf.ByteString.copyFrom(unit.id.bytes()))
                 .setType(unit.type.ordinal())
                 .setCreatorPublicKey(com.google.protobuf.ByteString.copyFrom(unit.creator.bytes()))
@@ -1981,8 +2179,39 @@ public class Node implements AutoCloseable {
                 .setEntityCounter(unit.entityCounter)
                 .setActiveNodeSet(persist(unit.activeNodeSet))
                 .setHome(unit.home)
-                .setNextNodeId(unit.nextNodeId)
-                .build();
+                .setNextNodeId(unit.nextNodeId);
+        unit.partialContentOperations.values().forEach(partial -> result.addPartialContentOperations(
+                Sync.PartialSyncUnitContentOperationState.newBuilder()
+                        .setUnitId(com.google.protobuf.ByteString.copyFrom(partial.unitId.bytes()))
+                        .setLamportClock(partial.id.clock)
+                        .setNodeHash(com.google.protobuf.ByteString.copyFrom(partial.id.nodeHash))
+                        .setAuthorPublicKey(com.google.protobuf.ByteString.copyFrom(partial.author.bytes()))
+                        .setKind(partial.kind.ordinal())
+                        .setKey(partial.key)
+                        .setTotalLength(partial.payload.length)
+                        .setReceivedBytes(com.google.protobuf.ByteString.copyFrom(partial.payload, 0,
+                                partial.receivedLength))
+                        .setSignature(com.google.protobuf.ByteString.copyFrom(partial.signature))));
+        return result.build();
+    }
+
+    private static PartialContentOperation loadPartialContentOperation(
+            Sync.PartialSyncUnitContentOperationState stored) {
+        int kind = stored.getKind();
+        if (kind < 0 || kind >= SyncUnitContentOperation.Kind.values().length)
+            throw new IllegalStateException("Invalid persisted partial SyncUnit content operation");
+        byte[] received = stored.getReceivedBytes().toByteArray();
+        if (received.length > stored.getTotalLength())
+            throw new IllegalStateException("Invalid persisted partial SyncUnit content operation");
+        var unitId = SyncUnitId.fromBytes(stored.getUnitId().toByteArray());
+        var id = new OperationId(stored.getLamportClock(), stored.getNodeHash().toByteArray());
+        var partial = new PartialContentOperation(unitId, id,
+                PubKey.from(stored.getAuthorPublicKey().toByteArray()),
+                SyncUnitContentOperation.Kind.values()[kind], stored.getKey(), stored.getTotalLength(),
+                stored.getSignature().toByteArray());
+        System.arraycopy(received, 0, partial.payload, 0, received.length);
+        partial.receivedLength = received.length;
+        return partial;
     }
 
     private static SyncUnitData deserializeSyncUnitMetadata(Sync.PersistedSyncUnit stored) {
@@ -1996,6 +2225,11 @@ public class Node implements AutoCloseable {
         unit.home = stored.getHome();
         unit.nextNodeId = stored.getNextNodeId();
         loadActiveNodeSet(stored.getActiveNodeSet(), unit.activeNodeSet);
+        for (var partial : stored.getPartialContentOperationsList()) {
+            var loaded = loadPartialContentOperation(partial);
+            if (!loaded.unitId.equals(id) || unit.partialContentOperations.put(loaded.id, loaded) != null)
+                throw new IllegalStateException("Invalid persisted partial SyncUnit content operation");
+        }
         return unit;
     }
 
@@ -2068,20 +2302,6 @@ public class Node implements AutoCloseable {
     }
 
     private static Sync.PersistedSyncUnit persist(SyncUnitData unit) {
-        return persist(unit, true);
-    }
-
-    private static Sync.PersistedSyncUnit persist(SyncUnitData unit, boolean includeContent) {
-        return persist(unit, includeContent, Map.of());
-    }
-
-    private static Sync.PersistedSyncUnit persist(SyncUnitData unit, boolean includeContent,
-            Map<String, Long> fromClock) {
-        return persist(unit, includeContent, fromClock, Integer.MAX_VALUE);
-    }
-
-    private static Sync.PersistedSyncUnit persist(SyncUnitData unit, boolean includeContent,
-            Map<String, Long> fromClock, int contentByteBudget) {
         var result = Sync.PersistedSyncUnit.newBuilder()
                 .setId(com.google.protobuf.ByteString.copyFrom(unit.id.bytes()))
                 .setType(unit.type.ordinal())
@@ -2104,30 +2324,6 @@ public class Node implements AutoCloseable {
                         .setRole(operation.role() == null ? 0 : operation.role().ordinal() + 1)
                         .setSignature(com.google.protobuf.ByteString.copyFrom(operation.signature())));
         });
-        if (includeContent) {
-            int[] remainingBytes = { contentByteBudget };
-            boolean[] sentAny = { false };
-            unit.contentOperations.values().forEach(operation -> {
-                if (operation.lamportClock() <= fromClock.getOrDefault(
-                        "c:" + HexFormat.of().formatHex(operation.nodeHash()), 0L))
-                    return;
-                int size = operation.payload().length + operation.key().length();
-                if (sentAny[0] && size > remainingBytes[0])
-                    return;
-                remainingBytes[0] -= size;
-                sentAny[0] = true;
-                result.addContentOperations(
-                    Sync.PersistedSyncUnitContentOperation.newBuilder()
-                            .setUnitId(com.google.protobuf.ByteString.copyFrom(operation.unitId().bytes()))
-                            .setLamportClock(operation.lamportClock())
-                            .setNodeHash(com.google.protobuf.ByteString.copyFrom(operation.nodeHash()))
-                            .setAuthorPublicKey(com.google.protobuf.ByteString.copyFrom(operation.author().bytes()))
-                            .setKind(operation.kind().ordinal())
-                            .setKey(operation.key())
-                            .setPayload(com.google.protobuf.ByteString.copyFrom(operation.payload()))
-                            .setSignature(com.google.protobuf.ByteString.copyFrom(operation.signature())));
-            });
-        }
         return result.build();
     }
 
@@ -2222,7 +2418,6 @@ public class Node implements AutoCloseable {
             }
             sharedFolderMapper = new GuidMapper(dataStorage, unitRoots,
                     SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, sharedFolderNextNodeId);
-            loadSharedFolderFilesFromTree();
         } finally {
             restoringState = false;
         }

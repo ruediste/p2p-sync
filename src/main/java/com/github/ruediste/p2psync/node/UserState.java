@@ -57,21 +57,16 @@ final class UserState {
         }
     }
 
-    static byte[] snapshotWithFileTree(byte[] baseSnapshot, byte[] rootId, String status,
+    static byte[] snapshotWithFileTree(Iterable<Sync.Contact> contacts, byte[] rootId, String status,
             Iterable<Sync.UserTreeEntry> entries) {
-        try {
-            var base = Sync.UserSnapshot.parseFrom(baseSnapshot);
-            var tree = Sync.UserTreeState.newBuilder()
-                    .setRootId(ByteString.copyFrom(rootId))
-                    .setStatusMessage(status)
-                    .addAllEntries(entries);
-            return Sync.UserSnapshot.newBuilder()
-                    .setFileTreeState(ByteString.copyFrom(tree.build().toByteArray()))
-                    .addAllContacts(base.getContactsList())
-                    .build().toByteArray();
-        } catch (InvalidProtocolBufferException e) {
-            throw new IllegalArgumentException("Invalid user snapshot", e);
-        }
+        var tree = Sync.UserTreeState.newBuilder()
+                .setRootId(ByteString.copyFrom(rootId))
+                .setStatusMessage(status)
+                .addAllEntries(entries);
+        return Sync.UserSnapshot.newBuilder()
+                .setFileTreeState(ByteString.copyFrom(tree.build().toByteArray()))
+                .addAllContacts(contacts)
+                .build().toByteArray();
     }
 
     byte[] serializeState() {

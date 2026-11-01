@@ -400,9 +400,10 @@ The user-visible `UserFileTree` is now backed directly by `FileTree`: path
 lookups, directory listings, writes, truncations, moves and deletes operate on
 the B-tree, and file contents are read on demand. Reopening a node uses the
 persisted `FILE_TREE` root without first materializing the tree in memory.
-`snapshotState` is still a full protobuf image of the tree, used for stable-log
-checkpoints and currently also sent alongside the entry-list snapshot during
-initial synchronization.
+`snapshotState` is still a full protobuf image of the tree, used locally for
+stable-log checkpoints and for restoring a node before replaying operations. It is
+no longer part of initial remote synchronization; peers transfer the entry list
+plus contacts instead.
 
 Directory iteration is streamed through `FileTree.forEachDirectory`,
 `UserFileTree.forEachDirectory`, `NodeUserHandle.forEachDirectory` and the FUSE
@@ -418,14 +419,15 @@ the existing API still sees one history.
 Shared-folder labels are USER-unit operations, and
 `Node.listRootEntries`/`NodeUserHandle.listRoot` combine the home entry with
 accepted shared folders, resolving label collisions by the lowest `SyncUnitId`.
-Shared-folder file maps are persisted in a single node-level `FileTree` keyed by
-`unitIdHex/path`, rooted through a reserved unit id and GUID mapping. Listings
-stream `(path, size)` directly from that tree and file content is read on demand;
-`listSharedFiles` remains as a convenience map wrapper.
+Shared-folder content is backed exclusively by a single node-level `FileTree`
+keyed by `unitIdHex/path`, rooted through a reserved unit id and GUID mapping.
+Listings stream `(path, size)` directly from that tree and file content is read on
+demand. Accepted content operations update the tree in place; no path/content map
+is materialized.
 
-Initial remote sync additionally transfers the file-tree snapshot as a list of
-`(entityId, parentId, name, directory, content)` entries. It is currently still
-accompanied by `snapshotState`; see `TODO.md`.
+Initial remote sync transfers the file-tree snapshot as a list of
+`(entityId, parentId, name, directory, content)` entries plus the contact list.
+`snapshotState` is not sent.
 
 ### 6.3 SyncUnit histories
 
@@ -437,7 +439,8 @@ before.
 
 Incremental unit synchronization filters content operations by per-source content
 clocks and by the request byte budget while always transferring authorization
-operations. Segment-level resumability is tracked in `TODO.md`.
+operations. Content transfers are segmented with per-operation offsets and the
+receiver persists partial payloads so a large operation resumes across requests.
 
 ### 6.4 `FileTree` — binary inode tree
 
@@ -502,15 +505,17 @@ segmented with per-operation offsets.
 SyncUnit authorization and content operations are stored in their own B-trees.
 Responses always carry authorization operations and transfer content operations
 incrementally using per-source content clocks and the request byte budget.
-Segment-level resumability of a single unit operation is tracked in `TODO.md`.
+Content transfers are segmented with per-operation offsets: an oversized
+operation is split across responses and the receiver persists the partial payload
+and resumes from the stored received length.
 
 ### 7.3 Initial synchronization and snapshots
 
 Initial user synchronization transfers the accepted operation history plus a
-file-tree snapshot as `(entityId, parentId, name, directory, content)` entries.
-The receiver reconstructs the local `FileTree` and replays/merges operations. It
-is still accompanied by `snapshotState`; removing that duplicate transfer is
-tracked in `TODO.md`.
+file-tree snapshot as `(entityId, parentId, name, directory, content)` entries and
+the contact list. The receiver reconstructs the local `FileTree` from those
+entries and replays/merges operations. The local `snapshotState` remains the
+baseline for stable-log checkpoints but is not transferred.
 
 ### 7.4 Log truncation
 
@@ -532,7 +537,8 @@ in the USER log until a materialized message snapshot replaces them.
 | explicit close (`Node.close`) | one final `persistState()` before the storage file is closed |
 
 The node writes new tree roots and rewrites the `NodeState` metadata blob on
-every persist. The shared-folder tree is regenerated from its path/content map;
+every persist. The shared-folder tree is updated in place by accepted content
+operations and its root handle is committed with the rest of the node state;
 user file trees are updated copy-on-write. One user-visible write can still cause
 two commits of the node document.
 
@@ -549,35 +555,3 @@ two commits of the node document.
 - Integrity of the *storage layer* is structural only: magic/version checks,
   offset and length validation, refcount bookkeeping, plus the optional
   `StorageCheck` scan. There are no per-block checksums.
-
-## 10. Implementation status
-
-Implemented:
-
-- single-file copy-on-write storage with SYSTEM/META/DATA areas, per-area block
-  sizes, free-space extent trees, refcount tree, deferred frees, typed blocks,
-  B+tree with variable-size values, and copy-on-write snapshots via `RefMode`.
-- caller-identified blob chains in `BlobStorage`; the legacy content-addressed
-  `BlockStorage`, `rootId` graph, shard list and node-number map are removed.
-- signed operation histories split into per-SyncUnit B-trees, oversized payloads
-  in DATA blocks, a per-SyncUnit root registry, and per-SyncUnit GUID mappings.
-- home and shared-folder units, shared-folder labels and the combined root view.
-- lazy user and shared-folder file trees backed by `FileTree`, with streaming
-  directory and shared-folder listings.
-- incremental SyncUnit content synchronization and file-tree entry snapshots on
-  initial remote sync.
-
-Known gaps and deferred work are listed in `TODO.md`.
-
-## 11. Practical consequences
-
-- A `node.db` grows by operation data, `FileTree` copy-on-write churn and the
-  rewritten `NodeState` metadata blob. Space is reused through refcount-driven
-  freeing and deferred free lists, but the file itself is only truncated to the
-  committed length when opening.
-- Concurrent writers are impossible by design (`RandomAccessFile`, single writer,
-  in-memory transaction state); `Node` and `SimpleFuseFS` both assume one process
-  per file.
-- Tooling that reads these files must implement the big-endian structs of the
-  storage layer plus protobuf for the node layer; `StorageCheck` and
-  `StorageCheckTest` are the reference for the structural invariants.

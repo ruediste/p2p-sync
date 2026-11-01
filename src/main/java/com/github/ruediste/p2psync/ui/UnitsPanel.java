@@ -310,7 +310,32 @@ final class UnitsPanel extends JPanel {
         JPanel panel = Theme.card();
         panel.setAlignmentX(LEFT_ALIGNMENT);
         panel.add(Theme.subheading("Files"));
+        panel.add(Box.createVerticalStrut(4));
+        panel.add(Theme.muted("This folder appears in the mounted root view under its label."));
         panel.add(Box.createVerticalStrut(6));
+
+        JPanel labelRow = Theme.row(6);
+        labelRow.setAlignmentX(LEFT_ALIGNMENT);
+        labelRow.add(Theme.muted("Root label"));
+        JTextField labelField = Theme.textField(14);
+        node.listRootEntries(user.userId()).stream()
+                .filter(entry -> entry.unitId().equals(unit.id()))
+                .findFirst()
+                .ifPresent(entry -> labelField.setText(entry.label()));
+        labelRow.add(labelField);
+        JButton saveLabel = Theme.secondaryButton("Save label");
+        saveLabel.addActionListener(event -> {
+            try {
+                node.setSharedFolderLabel(user.userId(), unit.id(), labelField.getText().trim());
+                status.accept("Shared folder label saved");
+                refresh();
+            } catch (RuntimeException error) {
+                status.accept("Could not save label: " + error.getMessage());
+            }
+        });
+        labelRow.add(saveLabel);
+        panel.add(labelRow);
+        panel.add(Box.createVerticalStrut(8));
 
         FileTableModel model = new FileTableModel();
         JTable table = new JTable(model);

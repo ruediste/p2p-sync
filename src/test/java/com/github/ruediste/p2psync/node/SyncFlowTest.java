@@ -514,6 +514,43 @@ public class SyncFlowTest {
         nodeC.close();
     }
 
+
+    /** Verifies remote shared-folder content resumes when one operation exceeds the transfer budget. */
+    @Tag("integration")
+    @Test
+    public void remoteSharedFolderTransferResumesAcrossRequests() {
+        var remoteA = new Node(new Network(), tempDir.resolve("remote-budget-a"));
+        var remoteB = new Node(new Network(), tempDir.resolve("remote-budget-b"));
+        try {
+            var owner = remoteA.createNewUser("budget-owner");
+            var recipient = remoteB.createNewUser("budget-recipient");
+            List<Multiaddr> addressesA = remoteA.startRemote("/ip4/127.0.0.1/tcp/0", false);
+            remoteB.startRemote("/ip4/127.0.0.1/tcp/0", false);
+            remoteB.addRemoteAddress(remoteA.peerId, addressesA.get(0));
+
+            var folder = remoteA.createSyncUnit(owner.data.userId(),
+                    SyncUnitAuthorization.Type.SHARED_FOLDER);
+            byte[] content = new byte[1_200_000];
+            for (int index = 0; index < content.length; index++)
+                content[index] = (byte) (index * 17);
+            remoteA.putSharedFile(folder, owner.data.userId(), "large.bin", content);
+            remoteA.inviteToSyncUnit(folder, owner.data.userId(), recipient.data.userId(),
+                    SyncUnitAuthorization.Role.EDITOR);
+
+            remoteB.joinSyncUnit(remoteA.peerId, folder, recipient.data.userId());
+            for (int round = 0; round < 5
+                    && remoteB.readSharedFile(folder, recipient.data.userId(), "large.bin") == null; round++)
+                remoteB.syncKnownPeers();
+
+            assertArrayEquals(content,
+                    remoteB.readSharedFile(folder, recipient.data.userId(), "large.bin"));
+            assertTrue(remoteB.syncUnits.get(folder).partialContentOperations.isEmpty());
+        } finally {
+            remoteA.close();
+            remoteB.close();
+        }
+    }
+
     /** Verifies remote join and operation transfer over TCP, Noise, and Yamux. */
     @Tag("integration")
     @Test

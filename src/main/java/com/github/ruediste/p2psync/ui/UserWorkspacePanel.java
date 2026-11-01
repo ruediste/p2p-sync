@@ -55,6 +55,7 @@ final class UserWorkspacePanel extends JPanel {
     private final JPanel overview;
     private final JLabel overviewMeta = Theme.muted("");
     private final JLabel mountPath = Theme.mono("");
+    private final JPanel rootList = Theme.column();
 
     private Node.UserStatus user;
     private Section section = Section.OVERVIEW;
@@ -156,6 +157,17 @@ final class UserWorkspacePanel extends JPanel {
         mount.add(Box.createVerticalStrut(4));
         mount.add(Theme.muted("Your mounted files are available in this folder."));
         content.add(mount);
+        content.add(Box.createVerticalStrut(12));
+
+        JPanel roots = Theme.card();
+        roots.setAlignmentX(LEFT_ALIGNMENT);
+        roots.add(Theme.subheading("File roots"));
+        roots.add(Box.createVerticalStrut(4));
+        roots.add(Theme.muted("The mount exposes the home tree and labeled shared folders together."));
+        roots.add(Box.createVerticalStrut(6));
+        rootList.setAlignmentX(LEFT_ALIGNMENT);
+        roots.add(rootList);
+        content.add(roots);
         return content;
     }
 
@@ -250,6 +262,28 @@ final class UserWorkspacePanel extends JPanel {
                 + user.pendingLocalOperationCount() + " local pending · "
                 + user.pendingIncomingOperationCount() + " incoming pending · "
                 + units + " SyncUnits (" + channels + " channels)");
+        refreshRoots();
+    }
+
+    private void refreshRoots() {
+        rootList.removeAll();
+        for (var entry : node.listRootEntries(user.userId())) {
+            JPanel row = Theme.row(8);
+            row.setAlignmentX(LEFT_ALIGNMENT);
+            JLabel label = Theme.mono(entry.label());
+            label.setPreferredSize(new Dimension(150, 20));
+            row.add(label);
+            String path = mountPoint.resolve(user.localName()).resolve(entry.label()).toString();
+            JLabel target = Theme.muted(path);
+            row.add(target);
+            if (entry.conflict())
+                row.add(Theme.muted("duplicate label; showing the first shared folder"));
+            rootList.add(row);
+        }
+        if (rootList.getComponentCount() == 0)
+            rootList.add(Theme.muted("No file roots are available yet."));
+        rootList.revalidate();
+        rootList.repaint();
     }
 
     private void updateHeader() {

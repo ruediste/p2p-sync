@@ -189,6 +189,19 @@ message PersistedSyncUnit {
 	ActiveNodeSetState activeNodeSet = 8;
 	bool home = 9;
 	uint64 nextNodeId = 10;
+	repeated PartialSyncUnitContentOperationState partialContentOperations = 11;
+}
+
+message PartialSyncUnitContentOperationState {
+	bytes unitId = 1;
+	uint64 lamportClock = 2;
+	bytes nodeHash = 3;
+	bytes authorPublicKey = 4;
+	int32 kind = 5;
+	string key = 6;
+	uint32 totalLength = 7;
+	bytes receivedBytes = 8;
+	bytes signature = 9;
 }
 
 message PersistedSyncUnitAuthorizationOperation {
@@ -279,6 +292,13 @@ message RemoteSyncRequest {
 	bytes syncUnitId = 9;
 	bytes requesterUserPublicKey = 10;
 	PersistedSyncUnit syncUnitUpdate = 11;
+	repeated SyncUnitContentOffset contentOffsets = 12;
+}
+
+message SyncUnitContentOffset {
+	string nodeId = 1;
+	uint64 lamportClock = 2;
+	uint32 offset = 3;
 }
 
 message RemoteDirectMessageDelivery {
@@ -317,5 +337,21 @@ message RemoteSyncResponse {
 	repeated UserTreeEntry fileTreeEntries = 13;
 	bytes fileTreeRootId = 14;
 	string fileTreeStatus = 15;
+	repeated RemoteSyncUnitContentTransfer contentTransfers = 16;
+	repeated Contact contacts = 17;
+}
+
+message RemoteSyncUnitContentTransfer {
+	bytes unitId = 1;
+	uint64 lamportClock = 2;
+	bytes nodeHash = 3;
+	bytes authorPublicKey = 4;
+	int32 kind = 5;
+	string key = 6;
+	uint32 totalLength = 7;
+	uint32 offset = 8;
+	bytes bytes = 9;
+	bytes signature = 10;
+	bool complete = 11;
 }
 

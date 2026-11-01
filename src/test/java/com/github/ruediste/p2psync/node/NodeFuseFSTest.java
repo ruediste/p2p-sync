@@ -2,6 +2,7 @@ package com.github.ruediste.p2psync.node;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
@@ -24,9 +25,21 @@ class NodeFuseFSTest {
         return result;
     }
 
+    private static List<String> list(NodeFuseFS fs, String path) {
+        List<String> names = new ArrayList<>();
+        FuseFillDir filler = (buffer, name, stat, offset) -> {
+            byte[] encoded = new byte[name.remaining()];
+            name.get(encoded);
+            names.add(new String(encoded, StandardCharsets.UTF_8));
+            return 0;
+        };
+        assertEquals(0, fs.readdir(path, buffer(new byte[0]), filler, 0, null));
+        return names;
+    }
+
     /**
-     * Verifies named user roots route I/O to isolated trees and appear at mount
-     * root.
+     * Verifies named user roots expose the combined home/shared-folder root view
+     * and route home I/O to isolated trees.
      */
     @Test
     void exposesIsolatedUserTreesByLocalName() {
@@ -37,34 +50,77 @@ class NodeFuseFSTest {
             node.createNewUser("work");
             var fs = new NodeFuseFS(node);
 
-            assertEquals(0, fs.mkdir("/alice/docs", 0755));
-            assertEquals(0, fs.create("/alice/docs/note.txt", 0644, null));
+            List<String> roots = list(fs, "/alice");
+            assertTrue(roots.containsAll(List.of(".", "..", "home")));
+
+            assertEquals(0, fs.mkdir("/alice/home/docs", 0755));
+            assertEquals(0, fs.create("/alice/home/docs/note.txt", 0644, null));
             byte[] content = "private note".getBytes(StandardCharsets.UTF_8);
-            assertEquals(content.length, fs.write("/alice/docs/note.txt", buffer(content), content.length, 0, null));
-            assertEquals(-ErrorCodes.ENOENT(), fs.open("/work/docs/note.txt", null));
+            assertEquals(content.length,
+                    fs.write("/alice/home/docs/note.txt", buffer(content), content.length, 0, null));
+            assertEquals(-ErrorCodes.ENOENT(), fs.open("/work/home/docs/note.txt", null));
 
             Pointer readBuffer = buffer(new byte[content.length]);
-            assertEquals(content.length, fs.read("/alice/docs/note.txt", readBuffer, content.length, 0, null));
+            assertEquals(content.length,
+                    fs.read("/alice/home/docs/note.txt", readBuffer, content.length, 0, null));
             byte[] actual = new byte[content.length];
             readBuffer.get(0, actual, 0, actual.length);
             assertArrayEquals(content, actual);
 
-            List<String> names = new ArrayList<>();
-            FuseFillDir filler = (buffer, name, stat, offset) -> {
-                byte[] encoded = new byte[name.remaining()];
-                name.get(encoded);
-                names.add(new String(encoded, StandardCharsets.UTF_8));
-                return 0;
-            };
-            assertEquals(0, fs.readdir("/", buffer(new byte[0]), filler, 0, null));
-            assertTrue(names.containsAll(List.of("alice", "work")));
+            assertTrue(list(fs, "/").containsAll(List.of("alice", "work")));
             FileStat stat = new FileStat(Runtime.getSystemRuntime());
-            assertEquals(0, fs.getattr("/alice/docs/note.txt", stat));
+            assertEquals(0, fs.getattr("/alice/home/docs/note.txt", stat));
             assertEquals(content.length, stat.st_size.longValue());
 
-            assertEquals(0, fs.rename("/alice/docs/note.txt", "/alice/docs/note.tmp"));
-            assertEquals(0, fs.rename("/alice/docs/note.tmp", "/alice/docs/note.txt"));
-            assertEquals(-ErrorCodes.EXDEV(), fs.rename("/alice/docs/note.txt", "/work/note.txt"));
+            assertEquals(0, fs.rename("/alice/home/docs/note.txt", "/alice/home/docs/note.tmp"));
+            assertEquals(0, fs.rename("/alice/home/docs/note.tmp", "/alice/home/docs/note.txt"));
+            assertEquals(-ErrorCodes.EXDEV(), fs.rename("/alice/home/docs/note.txt", "/work/home/note.txt"));
+        } finally {
+            node.close();
+        }
+    }
+
+    /**
+     * Verifies labeled shared folders appear next to home and can be read and
+     * written through the same root view.
+     */
+    @Test
+    void exposesSharedFolderContentInCombinedRoot() {
+        var network = new Node.Network();
+        var node = new Node(network);
+        try {
+            var handle = node.createNewUser("alice");
+            var folder = node.createSyncUnit(handle.data.userId(), SyncUnitAuthorization.Type.SHARED_FOLDER);
+            node.setSharedFolderLabel(handle.data.userId(), folder, "team");
+            var fs = new NodeFuseFS(node);
+
+            List<String> roots = list(fs, "/alice");
+            assertTrue(roots.containsAll(List.of("home", "team")));
+
+            assertEquals(0, fs.create("/alice/team/notes/todo.txt", 0644, null));
+            byte[] content = "shared todo".getBytes(StandardCharsets.UTF_8);
+            assertEquals(content.length,
+                    fs.write("/alice/team/notes/todo.txt", buffer(content), content.length, 0, null));
+            assertArrayEquals(content,
+                    node.readSharedFile(folder, handle.data.userId(), "notes/todo.txt"));
+
+            FileStat stat = new FileStat(Runtime.getSystemRuntime());
+            assertEquals(0, fs.getattr("/alice/team/notes/todo.txt", stat));
+            assertEquals(content.length, stat.st_size.longValue());
+            assertEquals(0, fs.getattr("/alice/team/notes", stat));
+
+            List<String> team = list(fs, "/alice/team");
+            assertTrue(team.contains("notes"));
+            assertTrue(list(fs, "/alice/team/notes").contains("todo.txt"));
+            Pointer readBuffer = buffer(new byte[content.length]);
+            assertEquals(content.length,
+                    fs.read("/alice/team/notes/todo.txt", readBuffer, content.length, 0, null));
+            byte[] actual = new byte[content.length];
+            readBuffer.get(0, actual, 0, actual.length);
+            assertArrayEquals(content, actual);
+
+            assertEquals(0, fs.unlink("/alice/team/notes/todo.txt"));
+            assertNull(node.readSharedFile(folder, handle.data.userId(), "notes/todo.txt"));
         } finally {
             node.close();
         }

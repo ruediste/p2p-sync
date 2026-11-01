@@ -19,11 +19,12 @@ If protobuf code generation misbehaves, a `mvn clean` usually helps.
 
 `com.github.ruediste.p2psync.ui.DesktopMain` starts the single-window desktop
 application, optional system-tray status menu, and a FUSE mount exposing each
-configured user below its node-local name. Users and workspace sections are
-selected in the left navigation. Chat, mail (an email-client style inbox/sent
-view), contacts, SyncUnits, and account settings stay in the main window;
-workflows use inline forms rather than modal dialogs. On Linux, install the FUSE 2
-compatibility library
+configured user below its node-local name. Each user directory is a combined root
+view: `home` plus the user's accepted shared folders by label. Users and workspace
+sections are selected in the left navigation. Chat, mail (an email-client style
+inbox/sent view), contacts, SyncUnits, and account settings stay in the main
+window; workflows use inline forms rather than modal dialogs. On Linux, install
+the FUSE 2 compatibility library
 (`libfuse2` or `libfuse2t64`), mount tools, and make `/dev/fuse` available to
 your user.
 
