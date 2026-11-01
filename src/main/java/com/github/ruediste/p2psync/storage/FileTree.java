@@ -300,14 +300,19 @@ public class FileTree {
     }
 
     public List<DirectoryEntry> listDirectory(ShortGuid directoryId) {
-        requireDirectory(directoryId);
         List<DirectoryEntry> result = new ArrayList<>();
+        forEachDirectory(directoryId, result::add);
+        return List.copyOf(result);
+    }
+
+    /** Streams the entries of a directory without materializing a list. */
+    public void forEachDirectory(ShortGuid directoryId, java.util.function.Consumer<DirectoryEntry> consumer) {
+        requireDirectory(directoryId);
         Iterator<BTree.Entry<byte[], byte[]>> entries = entriesForIterator(directoryId, EntryType.DIR_INDEX);
         while (entries.hasNext()) {
             BTree.Entry<byte[], byte[]> entry = entries.next();
-            result.add(decodeDirectoryIndex(entry.value));
+            consumer.accept(decodeDirectoryIndex(entry.value));
         }
-        return List.copyOf(result);
     }
 
     public DirectoryEntry lookup(ShortGuid directoryId, String name) {

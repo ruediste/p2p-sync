@@ -9,7 +9,7 @@ import java.util.HexFormat;
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 import com.github.ruediste.p2psync.libp2p.security.CryptoUtils;
 
-public final class SyncUnitId {
+public final class SyncUnitId implements Comparable<SyncUnitId> {
     private static final byte[] USER_PREFIX = "p2p-sync:user-unit:v1:".getBytes(StandardCharsets.US_ASCII);
     private static final SecureRandom RANDOM = new SecureRandom();
     private final byte[] bytes;
@@ -25,6 +25,16 @@ public final class SyncUnitId {
     public static SyncUnitId create() {
         byte[] bytes = new byte[32];
         RANDOM.nextBytes(bytes);
+        return new SyncUnitId(bytes);
+    }
+
+    /** Deterministic per-node unit id: node-hash prefix followed by a counter. */
+    public static SyncUnitId create(byte[] nodeHash, long counter) {
+        if (nodeHash == null || nodeHash.length != 32)
+            throw new IllegalArgumentException("Node hash must contain 32 bytes");
+        byte[] bytes = new byte[32];
+        System.arraycopy(nodeHash, 0, bytes, 0, 24);
+        ByteBuffer.wrap(bytes, 24, Long.BYTES).putLong(counter);
         return new SyncUnitId(bytes);
     }
 
@@ -51,6 +61,11 @@ public final class SyncUnitId {
     @Override
     public int hashCode() {
         return hashCode;
+    }
+
+    @Override
+    public int compareTo(SyncUnitId other) {
+        return Arrays.compareUnsigned(bytes, other.bytes);
     }
 
     @Override

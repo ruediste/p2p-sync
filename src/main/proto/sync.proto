@@ -16,38 +16,12 @@ message NodeUserConfiguration {
 // <<xxx, yyy>> means: encrypted with xxx-key (symmetric), signed with yyy-key
 
 // <<storage, data>>
-message StorageUserRoot {
-	VectorClock clock = 1;
-	bytes shardListId = 2;
-	bytes dataRootBlockId = 3;
-	bytes nodeNrMapId=4;
-}
-
-message ShardList{
-	repeated bytes shardIds = 2;
-	
-}
 
 // <<storage, data>>
-message StorageShard {
-	int64 dataSize = 1;
-	repeated bytes blockIds = 2;
-}
 
 // <<storage, data>>
-message StorageBlock {
-	// <<data, data>>
-	repeated bytes dataBytes = 2;
-}
 
 // Data Structures
-
-message DataUserRoot {
-	string userStatusMessage = 1;
-	bytes rootDirectoryId=2;
-	bytes rootDirectoryGuid=3;
-	repeated Contact contacts = 4;
-}
 
 message Contact {
 	bytes contactId = 1;
@@ -88,29 +62,8 @@ message UserTreeEntry {
 	bytes content = 5;
 }
 
-
 message VectorClock{
 	map<int32,int64> values=1;
-}
-
-message Directory{
-	VectorClock clock = 1;
-	repeated DirectoryEntry directories=2;
-	repeated FileEntry files=3;
-}
-
-message DirectoryEntry{
-	VectorClock clock = 1;
-	string name=2;
-	bytes directoryId=3;
-	bytes entityId=4;
-}
-
-message FileEntry{
-	VectorClock clock = 1;
-	string name=2;
-	bytes dataBlockId=3;
-	bytes entityId=4;
 }
 
 message UserOperation {
@@ -130,6 +83,7 @@ message UserOperation {
 		CONTACT_CREATE = 12;
 		CONTACT_UPDATE = 13;
 		CONTACT_DELETE = 14;
+		SET_SHARED_FOLDER_LABEL = 15;
 	}
 	Kind kind = 1;
 	bytes entityId = 2;
@@ -163,6 +117,7 @@ message NodeState {
 	repeated NodeUserState users = 4;
 	bytes peerPrivateKey = 5;
 	repeated PersistedSyncUnit syncUnits = 6;
+	uint64 sharedFolderNextNodeId = 7;
 }
 
 message UserCredential {
@@ -171,15 +126,16 @@ message UserCredential {
 	bytes iv = 3;
 }
 
+message SharedFolderLabel {
+	bytes syncUnitId = 1;
+	string label = 2;
+}
+
 message NodeUserState {
 	bytes userPrivateKey = 1;
 	reserved 2, 3;
 	string localName = 4;
-	bytes rootId = 5;
 	bytes rootDirectoryGuid = 6;
-	repeated PersistedOperation operationTree = 7;
-	repeated PersistedOperation localOperationTree = 8;
-	repeated PersistedOperation stagingTree = 9;
 	repeated OperationClock maxOperationClock = 10;
 	ActiveNodeSetState activeNodeSet = 11;
 	repeated PartialOperationState retrievalTree = 12;
@@ -187,6 +143,11 @@ message NodeUserState {
 	repeated bytes participatingSyncUnitIds = 14;
 	repeated string deliveredMessageIds = 15;
 	repeated StoredUserMessage inboxMessages = 16;
+	uint64 nextNodeId = 17;
+	uint64 clock = 18;
+	uint64 entityCounter = 19;
+	bytes homeSyncUnitId = 20;
+	repeated SharedFolderLabel sharedFolderLabels = 21;
 }
 
 message UserMessage {
@@ -205,6 +166,7 @@ message UserMessage {
 	string body = 6;
 	repeated SyncUnitAttachment attachments = 7;
 	bytes invitedSyncUnitId = 8;
+	string sharedFolderLabel = 9;
 }
 
 message StoredUserMessage {
@@ -222,6 +184,11 @@ message PersistedSyncUnit {
 	bytes creatorPublicKey = 3;
 	repeated PersistedSyncUnitAuthorizationOperation authorizationOperations = 4;
 	repeated PersistedSyncUnitContentOperation contentOperations = 5;
+	uint64 clock = 6;
+	uint64 entityCounter = 7;
+	ActiveNodeSetState activeNodeSet = 8;
+	bool home = 9;
+	uint64 nextNodeId = 10;
 }
 
 message PersistedSyncUnitAuthorizationOperation {
@@ -346,17 +313,9 @@ message RemoteSyncResponse {
 	bool syncUnitFound = 9;
 	PersistedSyncUnit syncUnit = 10;
 	bool syncUnitRevoked = 11;
+	bytes homeSyncUnitId = 12;
+	repeated UserTreeEntry fileTreeEntries = 13;
+	bytes fileTreeRootId = 14;
+	string fileTreeStatus = 15;
 }
 
-message NodeNrMap{
-	int32 nextNodeNr=1;
-	repeated NodeNrEntry entries=2;
-	VectorClock clock = 3;
-}
-
-message NodeNrEntry{
-	int32 nodeNr=1;
-	bytes peerId=2;
-	bytes joinId=3;
-	optional VectorClock leavingSince = 4;
-}

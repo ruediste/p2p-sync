@@ -28,14 +28,17 @@ import com.github.ruediste.p2psync.libp2p.host.HostBuilder;
 import com.github.ruediste.p2psync.libp2p.security.CryptoUtils;
 import com.github.ruediste.p2psync.proto.Sync;
 import com.github.ruediste.p2psync.storage.DataStorage;
-import com.github.ruediste.p2psync.storage.DataStorage.Area;
 
 public class Node implements AutoCloseable {
     private static final String USER_KEY_CLIPBOARD_PREFIX = "p2p-sync-user-key:v1:";
     public PeerId peerId;
     private PrivKey peerPrivateKey;
     public DataStorage dataStorage;
-    public BlockStorage storage;
+    public BlobStorage storage;
+    private UnitRootStore unitRoots;
+    private DataStorage.RootLongHandle syncUnitCounter;
+    private GuidMapper sharedFolderMapper;
+    private long sharedFolderNextNodeId;
     public Map<PubKey, NodeUserData> users = new HashMap<>();
     final Map<SyncUnitId, SyncUnitData> syncUnits = new HashMap<>();
     public Network network;
@@ -43,7 +46,6 @@ public class Node implements AutoCloseable {
     long guidCounter;
     private byte[] nodeHash;
     private String nodeKey;
-    private DataStorage.RootRefHandle<DataStorage.ByteArrayBlock> stateRoot;
     private Path temporaryDataFile;
     private boolean restoringState;
     private Host remoteHost;
@@ -138,22 +140,19 @@ public class Node implements AutoCloseable {
         nodeKey = HexFormat.of().formatHex(nodeHash);
         temporaryDataFile = temporary ? dataFile : null;
         dataStorage = new DataStorage();
-        storage = new BlockStorage(dataStorage, 1);
-        stateRoot = dataStorage.getRootRefHandle(2, Area.DATA, DataStorage.BYTE_ARRAY_BLOCK_TYPE);
+        storage = new BlobStorage(dataStorage, 1);
+        unitRoots = new UnitRootStore(dataStorage);
+        syncUnitCounter = dataStorage.getRootLongHandle(3);
         try {
             dataStorage.open(dataFile.toString());
             storage.restoreRoot();
-            if (stateRoot.blockOffset == 0) {
+            unitRoots.restoreRoot();
+            var stateBytes = storage.get(BlobStorage.NODE_STATE_ID);
+            if (stateBytes.isEmpty()) {
                 network.nodes.put(peerId, this);
                 persistState();
             } else {
-                byte[] reference = dataStorage.readBlock(stateRoot.blockOffset, Area.DATA,
-                        DataStorage.BYTE_ARRAY_BLOCK_TYPE).data();
-                if (reference.length < 32)
-                    throw new IllegalStateException("Invalid persisted node-state reference");
-                byte[] stateBytes = storage.getBlock(new BlockId(Arrays.copyOf(reference, 32)))
-                        .orElseThrow(() -> new IllegalStateException("Persisted node state block is missing"));
-                restoreState(Sync.NodeState.parseFrom(stateBytes));
+                restoreState(Sync.NodeState.parseFrom(stateBytes.get()));
             }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
             dataStorage.close();
@@ -254,10 +253,13 @@ public class Node implements AutoCloseable {
                     unit = syncUnits.get(id);
                     knownMember = unit.authorization.members().containsKey(requesterId);
                 }
+                var fromClock = new TreeMap<String, Long>();
+                request.getFromClockList().forEach(entry -> fromClock.merge(entry.getNodeId(), entry.getClock(), Math::max));
+                int contentBudget = request.getByteBudget() <= 0 ? 1_000_000 : request.getByteBudget();
                 return Sync.RemoteSyncResponse.newBuilder()
                         .setNodeClock(clock)
                         .setSyncUnitFound(true)
-                        .setSyncUnit(persist(unit, knownMember))
+                        .setSyncUnit(persist(unit, knownMember, fromClock, contentBudget))
                         .build().toByteArray();
             }
             PubKey userId = PubKey.from(request.getUserId().toByteArray());
@@ -266,10 +268,20 @@ public class Node implements AutoCloseable {
             if (data == null)
                 return response.build().toByteArray();
             response.setActiveNodeSet(persist(data.activeNodeSet));
+            if (data.homeSyncUnitId != null)
+                response.setHomeSyncUnitId(com.google.protobuf.ByteString.copyFrom(data.homeSyncUnitId.bytes()));
             data.maxOperationClock.forEach((source, clock) -> response.addMaxOperationClock(
                     Sync.OperationClock.newBuilder().setNodeId(source).setClock(clock)));
             if (request.getIncludeHistory()) {
                 response.setSnapshotState(com.google.protobuf.ByteString.copyFrom(data.snapshotState));
+                try {
+                    var treeState = Sync.UserTreeState.parseFrom(data.fileSystem.serializeState());
+                    response.setFileTreeRootId(treeState.getRootId())
+                            .setFileTreeStatus(treeState.getStatusMessage())
+                            .addAllFileTreeEntries(treeState.getEntriesList());
+                } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    throw new IllegalStateException("Invalid file-tree snapshot", e);
+                }
                 data.allOperations().values().forEach(operation -> response.addHistory(persist(operation)));
             } else {
                 var fromClock = new TreeMap<String, Long>();
@@ -315,27 +327,8 @@ public class Node implements AutoCloseable {
         return dataFile;
     }
 
-    public byte[] getBlock(BlockId id) {
-        return storage.getBlock(id).get();
-    }
-
     public static class Network {
         public Map<PeerId, Node> nodes = new HashMap<>();
-
-        public StorageUserRoot getStorageUserRoot(PeerId peerId, PubKey userId) {
-            var peer = nodes.get(peerId);
-            var rootId = peer.users.get(userId).rootId;
-            return StorageUserRoot.from(getBlock(rootId));
-        }
-
-        public byte[] getBlock(BlockId id) {
-            for (var node : nodes.values()) {
-                var block = node.storage.getBlock(id);
-                if (block.isPresent())
-                    return block.get();
-            }
-            return null;
-        }
 
         public Set<PeerId> getPeersForUser(PubKey userId) {
             return nodes.values().stream().filter(x -> x.users.containsKey(userId)).map(x -> x.peerId)
@@ -356,14 +349,20 @@ public class Node implements AutoCloseable {
     }
 
     public static class NodeUserData {
-        public BlockId rootId;
         public JoinId joinId;
         public PrivKey userKey;
         public String localName;
         final Set<String> participatingSyncUnitIds = new TreeSet<>();
-        final TreeMap<OperationId, Operation> operationTree = new TreeMap<>();
-        final TreeMap<OperationId, Operation> localOperationTree = new TreeMap<>();
-        final TreeMap<OperationId, Operation> stagingTree = new TreeMap<>();
+        final TreeMap<OperationId, Operation> userOperationTree = new TreeMap<>();
+        final TreeMap<OperationId, Operation> userLocalOperationTree = new TreeMap<>();
+        final TreeMap<OperationId, Operation> userStagingTree = new TreeMap<>();
+        final TreeMap<OperationId, Operation> homeOperationTree = new TreeMap<>();
+        final TreeMap<OperationId, Operation> homeLocalOperationTree = new TreeMap<>();
+        final TreeMap<OperationId, Operation> homeStagingTree = new TreeMap<>();
+        final CombinedOperationTree operationTree = new CombinedOperationTree(userOperationTree, homeOperationTree);
+        final CombinedOperationTree localOperationTree = new CombinedOperationTree(userLocalOperationTree,
+                homeLocalOperationTree);
+        final CombinedOperationTree stagingTree = new CombinedOperationTree(userStagingTree, homeStagingTree);
         final Map<String, PartialOperation> retrievalTree = new HashMap<>();
         final Map<String, Long> maxOperationClock = new HashMap<>();
         final Set<String> deliveredMessageIds = new HashSet<>();
@@ -373,6 +372,12 @@ public class Node implements AutoCloseable {
         byte[] snapshotState;
         UserFileTree fileSystem;
         ContactList contacts;
+        long clock;
+        long entityCounter;
+        SyncUnitId homeSyncUnitId;
+        final Map<String, String> sharedFolderLabels = new TreeMap<>();
+        long nextNodeId;
+        GuidMapper guidMapper;
 
         public PubKey userId() {
             return userKey.publicKey();
@@ -380,6 +385,10 @@ public class Node implements AutoCloseable {
 
         public SyncUnitId syncUnitId() {
             return SyncUnitId.forUser(userId());
+        }
+
+        SyncUnitId fileUnitId() {
+            return homeSyncUnitId == null ? syncUnitId() : homeSyncUnitId;
         }
 
         TreeMap<OperationId, Operation> allOperations() {
@@ -454,6 +463,7 @@ public class Node implements AutoCloseable {
                     stagingTree.putIfAbsent(transfer.id, new Operation(transfer.id, payload, signature));
                     retrievalTree.remove(source);
                     maxOperationClock.merge(source, transfer.id.clock, Math::max);
+                    clock = Math.max(clock, transfer.id.clock);
                     node.clock = Math.max(node.clock, transfer.id.clock);
                 } else {
                     var partial = retrievalTree.get(source);
@@ -497,6 +507,12 @@ public class Node implements AutoCloseable {
         final PubKey creator;
         final List<SyncUnitAuthorization.Operation> authorizationOperations = new java.util.ArrayList<>();
         final TreeMap<OperationId, SyncUnitContentOperation> contentOperations = new TreeMap<>();
+        long clock;
+        long entityCounter;
+        boolean home;
+        long nextNodeId;
+        GuidMapper guidMapper;
+        ActiveNodeSet activeNodeSet = new ActiveNodeSet();
         final Map<String, byte[]> files = new TreeMap<>();
         final Map<String, byte[]> todoItems = new TreeMap<>();
         final List<SyncUnitContentOperation> channelMessages = new java.util.ArrayList<>();
@@ -581,22 +597,15 @@ public class Node implements AutoCloseable {
         data.localName = localName;
         data.activeNodeSet.nodes.add(nodeKey);
         data.activeNodeSet.setVersion(nodeKey, nextClock());
-        data.rootDirectoryGuid = nextEntityId();
-        data.fileSystem = UserFileTree.empty(data.rootDirectoryGuid);
-        data.contacts = ContactList.empty(data.userId());
-        data.snapshotState = new UserState(data.fileSystem, data.contacts).serializeState();
+        data.rootDirectoryGuid = nextEntityId(data);
         users.put(data.userId(), data);
         ensureUserSyncUnit(data);
+        ensureHomeUnit(data);
+        data.guidMapper = new GuidMapper(dataStorage, unitRoots, data.fileUnitId(), 0);
+        data.fileSystem = UserFileTree.empty(dataStorage, data.guidMapper, data.rootDirectoryGuid);
+        data.contacts = ContactList.empty(data.userId());
+        data.snapshotState = new UserState(data.fileSystem, data.contacts).serializeState();
         var handle = new NodeUserHandle(this, data);
-
-        var root = new UserState(data.fileSystem, data.contacts).toDataUserRoot(storage);
-        var dataRootId = storage.store(root.toProto());
-
-        var storageRoot = new StorageUserRoot();
-        storageRoot.shardListId = storage.store(Sync.ShardList.newBuilder().build());
-        storageRoot.dataRootBlockId = dataRootId;
-        storageRoot.nodeNrMapId = storage.store(Sync.NodeNrMap.newBuilder().build());
-        data.rootId = storage.store(storageRoot.toProto());
         persistState();
         return handle;
     }
@@ -613,7 +622,6 @@ public class Node implements AutoCloseable {
             throw new IllegalArgumentException("User is already configured on this node");
         var peer = network.getPeersForUser(userId).stream().min(PeerId::compareTo)
                 .orElseThrow(() -> new IllegalArgumentException("No node hosts user " + userId));
-        var root = network.getStorageUserRoot(peer, userId);
         var peerNode = network.nodes.get(peer);
         var peerData = peerNode.users.get(userId);
         clock = Math.max(clock, peerNode.clock);
@@ -622,23 +630,24 @@ public class Node implements AutoCloseable {
         data.userKey = userKey;
         data.localName = localName;
         data.rootDirectoryGuid = peerData.rootDirectoryGuid.clone();
+        data.homeSyncUnitId = peerData.homeSyncUnitId;
         data.snapshotState = peerData.snapshotState.clone();
         data.operationTree.putAll(peerData.operationTree);
         data.stagingTree.putAll(peerData.stagingTree);
         data.stagingTree.putAll(peerData.localOperationTree);
         data.maxOperationClock.putAll(peerData.maxOperationClock);
-        var state = UserState.replayFromState(data.snapshotState, userId, data.allOperations().values());
-        data.fileSystem = state.fileSystem;
-        data.contacts = state.contacts;
+        data.clock = peerData.clock;
         data.activeNodeSet = peerData.activeNodeSet.copy();
         data.activeNodeSet.nodes.add(nodeKey);
         data.activeNodeSet.setVersion(nodeKey, nextClock());
-        root.shardListId = storage.store(Sync.ShardList.newBuilder().build());
-        root.dataRootBlockId = storage.store(state.toDataUserRoot(storage).toProto());
-        root.nodeNrMapId = storage.store(Sync.NodeNrMap.newBuilder().build());
-        data.rootId = storage.store(root.toProto());
         users.put(userId, data);
         ensureUserSyncUnit(data);
+        ensureHomeUnit(data);
+        data.guidMapper = new GuidMapper(dataStorage, unitRoots, data.fileUnitId(), 0);
+        var state = UserState.replayFromState(dataStorage, data.guidMapper, data.snapshotState, userId,
+                data.allOperations().values());
+        data.fileSystem = state.fileSystem;
+        data.contacts = state.contacts;
         var handle = new NodeUserHandle(this, data);
         handle.syncFrom(peer);
         peerData.activeNodeSet.nodes.add(nodeKey);
@@ -698,10 +707,13 @@ public class Node implements AutoCloseable {
         data.userKey = userKey;
         data.localName = localName;
         data.snapshotState = response.getSnapshotState().toByteArray();
-        var snapshot = UserState.from(data.snapshotState, userKey.publicKey());
-        data.rootDirectoryGuid = snapshot.fileSystem.rootId.clone();
-        data.fileSystem = snapshot.fileSystem;
-        data.contacts = snapshot.contacts;
+        if (response.getFileTreeEntriesCount() > 0)
+            data.snapshotState = UserState.snapshotWithFileTree(data.snapshotState,
+                    response.getFileTreeRootId().toByteArray(), response.getFileTreeStatus(),
+                    response.getFileTreeEntriesList());
+        data.rootDirectoryGuid = UserState.rootIdFromState(data.snapshotState);
+        if (!response.getHomeSyncUnitId().isEmpty())
+            data.homeSyncUnitId = SyncUnitId.fromBytes(response.getHomeSyncUnitId().toByteArray());
         for (var stored : response.getHistoryList()) {
             var id = new OperationId(stored.getLamportClock(), stored.getNodeHash().toByteArray());
             var payload = stored.getPayload().toByteArray();
@@ -713,21 +725,20 @@ public class Node implements AutoCloseable {
         }
         for (var entry : response.getMaxOperationClockList()) {
             data.maxOperationClock.put(entry.getNodeId(), entry.getClock());
+            data.clock = Math.max(data.clock, entry.getClock());
             clock = Math.max(clock, entry.getClock());
         }
         loadActiveNodeSet(response.getActiveNodeSet(), data.activeNodeSet);
         data.activeNodeSet.nodes.add(nodeKey);
         data.activeNodeSet.setVersion(nodeKey, nextClock());
-        var state = UserState.replayFromState(data.snapshotState, userKey.publicKey(), data.operationTree.values());
-        data.fileSystem = state.fileSystem;
-        data.contacts = state.contacts;
-        var storageRoot = new StorageUserRoot();
-        storageRoot.shardListId = storage.store(Sync.ShardList.newBuilder().build());
-        storageRoot.dataRootBlockId = storage.store(state.toDataUserRoot(storage).toProto());
-        storageRoot.nodeNrMapId = storage.store(Sync.NodeNrMap.newBuilder().build());
-        data.rootId = storage.store(storageRoot.toProto());
         users.put(data.userId(), data);
         ensureUserSyncUnit(data);
+        ensureHomeUnit(data);
+        data.guidMapper = new GuidMapper(dataStorage, unitRoots, data.fileUnitId(), 0);
+        var state = UserState.replayFromState(dataStorage, data.guidMapper, data.snapshotState,
+                userKey.publicKey(), data.operationTree.values());
+        data.fileSystem = state.fileSystem;
+        data.contacts = state.contacts;
         persistState();
         return new NodeUserHandle(this, data);
     }
@@ -742,16 +753,63 @@ public class Node implements AutoCloseable {
         persistState();
     }
 
+    public void setSharedFolderLabel(PubKey userId, SyncUnitId unitId, String label) {
+        var user = requireConfiguredUser(userId);
+        requireSyncUnitType(unitId, SyncUnitAuthorization.Type.SHARED_FOLDER);
+        setSharedFolderLabel(user, unitId, label);
+    }
+
+    private void setSharedFolderLabel(NodeUserData user, SyncUnitId unitId, String label) {
+        if (label == null || label.isBlank() || label.equals("home") || label.indexOf('/') >= 0
+                || label.indexOf('\0') >= 0)
+            throw new IllegalArgumentException("Invalid shared-folder label");
+        var operation = Sync.UserOperation.newBuilder()
+                .setKind(Sync.UserOperation.Kind.SET_SHARED_FOLDER_LABEL)
+                .setSyncUnitId(com.google.protobuf.ByteString.copyFrom(unitId.bytes()))
+                .setName(label)
+                .build();
+        recordLocalOperation(user, operation.toByteArray());
+        user.sharedFolderLabels.put(unitId.toString(), label);
+        persistState();
+    }
+
+    public record RootEntry(String label, SyncUnitId unitId, boolean home, boolean conflict) {
+    }
+
+    public List<RootEntry> listRootEntries(PubKey userId) {
+        var user = requireConfiguredUser(userId);
+        var result = new java.util.ArrayList<RootEntry>();
+        if (user.homeSyncUnitId != null)
+            result.add(new RootEntry("home", user.homeSyncUnitId, true, false));
+        var byLabel = new java.util.TreeMap<String, List<SyncUnitId>>();
+        user.sharedFolderLabels.forEach((unitHex, label) -> {
+            if (!user.participatingSyncUnitIds.contains(unitHex))
+                return;
+            byLabel.computeIfAbsent(label, ignored -> new java.util.ArrayList<>())
+                    .add(SyncUnitId.fromBytes(HexFormat.of().parseHex(unitHex)));
+        });
+        for (var entry : byLabel.entrySet()) {
+            entry.getValue().sort(java.util.Comparator.naturalOrder());
+            result.add(new RootEntry(entry.getKey(), entry.getValue().get(0), false,
+                    entry.getValue().size() > 1));
+        }
+        result.sort(java.util.Comparator.comparing(RootEntry::label));
+        return List.copyOf(result);
+    }
+
     public SyncUnitId createSyncUnit(PubKey creatorId, SyncUnitAuthorization.Type type) {
         if (type == SyncUnitAuthorization.Type.USER)
             throw new IllegalArgumentException("User SyncUnits are created with createNewUser");
         var creator = requireConfiguredUser(creatorId);
         SyncUnitId id;
         do {
-            id = SyncUnitId.create();
+            id = SyncUnitId.create(nodeHash, ++syncUnitCounter.value);
         } while (syncUnits.containsKey(id));
         var unit = new SyncUnitData(id, type, creatorId);
+        unit.activeNodeSet.nodes.add(nodeKey);
+        unit.activeNodeSet.setVersion(nodeKey, ++unit.clock);
         syncUnits.put(id, unit);
+        ensureUnitMapper(unit);
         recordSyncUnitParticipation(creator, id, true);
         return id;
     }
@@ -771,6 +829,7 @@ public class Node implements AutoCloseable {
     public List<SyncUnitStatus> listSyncUnits(PubKey userId) {
         var user = requireConfiguredUser(userId);
         return syncUnits.values().stream()
+                .filter(unit -> !unit.home)
                 .filter(unit -> user.participatingSyncUnitIds.contains(unit.id.toString())
                         || unit.authorization.pendingInvitations().containsKey(userId))
                 .map(unit -> new SyncUnitStatus(unit.id, unit.type, unit.authorization.members().get(userId),
@@ -1005,6 +1064,8 @@ public class Node implements AutoCloseable {
 
     public void inviteToSyncUnit(SyncUnitId id, PubKey actorId, PubKey inviteeId,
             SyncUnitAuthorization.Role role) {
+        if (requireSyncUnit(id).home)
+            throw new IllegalArgumentException("The home SyncUnit cannot be shared");
         appendSyncUnitOperation(id, actorId, SyncUnitAuthorization.Action.INVITE, inviteeId, role);
         for (var peer : List.copyOf(network.nodes.values()))
             if (peer != this && peer.users.containsKey(inviteeId))
@@ -1017,8 +1078,17 @@ public class Node implements AutoCloseable {
             throw new IllegalArgumentException("User has no pending invitation to this SyncUnit");
         appendSyncUnitOperation(id, inviteeId, SyncUnitAuthorization.Action.ACCEPT_INVITATION, inviteeId, null);
         var user = users.get(inviteeId);
-        if (user != null)
+        if (user != null) {
             recordSyncUnitParticipation(user, id, true);
+            for (var stored : user.inboxMessages.values()) {
+                if (stored.message.getInvitedSyncUnitId().equals(
+                        com.google.protobuf.ByteString.copyFrom(id.bytes()))
+                        && !stored.message.getSharedFolderLabel().isBlank()) {
+                    setSharedFolderLabel(user, id, stored.message.getSharedFolderLabel());
+                    break;
+                }
+            }
+        }
         persistState();
         for (var peer : List.copyOf(network.nodes.values())) {
             if (peer == this || !peer.users.containsKey(inviteeId))
@@ -1064,6 +1134,7 @@ public class Node implements AutoCloseable {
         var localUnit = requireSyncUnit(id);
         if (!localUnit.authorization.pendingInvitations().containsKey(inviteeId))
             throw new IllegalArgumentException("User has no pending invitation to this SyncUnit");
+        localUnit.clock = Math.max(localUnit.clock, maxSyncUnitClock(sourceUnit));
         clock = Math.max(clock, maxSyncUnitClock(sourceUnit));
         acceptSyncUnitInvitation(id, inviteeId);
         if (source != null)
@@ -1108,8 +1179,12 @@ public class Node implements AutoCloseable {
         var request = Sync.RemoteSyncRequest.newBuilder()
                 .setSyncUnitId(com.google.protobuf.ByteString.copyFrom(id.bytes()))
                 .setRequesterUserPublicKey(com.google.protobuf.ByteString.copyFrom(requesterId.bytes()));
-        if (update != null)
+        if (update != null) {
             request.setSyncUnitUpdate(persist(update));
+            for (var clock : maxOperationClocks(update).entrySet())
+                request.addFromClock(Sync.OperationClock.newBuilder()
+                        .setNodeId(clock.getKey()).setClock(clock.getValue()));
+        }
         var response = exchangeRemote(peerId, request.build());
         return new RemoteSyncUnitResult(response.getSyncUnitFound()
                 ? deserializeSyncUnit(response.getSyncUnit())
@@ -1127,7 +1202,12 @@ public class Node implements AutoCloseable {
 
     private void installSyncUnit(SyncUnitData source, boolean includeContent) {
         var copy = copySyncUnit(source, includeContent);
+        if (!copy.id.equals(SyncUnitId.forUser(copy.creator))) {
+            copy.activeNodeSet.nodes.add(nodeKey);
+            copy.activeNodeSet.setVersion(nodeKey, ++copy.clock);
+        }
         syncUnits.put(copy.id, copy);
+        ensureUnitMapper(copy);
         for (var user : users.values())
             if (copy.authorization.members().containsKey(user.userId()))
                 user.participatingSyncUnitIds.add(copy.id.toString());
@@ -1136,6 +1216,11 @@ public class Node implements AutoCloseable {
 
     private static SyncUnitData copySyncUnit(SyncUnitData source, boolean includeContent) {
         var copy = new SyncUnitData(source.id, source.type, source.creator);
+        copy.clock = source.clock;
+        copy.entityCounter = source.entityCounter;
+        copy.nextNodeId = source.nextNodeId;
+        if (!source.id.equals(SyncUnitId.forUser(source.creator)))
+            copy.activeNodeSet = source.activeNodeSet.copy();
         copy.authorizationOperations.addAll(source.authorizationOperations);
         copy.replayAuthorization();
         if (includeContent)
@@ -1175,8 +1260,19 @@ public class Node implements AutoCloseable {
                 throw new IllegalArgumentException("Conflicting content operations share an ID");
         }
         local.replayContent();
+        local.clock = Math.max(local.clock, incoming.clock);
+        var targetUnit = local;
+        if (!targetUnit.id.equals(SyncUnitId.forUser(targetUnit.creator)))
+            targetUnit.activeNodeSet.mergeFrom(incoming.activeNodeSet, nodeKey, () -> ++targetUnit.clock);
         clock = Math.max(clock, maxSyncUnitClock(incoming));
         installSyncUnit(local, true);
+    }
+
+    private static Map<String, Long> maxOperationClocks(SyncUnitData unit) {
+        var result = new TreeMap<String, Long>();
+        for (var operation : unit.contentOperations.values())
+            result.merge("c:" + HexFormat.of().formatHex(operation.nodeHash()), operation.lamportClock(), Math::max);
+        return result;
     }
 
     private static long maxSyncUnitClock(SyncUnitData unit) {
@@ -1215,8 +1311,39 @@ public class Node implements AutoCloseable {
     public byte[] readSharedFile(SyncUnitId id, PubKey readerId, String path) {
         var unit = requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
         requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
+        ensureSharedFolderMapper();
+        long root = unitRoots.get(SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, UnitRootStore.FILE_TREE);
+        if (root != 0) {
+            byte[] content = SharedFolderPersistence.readFile(dataStorage, sharedFolderMapper, root,
+                    id.toString(), validateSyncUnitKey(path));
+            if (content != null)
+                return content;
+        }
         byte[] content = unit.files.get(validateSyncUnitKey(path));
         return content == null ? null : content.clone();
+    }
+
+    public void forEachSharedFile(SyncUnitId id, PubKey readerId,
+            java.util.function.BiConsumer<String, Long> consumer) {
+        var unit = requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
+        requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
+        ensureSharedFolderMapper();
+        long root = unitRoots.get(SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, UnitRootStore.FILE_TREE);
+        if (root != 0) {
+            SharedFolderPersistence.forEachFile(dataStorage, sharedFolderMapper, root, id.toString(), consumer);
+            return;
+        }
+        unit.files.forEach((path, content) -> consumer.accept(path, (long) content.length));
+    }
+
+    public List<SharedFileInfo> listSharedFileInfos(SyncUnitId id, PubKey readerId) {
+        var result = new java.util.ArrayList<SharedFileInfo>();
+        forEachSharedFile(id, readerId, (path, size) -> result.add(new SharedFileInfo(path, size)));
+        result.sort(Comparator.comparing(SharedFileInfo::path));
+        return List.copyOf(result);
+    }
+
+    public record SharedFileInfo(String path, long size) {
     }
 
     public Map<String, byte[]> listSharedFiles(SyncUnitId id, PubKey readerId) {
@@ -1225,6 +1352,12 @@ public class Node implements AutoCloseable {
         var result = new TreeMap<String, byte[]>();
         unit.files.forEach((path, content) -> result.put(path, content.clone()));
         return java.util.Collections.unmodifiableMap(result);
+    }
+
+    private void ensureSharedFolderMapper() {
+        if (sharedFolderMapper == null)
+            sharedFolderMapper = new GuidMapper(dataStorage, unitRoots,
+                    SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, sharedFolderNextNodeId);
     }
 
     public void deleteSharedFile(SyncUnitId id, PubKey authorId, String path) {
@@ -1297,7 +1430,7 @@ public class Node implements AutoCloseable {
             case CHANNEL_MESSAGE -> SyncUnitAuthorization.Action.SEND_MESSAGE;
         };
         requireSyncUnitAccess(unit, authorId, action);
-        var operation = SyncUnitContentOperation.sign(id, nextClock(), nodeHash, author.userKey,
+        var operation = SyncUnitContentOperation.sign(id, ++unit.clock, nodeHash, author.userKey,
                 kind, key, payload);
         unit.contentOperations.put(new OperationId(operation.lamportClock(), operation.nodeHash()), operation);
         unit.replayContent();
@@ -1329,7 +1462,7 @@ public class Node implements AutoCloseable {
             SyncUnitAuthorization.Action action, PubKey subject, SyncUnitAuthorization.Role role) {
         var unit = requireSyncUnit(id);
         var actor = requireConfiguredUser(actorId);
-        var operation = SyncUnitAuthorization.Operation.sign(id, nextClock(), nodeHash, actor.userKey,
+        var operation = SyncUnitAuthorization.Operation.sign(id, ++unit.clock, nodeHash, actor.userKey,
                 action, subject, role);
         unit.authorizationOperations.add(operation);
         unit.replayAuthorization();
@@ -1356,9 +1489,38 @@ public class Node implements AutoCloseable {
         return unit;
     }
 
+    private void ensureHomeUnit(NodeUserData user) {
+        if (user.homeSyncUnitId == null) {
+            var id = SyncUnitId.create(nodeHash, ++syncUnitCounter.value);
+            user.homeSyncUnitId = id;
+        }
+        var id = user.homeSyncUnitId;
+        var unit = syncUnits.get(id);
+        if (unit == null) {
+            unit = new SyncUnitData(id, SyncUnitAuthorization.Type.SHARED_FOLDER, user.userId());
+            unit.home = true;
+            unit.activeNodeSet = user.activeNodeSet;
+            unit.clock = user.clock;
+            syncUnits.put(id, unit);
+        }
+        unit.home = true;
+        unit.activeNodeSet = user.activeNodeSet;
+        user.participatingSyncUnitIds.add(id.toString());
+    }
+
+    private void ensureUnitMapper(SyncUnitData unit) {
+        if (unit.type != SyncUnitAuthorization.Type.SHARED_FOLDER || unit.home || unit.guidMapper != null)
+            return;
+        unit.guidMapper = new GuidMapper(dataStorage, unitRoots, unit.id, unit.nextNodeId);
+    }
+
     private void ensureUserSyncUnit(NodeUserData user) {
         var id = user.syncUnitId();
-        syncUnits.putIfAbsent(id, new SyncUnitData(id, SyncUnitAuthorization.Type.USER, user.userId()));
+        var unit = syncUnits.putIfAbsent(id, new SyncUnitData(id, SyncUnitAuthorization.Type.USER, user.userId()));
+        if (unit != null) {
+            unit.clock = Math.max(unit.clock, user.clock);
+            unit.activeNodeSet = user.activeNodeSet;
+        }
         user.participatingSyncUnitIds.add(id.toString());
         applyParticipationOperations(user);
     }
@@ -1367,6 +1529,16 @@ public class Node implements AutoCloseable {
         for (var operation : user.allOperations().values()) {
             try {
                 var userOperation = Sync.UserOperation.parseFrom(operation.payload);
+                if (userOperation.getKind() == Sync.UserOperation.Kind.SET_SHARED_FOLDER_LABEL) {
+                    var unitIdBytes = userOperation.getSyncUnitId().toByteArray();
+                    if (unitIdBytes.length != 32 || userOperation.getName().isBlank())
+                        throw new IllegalArgumentException("Invalid shared-folder label operation");
+                    var label = userOperation.getName();
+                    if (label.equals("home"))
+                        throw new IllegalArgumentException("The label 'home' is reserved");
+                    user.sharedFolderLabels.put(SyncUnitId.fromBytes(unitIdBytes).toString(), label);
+                    continue;
+                }
                 if (userOperation.getKind() != Sync.UserOperation.Kind.PARTICIPATE_SYNC_UNIT
                         && userOperation.getKind() != Sync.UserOperation.Kind.LEAVE_SYNC_UNIT)
                     continue;
@@ -1512,7 +1684,10 @@ public class Node implements AutoCloseable {
                 var unit = syncUnits.get(unitId);
                 if (unit == null || unit.type == SyncUnitAuthorization.Type.USER)
                     continue;
+                boolean restrictToActiveNodes = unit.activeNodeSet.nodes.size() > 1;
                 for (PeerId remotePeerId : peers) {
+                    if (restrictToActiveNodes && !unit.activeNodeSet.nodes.contains(nodeKeyFor(remotePeerId)))
+                        continue;
                     Node localPeer = network.nodes.get(remotePeerId);
                     if (localPeer != null && !localPeer.syncUnits.containsKey(unitId))
                         continue;
@@ -1546,7 +1721,11 @@ public class Node implements AutoCloseable {
 
     void recordLocalOperation(NodeUserData data, byte[] payload) {
         requireUserUnitModification(data.userId());
-        var id = new OperationId(++clock, nodeHash);
+        var id = new OperationId(++data.clock, nodeHash);
+        clock = Math.max(clock, data.clock);
+        var userUnit = syncUnits.get(data.syncUnitId());
+        if (userUnit != null)
+            userUnit.clock = Math.max(userUnit.clock, data.clock);
         byte[] signature = data.userKey.sign(operationSigningBytes(id, payload));
         data.localOperationTree.put(id, new Operation(id, payload, signature));
         data.maxOperationClock.put(nodeKey, id.clock);
@@ -1572,9 +1751,9 @@ public class Node implements AutoCloseable {
         }
     }
 
-    byte[] nextEntityId() {
+    byte[] nextEntityId(NodeUserData user) {
         return ByteBuffer.allocate(nodeHash.length + Long.BYTES)
-                .put(nodeHash).putLong(++guidCounter).array();
+                .put(nodeHash).putLong(++user.entityCounter).array();
     }
 
     long nextClock() {
@@ -1589,6 +1768,143 @@ public class Node implements AutoCloseable {
         return HexFormat.of().formatHex(CryptoUtils.sha256(peerId.getBytes()));
     }
 
+    private void persistUserFileTrees() {
+        for (var user : users.values()) {
+            if (user.guidMapper == null)
+                user.guidMapper = new GuidMapper(dataStorage, unitRoots, user.fileUnitId(), user.nextNodeId);
+            unitRoots.put(user.fileUnitId(), UnitRootStore.FILE_TREE, user.fileSystem.rootOffset());
+            user.nextNodeId = user.guidMapper.nextNodeId();
+            user.guidMapper.flush();
+        }
+        if (sharedFolderMapper == null)
+            sharedFolderMapper = new GuidMapper(dataStorage, unitRoots,
+                    SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, sharedFolderNextNodeId);
+        var allFiles = new TreeMap<String, byte[]>();
+        for (var unit : syncUnits.values()) {
+            if (unit.type != SyncUnitAuthorization.Type.SHARED_FOLDER || unit.home)
+                continue;
+            unit.files.forEach((path, content) -> allFiles.put(unit.id.toString() + "/" + path, content));
+        }
+        SharedFolderPersistence.write(dataStorage, unitRoots, sharedFolderMapper, allFiles);
+        sharedFolderNextNodeId = sharedFolderMapper.nextNodeId();
+        sharedFolderMapper.flush();
+    }
+
+    private void loadSharedFolderFilesFromTree() {
+        if (sharedFolderMapper == null)
+            sharedFolderMapper = new GuidMapper(dataStorage, unitRoots,
+                    SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, sharedFolderNextNodeId);
+        long root = unitRoots.get(SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, UnitRootStore.FILE_TREE);
+        if (root == 0)
+            return;
+        var allFiles = SharedFolderPersistence.read(dataStorage, sharedFolderMapper, root);
+        for (var unit : syncUnits.values())
+            if (unit.type == SyncUnitAuthorization.Type.SHARED_FOLDER && !unit.home)
+                unit.files.clear();
+        allFiles.forEach((path, content) -> {
+            int separator = path.indexOf('/');
+            if (separator < 0)
+                return;
+            var unitId = SyncUnitId.fromBytes(HexFormat.of().parseHex(path.substring(0, separator)));
+            var unit = syncUnits.get(unitId);
+            if (unit != null)
+                unit.files.put(path.substring(separator + 1), content);
+        });
+    }
+
+
+
+    private static Sync.UserOperation parseUserOperation(Operation operation) {
+        try {
+            return Sync.UserOperation.parseFrom(operation.payload);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            throw new IllegalArgumentException("Invalid user operation payload", e);
+        }
+    }
+
+    private void persistUserOperationTrees() {
+        for (var user : users.values()) {
+            persistOperationTree(user.syncUnitId(), UnitRootStore.ACCEPTED_OPERATIONS, user.userOperationTree);
+            persistOperationTree(user.syncUnitId(), UnitRootStore.LOCAL_OPERATIONS, user.userLocalOperationTree);
+            persistOperationTree(user.syncUnitId(), UnitRootStore.STAGING_OPERATIONS, user.userStagingTree);
+            if (user.homeSyncUnitId != null) {
+                persistOperationTree(user.homeSyncUnitId, UnitRootStore.ACCEPTED_OPERATIONS,
+                        user.homeOperationTree);
+                persistOperationTree(user.homeSyncUnitId, UnitRootStore.LOCAL_OPERATIONS,
+                        user.homeLocalOperationTree);
+                persistOperationTree(user.homeSyncUnitId, UnitRootStore.STAGING_OPERATIONS,
+                        user.homeStagingTree);
+            }
+        }
+    }
+
+    private void persistOperationTree(SyncUnitId unitId, int kind, TreeMap<OperationId, Operation> operations) {
+        var tree = new OperationTree(dataStorage, unitRoots.get(unitId, kind));
+        for (var stored : tree.values()) {
+            if (!operations.containsKey(stored.id))
+                tree.remove(stored.id);
+        }
+        for (var operation : operations.values()) {
+            if (!tree.contains(operation.id))
+                tree.put(operation.id, operation);
+        }
+        unitRoots.put(unitId, kind, tree.rootOffset());
+    }
+
+    private void persistSyncUnitOperationTrees() {
+        for (var unit : syncUnits.values()) {
+            var authorization = new TreeMap<OperationId, Operation>();
+            for (var operation : unit.authorizationOperations) {
+                var id = new OperationId(operation.lamportClock(), operation.nodeHash());
+                authorization.put(id, new Operation(id, persistAuthOperation(operation).toByteArray(),
+                        operation.signature()));
+            }
+            persistOperationTree(unit.id, UnitRootStore.AUTHORIZATION_OPERATIONS, authorization);
+
+            var content = new TreeMap<OperationId, Operation>();
+            unit.contentOperations.forEach((id, operation) -> content.put(id,
+                    new Operation(id, persistContentOperation(operation).toByteArray(), operation.signature())));
+            persistOperationTree(unit.id, UnitRootStore.CONTENT_OPERATIONS, content);
+        }
+    }
+
+    private void loadSyncUnitOperationTrees(SyncUnitData unit) {
+        unit.authorizationOperations.clear();
+        var authorization = new OperationTree(dataStorage, unitRoots.get(unit.id, UnitRootStore.AUTHORIZATION_OPERATIONS));
+        for (var operation : authorization.values()) {
+            var stored = parseAuthOperation(operation.payload);
+            unit.authorizationOperations.add(stored);
+        }
+        unit.replayAuthorization();
+
+        unit.contentOperations.clear();
+        var content = new OperationTree(dataStorage, unitRoots.get(unit.id, UnitRootStore.CONTENT_OPERATIONS));
+        for (var operation : content.values()) {
+            var stored = parseContentOperation(operation.payload);
+            unit.contentOperations.put(new OperationId(stored.lamportClock(), stored.nodeHash()), stored);
+        }
+        unit.replayContent();
+    }
+
+    private void loadUserOperationTrees(NodeUserData user) {
+        var unitId = user.syncUnitId();
+        loadOperationTree(unitId, UnitRootStore.ACCEPTED_OPERATIONS, user.userOperationTree);
+        loadOperationTree(unitId, UnitRootStore.LOCAL_OPERATIONS, user.userLocalOperationTree);
+        loadOperationTree(unitId, UnitRootStore.STAGING_OPERATIONS, user.userStagingTree);
+        if (user.homeSyncUnitId != null) {
+            loadOperationTree(user.homeSyncUnitId, UnitRootStore.ACCEPTED_OPERATIONS, user.homeOperationTree);
+            loadOperationTree(user.homeSyncUnitId, UnitRootStore.LOCAL_OPERATIONS, user.homeLocalOperationTree);
+            loadOperationTree(user.homeSyncUnitId, UnitRootStore.STAGING_OPERATIONS, user.homeStagingTree);
+        }
+    }
+
+    private void loadOperationTree(SyncUnitId unitId, int kind, TreeMap<OperationId, Operation> target) {
+        target.clear();
+        var tree = new OperationTree(dataStorage, unitRoots.get(unitId, kind));
+        for (var operation : tree.values())
+            target.put(operation.id, operation);
+    }
+
     void persistState() {
         if (restoringState)
             return;
@@ -1596,17 +1912,23 @@ public class Node implements AutoCloseable {
                 .setPeerId(com.google.protobuf.ByteString.copyFrom(peerId.getBytes()))
                 .setPeerPrivateKey(com.google.protobuf.ByteString.copyFrom(peerPrivateKey.bytes()))
                 .setClock(clock)
-                .setGuidCounter(guidCounter);
+                .setGuidCounter(guidCounter)
+                .setSharedFolderNextNodeId(sharedFolderNextNodeId);
         for (var user : users.values()) {
             var storedUser = Sync.NodeUserState.newBuilder()
                     .setUserPrivateKey(com.google.protobuf.ByteString.copyFrom(user.userKey.bytes()))
                     .setLocalName(user.localName)
-                    .setRootId(user.rootId.toProto())
                     .setRootDirectoryGuid(com.google.protobuf.ByteString.copyFrom(user.rootDirectoryGuid))
-                    .setSnapshotState(com.google.protobuf.ByteString.copyFrom(user.snapshotState));
-            user.operationTree.values().forEach(op -> storedUser.addOperationTree(persist(op)));
-            user.localOperationTree.values().forEach(op -> storedUser.addLocalOperationTree(persist(op)));
-            user.stagingTree.values().forEach(op -> storedUser.addStagingTree(persist(op)));
+                    .setSnapshotState(com.google.protobuf.ByteString.copyFrom(user.snapshotState))
+                    .setNextNodeId(user.nextNodeId)
+                    .setClock(user.clock)
+                    .setEntityCounter(user.entityCounter)
+                    .setHomeSyncUnitId(user.homeSyncUnitId == null ? com.google.protobuf.ByteString.EMPTY
+                            : com.google.protobuf.ByteString.copyFrom(user.homeSyncUnitId.bytes()));
+            user.sharedFolderLabels.forEach((unitId, label) -> storedUser.addSharedFolderLabels(
+                    Sync.SharedFolderLabel.newBuilder()
+                            .setSyncUnitId(com.google.protobuf.ByteString.copyFrom(HexFormat.of().parseHex(unitId)))
+                            .setLabel(label)));
             user.maxOperationClock.forEach((source, value) -> storedUser.addMaxOperationClock(
                     Sync.OperationClock.newBuilder().setNodeId(source).setClock(value)));
             storedUser.setActiveNodeSet(persist(user.activeNodeSet));
@@ -1632,49 +1954,13 @@ public class Node implements AutoCloseable {
                             .setSignature(com.google.protobuf.ByteString.copyFrom(message.signature))));
             state.addUsers(storedUser);
         }
-        syncUnits.values().forEach(unit -> state.addSyncUnits(persist(unit)));
-        BlockId stateId = storage.store(state.build());
-        stateRoot.write(new DataStorage.ByteArrayBlock(stateId.bytes()));
-        storage.collectGarbage(collectReachableBlocks(stateId));
+        persistUserOperationTrees();
+        persistUserFileTrees();
+        persistSyncUnitOperationTrees();
+        syncUnits.values().forEach(unit -> state.addSyncUnits(persistMetadata(unit)));
+        storage.put(BlobStorage.NODE_STATE_ID, state.build());
+        unitRoots.flush();
         storage.commit();
-    }
-
-    private Set<BlockId> collectReachableBlocks(BlockId stateId) {
-        var reachable = new HashSet<BlockId>();
-        reachable.add(stateId);
-        for (NodeUserData user : users.values()) {
-            reachable.add(user.rootId);
-            var root = StorageUserRoot.from(storage.getBlock(user.rootId).orElseThrow());
-            reachable.add(root.shardListId);
-            reachable.add(root.nodeNrMapId);
-            try {
-                var shardList = Sync.ShardList.parseFrom(storage.getBlock(root.shardListId).orElseThrow());
-                for (var shardId : shardList.getShardIdsList()) {
-                    BlockId shardBlockId = BlockId.fromProto(shardId);
-                    if (!reachable.add(shardBlockId))
-                        continue;
-                    var shard = Sync.StorageShard.parseFrom(storage.getBlock(shardBlockId).orElseThrow());
-                    shard.getBlockIdsList().stream().map(BlockId::fromProto).forEach(reachable::add);
-                }
-                var dataRoot = DataUserRoot.from(storage.getBlock(root.dataRootBlockId).orElseThrow());
-                reachable.add(root.dataRootBlockId);
-                collectDirectoryBlocks(dataRoot.rootDirectoryId, reachable);
-            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                throw new IllegalStateException("Invalid block graph in node storage", e);
-            }
-        }
-        return reachable;
-    }
-
-    private void collectDirectoryBlocks(BlockId directoryId, Set<BlockId> reachable)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-        if (!reachable.add(directoryId))
-            return;
-        var directory = Sync.Directory.parseFrom(storage.getBlock(directoryId).orElseThrow());
-        for (var child : directory.getDirectoriesList())
-            collectDirectoryBlocks(BlockId.fromProto(child.getDirectoryId()), reachable);
-        directory.getFilesList().stream().map(entry -> BlockId.fromProto(entry.getDataBlockId()))
-                .forEach(reachable::add);
     }
 
     private static Sync.PersistedOperation persist(Operation operation) {
@@ -1686,16 +1972,127 @@ public class Node implements AutoCloseable {
                 .build();
     }
 
+    private static Sync.PersistedSyncUnit persistMetadata(SyncUnitData unit) {
+        return Sync.PersistedSyncUnit.newBuilder()
+                .setId(com.google.protobuf.ByteString.copyFrom(unit.id.bytes()))
+                .setType(unit.type.ordinal())
+                .setCreatorPublicKey(com.google.protobuf.ByteString.copyFrom(unit.creator.bytes()))
+                .setClock(unit.clock)
+                .setEntityCounter(unit.entityCounter)
+                .setActiveNodeSet(persist(unit.activeNodeSet))
+                .setHome(unit.home)
+                .setNextNodeId(unit.nextNodeId)
+                .build();
+    }
+
+    private static SyncUnitData deserializeSyncUnitMetadata(Sync.PersistedSyncUnit stored) {
+        if (stored.getType() < 0 || stored.getType() >= SyncUnitAuthorization.Type.values().length)
+            throw new IllegalStateException("Invalid persisted SyncUnit type");
+        var id = SyncUnitId.fromBytes(stored.getId().toByteArray());
+        var unit = new SyncUnitData(id, SyncUnitAuthorization.Type.values()[stored.getType()],
+                PubKey.from(stored.getCreatorPublicKey().toByteArray()));
+        unit.clock = stored.getClock();
+        unit.entityCounter = stored.getEntityCounter();
+        unit.home = stored.getHome();
+        unit.nextNodeId = stored.getNextNodeId();
+        loadActiveNodeSet(stored.getActiveNodeSet(), unit.activeNodeSet);
+        return unit;
+    }
+
+    private static Sync.PersistedSyncUnitAuthorizationOperation persistAuthOperation(
+            SyncUnitAuthorization.Operation operation) {
+        return Sync.PersistedSyncUnitAuthorizationOperation.newBuilder()
+                .setUnitId(com.google.protobuf.ByteString.copyFrom(operation.unitId().bytes()))
+                .setLamportClock(operation.lamportClock())
+                .setNodeHash(com.google.protobuf.ByteString.copyFrom(operation.nodeHash()))
+                .setAuthorPublicKey(com.google.protobuf.ByteString.copyFrom(operation.author().bytes()))
+                .setAction(operation.action().ordinal())
+                .setSubjectPublicKey(operation.subject() == null ? com.google.protobuf.ByteString.EMPTY
+                        : com.google.protobuf.ByteString.copyFrom(operation.subject().bytes()))
+                .setRole(operation.role() == null ? 0 : operation.role().ordinal() + 1)
+                .setSignature(com.google.protobuf.ByteString.copyFrom(operation.signature()))
+                .build();
+    }
+
+    private static SyncUnitAuthorization.Operation parseAuthOperation(byte[] payload) {
+        try {
+            var stored = Sync.PersistedSyncUnitAuthorizationOperation.parseFrom(payload);
+            int action = stored.getAction();
+            int role = stored.getRole();
+            if (action < 0 || action >= SyncUnitAuthorization.Action.values().length
+                    || role < 0 || role > SyncUnitAuthorization.Role.values().length)
+                throw new IllegalStateException("Invalid persisted SyncUnit authorization operation");
+            var subject = stored.getSubjectPublicKey().toByteArray();
+            return new SyncUnitAuthorization.Operation(
+                    SyncUnitId.fromBytes(stored.getUnitId().toByteArray()),
+                    stored.getLamportClock(), stored.getNodeHash().toByteArray(),
+                    PubKey.from(stored.getAuthorPublicKey().toByteArray()),
+                    SyncUnitAuthorization.Action.values()[action],
+                    subject.length == 0 ? null : PubKey.from(subject),
+                    role == 0 ? null : SyncUnitAuthorization.Role.values()[role - 1],
+                    stored.getSignature().toByteArray());
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            throw new IllegalStateException("Invalid persisted SyncUnit authorization operation", e);
+        }
+    }
+
+    private static Sync.PersistedSyncUnitContentOperation persistContentOperation(
+            SyncUnitContentOperation operation) {
+        return Sync.PersistedSyncUnitContentOperation.newBuilder()
+                .setUnitId(com.google.protobuf.ByteString.copyFrom(operation.unitId().bytes()))
+                .setLamportClock(operation.lamportClock())
+                .setNodeHash(com.google.protobuf.ByteString.copyFrom(operation.nodeHash()))
+                .setAuthorPublicKey(com.google.protobuf.ByteString.copyFrom(operation.author().bytes()))
+                .setKind(operation.kind().ordinal())
+                .setKey(operation.key())
+                .setPayload(com.google.protobuf.ByteString.copyFrom(operation.payload()))
+                .setSignature(com.google.protobuf.ByteString.copyFrom(operation.signature()))
+                .build();
+    }
+
+    private static SyncUnitContentOperation parseContentOperation(byte[] payload) {
+        try {
+            var stored = Sync.PersistedSyncUnitContentOperation.parseFrom(payload);
+            int kind = stored.getKind();
+            if (kind < 0 || kind >= SyncUnitContentOperation.Kind.values().length)
+                throw new IllegalStateException("Invalid persisted SyncUnit content operation");
+            return new SyncUnitContentOperation(
+                    SyncUnitId.fromBytes(stored.getUnitId().toByteArray()),
+                    stored.getLamportClock(), stored.getNodeHash().toByteArray(),
+                    PubKey.from(stored.getAuthorPublicKey().toByteArray()),
+                    SyncUnitContentOperation.Kind.values()[kind], stored.getKey(),
+                    stored.getPayload().toByteArray(), stored.getSignature().toByteArray());
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            throw new IllegalStateException("Invalid persisted SyncUnit content operation", e);
+        }
+    }
+
     private static Sync.PersistedSyncUnit persist(SyncUnitData unit) {
         return persist(unit, true);
     }
 
     private static Sync.PersistedSyncUnit persist(SyncUnitData unit, boolean includeContent) {
+        return persist(unit, includeContent, Map.of());
+    }
+
+    private static Sync.PersistedSyncUnit persist(SyncUnitData unit, boolean includeContent,
+            Map<String, Long> fromClock) {
+        return persist(unit, includeContent, fromClock, Integer.MAX_VALUE);
+    }
+
+    private static Sync.PersistedSyncUnit persist(SyncUnitData unit, boolean includeContent,
+            Map<String, Long> fromClock, int contentByteBudget) {
         var result = Sync.PersistedSyncUnit.newBuilder()
                 .setId(com.google.protobuf.ByteString.copyFrom(unit.id.bytes()))
                 .setType(unit.type.ordinal())
-                .setCreatorPublicKey(com.google.protobuf.ByteString.copyFrom(unit.creator.bytes()));
-        unit.authorizationOperations.forEach(operation -> result.addAuthorizationOperations(
+                .setCreatorPublicKey(com.google.protobuf.ByteString.copyFrom(unit.creator.bytes()))
+                .setClock(unit.clock)
+                .setEntityCounter(unit.entityCounter)
+                .setActiveNodeSet(persist(unit.activeNodeSet))
+                .setHome(unit.home)
+                .setNextNodeId(unit.nextNodeId);
+        unit.authorizationOperations.forEach(operation -> {
+            result.addAuthorizationOperations(
                 Sync.PersistedSyncUnitAuthorizationOperation.newBuilder()
                         .setUnitId(com.google.protobuf.ByteString.copyFrom(operation.unitId().bytes()))
                         .setLamportClock(operation.lamportClock())
@@ -1705,9 +2102,21 @@ public class Node implements AutoCloseable {
                         .setSubjectPublicKey(operation.subject() == null ? com.google.protobuf.ByteString.EMPTY
                                 : com.google.protobuf.ByteString.copyFrom(operation.subject().bytes()))
                         .setRole(operation.role() == null ? 0 : operation.role().ordinal() + 1)
-                        .setSignature(com.google.protobuf.ByteString.copyFrom(operation.signature()))));
-        if (includeContent)
-            unit.contentOperations.values().forEach(operation -> result.addContentOperations(
+                        .setSignature(com.google.protobuf.ByteString.copyFrom(operation.signature())));
+        });
+        if (includeContent) {
+            int[] remainingBytes = { contentByteBudget };
+            boolean[] sentAny = { false };
+            unit.contentOperations.values().forEach(operation -> {
+                if (operation.lamportClock() <= fromClock.getOrDefault(
+                        "c:" + HexFormat.of().formatHex(operation.nodeHash()), 0L))
+                    return;
+                int size = operation.payload().length + operation.key().length();
+                if (sentAny[0] && size > remainingBytes[0])
+                    return;
+                remainingBytes[0] -= size;
+                sentAny[0] = true;
+                result.addContentOperations(
                     Sync.PersistedSyncUnitContentOperation.newBuilder()
                             .setUnitId(com.google.protobuf.ByteString.copyFrom(operation.unitId().bytes()))
                             .setLamportClock(operation.lamportClock())
@@ -1716,7 +2125,9 @@ public class Node implements AutoCloseable {
                             .setKind(operation.kind().ordinal())
                             .setKey(operation.key())
                             .setPayload(com.google.protobuf.ByteString.copyFrom(operation.payload()))
-                            .setSignature(com.google.protobuf.ByteString.copyFrom(operation.signature()))));
+                            .setSignature(com.google.protobuf.ByteString.copyFrom(operation.signature())));
+            });
+        }
         return result.build();
     }
 
@@ -1752,6 +2163,7 @@ public class Node implements AutoCloseable {
         nodeKey = HexFormat.of().formatHex(nodeHash);
         clock = state.getClock();
         guidCounter = state.getGuidCounter();
+        sharedFolderNextNodeId = state.getSharedFolderNextNodeId();
         network.nodes.put(peerId, this);
         restoringState = true;
         try {
@@ -1762,12 +2174,16 @@ public class Node implements AutoCloseable {
                 user.userKey = com.github.ruediste.p2psync.libp2p.crypto.Marshaling.unmarshalPrivateKey(
                         storedUser.getUserPrivateKey().toByteArray());
                 user.localName = storedUser.getLocalName();
-                user.rootId = BlockId.fromProto(storedUser.getRootId());
                 user.rootDirectoryGuid = storedUser.getRootDirectoryGuid().toByteArray();
                 user.snapshotState = storedUser.getSnapshotState().toByteArray();
-                loadOperations(storedUser.getOperationTreeList(), user.operationTree);
-                loadOperations(storedUser.getLocalOperationTreeList(), user.localOperationTree);
-                loadOperations(storedUser.getStagingTreeList(), user.stagingTree);
+                if (!storedUser.getHomeSyncUnitId().isEmpty())
+                    user.homeSyncUnitId = SyncUnitId.fromBytes(storedUser.getHomeSyncUnitId().toByteArray());
+                for (var label : storedUser.getSharedFolderLabelsList())
+                    user.sharedFolderLabels.put(
+                            SyncUnitId.fromBytes(label.getSyncUnitId().toByteArray()).toString(), label.getLabel());
+                user.nextNodeId = storedUser.getNextNodeId();
+                user.clock = storedUser.getClock();
+                user.entityCounter = storedUser.getEntityCounter();
                 for (var entry : storedUser.getMaxOperationClockList())
                     user.maxOperationClock.put(entry.getNodeId(), entry.getClock());
                 loadActiveNodeSet(storedUser.getActiveNodeSet(), user.activeNodeSet);
@@ -1783,15 +2199,30 @@ public class Node implements AutoCloseable {
                     if (user.inboxMessages.putIfAbsent(message.messageId, message) != null)
                         throw new IllegalStateException("Duplicate persisted inbox message ID");
                 }
-                var snapshot = UserState.from(user.snapshotState, user.userId());
-                user.fileSystem = snapshot.fileSystem;
-                user.contacts = snapshot.contacts;
+                user.contacts = UserState.contactsFromState(user.snapshotState, user.userId());
                 users.put(user.userId(), user);
                 ensureUserSyncUnit(user);
+                ensureHomeUnit(user);
+                user.guidMapper = new GuidMapper(dataStorage, unitRoots, user.fileUnitId(), user.nextNodeId);
+                loadUserOperationTrees(user);
+                long fileTreeRoot = unitRoots.get(user.fileUnitId(), UnitRootStore.FILE_TREE);
+                if (fileTreeRoot != 0)
+                    user.fileSystem = new UserFileTree(dataStorage, user.guidMapper,
+                            user.rootDirectoryGuid, fileTreeRoot);
+                else
+                    user.fileSystem = UserFileTree.replayFromState(dataStorage, user.guidMapper,
+                            user.snapshotState, user.allOperations().values());
                 rebuildInboxMessages(user);
-                if (!user.allOperations().isEmpty())
-                    new NodeUserHandle(this, user).rebuildCurrentState();
+                if (!user.allOperations().isEmpty()) {
+                    var replayed = UserState.contactsFromState(user.snapshotState, user.userId());
+                    for (var operation : user.allOperations().values())
+                        replayed.apply(parseUserOperation(operation));
+                    user.contacts = replayed;
+                }
             }
+            sharedFolderMapper = new GuidMapper(dataStorage, unitRoots,
+                    SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, sharedFolderNextNodeId);
+            loadSharedFolderFilesFromTree();
         } finally {
             restoringState = false;
         }
@@ -1808,9 +2239,11 @@ public class Node implements AutoCloseable {
     }
 
     private void loadSyncUnit(Sync.PersistedSyncUnit stored) {
-        var unit = deserializeSyncUnit(stored);
+        var unit = deserializeSyncUnitMetadata(stored);
         if (syncUnits.putIfAbsent(unit.id, unit) != null)
             throw new IllegalStateException("Duplicate persisted SyncUnit ID");
+        loadSyncUnitOperationTrees(unit);
+        ensureUnitMapper(unit);
     }
 
     private static SyncUnitData deserializeSyncUnit(Sync.PersistedSyncUnit stored) {
@@ -1819,6 +2252,11 @@ public class Node implements AutoCloseable {
         var id = SyncUnitId.fromBytes(stored.getId().toByteArray());
         var unit = new SyncUnitData(id, SyncUnitAuthorization.Type.values()[stored.getType()],
                 PubKey.from(stored.getCreatorPublicKey().toByteArray()));
+        unit.clock = stored.getClock();
+        unit.entityCounter = stored.getEntityCounter();
+        unit.home = stored.getHome();
+        unit.nextNodeId = stored.getNextNodeId();
+        loadActiveNodeSet(stored.getActiveNodeSet(), unit.activeNodeSet);
         for (var storedOperation : stored.getAuthorizationOperationsList()) {
             int action = storedOperation.getAction();
             int role = storedOperation.getRole();

@@ -63,7 +63,7 @@ Local changes are signed operations ordered by Lamport clock and author identity
 Incoming operations are verified and authorized before reconciliation replays
 them in the unit's operation order. A stable snapshot can replace the prefix of
 the main log acknowledged by every active node participating in that unit.
-`doc/storage-sync.md` describes the transfer, membership, snapshot, and conflict
+`doc/persistence.md` describes the transfer, membership, snapshot, and conflict
 rules.
 
 ## Node Interface

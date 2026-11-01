@@ -302,6 +302,16 @@ public class DataStorage implements Closeable {
 
     }
 
+    public RootLongHandle getRootLongHandle(int id) {
+        if (id < 0 || id > 0xFFFF)
+            throw new IllegalArgumentException("RootLongHandle id must be an unsigned 16-bit integer");
+        if (rootLongHandles.containsKey(id))
+            throw new IllegalStateException("RootLongHandle with id " + id + " already exists");
+        var handle = new RootLongHandle(id);
+        rootLongHandles.put(id, handle);
+        return handle;
+    }
+
     public <T extends BlockInstance<T>> RootRefHandle<T> getRootRefHandle(int id, Area area, BlockType<T> blockType) {
         if (id < 0 || id > 0xFFFF)
             throw new IllegalArgumentException("RootRefHandle id must be an unsigned 16-bit integer");

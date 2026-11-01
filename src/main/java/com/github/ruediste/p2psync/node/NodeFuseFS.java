@@ -112,17 +112,24 @@ public class NodeFuseFS extends FuseStubFS {
             if (offset < 0)
                 throw new FsError(ErrorCodes.EINVAL());
             UserPath target = resolve(path);
-            List<String> names = new ArrayList<>(List.of(".", ".."));
+            long[] index = { 0 };
+            boolean[] stopped = { false };
+            java.util.function.Consumer<String> emit = name -> {
+                long current = index[0]++;
+                if (stopped[0] || current < offset)
+                    return;
+                if (filler.apply(buffer, name, null, current + 1) != 0)
+                    stopped[0] = true;
+            };
+            emit.accept(".");
+            emit.accept("..");
             if (target.user() == null)
-                node.listUsers().forEach(user -> names.add(user.localName()));
+                node.listUsers().forEach(user -> emit.accept(user.localName()));
             else {
                 if (!target.user().isDirectory(target.path()))
                     throw new FsError(ErrorCodes.ENOTDIR());
-                target.user().listDirectory(target.path()).forEach(entry -> names.add(entry.name()));
+                target.user().forEachDirectory(target.path(), entry -> emit.accept(entry.name()));
             }
-            for (long index = offset; index < names.size(); index++)
-                if (filler.apply(buffer, names.get((int) index), null, index + 1) != 0)
-                    break;
             return 0;
         });
     }

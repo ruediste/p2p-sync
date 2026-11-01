@@ -315,7 +315,7 @@ final class UnitsPanel extends JPanel {
         FileTableModel model = new FileTableModel();
         JTable table = new JTable(model);
         styleInnerTable(table);
-        model.setFiles(node.listSharedFiles(unit.id(), user.userId()));
+        model.setInfos(node.listSharedFileInfos(unit.id(), user.userId()));
         JScrollPane scroll = Theme.scroll(table);
         scroll.setPreferredSize(new Dimension(500, 180));
         scroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
@@ -354,7 +354,7 @@ final class UnitsPanel extends JPanel {
                 node.putSharedFile(unit.id(), user.userId(), path, Files.readAllBytes(file));
                 localPath.setText("");
                 sharedPath.setText("");
-                model.setFiles(node.listSharedFiles(unit.id(), user.userId()));
+                model.setInfos(node.listSharedFileInfos(unit.id(), user.userId()));
                 status.accept("Uploaded " + path);
             } catch (Exception error) {
                 status.accept("Could not upload file: " + error.getMessage());
@@ -419,7 +419,7 @@ final class UnitsPanel extends JPanel {
             }
             try {
                 node.deleteSharedFile(unit.id(), user.userId(), model.paths.get(table.convertRowIndexToModel(row)));
-                model.setFiles(node.listSharedFiles(unit.id(), user.userId()));
+                model.setInfos(node.listSharedFileInfos(unit.id(), user.userId()));
             } catch (RuntimeException error) {
                 status.accept("Could not delete file: " + error.getMessage());
             }
@@ -684,18 +684,18 @@ final class UnitsPanel extends JPanel {
 
     private static final class FileTableModel extends AbstractTableModel {
         private static final String[] COLUMNS = { "Path", "Size" };
-        private List<String> paths = List.of();
-        private Map<String, byte[]> files = Map.of();
+        private List<Node.SharedFileInfo> files = List.of();
+        List<String> paths = List.of();
 
-        void setFiles(Map<String, byte[]> files) {
+        void setInfos(List<Node.SharedFileInfo> files) {
             this.files = files;
-            paths = List.copyOf(files.keySet());
+            paths = files.stream().map(Node.SharedFileInfo::path).toList();
             fireTableDataChanged();
         }
 
         @Override
         public int getRowCount() {
-            return paths.size();
+            return files.size();
         }
 
         @Override
@@ -710,8 +710,8 @@ final class UnitsPanel extends JPanel {
 
         @Override
         public Object getValueAt(int row, int column) {
-            String path = paths.get(row);
-            return column == 0 ? path : files.get(path).length;
+            var file = files.get(row);
+            return column == 0 ? file.path() : file.size();
         }
     }
 

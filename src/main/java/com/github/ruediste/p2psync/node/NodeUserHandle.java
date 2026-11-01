@@ -27,14 +27,14 @@ public class NodeUserHandle {
     }
 
     public void modify(Consumer<DataUserRoot> action) {
-        var root = StorageUserRoot.from(this.node.network.getBlock(data.rootId));
-        var dataRoot = DataUserRoot.from(this.node.network.getBlock(root.dataRootBlockId));
+        var dataRoot = currentView();
         String previousStatus = dataRoot.userStatusMessage;
         byte[] previousRootId = dataRoot.rootDirectoryGuid.clone();
         action.accept(dataRoot);
         if (!java.util.Arrays.equals(previousRootId, dataRoot.rootDirectoryGuid))
             throw new IllegalArgumentException("The root directory identity is managed by the filesystem API");
         if (!java.util.Objects.equals(previousStatus, dataRoot.userStatusMessage)) {
+            data.fileSystem.statusMessage = dataRoot.userStatusMessage;
             var operation = Sync.UserOperation.newBuilder()
                     .setKind(Sync.UserOperation.Kind.SET_STATUS)
                     .setStatusMessage(dataRoot.userStatusMessage)
@@ -44,9 +44,15 @@ public class NodeUserHandle {
     }
 
     public <T> T read(Function<DataUserRoot, T> action) {
-        var root = StorageUserRoot.from(this.node.network.getBlock(data.rootId));
-        var dataRoot = DataUserRoot.from(this.node.network.getBlock(root.dataRootBlockId));
-        return action.apply(dataRoot);
+        return action.apply(currentView());
+    }
+
+    private DataUserRoot currentView() {
+        var result = new DataUserRoot();
+        result.userStatusMessage = data.fileSystem.statusMessage;
+        result.rootDirectoryGuid = data.rootDirectoryGuid.clone();
+        result.contacts = data.contacts.list();
+        return result;
     }
 
     public String sendMessage(PubKey recipientUserId, Sync.UserMessage.Type type, String subject, String body,
@@ -106,6 +112,22 @@ public class NodeUserHandle {
         return sendMessage(recipientUserId, Sync.UserMessage.Type.MAIL, subject, body, attachments, null);
     }
 
+    public void forEachSharedFile(SyncUnitId unitId, java.util.function.BiConsumer<String, Long> consumer) {
+        node.forEachSharedFile(unitId, data.userId(), consumer);
+    }
+
+    public List<Node.SharedFileInfo> listSharedFileInfos(SyncUnitId unitId) {
+        return node.listSharedFileInfos(unitId, data.userId());
+    }
+
+    public void setSharedFolderLabel(SyncUnitId unitId, String label) {
+        node.setSharedFolderLabel(data.userId(), unitId, label);
+    }
+
+    public List<Node.RootEntry> listRoot() {
+        return node.listRootEntries(data.userId());
+    }
+
     public List<Contact> listContacts() {
         return data.contacts.list();
     }
@@ -126,7 +148,7 @@ public class NodeUserHandle {
     public Contact createContact(PubKey userId, String firstName, String lastName, String email, String phone,
             String notes) {
         validateContactUserId(userId, null);
-        Contact contact = new Contact(HexFormat.of().formatHex(node.nextEntityId()), userId, trim(firstName),
+        Contact contact = new Contact(HexFormat.of().formatHex(node.nextEntityId(data)), userId, trim(firstName),
                 trim(lastName), trim(email), trim(phone), trim(notes));
         if (contact.isEmpty())
             throw new IllegalArgumentException("A contact needs at least one field");
@@ -226,9 +248,11 @@ public class NodeUserHandle {
     private void recordOperations(List<Sync.UserOperation> operations) {
         if (operations.isEmpty())
             return;
-        for (var operation : operations)
+        for (var operation : operations) {
+            data.fileSystem.apply(operation);
+            data.contacts.apply(operation);
             node.recordLocalOperation(data, operation.toByteArray());
-        rebuildCurrentState();
+        }
     }
 
     public void syncFrom(PeerId otherId) {
@@ -312,8 +336,15 @@ public class NodeUserHandle {
     }
 
     public java.util.List<DirectoryEntry> listDirectory(String path) {
-        return data.fileSystem.listDirectory(path).stream()
-                .map(entry -> new DirectoryEntry(entry.name(), entry.directory())).toList();
+        var result = new java.util.ArrayList<DirectoryEntry>();
+        forEachDirectory(path, result::add);
+        return result;
+    }
+
+    /** Streams directory entries to the consumer without materializing the list. */
+    public void forEachDirectory(String path, java.util.function.Consumer<DirectoryEntry> consumer) {
+        data.fileSystem.forEachDirectory(path,
+                entry -> consumer.accept(new DirectoryEntry(entry.name(), entry.directory())));
     }
 
     public void createDirectory(String path) {
@@ -322,7 +353,7 @@ public class NodeUserHandle {
         data.fileSystem.requireAvailableName(parentId, name, null);
         recordOperation(Sync.UserOperation.newBuilder()
                 .setKind(Sync.UserOperation.Kind.CREATE_DIRECTORY)
-                .setEntityId(com.google.protobuf.ByteString.copyFrom(node.nextEntityId()))
+                .setEntityId(com.google.protobuf.ByteString.copyFrom(node.nextEntityId(data)))
                 .setParentId(com.google.protobuf.ByteString.copyFrom(java.util.HexFormat.of().parseHex(parentId)))
                 .setName(name)
                 .build());
@@ -334,7 +365,7 @@ public class NodeUserHandle {
         data.fileSystem.requireAvailableName(parentId, name, null);
         recordOperation(Sync.UserOperation.newBuilder()
                 .setKind(Sync.UserOperation.Kind.CREATE_FILE)
-                .setEntityId(com.google.protobuf.ByteString.copyFrom(node.nextEntityId()))
+                .setEntityId(com.google.protobuf.ByteString.copyFrom(node.nextEntityId(data)))
                 .setParentId(com.google.protobuf.ByteString.copyFrom(java.util.HexFormat.of().parseHex(parentId)))
                 .setName(name)
                 .build());
@@ -416,8 +447,9 @@ public class NodeUserHandle {
     }
 
     private void recordOperation(Sync.UserOperation operation) {
+        data.fileSystem.apply(operation);
+        data.contacts.apply(operation);
         node.recordLocalOperation(data, operation.toByteArray());
-        rebuildCurrentState();
     }
 
     public void startLeaving(PeerId leavingPeerId) {
@@ -437,10 +469,7 @@ public class NodeUserHandle {
         if (data.stagingTree.isEmpty() && data.localOperationTree.isEmpty())
             return;
         var merged = data.allOperations();
-        var state = UserState.replayFromState(data.snapshotState, data.userId(), merged.values());
-        var root = StorageUserRoot.from(node.network.getBlock(data.rootId));
-        root.dataRootBlockId = node.storage.store(state.toDataUserRoot(node.storage).toProto());
-        data.rootId = node.storage.store(root.toProto());
+        var state = UserState.replayFromState(node.dataStorage, data.guidMapper, data.snapshotState, data.userId(), merged.values());
         data.fileSystem = state.fileSystem;
         data.contacts = state.contacts;
         data.operationTree.putAll(data.localOperationTree);
@@ -453,10 +482,7 @@ public class NodeUserHandle {
     }
 
     void rebuildCurrentState() {
-        var state = UserState.replayFromState(data.snapshotState, data.userId(), data.allOperations().values());
-        var root = StorageUserRoot.from(node.network.getBlock(data.rootId));
-        root.dataRootBlockId = node.storage.store(state.toDataUserRoot(node.storage).toProto());
-        data.rootId = node.storage.store(root.toProto());
+        var state = UserState.replayFromState(node.dataStorage, data.guidMapper, data.snapshotState, data.userId(), data.allOperations().values());
         data.fileSystem = state.fileSystem;
         data.contacts = state.contacts;
         node.persistState();
@@ -486,7 +512,7 @@ public class NodeUserHandle {
         }
         if (removable.isEmpty())
             return false;
-        var snapshot = UserState.replayFromState(data.snapshotState, data.userId(), removable);
+        var snapshot = UserState.replayFromState(node.dataStorage, data.guidMapper, data.snapshotState, data.userId(), removable);
         data.snapshotState = snapshot.serializeState();
         removable.forEach(operation -> data.operationTree.remove(operation.id));
         rebuildCurrentState();

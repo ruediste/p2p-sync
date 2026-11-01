@@ -34,9 +34,9 @@ mvn compile org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
 ```
 
 The mount directory is optional; when omitted, a sibling directory is created.
-The node stores its state, operation histories, and content-addressed blocks in
-`node.db` inside the data directory. Node storage is not password-locked; protect
-`node.db` with filesystem permissions. Run one process per node-data directory.
+The node stores its state, per-SyncUnit operation B-trees, GUID mappings, and
+`FileTree` file data in `node.db` inside the data directory. Node storage is not
+password-locked; protect `node.db` with filesystem permissions. Run one process per node-data directory.
 The main window remains available when the desktop environment has no system tray.
 The tray uses Java AWT and requires legacy X11 tray support. On XFCE, add the
 `Status Tray Plugin` (or `Notification Area` on older versions) to the panel
@@ -94,7 +94,7 @@ Runs the fast unit tests (excludes integration tests). Takes roughly 10 seconds.
 
 ### Integration tests
 
-Integration tests are classes named `*IT.java` (currently the slow mDNS loopback tests: `MDnsDiscoveryIT`, `MDnsWireUpIT`). They need working multicast networking and rely on JmDNS's multi-second probe/announce state machine, so they are not part of the default test run.
+Integration tests are classes named `*IT.java` or tests tagged `integration` (currently the slow mDNS loopback tests and the remote libp2p synchronization test). They need working networking; the mDNS tests additionally need multicast and rely on JmDNS's multi-second probe/announce state machine, so they are not part of the default test run.
 
 Run them with the `it` profile:
 
