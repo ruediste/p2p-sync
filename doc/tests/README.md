@@ -40,6 +40,13 @@ interpreting a result.
 - Node storage is not encrypted at rest. Use disposable test users, test data,
   and properly protected database files.
 
+## General Instructions for Scripted Execution
+- Take one screenshot of each screen encountered
+- Avoid repeatedly taking screenshots of the same screen, when no significant changes are present
+- If a screen shows new data (such a an empty table now containing rows), take a separate screenshot of the changed state
+- Write findings into `TODO.md`
+- After updating `TODO.md`, inspect the screenshots and report findings in `TODO.md` as well
+
 ## Scripted Two-Node Setup With SwingDrive
 
 Most synchronization tests need two nodes that already share a user. The
