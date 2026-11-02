@@ -409,15 +409,13 @@ public class FileTree {
 
     private void writeData(ShortGuid guid, byte[] content) {
         int inlineThreshold = storage.infoBlock.getInlineDataThreshold();
-        if (content.length <= inlineThreshold) {
-            // write content inline
-            for (int offset = 0; offset < content.length; offset += INLINE_ENTRY_LIMIT) {
-                int length = Math.min(INLINE_ENTRY_LIMIT, content.length - offset);
-                tree.put(key(guid, EntryType.INLINE_DATA, offset),
-                        Arrays.copyOfRange(content, offset, offset + length));
-            }
-        } else
-            writeExtentBlocks(guid, 0, blockCount(content.length), content);
+        if (content.length > inlineThreshold)
+            throw new IllegalArgumentException("Inline file data exceeds the inline threshold");
+        for (int offset = 0; offset < content.length; offset += INLINE_ENTRY_LIMIT) {
+            int length = Math.min(INLINE_ENTRY_LIMIT, content.length - offset);
+            tree.put(key(guid, EntryType.INLINE_DATA, offset),
+                    Arrays.copyOfRange(content, offset, offset + length));
+        }
     }
 
     private void truncateInlineData(ShortGuid guid, long newSize) {
@@ -468,9 +466,12 @@ public class FileTree {
 
     private void writeExtentBlocks(ShortGuid guid, long firstBlock, long endBlock, byte[] prefix) {
         int blockSize = storage.blockSize(DataStorage.Area.DATA);
-        int offsetsPerEntry = Math.max(1, (storage.blockSize(DataStorage.Area.META) - 64) / Long.BYTES);
+        int metaBlockSize = storage.blockSize(DataStorage.Area.META);
+        int maxValueSize = BTree.maxLeafValueSize(metaBlockSize, KEY_SIZE);
+        if (maxValueSize < Long.BYTES)
+            throw new IllegalStateException("META block is too small for extent entries");
+        int offsetsPerEntry = maxValueSize / Long.BYTES;
         List<Long> offsets = new ArrayList<>(offsetsPerEntry);
-        // Remove children first so no directory entry can outlive its target.
         long entryStart = firstBlock * blockSize;
         // Batch consecutive DATA block offsets into extent values sized for META
         // blocks.
@@ -637,8 +638,9 @@ public class FileTree {
                 break;
             }
         }
-        if (indexKey != null)
-            tree.remove(indexKey);
+        if (indexKey == null)
+            throw new IllegalStateException("Directory index entry not found: " + entry.name());
+        tree.remove(indexKey);
         touchDirectory(parentId);
     }
 
@@ -672,9 +674,12 @@ public class FileTree {
 
     private boolean isDescendant(ShortGuid candidate, ShortGuid ancestor) {
         ShortGuid current = copyGuid(candidate);
+        java.util.Set<GuidKey> visited = new java.util.HashSet<>();
         while (true) {
             if (sameGuid(current, ancestor))
                 return true;
+            if (!visited.add(new GuidKey(current.nodeId, current.counter)))
+                throw new IllegalStateException("Directory parent cycle detected at " + formatGuid(current));
             byte[] header = getHeader(current, EntryType.DIR_HEADER);
             if (header == null)
                 return false;
@@ -763,8 +768,11 @@ public class FileTree {
         for (BTree.Entry<byte[], byte[]> entry : spill) {
             if (startsWith(entry.key, hash)) {
                 int existing = ByteBuffer.wrap(entry.key, 32, Integer.BYTES).order(ByteOrder.BIG_ENDIAN).getInt();
-                if (Integer.compareUnsigned(existing, next) >= 0)
+                if (Integer.compareUnsigned(existing, next) >= 0) {
+                    if (existing == -1)
+                        throw new IllegalStateException("Spill key counter exhausted for " + name);
                     next = existing + 1;
+                }
             }
         }
         return ByteBuffer.allocate(SPILL_KEY_SIZE).order(ByteOrder.BIG_ENDIAN).put(hash).putInt(next).array();
@@ -982,5 +990,8 @@ public class FileTree {
             this.type = type;
             this.name = name;
         }
+    }
+
+    private record GuidKey(int nodeId, long counter) {
     }
 }

@@ -36,8 +36,13 @@ import com.github.ruediste.p2psync.storage.BlockType.BlockInstance;
  */
 public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
 
-    private static final int HEADER_SIZE = 5; // nritems (4) + level (1)
+    static final int HEADER_SIZE = 5; // nritems (4) + level (1)
     private static final int NODE_PTR_EXTRA = 8; // blockptr (8)
+
+    /** Largest value that fits into a leaf block next to one item. */
+    static int maxLeafValueSize(int blockSize, int keySize) {
+        return blockSize - HEADER_SIZE - keySize - 2 * Integer.BYTES;
+    }
 
     private final Storage storage;
     private final KeySerializer<K> keySerializer;

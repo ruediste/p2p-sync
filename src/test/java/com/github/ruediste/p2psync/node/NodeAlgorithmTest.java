@@ -3,6 +3,7 @@ package com.github.ruediste.p2psync.node;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -460,8 +461,7 @@ public class NodeAlgorithmTest {
         a.startLeaving("C", "process-1");
         settleLeaving(List.of(a, b)); // all active nodes except the leaving one
 
-        assertNotNull(a.activeNodeSet.leavingProcess);
-        assertEquals(ActiveNodeSet.Phase.I, a.activeNodeSet.leavingProcess.phase);
+        assertNull(a.activeNodeSet.leavingProcess);
         assertFalse(a.activeNodeSet.nodes.contains("C"));
         assertFalse(b.activeNodeSet.nodes.contains("C"));
         assertTrue(a.activeNodeSet.nodes.contains("A"));
@@ -493,7 +493,7 @@ public class NodeAlgorithmTest {
         // B catches up and the process completes
         b.syncFrom(c, 100, 100_000);
         settleLeaving(List.of(a, b));
-        assertEquals(ActiveNodeSet.Phase.I, a.activeNodeSet.leavingProcess.phase);
+        assertNull(a.activeNodeSet.leavingProcess);
         assertFalse(a.activeNodeSet.nodes.contains("C"));
     }
 

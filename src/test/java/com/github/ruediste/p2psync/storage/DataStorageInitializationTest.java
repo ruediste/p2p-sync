@@ -80,8 +80,8 @@ class DataStorageInitializationTest {
     }
 
     /**
-     * Rejects a SYSTEM block too small for the twenty serialized root pointers,
-     * before formatting can fail later with a buffer overflow.
+     * Rejects a SYSTEM block too small for the fixed part of the serialized root
+     * block, before formatting can fail later with a buffer overflow.
      */
     @Test
     void rejectsSystemBlockTooSmallForRootBlock() {
@@ -89,12 +89,28 @@ class DataStorageInitializationTest {
 
         try (var storage = new DataStorage()) {
             assertThrows(IllegalArgumentException.class,
-                    () -> storage.format(path.toString(), 4096, 16384, 4096, 4096, 16384, 19 * Long.BYTES));
+                    () -> storage.format(path.toString(), 4096, 16384, 4096, 4096, 16384,
+                            RootBlock.FIXED_SERIALIZED_SIZE - 1));
         }
 
-        writeFile(path, superblock(DataStorage.FORMAT_VERSION, 4096, 4096, 16384, 19 * Long.BYTES));
+        writeFile(path, superblock(DataStorage.FORMAT_VERSION, 4096, 4096, 16384,
+                RootBlock.FIXED_SERIALIZED_SIZE - 1));
         var exception = openExpectingFailure(path);
         assertEquals("Invalid data storage block sizes", exception.getCause().getMessage());
+    }
+
+    /**
+     * Verifies the root block size formula used to validate the SYSTEM block
+     * size: a fixed payload plus ten bytes per ref or long handle.
+     */
+    @Test
+    void rootBlockSizeMatchesHandleSerialization() {
+        try (var storage = new DataStorage()) {
+            var rootBlock = new RootBlock(storage);
+            assertEquals(RootBlock.FIXED_SERIALIZED_SIZE, rootBlock.serializedSize());
+            assertEquals(RootBlock.FIXED_SERIALIZED_SIZE + 2 * RootBlock.HANDLE_SERIALIZED_SIZE,
+                    RootBlock.serializedSizeForHandles(1, 1));
+        }
     }
 
     /**

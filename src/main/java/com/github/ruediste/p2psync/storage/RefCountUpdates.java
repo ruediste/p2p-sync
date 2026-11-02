@@ -1,7 +1,6 @@
 package com.github.ruediste.p2psync.storage;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
@@ -11,19 +10,12 @@ public class RefCountUpdates {
 
     /**
      * Updates store absolute reference counts. A block allocated in the current
-     * transaction is freed immediately if its count becomes 0.
+     * transaction is freed immediately if its count becomes 0. A previously
+     * committed block that reaches zero is released at commit time and only put
+     * on the deferred free list, because the previous superblock can still reach
+     * it until the commit point.
      */
     private HashMap<Long, RefCountUpdates.RefCountUpdate> refCountUpdates = new HashMap<>();
-
-    /**
-     * Refcount updates for management data structures (Meta Free Tree and
-     * RefCount Tree) are tracked separately from regular updates to detect when
-     * the recursive refcount updates are complete. Note that these updates
-     * are all persistable, thus we can just stop the updates at any time and
-     * just store the remaining updates for the next transaction.
-     */
-    private HashSet<Long> refCountUpdatesPersistable = new HashSet<>();
-    private HashSet<Long> refCountUpdatesNonPersistable = new HashSet<>();
 
     public RefCountUpdates(DataStorage storage) {
         this.storage = storage;
@@ -63,34 +55,21 @@ public class RefCountUpdates {
 
     public void setBlockType(long blockOffset, RefCountUpdate update, BlockType<?> blockType) {
         update.blockType = Optional.of(blockType);
-        if (storage.persistableBlockType(blockType).isPresent()) {
-            refCountUpdatesPersistable.add(blockOffset);
-            refCountUpdatesNonPersistable.remove(blockOffset);
-        } else {
-            refCountUpdatesPersistable.remove(blockOffset);
-            refCountUpdatesNonPersistable.add(blockOffset);
-        }
     }
 
     public void clear() {
         refCountUpdates.clear();
-        refCountUpdatesPersistable.clear();
-        refCountUpdatesNonPersistable.clear();
     }
 
     public RefCountUpdate getOrCreate(long blockOffset, DataStorage.Area area) {
         return refCountUpdates.computeIfAbsent(blockOffset, k -> {
-            var update = new RefCountUpdate(area, storage.getRefPersistedCount(blockOffset));
-            refCountUpdatesPersistable.add(blockOffset);
-            return update;
+            return new RefCountUpdate(area, storage.getRefPersistedCount(blockOffset));
         });
     }
 
     public RefCountUpdate create(long blockOffset, DataStorage.Area area, long count) {
         var update = new RefCountUpdate(area, count);
         refCountUpdates.put(blockOffset, update);
-        refCountUpdatesPersistable.add(blockOffset);
-        refCountUpdatesNonPersistable.remove(blockOffset);
         return update;
     }
 
@@ -100,20 +79,10 @@ public class RefCountUpdates {
 
     public void remove(long blockOffset) {
         refCountUpdates.remove(blockOffset);
-        refCountUpdatesPersistable.remove(blockOffset);
-        refCountUpdatesNonPersistable.remove(blockOffset);
     }
 
     public boolean containsKey(long offset) {
         return refCountUpdates.containsKey(offset);
-    }
-
-    public int persistableCount() {
-        return refCountUpdatesPersistable.size();
-    }
-
-    public int nonPersistableCount() {
-        return refCountUpdatesNonPersistable.size();
     }
 
     public Set<Entry<Long, RefCountUpdate>> entrySet() {

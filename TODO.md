@@ -99,30 +99,30 @@ root.
 
 ### Synchronization semantics
 
-- [ ] **[high] Fetch operations from unknown sources.** The responder only serves
+- [x] **[high] Fetch operations from unknown sources.** The responder only serves
   sources present in `fromClock`, and `syncFromRemote` does not seed sources from
   the response's `maxOperationClock` list. Operations authored by a node this node
   has never seen are therefore never requested
   (`Node.java:467-471`, `NodeUserHandle.java:299-315`).
-- [ ] **[medium] Fix the leaving protocol.** The implementation never returns to
+- [x] **[medium] Fix the leaving protocol.** The implementation never returns to
   idle: phase `I` is terminal and `leavingProcess` is never cleared, while
   `doc/persistence.md` describes a return to idle. Non-user units never call
   `updateLeaving` at all (`ActiveNodeSet.java:138-184`,
   `NodeUserHandle.java:290,329`).
-- [ ] **[medium] Remove replicated `lastSeen` or use it.** `lastSeen` is merged and
+- [x] **[medium] Remove replicated `lastSeen` or use it.** `lastSeen` is merged and
   persisted/transferred in every active-node state, although the documentation says
   it is local-only, and no selection or truncation code reads it
   (`ActiveNodeSet.java:111`, `Node.java:2335-2336`, `doc/persistence.md:478-480`).
-- [ ] **[medium] Make clocks and counters per unit.** `SyncUnitData.entityCounter`
+- [x] **[medium] Make clocks and counters per unit.** `SyncUnitData.entityCounter`
   is persisted and copied but never incremented or read; all entity ids use the
   user counter. The USER unit and home unit share one `ActiveNodeSet` and one
   clock, and `ensureUnitMapper` creates per-unit mappers that are never flushed
   (`Node.java:569,1691-1726,2082`, `doc/persistence.md:163,307`).
-- [ ] **[medium] Preserve documented truncation exclusions.** `truncateStableLog`
+- [x] **[medium] Preserve documented truncation exclusions.** `truncateStableLog`
   removes `RECEIVE_MESSAGE` receipts (which embed message payloads) and
   `SET_SHARED_FOLDER_LABEL`; `doc/users-and-nodes.md` says direct-message events
   stay out of truncation (`NodeUserHandle.java:503-508`).
-- [ ] **[low] Validate node ids before truncation.** Stable-log candidate ids are
+- [x] **[low] Validate node ids before truncation.** Stable-log candidate ids are
   parsed with `HexFormat.parseHex` without checking length or hex validity, which
   is reachable through the unauthenticated `joiningNodeId` path
   (`NodeUserHandle.java:493-496`).
@@ -140,7 +140,7 @@ root.
   update; structurally owned blocks are silently left unwritten
   (`DataStorage.java:1177-1179`, `DataStorage.java:1202-1204`,
   `DataStorage.java:922-937`).
-- [ ] **[high] Replace the root-block size heuristic.** Format/open validation
+- [x] **[high] Replace the root-block size heuristic.** Format/open validation
   only requires `systemBlockSize >= 20 * Long.BYTES`, but the real root block has a
   fixed 96-byte payload plus 10 bytes per ref handle. A root with several handles
   can overflow the SYSTEM block (`DataStorage.java:559,815-817`,
@@ -149,24 +149,24 @@ root.
   and `addListBlocksToDeferredFreeBlocks` follow `next` in unbounded loops without
   visited sets, contrary to the documented open-time cycle validation
   (`DataStorage.java:1357-1375,1880-1888`, `doc/persistence.md:273-275`).
-- [ ] **[medium] Remove or implement deferred refcount updates.** `commit()` always
+- [x] **[medium] Remove deferred refcount updates.** `commit()` always
   writes `refCountUpdateList = 0`; nothing ever persists the pending updates. The
   loader/checker paths are only reachable with hand-edited files, and
   `RefCountUpdates` still documents the opposite (`DataStorage.java:1829,1875`,
   `RefCountUpdates.java:18-24`, `doc/persistence.md:237`).
-- [ ] **[medium] Fix BTree endianness documentation.** BTree node headers, item
+- [x] **[medium] Fix BTree endianness documentation.** BTree node headers, item
   counts and offsets are little-endian, while `doc/persistence.md` claims all
   structs and multi-byte fields are big-endian (`BTree.java:1112-1113`,
   `doc/persistence.md:103-104,464`).
-- [ ] **[medium] Align refcount-zero behavior with the docs.** Committed blocks
+- [x] **[medium] Align docs with refcount-zero behavior (update docs).** Committed blocks
   that reach zero are not freed immediately; only blocks newly allocated in the
   transaction are. The documentation says a zero count frees immediately
   (`DataStorage.java:596-616`, `doc/persistence.md:219-221`).
-- [ ] **[medium] Reset and validate long root handles.** `resetInMemoryState`
+- [x] **[medium] Reset and validate long root handles.** `resetInMemoryState`
   does not clear `rootLongHandles`, and `readRootBlock` assumes the id/value lists
   have equal size. A corrupt root can throw `IndexOutOfBoundsException` or ignore
   extra values (`DataStorage.java:514-530,850-855`, `RootBlock.java:88-89`).
-- [ ] **[medium] Make `StorageCheck` catch duplicate pending removals.**
+- [x] **[medium] Make `StorageCheck` catch duplicate pending removals.**
   `StorageCheck.run` collects pending META removals in a `TreeSet`, silently
   deduplicating records that the open path explicitly rejects
   (`StorageCheck.java:186-188`, `DataStorage.java:1390-1393`).
@@ -175,28 +175,28 @@ root.
   the `BlobStorage` index and handle 2 is `UnitRootStore`
   (`StorageCheckMain.java:24-26`, `Node.java:192-194`,
   `doc/persistence.md:295-296`).
-- [ ] **[medium] Add missing `FileTree` invariants.** `removeDirectoryEntry`
+- [x] **[medium] Add missing `FileTree` invariants.** `removeDirectoryEntry`
   silently ignores a missing `DIR_INDEX`; `nextSpillKey` wraps the unsigned
   32-bit counter to zero; `isDescendant` has an unbounded parent walk; and
   `writeExtentBlocks` has a stale comment plus a hardcoded 64-byte reserve
   (`FileTree.java:465-469,626-637,669-681,756-767`).
-- [ ] **[low] Remove the dead extent branch in `FileTree.writeData`.** `writeData`
+- [x] **[low] Remove the dead extent branch in `FileTree.writeData`.** `writeData`
   is only called for content up to the inline threshold, so its extent branch is
   unreachable (`FileTree.java:198-203,232-234,415-416`).
-- [ ] **[low] Stream FUSE `readdir` as documented.** `SimpleFuseFS.readdir`
+- [x] **[low] Stream FUSE `readdir` as documented.** `SimpleFuseFS.readdir`
   materializes a `List<String>` via `listDirectory`, contrary to the documented
   streaming path (`SimpleFuseFS.java:198-204`, `FileTree.java:302-316`,
   `doc/persistence.md:408-411`).
-- [ ] **[low] Fix `SimpleFuseFS` block-size reporting.** `getattr` hardcodes
+- [x] **[low] Fix `SimpleFuseFS` block-size reporting.** `getattr` hardcodes
   `st_blksize = 4096` instead of the DATA area block size
   (`SimpleFuseFS.java:185`).
-- [ ] **[low] Tighten format validation.** Only `metaBlockSize > 0` is required,
+- [x] **[low] Tighten format validation.** Only `metaBlockSize > 0` is required,
   so a 1-byte META block is accepted even though a BTree node needs a 5-byte header
   (`DataStorage.java:559,815-817`, `BTree.java:39-40`).
-- [ ] **[low] Fix direct-write documentation.** `writeNewBlockDirect` says the
+- [x] **[low] Fix direct-write documentation.** `writeNewBlockDirect` says the
   block may not reference other blocks, but the typed path collects and increments
   references (`DataStorage.java:1258-1274`, `DataStorage.java:1192-1201`).
-- [ ] **[low] Remove stale refcount abstractions.** The `Mod` enum is unused, and
+- [x] **[low] Remove stale refcount abstractions.** The `Mod` enum is unused, and
   `RefCountUpdates.persistable`/`nonPersistable` only drive a loop that drains
   everything (`DataStorage.java:83-99`, `RefCountUpdates.java:18-24,111-117`).
 

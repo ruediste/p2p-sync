@@ -3,6 +3,7 @@ package com.github.ruediste.p2psync.node;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -151,8 +152,8 @@ public class SyncFlowTest {
 
         assertTrue(!handleA.data.activeNodeSet.nodes.contains(nodeB.nodeKey()));
         assertTrue(!handleC.data.activeNodeSet.nodes.contains(nodeB.nodeKey()));
-        assertEquals(ActiveNodeSet.Phase.I, handleA.data.activeNodeSet.leavingProcess.phase);
-        assertEquals(ActiveNodeSet.Phase.I, handleC.data.activeNodeSet.leavingProcess.phase);
+        assertNull(handleA.data.activeNodeSet.leavingProcess);
+        assertNull(handleC.data.activeNodeSet.leavingProcess);
         nodeC.close();
     }
 
@@ -325,6 +326,92 @@ public class SyncFlowTest {
                 java.util.Map.of(nodeA.nodeKey(), 0L), java.util.Map.of(), 10, 0);
 
         assertTrue(transfers.isEmpty(), "an empty budget must not create a zero-length transfer");
+    }
+
+    /**
+     * Verifies that the USER and home units keep independent entity counters and
+     * clocks, and that the home unit no longer aliases the user's active-node set.
+     */
+    @Test
+    public void clocksAndCountersArePerSyncUnit() {
+        var userUnit = nodeA.syncUnits.get(handleA.data.syncUnitId());
+        var homeUnit = nodeA.syncUnits.get(handleA.data.fileUnitId());
+        assertFalse(homeUnit.activeNodeSet == handleA.data.activeNodeSet);
+
+        long userCounter = userUnit.entityCounter;
+        long homeCounter = homeUnit.entityCounter;
+        nodeA.nextEntityId(handleA.data, handleA.data.fileUnitId());
+        assertEquals(userCounter, userUnit.entityCounter);
+        assertEquals(homeCounter + 1, homeUnit.entityCounter);
+
+        handleA.modify(root -> root.userStatusMessage = "home operation");
+        assertEquals(1L, homeUnit.clock);
+        handleA.createContact(null, "Ada", "Lovelace", "", "", "");
+        assertEquals(2L, userUnit.clock);
+        assertEquals(1L, homeUnit.clock);
+    }
+
+    /**
+     * Verifies that a remote response seeds operation sources the node has never
+     * seen, so the next request fetches their operations instead of ignoring them.
+     */
+    @Test
+    public void remoteSyncSeedsUnknownOperationSources() {
+        var handleB = nodeB.join(handleA.data.userKey);
+        String unknownSource = "ab".repeat(32);
+        var response = Sync.RemoteSyncResponse.newBuilder()
+                .setUserFound(true)
+                .addMaxOperationClock(Sync.OperationClock.newBuilder()
+                        .setNodeId(unknownSource).setClock(7L))
+                .build();
+
+        handleB.applyRemoteSyncResponse(nodeA.peerId, response);
+
+        var entry = handleB.buildRemoteSyncRequest(10, 1_000).getFromClockList().stream()
+                .filter(clock -> clock.getNodeId().equals(unknownSource))
+                .findFirst().orElseThrow();
+        assertEquals(0L, entry.getClock());
+    }
+
+    /**
+     * Verifies that stable-log truncation keeps direct-message receipts and
+     * shared-folder labels, which the documentation explicitly excludes.
+     */
+    @Test
+    public void truncationKeepsMessageReceiptsAndSharedFolderLabels() {
+        var handleB = nodeB.join(handleA.data.userKey);
+        var folder = nodeA.createSyncUnit(handleA.data.userId(),
+                SyncUnitAuthorization.Type.SHARED_FOLDER);
+        handleA.modify(root -> root.userStatusMessage = "trim me");
+        nodeA.setSharedFolderLabel(handleA.data.userId(), folder, "shared");
+        handleA.sendChatMessage(handleB.data.userId(), "hello", List.of());
+        handleB.syncFrom(nodeA.peerId);
+        for (int index = 0; index < 10; index++) {
+            int value = index;
+            handleB.modify(root -> root.userStatusMessage = "b" + value);
+        }
+        handleA.syncFrom(nodeB.peerId);
+        handleB.syncFrom(nodeA.peerId);
+
+        assertTrue(handleA.truncateStableLog());
+        assertTrue(handleB.truncateStableLog());
+
+        assertTrue(handleB.data.allOperations().values().stream().anyMatch(operation -> {
+            try {
+                return Sync.UserOperation.parseFrom(operation.payload)
+                        .getKind() == Sync.UserOperation.Kind.RECEIVE_MESSAGE;
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw new IllegalStateException(e);
+            }
+        }));
+        assertTrue(handleA.data.allOperations().values().stream().anyMatch(operation -> {
+            try {
+                return Sync.UserOperation.parseFrom(operation.payload)
+                        .getKind() == Sync.UserOperation.Kind.SET_SHARED_FOLDER_LABEL;
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw new IllegalStateException(e);
+            }
+        }));
     }
 
     /**

@@ -1,9 +1,7 @@
 package com.github.ruediste.p2psync.storage;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -182,7 +180,7 @@ public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
             stat.st_uid.set(uid);
             stat.st_gid.set(gid);
             stat.st_size.set(meta.size);
-            stat.st_blksize.set(4096);
+            stat.st_blksize.set(storage.blockSize(DataStorage.Area.DATA));
             stat.st_blocks.set(meta.size / 512 + (meta.size % 512 == 0 ? 0 : 1));
             stat.st_mtim.tv_sec.set(meta.modificationTime / 1000);
             stat.st_mtim.tv_nsec.set(meta.modificationTime % 1000 * 1_000_000);
@@ -200,12 +198,24 @@ public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
             var entry = resolve(path);
             require(entry.directory(), ErrorCodes.ENOTDIR());
             require(offset >= 0, ErrorCodes.EINVAL());
-            List<String> names = new ArrayList<>(List.of(".", ".."));
-            tree.listDirectory(entry.guid()).forEach(child -> names.add(child.name()));
-            for (long index = offset; index < names.size(); index++) {
-                if (filler.apply(buffer, names.get((int) index), null, index + 1) != 0)
-                    break;
+            long[] index = { 0 };
+            boolean[] stopped = { false };
+            for (String special : new String[] { ".", ".." }) {
+                index[0]++;
+                if (stopped[0] || index[0] <= offset)
+                    continue;
+                if (filler.apply(buffer, special, null, index[0]) != 0)
+                    stopped[0] = true;
             }
+            tree.forEachDirectory(entry.guid(), child -> {
+                if (stopped[0])
+                    return;
+                index[0]++;
+                if (index[0] <= offset)
+                    return;
+                if (filler.apply(buffer, child.name(), null, index[0]) != 0)
+                    stopped[0] = true;
+            });
             return 0;
         });
     }

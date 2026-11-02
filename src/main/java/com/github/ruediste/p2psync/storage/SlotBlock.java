@@ -314,6 +314,11 @@ public abstract class SlotBlock<TSelf> implements BlockInstance<TSelf> {
 
     List<Slot> slots = new ArrayList<>();
 
+    /** The serialized size of this block, excluding any area padding. */
+    public int serializedSize() {
+        return slots.stream().mapToInt(Slot::serializedSize).sum();
+    }
+
     private <T extends Slot> T addSlot(T slot) {
         slots.add(slot);
         return slot;

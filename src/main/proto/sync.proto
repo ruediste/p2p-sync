@@ -263,14 +263,9 @@ message ActiveNodeSetState {
 	string versionNodeId = 1;
 	uint64 versionClock = 2;
 	repeated string nodeIds = 3;
-	repeated ActiveNodeLastSeen lastSeen = 4;
+	reserved 4;
 	LeavingProcessState leavingProcess = 5;
 	repeated string removedNodeIds = 6;
-}
-
-message ActiveNodeLastSeen {
-	string nodeId = 1;
-	int64 timestamp = 2;
 }
 
 message LeavingProcessState {

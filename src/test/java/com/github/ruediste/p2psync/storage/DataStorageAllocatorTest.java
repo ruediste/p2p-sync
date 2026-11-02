@@ -368,39 +368,6 @@ class DataStorageAllocatorTest {
     }
 
     /**
-     * Creates a persisted update-list self-cycle and verifies that opening
-     * the file rejects the malformed chain.
-     */
-    @Test
-    void rejectsCyclicDeferredRefCountUpdateList() throws IOException {
-        Path path = tempDir.resolve("deferred-ref-count-cycle.db");
-        long listHead;
-        try (var storage = newPersistentStorage(path)) {
-            listHead = storage.writeNewBlock(DataStorage.Area.META,
-                    new byte[storage.blockSize(DataStorage.Area.META)]);
-            storage.incrementRefCount(new BlockType.BlockRef(listHead, DataStorage.Area.META,
-                    DataStorage.BYTE_ARRAY_BLOCK_TYPE));
-            storage.commit();
-
-            long rootOffset = storage.superBlock.rootBlock;
-            byte[] rootBytes = storage.readBlock(rootOffset, DataStorage.Area.SYSTEM);
-            var rootType = RootBlock.getBlockType(storage);
-            var rootBlock = rootType.deserialize(ByteBuffer.wrap(rootBytes));
-            rootBlock.refCountUpdateList.value = listHead;
-            ByteBuffer.wrap(rootBytes).put(rootType.serialize(rootBlock));
-            storage.file.seek(listHead);
-            storage.file.writeLong(listHead);
-            storage.file.seek(rootOffset);
-            storage.file.write(rootBytes);
-        }
-
-        try (var reopened = new DataStorage()) {
-            var exception = assertThrows(IllegalStateException.class, () -> reopened.open(path.toString()));
-            assertEquals("Cycle in deferred ref-count update list", exception.getMessage());
-        }
-    }
-
-    /**
      * Rejects a typed block whose serialized payload is larger than its area's
      * block size, which would otherwise overwrite the next block.
      */

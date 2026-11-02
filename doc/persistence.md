@@ -104,9 +104,10 @@ Two independent applications sit on `DataStorage`:
 | metaBlockSize | int32 | default 16384 |
 | systemBlockSize | int32 | default 4096 |
 
-Block sizes live in the superblock (they are needed to read the root block),
+Block sizes live in the superblock (they are needed to read the root block).
 All structs are encoded with `ByteBuffer` default order, i.e.
-**big-endian**, and there is **no padding/alignment inside blocks**.
+**big-endian**, except B+tree node blocks, whose structural fields are
+**little-endian** (see 4.6). There is **no padding/alignment inside blocks**.
 
 ### 4.2 Areas and file layout
 
@@ -143,11 +144,15 @@ systemDeferredFreeBlockList    uint64
 metaDeferredFreeBlockList      uint64
 dataDeferredFreeBlockList      uint64
 pendingMetaFreeTreeRemovalList uint64
-refCountUpdateList             uint64
 refHandles             uint16 count, then uint16 handle ids, then uint64 offsets
 longHandleIds          uint16 count + uint16 ids
 longHandles            uint16 count + uint64 values
 ```
+
+The fixed payload before any handles is 88 bytes. Every registered ref or
+long handle adds 10 bytes (a uint16 id plus a uint64 value/offset), so the
+SYSTEM block size must be at least `88 + 10 * handleCount`. Format, open and
+commit validate the actual root block size against the SYSTEM block size.
 
 `refHandles`/`longHandles` are how applications persist their own roots: the
 application registers `getRootRefHandle(id, area, blockType)`, writes the block
@@ -197,13 +202,18 @@ decide between inline and extent storage for file data.
 `BTree<K, V>` is a copy-on-write B+tree with variable-sized values.
 
 ```
-node := int32 itemCount          (4 bytes)
+node := int32 itemCount          (4 bytes, little-endian)
         uint8 level              (0 = leaf)
         items...
-internal item := key[keySize] , uint64 childOffset
-leaf item     := key[keySize] , int32 valueOffset , int32 valueSize
+internal item := key[keySize] , uint64 childOffset (little-endian)
+leaf item     := key[keySize] , int32 valueOffset (little-endian) , int32 valueSize (little-endian)
                  ... value bytes stored after the item array
 ```
+
+- The node header, item counts, value offsets/sizes and child offsets are
+  little-endian (they are written through a little-endian `ByteBuffer`). Key
+  bytes and entry values are opaque serialized data; numeric key serializers
+  such as `KeySerializer.longs()` use big-endian.
 
 - Keys have a fixed serialized size per tree and are ordered by unsigned
   lexicographic comparison of their serialized bytes; internal nodes store the
@@ -220,10 +230,13 @@ leaf item     := key[keySize] , int32 valueOffset , int32 valueSize
   stored in META.
 - Within a transaction, counts are kept as **absolute** pending values in
   `RefCountUpdates`, not as deltas. A new block starts at 0, the first update
-  reads the persisted count, updates that return to the persisted value are
-  dropped, and a count that reaches 0 inside the transaction frees the block
+  reads the persisted count, and updates that return to the persisted value are
+  dropped. A block allocated in the current transaction that reaches 0 is freed
   immediately (recursively releasing its references, reading the block from disk
-  to enumerate them if necessary).
+  to enumerate them if necessary). A previously committed block that reaches 0
+  is released while the commit applies the pending updates: its references are
+  released, but the block itself is only put on the deferred free list, because
+  the previous superblock can still reach it until the commit point.
 - `RefMode` selects who owns the edges along a modified path: `EXCLUSIVE`
   (structural ownership without refcount entries, used by the allocator trees),
   `TRANSFER` (move one incoming counted edge; shared children are copied) and
@@ -239,7 +252,6 @@ leaf item     := key[keySize] , int32 valueOffset , int32 valueSize
 | --- | --- |
 | deferred free block lists (`system`/`meta`/`data`) | linked list of blocks that became free in the last transaction; head offsets in the root block; applied at the start of the next transaction |
 | pending META free-tree removal list | blocks allocated in the last transaction that still have to be removed from the META free-space tree; kept pending so allocation never hands them out before the removal is done |
-| deferred ref-count update list | absolute refcount updates for blocks that still had to be written when the commit point was reached; each record stores offset, count, area and a `PersistableBlockType` code (1 = META free tree, 2 = ref-count tree) so the children of such a block can be released later |
 
 The point of these lists is that the tail of a commit (persisting them, writing
 the final root block) touches only the META free-space tree, which keeps the
@@ -270,14 +282,15 @@ buffer.
 
 `open(path)` formats the file if it is missing or empty, otherwise it reads the
 superblock, root block, info block, free-space trees, ref-count tree, and then
-replays the pending-removal list, the deferred refcount list and the deferred
-free lists. It then truncates the file to `rootBlock.fileLength`, which discards
-bytes written by a transaction that never committed. `openReadOnly` loads only
-the committed state for inspection.
+replays the pending-removal list and the deferred free lists. It then truncates
+the file to `rootBlock.fileLength`, which discards bytes written by a transaction
+that never committed. `openReadOnly` loads only the committed state for
+inspection.
 
 Validation performed while opening: magic, format version, block sizes, root
-block offset, committed file length, list cycles, duplicate pending blocks and
-refcount records. Corrupt input fails the open instead of being silently reused.
+block size, root block offset, committed file length, list cycles, duplicate
+pending blocks and long-handle ids. Corrupt input fails the open instead of
+being silently reused.
 
 Durability caveat: the file is accessed through `RandomAccessFile` and there is
 **no `FileDescriptor.sync()`/`fsync` anywhere**, and blocks are written before the
@@ -291,8 +304,7 @@ can lose the last commits and can leave a file that needs the inspection tool.
 `StorageCheck.check(storage, path)` opens the file read-only and verifies that
 
 - every block with a stored refcount is reachable from the root block,
-- stored refcounts (tree plus persisted deferred updates) match the number of
-  observed references,
+- stored refcounts match the number of observed references,
 - every block in the file is accounted for exactly once: allocated, on a
   deferred free list, or inside its area's free-space tree (full coverage check),
 - free extents are aligned, non-empty and within the committed file length.
@@ -474,7 +486,8 @@ tree (`sha256(name) | uint32 counter`) for oversized directory items.
 list of `{ locationGuid[12], locationType, nameLength, name[] }` entries to
 handle collisions. Data is stored inline while the file is at most
 `inlineDataThreshold` (16 KiB) and converted to extent blocks in the DATA area
-above that size. All multi-byte fields are big-endian.
+above that size. FileTree keys and values are big-endian; the enclosing B+tree
+node header and item offsets are little-endian as described in 4.6.
 
 `SimpleFuseFS` commits after every mutating FUSE operation (`dirty` flag) and
 additionally every 5 seconds from a scheduler thread; a failed periodic commit
@@ -488,11 +501,10 @@ Each SyncUnit tracks a replicated set of active node keys. Membership is based o
 node keys; at least one user participating in the unit sponsors a node. A node may
 host several users in the same unit and is represented once.
 
-The active-node set carries a version (node key + clock), a three-phase leaving
-process (`A`, `B`, `I`), and locally tracked `lastSeen` timestamps. `lastSeen` is
-not replicated. Sets are exchanged when their versions differ; a received strict
-superset replaces the local version, otherwise a local change increments the
-version.
+The active-node set carries a version (node key + clock) and a three-phase
+leaving process (`A`, `B`, `I`). Sets are exchanged when their versions differ;
+a received strict superset replaces the local version, otherwise a local change
+increments the version.
 
 Leaving uses the three-phase confirmation protocol documented by the
 `ActiveNodeSet` implementation: nodes confirm the leaving status, then removal,

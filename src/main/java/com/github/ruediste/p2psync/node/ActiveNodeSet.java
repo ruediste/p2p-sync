@@ -1,6 +1,5 @@
 package com.github.ruediste.p2psync.node;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -50,7 +49,6 @@ final class ActiveNodeSet {
     LeavingProcess leavingProcess;
     final Set<String> nodes = new TreeSet<>();
     final Set<String> removedNodes = new TreeSet<>();
-    final Map<String, Long> lastSeen = new HashMap<>();
 
     ActiveNodeSet copy() {
         var result = new ActiveNodeSet();
@@ -58,7 +56,6 @@ final class ActiveNodeSet {
         result.leavingProcess = leavingProcess == null ? null : leavingProcess.copy();
         result.nodes.addAll(nodes);
         result.removedNodes.addAll(removedNodes);
-        result.lastSeen.putAll(lastSeen);
         return result;
     }
 
@@ -196,9 +193,16 @@ final class ActiveNodeSet {
 
     boolean updateLeaving(String localNodeId, Map<String, Long> maxOperationClock, LongSupplier nextClock) {
         var process = leavingProcess;
-        if (process == null || process.leavingNodeId.equals(localNodeId))
+        if (process == null)
             return false;
-        if (process.phase == Phase.I)
+        if (process.phase == Phase.I) {
+            // Phase I is the completed tombstone. Returning to idle clears it so the
+            // set no longer carries a terminal leaving process forever.
+            leavingProcess = null;
+            setVersion(localNodeId, nextClock.getAsLong());
+            return true;
+        }
+        if (process.leavingNodeId.equals(localNodeId))
             return false;
 
         boolean changed = false;

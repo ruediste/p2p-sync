@@ -293,11 +293,7 @@ public class Node implements AutoCloseable {
 
             // TODO 3: Validate joiningNodeId against the authenticated peer identity
             if (!request.getJoiningNodeId().isEmpty()) {
-                try {
-                    java.util.HexFormat.of().parseHex(request.getJoiningNodeId());
-                } catch (IllegalArgumentException e) {
-                    throw new IllegalArgumentException("Malformed joiningNodeId", e);
-                }
+                Node.parseNodeKey(request.getJoiningNodeId());
                 if (!request.getJoiningNodeId().equals(remoteNodeKey)) {
                     throw new IllegalArgumentException("joiningNodeId does not match authenticated peer");
                 }
@@ -334,7 +330,7 @@ public class Node implements AutoCloseable {
                     return Sync.RemoteSyncResponse.newBuilder().setNodeClock(clock).setSyncUnitRevoked(true)
                             .build();
                 if (request.hasSyncUnitUpdate()) {
-                    if (authorized && knownMember) {
+                    if (authorized || knownMember || invited) {
                         try {
                             var update = deserializeSyncUnit(request.getSyncUnitUpdate());
                             if (!update.id.equals(id) || update.type != unit.type || !update.creator.equals(unit.creator))
@@ -369,7 +365,8 @@ public class Node implements AutoCloseable {
             if (data == null)
                 return response.build();
             // TODO 1: Authenticate user sync request against the Noise-authenticated peer
-            if (!data.activeNodeSet.nodes.contains(remoteNodeKey)) {
+            if (request.getJoiningNodeId().isEmpty()
+                    && !data.activeNodeSet.nodes.contains(remoteNodeKey)) {
                 return Sync.RemoteSyncResponse.newBuilder().setNodeClock(clock).setUserFound(false).build();
             }
             response.setActiveNodeSet(persist(data.activeNodeSet));
@@ -573,6 +570,7 @@ public class Node implements AutoCloseable {
                     maxOperationClock.merge(source, transfer.id.clock, Math::max);
                     clock = Math.max(clock, transfer.id.clock);
                     node.clock = Math.max(node.clock, transfer.id.clock);
+                    node.advanceUnitClock(this, payload, transfer.id.clock);
                 } else {
                     var partial = retrievalTree.get(source);
                     if (partial == null || !partial.id.equals(transfer.id)
@@ -797,10 +795,10 @@ public class Node implements AutoCloseable {
         data.localName = localName;
         data.activeNodeSet.nodes.add(nodeKey);
         data.activeNodeSet.setVersion(nodeKey, nextClock());
-        data.rootDirectoryGuid = nextEntityId(data);
         users.put(data.userId(), data);
         ensureUserSyncUnit(data);
         ensureHomeUnit(data);
+        data.rootDirectoryGuid = nextEntityId(data, data.fileUnitId());
         data.guidMapper = new GuidMapper(dataStorage, unitRoots, data.fileUnitId(), 0);
         data.fileSystem = UserFileTree.empty(dataStorage, data.guidMapper, data.rootDirectoryGuid);
         data.contacts = ContactList.empty(data.userId());
@@ -879,6 +877,7 @@ public class Node implements AutoCloseable {
                 var response = exchangeRemote(candidate, Sync.RemoteSyncRequest.newBuilder()
                         .setUserId(com.google.protobuf.ByteString.copyFrom(userKey.publicKey().bytes()))
                         .setIncludeHistory(true)
+                        .setJoiningNodeId(nodeKey)
                         .build());
                 if (response.getUserFound())
                     return joinRemote(userKey, localName, candidate);
@@ -1132,6 +1131,9 @@ public class Node implements AutoCloseable {
                 var remotePeers = new TreeSet<PeerId>(PeerId::compareTo);
                 // TODO 2: Resolve the recipient's peers first instead of broadcasting to all address-book peers
                 remotePeers.addAll(network.getPeersForUser(recipientId));
+                remotePeers.addAll(remoteAddresses.keySet());
+                if (remoteHost != null)
+                    remotePeers.addAll(remoteHost.addressBook().getPeerIds());
                 remotePeers.remove(peerId);
                 for (var remotePeer : remotePeers) {
                     if (network.nodes.containsKey(remotePeer))
@@ -1416,6 +1418,7 @@ public class Node implements AutoCloseable {
         if (sourceUnit == null)
             throw new UnknownSyncUnitException("Peer does not host this SyncUnit");
         mergeSyncUnit(sourceUnit, source.nodeKey());
+        updateUnitLeaving(unit);
     }
 
     private PubKey localMemberId(SyncUnitData unit) {
@@ -1445,7 +1448,23 @@ public class Node implements AutoCloseable {
         var localUnit = requireSyncUnit(id);
         localUnit.partialContentOperations.keySet().removeAll(result.unit().contentOperations.keySet());
         localUnit.partialContentOperations.putAll(result.unit().partialContentOperations);
+        updateUnitLeaving(localUnit);
         persistState();
+    }
+
+    /**
+     * Advances a non-user SyncUnit's leaving protocol. Content operations are
+     * keyed by source node, so the per-source content clock is the clock used to
+     * confirm that a leaving node's operations have been retrieved.
+     */
+    private void updateUnitLeaving(SyncUnitData unit) {
+        if (unit.home || unit.type == SyncUnitAuthorization.Type.USER)
+            return;
+        var clocks = new TreeMap<String, Long>();
+        for (var operation : unit.contentOperations.values())
+            clocks.merge(HexFormat.of().formatHex(operation.nodeHash()), operation.lamportClock(), Math::max);
+        if (unit.activeNodeSet.updateLeaving(nodeKey, clocks, () -> ++unit.clock))
+            clock = Math.max(clock, unit.clock);
     }
 
     private record RemoteSyncUnitResult(SyncUnitData unit, boolean revoked) {
@@ -1830,12 +1849,15 @@ public class Node implements AutoCloseable {
         if (unit == null) {
             unit = new SyncUnitData(id, SyncUnitAuthorization.Type.SHARED_FOLDER, user.userId());
             unit.home = true;
-            unit.activeNodeSet = user.activeNodeSet;
+            // The home unit has its own clock, counter and membership. It starts as a
+            // copy of the user's state because the same nodes host the user's home.
+            unit.activeNodeSet = user.activeNodeSet.copy();
             unit.clock = user.clock;
+            unit.entityCounter = user.entityCounter;
             syncUnits.put(id, unit);
         }
         unit.home = true;
-        unit.activeNodeSet = user.activeNodeSet;
+        unit.entityCounter = Math.max(unit.entityCounter, user.entityCounter);
         user.participatingSyncUnitIds.add(id.toString());
     }
 
@@ -1847,13 +1869,42 @@ public class Node implements AutoCloseable {
 
     private void ensureUserSyncUnit(NodeUserData user) {
         var id = user.syncUnitId();
-        var unit = syncUnits.putIfAbsent(id, new SyncUnitData(id, SyncUnitAuthorization.Type.USER, user.userId()));
-        if (unit != null) {
-            unit.clock = Math.max(unit.clock, user.clock);
-            unit.activeNodeSet = user.activeNodeSet;
-        }
+        var unit = syncUnits.computeIfAbsent(id,
+                ignored -> new SyncUnitData(id, SyncUnitAuthorization.Type.USER, user.userId()));
+        unit.clock = Math.max(unit.clock, user.clock);
+        unit.entityCounter = Math.max(unit.entityCounter, user.entityCounter);
+        unit.activeNodeSet = user.activeNodeSet;
         user.participatingSyncUnitIds.add(id.toString());
         applyParticipationOperations(user);
+    }
+
+    /**
+     * Mirrors a locally started leave process into the home unit, which keeps its
+     * own active-node set. User synchronization carries the home membership.
+     */
+    void mirrorStartLeaving(NodeUserData user, String leavingNodeId, String processId) {
+        if (user.homeSyncUnitId == null)
+            return;
+        var home = syncUnits.get(user.homeSyncUnitId);
+        if (home == null || home.activeNodeSet == user.activeNodeSet)
+            return;
+        if (home.activeNodeSet.startLeaving(leavingNodeId, processId, user.maxOperationClock, nodeKey,
+                () -> ++home.clock))
+            clock = Math.max(clock, home.clock);
+    }
+
+    /**
+     * Applies a user active-node-set exchange to the separately tracked home unit.
+     */
+    void syncHomeActiveNodeSet(NodeUserData user, ActiveNodeSet remote, String senderNodeId) {
+        if (user.homeSyncUnitId == null)
+            return;
+        var home = syncUnits.get(user.homeSyncUnitId);
+        if (home == null || home.activeNodeSet == user.activeNodeSet)
+            return;
+        home.activeNodeSet.mergeFrom(remote, nodeKey, senderNodeId, () -> ++home.clock);
+        home.activeNodeSet.updateLeaving(nodeKey, user.maxOperationClock, () -> ++home.clock);
+        clock = Math.max(clock, home.clock);
     }
 
     synchronized void applyParticipationOperations(NodeUserData user) {
@@ -2052,15 +2103,45 @@ public class Node implements AutoCloseable {
 
     synchronized void recordLocalOperation(NodeUserData data, byte[] payload) {
         requireUserUnitModification(data.userId());
-        var id = new OperationId(++data.clock, nodeHash);
+        var unit = unitForOperation(data, payload);
+        long next = Math.max(data.clock, unit == null ? 0L : unit.clock) + 1;
+        data.clock = next;
+        if (unit != null)
+            unit.clock = next;
         clock = Math.max(clock, data.clock);
-        var userUnit = syncUnits.get(data.syncUnitId());
-        if (userUnit != null)
-            userUnit.clock = Math.max(userUnit.clock, data.clock);
+        var id = new OperationId(next, nodeHash);
         byte[] signature = data.userKey.sign(operationSigningBytes(id, payload));
         data.localOperationTree.put(id, new Operation(id, payload, signature));
         data.maxOperationClock.put(nodeKey, id.clock);
         persistState();
+    }
+
+    /**
+     * Returns the SyncUnit that owns an operation: file-tree operations belong to
+     * the user's home unit, all other user operations to the USER unit.
+     */
+    private SyncUnitData unitForOperation(NodeUserData user, byte[] payload) {
+        boolean fileOperation;
+        try {
+            fileOperation = switch (Sync.UserOperation.parseFrom(payload).getKind()) {
+                case SET_STATUS, CREATE_DIRECTORY, CREATE_FILE, WRITE_FILE, TRUNCATE_FILE, MOVE, RENAME,
+                        DELETE -> true;
+                default -> false;
+            };
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            fileOperation = false;
+        }
+        return syncUnits.get(fileOperation ? user.fileUnitId() : user.syncUnitId());
+    }
+
+    /** Advances the owning unit's Lamport clock after receiving an operation. */
+    void advanceUnitClock(NodeUserData user, byte[] payload, long operationClock) {
+        var unit = unitForOperation(user, payload);
+        if (unit == null)
+            return;
+        if (operationClock > unit.clock)
+            unit.clock = operationClock;
+        clock = Math.max(clock, unit.clock);
     }
 
     private static void requireUserUnitModification(PubKey author) {
@@ -2083,8 +2164,17 @@ public class Node implements AutoCloseable {
     }
 
     synchronized byte[] nextEntityId(NodeUserData user) {
+        return nextEntityId(user, user.syncUnitId());
+    }
+
+    synchronized byte[] nextEntityId(NodeUserData user, SyncUnitId unitId) {
+        var unit = syncUnits.get(unitId);
+        if (unit == null)
+            throw new IllegalArgumentException("Unknown SyncUnit " + unitId);
+        long counter = ++unit.entityCounter;
+        user.entityCounter = Math.max(user.entityCounter, counter);
         return ByteBuffer.allocate(nodeHash.length + Long.BYTES)
-                .put(nodeHash).putLong(++user.entityCounter).array();
+                .put(nodeHash).putLong(counter).array();
     }
 
     long nextClock() {
@@ -2097,6 +2187,17 @@ public class Node implements AutoCloseable {
 
     static String nodeKeyFor(PeerId peerId) {
         return HexFormat.of().formatHex(CryptoUtils.sha256(peerId.getBytes()));
+    }
+
+    /**
+     * Parses a node key, which is the SHA-256 of a peer id encoded as hex. Rejects
+     * values of the wrong length as well as non-hex input so unvalidated remote
+     * data cannot produce a malformed operation id.
+     */
+    static byte[] parseNodeKey(String nodeKey) {
+        if (nodeKey == null || nodeKey.length() != 2 * 32)
+            throw new IllegalArgumentException("Invalid node key length");
+        return HexFormat.of().parseHex(nodeKey);
     }
 
     private void persistUserFileTrees() {
@@ -2487,8 +2588,6 @@ public class Node implements AutoCloseable {
             result.setVersionNodeId(activeNodeSet.version.nodeId).setVersionClock(activeNodeSet.version.clock);
         activeNodeSet.nodes.forEach(result::addNodeIds);
         activeNodeSet.removedNodes.forEach(result::addRemovedNodeIds);
-        activeNodeSet.lastSeen.forEach((id, timestamp) -> result.addLastSeen(
-                Sync.ActiveNodeLastSeen.newBuilder().setNodeId(id).setTimestamp(timestamp)));
         if (activeNodeSet.leavingProcess != null) {
             var process = activeNodeSet.leavingProcess;
             var saved = Sync.LeavingProcessState.newBuilder()
@@ -2670,7 +2769,6 @@ public class Node implements AutoCloseable {
             target.setVersion(stored.getVersionNodeId(), stored.getVersionClock());
         target.nodes.addAll(stored.getNodeIdsList());
         stored.getRemovedNodeIdsList().forEach(target.removedNodes::add);
-        stored.getLastSeenList().forEach(value -> target.lastSeen.put(value.getNodeId(), value.getTimestamp()));
         if (stored.hasLeavingProcess()) {
             var saved = stored.getLeavingProcess();
             int phase = saved.getPhase();

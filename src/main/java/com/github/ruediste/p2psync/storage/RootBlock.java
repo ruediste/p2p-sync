@@ -10,6 +10,13 @@ import com.github.ruediste.p2psync.storage.DataStorage.InfoBlock;
 import com.github.ruediste.p2psync.storage.DataStorage.RootRefHandle;
 
 public class RootBlock extends SlotBlock<RootBlock> {
+    /**
+     * Serialized size of the root block without any registered ref or long
+     * handles. Every handle adds {@link #HANDLE_SERIALIZED_SIZE} bytes.
+     */
+    public static final int FIXED_SERIALIZED_SIZE = 88;
+    public static final int HANDLE_SERIALIZED_SIZE = Short.BYTES + Long.BYTES;
+
     private BlockType<RootBlock> type;
 
     public class RootRefsSlot extends SlotBlock.RefsSlot {
@@ -67,6 +74,11 @@ public class RootBlock extends SlotBlock<RootBlock> {
         this.type = getBlockType(storage);
     }
 
+    public static int serializedSizeForHandles(int refHandleCount, int longHandleCount) {
+        return Math.addExact(FIXED_SERIALIZED_SIZE,
+                Math.multiplyExact(refHandleCount + longHandleCount, HANDLE_SERIALIZED_SIZE));
+    }
+
     public final RefSlot dataFreeSpaceTree = exclusiveTreeSlot();
     public final RefSlot metaFreeSpaceTree = exclusiveTreeSlot();
     public final RefSlot systemFreeSpaceTree = exclusiveTreeSlot();
@@ -81,7 +93,6 @@ public class RootBlock extends SlotBlock<RootBlock> {
     public final LongSlot metaDeferredFreeBlockList = longSlot();
     public final LongSlot dataDeferredFreeBlockList = longSlot();
     public final LongSlot pendingMetaFreeTreeRemovalList = longSlot();
-    public final LongSlot refCountUpdateList = longSlot();
 
     public final RootRefsSlot refHandles = rootRefsSlot();
 

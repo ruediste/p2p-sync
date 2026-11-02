@@ -360,11 +360,11 @@ public class NodeUserHandle {
         mergeStaging();
         data.activeNodeSet.mergeFrom(peerData.activeNodeSet, node.nodeKey(), peer.nodeKey(), node::nextClock);
         data.activeNodeSet.updateLeaving(node.nodeKey(), data.maxOperationClock, node::nextClock);
-        data.activeNodeSet.lastSeen.put(peer.nodeKey(), System.currentTimeMillis());
+        node.syncHomeActiveNodeSet(data, peerData.activeNodeSet, peer.nodeKey());
         node.persistState();
     }
 
-    private Sync.RemoteSyncRequest buildRemoteSyncRequest(int maxOperations, int byteBudget) {
+    Sync.RemoteSyncRequest buildRemoteSyncRequest(int maxOperations, int byteBudget) {
         var sources = new java.util.TreeSet<String>();
         sources.addAll(data.activeNodeSet.nodes);
         sources.addAll(data.maxOperationClock.keySet());
@@ -386,9 +386,15 @@ public class NodeUserHandle {
         return request.build();
     }
 
-    private void applyRemoteSyncResponse(PeerId peerId, Sync.RemoteSyncResponse response) {
+    void applyRemoteSyncResponse(PeerId peerId, Sync.RemoteSyncResponse response) {
         if (!response.getUserFound())
             throw new IllegalArgumentException("Remote peer does not host user " + data.userId());
+        // The response advertises every source the remote knows, including nodes this
+        // node has never seen. Seed them at clock zero so the next request asks for
+        // their operations; a non-zero value would incorrectly claim they are already
+        // present locally.
+        for (var entry : response.getMaxOperationClockList())
+            data.maxOperationClock.putIfAbsent(entry.getNodeId(), 0L);
         var transfers = new java.util.ArrayList<Node.Transfer>();
         for (var remote : response.getTransfersList()) {
             var id = new Node.OperationId(remote.getLamportClock(), remote.getNodeHash().toByteArray());
@@ -401,7 +407,7 @@ public class NodeUserHandle {
         mergeStaging();
         data.activeNodeSet.mergeFrom(activeNodeSet, node.nodeKey(), Node.nodeKeyFor(peerId), node::nextClock);
         data.activeNodeSet.updateLeaving(node.nodeKey(), data.maxOperationClock, node::nextClock);
-        data.activeNodeSet.lastSeen.put(Node.nodeKeyFor(peerId), System.currentTimeMillis());
+        node.syncHomeActiveNodeSet(data, activeNodeSet, Node.nodeKeyFor(peerId));
         node.persistState();
     }
 
@@ -427,7 +433,7 @@ public class NodeUserHandle {
             data.fileSystem.requireAvailableName(parentId, name, null);
             recordOperation(Sync.UserOperation.newBuilder()
                     .setKind(Sync.UserOperation.Kind.CREATE_DIRECTORY)
-                    .setEntityId(com.google.protobuf.ByteString.copyFrom(node.nextEntityId(data)))
+                    .setEntityId(com.google.protobuf.ByteString.copyFrom(node.nextEntityId(data, data.fileUnitId())))
                     .setParentId(
                             com.google.protobuf.ByteString.copyFrom(java.util.HexFormat.of().parseHex(parentId)))
                     .setName(name)
@@ -442,7 +448,7 @@ public class NodeUserHandle {
             data.fileSystem.requireAvailableName(parentId, name, null);
             recordOperation(Sync.UserOperation.newBuilder()
                     .setKind(Sync.UserOperation.Kind.CREATE_FILE)
-                    .setEntityId(com.google.protobuf.ByteString.copyFrom(node.nextEntityId(data)))
+                    .setEntityId(com.google.protobuf.ByteString.copyFrom(node.nextEntityId(data, data.fileUnitId())))
                     .setParentId(
                             com.google.protobuf.ByteString.copyFrom(java.util.HexFormat.of().parseHex(parentId)))
                     .setName(name)
@@ -553,8 +559,10 @@ public class NodeUserHandle {
                 throw new IllegalArgumentException("A node cannot initiate its own leave process");
             if (!data.activeNodeSet.nodes.contains(leavingNode.nodeKey()))
                 throw new IllegalArgumentException("Peer is not active for this user");
-            data.activeNodeSet.startLeaving(leavingNode.nodeKey(), UUID.randomUUID().toString(),
-                    data.maxOperationClock, node.nodeKey(), node::nextClock);
+            String processId = UUID.randomUUID().toString();
+            if (data.activeNodeSet.startLeaving(leavingNode.nodeKey(), processId,
+                    data.maxOperationClock, node.nodeKey(), node::nextClock))
+                node.mirrorStartLeaving(data, leavingNode.nodeKey(), processId);
             node.persistState();
         }
     }
@@ -591,9 +599,8 @@ public class NodeUserHandle {
         for (String source : data.activeNodeSet.nodes) {
             byte[] sourceBytes;
             try {
-                sourceBytes = java.util.HexFormat.of().parseHex(source);
+                sourceBytes = Node.parseNodeKey(source);
             } catch (IllegalArgumentException e) {
-                // TODO 3: Skip malformed node IDs instead of throwing
                 continue;
             }
             var candidate = new Node.OperationId(data.maxOperationClock.getOrDefault(source, 0L), sourceBytes);
@@ -607,6 +614,8 @@ public class NodeUserHandle {
             try {
                 var userOperation = Sync.UserOperation.parseFrom(operation.payload);
                 if (userOperation.getKind() != Sync.UserOperation.Kind.DIRECT_MESSAGE
+                        && userOperation.getKind() != Sync.UserOperation.Kind.RECEIVE_MESSAGE
+                        && userOperation.getKind() != Sync.UserOperation.Kind.SET_SHARED_FOLDER_LABEL
                         && userOperation.getKind() != Sync.UserOperation.Kind.PARTICIPATE_SYNC_UNIT
                         && userOperation.getKind() != Sync.UserOperation.Kind.LEAVE_SYNC_UNIT)
                     removable.add(operation);

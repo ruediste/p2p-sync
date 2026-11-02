@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -18,7 +17,6 @@ import java.util.function.Consumer;
 
 import com.github.ruediste.p2psync.storage.BlockType.BlockRef;
 import com.github.ruediste.p2psync.storage.DataStorage.Area;
-import com.github.ruediste.p2psync.storage.DataStorage.PersistableBlockType;
 
 /**
  * Read-only consistency check of the committed state of a {@link DataStorage}
@@ -26,10 +24,9 @@ import com.github.ruediste.p2psync.storage.DataStorage.PersistableBlockType;
  *
  * <p>
  * Verifies that every block with a reference count is reachable from the root
- * block, that stored reference counts (ref-count tree plus the persisted
- * deferred updates) match the number of references, and that every block
- * of the file is accounted for exactly once: either allocated, on a deferred
- * free list, or contained in its area's free-space tree.
+ * block, that stored reference counts match the number of references, and that
+ * every block of the file is accounted for exactly once: either allocated, on a
+ * deferred free list, or contained in its area's free-space tree.
  *
  * <p>
  * Root reference handles must be registered on the storage before running the
@@ -40,7 +37,7 @@ public class StorageCheck {
     public enum BlockKind {
         /** reachable and ref counted */
         REFERENCED,
-        /** reference count drops to zero with the persisted updates */
+        /** reachable but not ref counted */
         PENDING_RELEASE,
         /** has a positive reference count, but is not reachable */
         UNREFERENCED,
@@ -125,9 +122,6 @@ public class StorageCheck {
     private record Claim(long offset, Area area, BlockKind kind, String description) {
     }
 
-    private record Update(long value, Area area, Optional<BlockType<?>> type) {
-    }
-
     private record Interval(long start, long end, Area area, String description) {
     }
 
@@ -173,11 +167,10 @@ public class StorageCheck {
         }
 
         Map<Long, Long> treeCounts = loadRefCountTree();
-        Map<Long, Update> updates = loadUpdates(root.refCountUpdateList.value);
-        checkRefCounts(treeCounts, updates);
+        checkRefCounts(treeCounts);
         for (Area area : Area.values())
-            checkExclusiveTree(storage.freeSpaceTrees.get(area), "free space tree " + area, treeCounts, updates);
-        checkExclusiveTree(storage.refCountTree, "ref count tree", treeCounts, updates);
+            checkExclusiveTree(storage.freeSpaceTrees.get(area), "free space tree " + area, treeCounts);
+        checkExclusiveTree(storage.refCountTree, "ref count tree", treeCounts);
 
         for (Area area : Area.values())
             readList(root.getDeferredFreeListHead(area), "deferred free list (" + area + ")", Long.BYTES,
@@ -185,7 +178,11 @@ public class StorageCheck {
 
         Set<Long> pendingMetaRemovals = new TreeSet<>();
         readList(root.pendingMetaFreeTreeRemovalList.value, "pending META free-tree removal list", Long.BYTES,
-                buffer -> pendingMetaRemovals.add(buffer.getLong()));
+                buffer -> {
+                    long offset = buffer.getLong();
+                    if (!pendingMetaRemovals.add(offset))
+                        error("Duplicate pending META free-tree removal for block " + offset);
+                });
 
         EnumMap<Area, TreeMap<Long, Long>> freeExtents = loadFreeExtents();
         removePendingMetaRemovals(freeExtents.get(Area.META), pendingMetaRemovals);
@@ -236,25 +233,6 @@ public class StorageCheck {
         return counts;
     }
 
-    private Map<Long, Update> loadUpdates(long head) {
-        Map<Long, Update> updates = new HashMap<>();
-        readList(head, "ref-count update list", Long.BYTES + Long.BYTES + 2, buffer -> {
-            long offset = buffer.getLong();
-            long value = buffer.getLong();
-            Area area = DataStorage.areaFromCode(Byte.toUnsignedInt(buffer.get()));
-            int typeCode = Byte.toUnsignedInt(buffer.get());
-            Optional<BlockType<?>> type = typeCode == 0 ? Optional.empty()
-                    : Optional.of(PersistableBlockType.fromCode(typeCode).blockType.apply(storage));
-            if (value < 0)
-                error("Negative ref-count update for block " + offset);
-            if (value == 0 && type.isEmpty())
-                error("Zero ref-count update without block type for block " + offset);
-            if (updates.put(offset, new Update(value, area, type)) != null)
-                error("Duplicate ref-count update for block " + offset);
-        });
-        return updates;
-    }
-
     /**
      * Reads a linked list of META blocks with the layout next(8), count(8),
      * entries. The list blocks themselves are claimed as {@link BlockKind#LIST}.
@@ -289,10 +267,10 @@ public class StorageCheck {
     }
 
     /**
-     * Traverses all blocks reachable from the root block and from blocks pending
-     * release, counting references, and compares the counts with the stored ones.
+     * Traverses all blocks reachable from the root block, counting references,
+     * and compares the counts with the stored ones.
      */
-    private void checkRefCounts(Map<Long, Long> treeCounts, Map<Long, Update> updates) {
+    private void checkRefCounts(Map<Long, Long> treeCounts) {
         Map<Long, BlockRef> visited = new HashMap<>();
         Map<Long, Long> expected = new HashMap<>();
         ArrayDeque<BlockRef> queue = new ArrayDeque<>();
@@ -313,18 +291,6 @@ public class StorageCheck {
         var rootRef = new BlockRef(storage.superBlock.rootBlock, Area.SYSTEM, RootBlock.getBlockType(storage));
         expected.put(rootRef.blockOffset(), 1L);
         visit.accept(rootRef);
-
-        // blocks released by the persisted updates still hold references to their
-        // children
-        updates.forEach((offset, update) -> {
-            long stored = treeCounts.getOrDefault(offset, 0L);
-            if (stored > 0 && update.value == 0 && update.type.isPresent()) {
-                var ref = new BlockRef(offset, update.area, update.type.get());
-                if (ref.type() instanceof BTree.NodeBlockType && treeOf.putIfAbsent(offset, "pending release") == null)
-                    treeRoots.add(offset);
-                visit.accept(ref);
-            }
-        });
 
         while (!queue.isEmpty()) {
             BlockRef ref = queue.poll();
@@ -363,36 +329,27 @@ public class StorageCheck {
 
         Set<Long> offsets = new TreeSet<>(visited.keySet());
         offsets.addAll(treeCounts.keySet());
-        offsets.addAll(updates.keySet());
         for (long offset : offsets) {
             long stored = treeCounts.getOrDefault(offset, 0L);
-            Update update = updates.get(offset);
-            long effective = update == null ? stored : update.value;
-            if (effective < 0)
-                error("Negative effective ref count " + effective + " for block " + offset);
+            if (stored < 0)
+                error("Negative ref count " + stored + " for block " + offset);
             BlockRef ref = visited.get(offset);
             if (ref != null) {
                 if (!isValidOffset(offset, ref.area()))
                     continue;
                 long expectedCount = expected.getOrDefault(offset, 0L);
-                if (effective != expectedCount)
+                if (stored != expectedCount)
                     error("Ref count mismatch for " + ref.area() + " block " + offset + ": stored=" + stored
-                            + ", update=" + (update == null ? 0 : update.value) + ", references="
-                            + expectedCount);
-                claim(offset, ref.area(), effective > 0 ? BlockKind.REFERENCED : BlockKind.PENDING_RELEASE,
+                            + ", references=" + expectedCount);
+                claim(offset, ref.area(), stored > 0 ? BlockKind.REFERENCED : BlockKind.PENDING_RELEASE,
                         "ref counted block");
-            } else if (effective > 0) {
-                if (update != null) {
-                    error("Unreferenced " + update.area + " block " + offset + " with ref count " + effective);
-                    claim(offset, update.area, BlockKind.UNREFERENCED, "unreferenced block");
-                } else
-                    error("Unreferenced block " + offset + " (unknown area) with ref count " + effective);
+            } else if (stored > 0) {
+                error("Unreferenced block " + offset + " (unknown area) with ref count " + stored);
             }
         }
     }
 
-    private void checkExclusiveTree(BTree<?, ?> tree, String name, Map<Long, Long> counts,
-            Map<Long, Update> updates) {
+    private void checkExclusiveTree(BTree<?, ?> tree, String name, Map<Long, Long> counts) {
         if (tree.rootOffset == 0)
             return;
         var pending = new ArrayDeque<Long>();
@@ -410,7 +367,7 @@ public class StorageCheck {
                 continue;
             // Uncounted does not mean free: these nodes still occupy allocated space.
             claim(offset, Area.META, BlockKind.REFERENCED, "exclusive block of " + name);
-            if (counts.containsKey(offset) || updates.containsKey(offset))
+            if (counts.containsKey(offset))
                 error("Exclusive tree block " + offset + " has a reference count");
             try {
                 var block = storage.readBlock(offset, Area.META, tree.blockType);

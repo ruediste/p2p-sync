@@ -194,7 +194,6 @@ class StorageCheckTest {
                         handle.write(new DataStorage.ByteArrayBlock(new byte[storage.blockSize(Area.DATA)]));
                 }
                 storage.commit();
-                assertEquals(0, storage.rootBlock.refCountUpdateList.value);
                 assertTrue(storage.refCountUpdates.entrySet().isEmpty());
                 assertCheckPasses(file, handleCount);
                 if (transaction % 3 == 0)

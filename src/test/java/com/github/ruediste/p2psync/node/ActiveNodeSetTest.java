@@ -254,7 +254,7 @@ class ActiveNodeSetTest {
         assertEquals(ActiveNodeSet.Phase.A, set.leavingProcess.phase);
     }
 
-    /** Verifies that updateLeaving ignores missing, completed, and own leave processes. */
+    /** Verifies that updateLeaving ignores missing and own leave processes. */
     @Test
     void updateLeavingIgnoresInactiveProcesses() {
         var noProcess = setWith("A", 5, "A", "B");
@@ -263,11 +263,19 @@ class ActiveNodeSetTest {
         var leavingNode = setWith("A", 5, "A", "B");
         startProcess(leavingNode, ActiveNodeSet.Phase.A, "p", "A", "A", 3);
         assertFalse(leavingNode.updateLeaving("A", Map.of("A", 3L), nextClock()));
+    }
 
-        var completed = setWith("A", 5, "A", "B");
-        startProcess(completed, ActiveNodeSet.Phase.I, "p", "C", "A", 3);
-        assertFalse(completed.updateLeaving("A", Map.of("C", 3L), nextClock()));
-        assertEquals(5, completed.version.clock);
+    /** Verifies that a completed leave process returns the set to idle. */
+    @Test
+    void completedProcessReturnsToIdle() {
+        var set = setWith("A", 5, "A", "B");
+        startProcess(set, ActiveNodeSet.Phase.I, "p", "C", "A", 3);
+
+        assertTrue(set.updateLeaving("A", Map.of("C", 3L), nextClock()));
+        assertNull(set.leavingProcess);
+        assertEquals("A", set.version.nodeId);
+        assertEquals(101, set.version.clock);
+        assertFalse(set.updateLeaving("A", Map.of("C", 3L), nextClock()));
     }
 
     /** Verifies that a confirmation is postponed while the local clock is behind. */
@@ -336,23 +344,13 @@ class ActiveNodeSetTest {
         assertEquals(ActiveNodeSet.Phase.I, set.leavingProcess.phase);
         assertEquals(Set.of("A", "B"), set.nodes);
         assertTrue(set.leavingProcess.confirmedBy.isEmpty());
-        assertFalse(set.updateLeaving("A", Map.of("C", 5L), nextClock()));
+
+        // The next update returns the completed process to idle.
+        assertTrue(set.updateLeaving("A", Map.of("C", 5L), nextClock()));
+        assertNull(set.leavingProcess);
     }
 
-    /** Verifies that lastSeen is local state and never copied from a remote set. */
-    @Test
-    void lastSeenIsNotMergedFromRemote() {
-        var local = setWith("A", 5, "A", "B");
-        local.lastSeen.put("A", 1L);
-        var remote = setWith("B", 9, "A", "B");
-        remote.lastSeen.put("B", 99L);
-
-        local.mergeFrom(remote, "A", "B", nextClock());
-        assertEquals(Set.of("A"), local.lastSeen.keySet());
-        assertEquals(1L, local.lastSeen.get("A"));
-    }
-
-    /** Verifies that a node removed by a completed leave process is not re-added by a stale peer. */
+    /** Verifies that a node removed by a leave process is not re-added by a stale peer. */
     @Test
     void removedNodeCannotBeReAdded() {
         var local = setWith("A", 5, "A", "B", "C");
@@ -407,28 +405,24 @@ class ActiveNodeSetTest {
         assertTrue(local.nodes.contains("C"));
     }
 
-    /** Verifies that a copy owns its nodes, lastSeen entries, and leaving process. */
+    /** Verifies that a copy is independent from its source. */
     @Test
     void copyIsIndependent() {
         var original = setWith("A", 5, "A", "B");
-        original.lastSeen.put("A", 1L);
         startProcess(original, ActiveNodeSet.Phase.A, "p", "B", "B", 5, "A");
 
         var copy = original.copy();
         copy.nodes.add("C");
         copy.leavingProcess.confirmedBy.add("B");
-        copy.lastSeen.put("B", 2L);
 
         assertEquals(Set.of("A", "B"), original.nodes);
         assertEquals(Set.of("A"), original.leavingProcess.confirmedBy);
-        assertFalse(original.lastSeen.containsKey("B"));
     }
 
-    /** Verifies that the persisted version, nodes, lastSeen, and leave process round-trip. */
+    /** Verifies that the persisted version, nodes, and leave process round-trip. */
     @Test
     void persistedStateRoundTrips() {
         var original = setWith("A", 5, "A", "B", "C");
-        original.lastSeen.put("A", 11L);
         original.removedNodes.add("D");
         startProcess(original, ActiveNodeSet.Phase.B, "p", "C", "A", 9, "A", "B");
 
@@ -439,7 +433,6 @@ class ActiveNodeSetTest {
         assertEquals("A", loaded.version.nodeId);
         assertEquals(5, loaded.version.clock);
         assertEquals(Set.of("A", "B", "C"), loaded.nodes);
-        assertEquals(11L, loaded.lastSeen.get("A"));
         assertEquals(ActiveNodeSet.Phase.B, loaded.leavingProcess.phase);
         assertEquals("p", loaded.leavingProcess.processId);
         assertEquals("C", loaded.leavingProcess.leavingNodeId);
