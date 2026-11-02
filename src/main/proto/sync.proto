@@ -290,6 +290,8 @@ message RemoteSyncRequest {
 	bytes requesterUserPublicKey = 10;
 	PersistedSyncUnit syncUnitUpdate = 11;
 	repeated SyncUnitContentOffset contentOffsets = 12;
+	bytes requesterSignature = 13;
+	bool userLookup = 14;
 }
 
 message SyncUnitContentOffset {

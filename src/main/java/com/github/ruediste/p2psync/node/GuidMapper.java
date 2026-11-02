@@ -1,9 +1,9 @@
 package com.github.ruediste.p2psync.node;
 
 import java.nio.ByteBuffer;
-import java.util.HexFormat;
 
 import com.github.ruediste.p2psync.storage.DataStorage;
+import com.github.ruediste.p2psync.util.FullGuid;
 import com.github.ruediste.p2psync.util.ShortGuid;
 
 /**
@@ -44,11 +44,9 @@ final class GuidMapper {
         return nextNodeId;
     }
 
-    ShortGuid toShort(byte[] fullId) {
-        if (fullId.length != 40)
-            throw new IllegalArgumentException("Full entity id must contain 40 bytes");
-        byte[] nodeHash = java.util.Arrays.copyOfRange(fullId, 0, 32);
-        long counter = ByteBuffer.wrap(fullId, 32, 8).getLong();
+    ShortGuid toShort(FullGuid fullId) {
+        byte[] nodeHash = fullId.nodeHash();
+        long counter = fullId.counter();
         long nodeId = forward.getNodeId(nodeHash);
         if (nodeId < 0) {
             long next = nextNodeId();
@@ -66,11 +64,15 @@ final class GuidMapper {
         return result;
     }
 
-    byte[] toFull(ShortGuid guid) {
+    ShortGuid toShort(byte[] fullId) {
+        return toShort(FullGuid.fromBytes(fullId));
+    }
+
+    FullGuid toFull(ShortGuid guid) {
         byte[] nodeHash = reverse.getNodeHash(Integer.toUnsignedLong(guid.nodeId));
         if (nodeHash == null)
             throw new IllegalStateException("Missing reverse GUID mapping");
-        return ByteBuffer.allocate(40).put(nodeHash).putLong(guid.counter).array();
+        return new FullGuid(nodeHash, guid.counter);
     }
 
     void flush() {
@@ -81,11 +83,11 @@ final class GuidMapper {
         dirty = false;
     }
 
-    static byte[] fullId(byte[] nodeHash, long counter) {
-        return ByteBuffer.allocate(40).put(nodeHash).putLong(counter).array();
+    static FullGuid fullId(byte[] nodeHash, long counter) {
+        return new FullGuid(nodeHash, counter);
     }
 
-    static String hex(byte[] fullId) {
-        return HexFormat.of().formatHex(fullId);
+    static String hex(FullGuid fullId) {
+        return fullId.hex();
     }
 }

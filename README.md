@@ -41,7 +41,22 @@ directory is optional; when omitted, a sibling directory named
 operation B-trees, GUID mappings, and `FileTree` file data in that single file.
 Node storage is not password-locked; protect the database file with filesystem
 permissions. Run one process per node database file.
+
+Use `--no-mount` to run without mounting the FUSE filesystem, and `--drive PORT`
+(or `--drive=PORT`) to start the local [SwingDrive](doc/swingdrive.md)
+development server, which inspects, drives, and screenshots the Swing UI over
+HTTP and exposes the same combined file view through `/fs/...` endpoints.
+`--drive` alone uses port 9222, and port 0 selects a random free port. For
+example:
+
+```bash
+mvn compile org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
+	-Dexec.mainClass=com.github.ruediste.p2psync.ui.DesktopMain \
+	-Dexec.args="--no-mount --drive 9222 /absolute/path/node.db"
+```
+
 The main window remains available when the desktop environment has no system tray.
+
 The tray uses Java AWT and requires legacy X11 tray support. On XFCE, add the
 `Status Tray Plugin` (or `Notification Area` on older versions) to the panel
 and ensure legacy tray icons are enabled. A StatusNotifier/AppIndicator-only

@@ -2,9 +2,14 @@ package com.github.ruediste.p2psync.node;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
+import java.util.function.Supplier;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jnr.ffi.Pointer;
 import jnr.posix.POSIXFactory;
@@ -20,6 +25,7 @@ import ru.serce.jnrfuse.struct.FuseFileInfo;
  * tree and the accepted shared folders by their local labels.
  */
 public class NodeFuseFS extends FuseStubFS {
+    private static final Logger log = LoggerFactory.getLogger(NodeFuseFS.class);
     private final Node node;
     private final int uid = POSIXFactory.getNativePOSIX().getuid();
     private final int gid = POSIXFactory.getNativePOSIX().getgid();
@@ -32,6 +38,27 @@ public class NodeFuseFS extends FuseStubFS {
         }
     }
 
+    /**
+     * Raised by the direct (non-FUSE) filesystem helpers when a request fails.
+     * The errno uses the same values as the FUSE callbacks.
+     */
+    public static final class FsException extends RuntimeException {
+        private final int errno;
+
+        FsException(int errno) {
+            super("Filesystem error " + errno);
+            this.errno = errno;
+        }
+
+        public int errno() {
+            return errno;
+        }
+    }
+
+    /** One entry returned by {@link #list(String)}. */
+    public record FsEntry(String name, boolean directory, long size) {
+    }
+
     private record UserPath(NodeUserHandle user, Node.RootEntry root, String path) {
     }
 
@@ -42,13 +69,46 @@ public class NodeFuseFS extends FuseStubFS {
         this.node = java.util.Objects.requireNonNull(node);
     }
 
+    /**
+     * Runs one FUSE request while holding the node state lock. The node's file
+     * trees, GUID mappings, and B-trees are not thread-safe, and a request such
+     * as {@code getattr} performs several dependent lookups, so the whole
+     * request is serialized against mutations and against other FUSE threads.
+     */
     private int execute(IntSupplier action) {
-        try {
-            return action.getAsInt();
-        } catch (FsError error) {
-            return -error.errno;
-        } catch (IllegalArgumentException error) {
-            return -ErrorCodes.EINVAL();
+        synchronized (node) {
+            try {
+                return action.getAsInt();
+            } catch (FsError error) {
+                return -error.errno;
+            } catch (IllegalArgumentException error) {
+                return -ErrorCodes.EINVAL();
+            } catch (RuntimeException error) {
+                log.error("FUSE operation failed", error);
+                return -ErrorCodes.EIO();
+            }
+        }
+    }
+
+    /**
+     * Runs a direct filesystem operation while holding the same node lock used
+     * by the FUSE callbacks. Unlike {@link #execute}, failures are reported as
+     * exceptions so they can be translated into HTTP responses.
+     */
+    private <T> T executeValue(Supplier<T> action) {
+        synchronized (node) {
+            try {
+                return action.get();
+            } catch (FsError error) {
+                throw new FsException(error.errno);
+            } catch (FsException error) {
+                throw error;
+            } catch (IllegalArgumentException error) {
+                throw new FsException(ErrorCodes.EINVAL());
+            } catch (RuntimeException error) {
+                log.error("Filesystem operation failed", error);
+                throw new FsException(ErrorCodes.EIO());
+            }
         }
     }
 
@@ -245,37 +305,225 @@ public class NodeFuseFS extends FuseStubFS {
         });
     }
 
+    private void createEntryValue(String path, boolean directory) {
+        Destination target = destination(path);
+        String fullPath = childPath(target.parent(), target.name());
+        if (target.root().home()) {
+            if (target.user().exists(fullPath))
+                throw new FsError(ErrorCodes.EEXIST());
+            try {
+                if (directory)
+                    target.user().createDirectory(fullPath);
+                else
+                    target.user().createFile(fullPath);
+            } catch (IllegalArgumentException error) {
+                throw new FsError(ErrorCodes.ENOENT());
+            }
+        } else {
+            boolean file = sharedFileExists(target.user(), target.root(), fullPath);
+            boolean existingDirectory = sharedDirectoryExists(target.user(), target.root(), fullPath);
+            if (directory) {
+                if (file || existingDirectory)
+                    throw new FsError(ErrorCodes.EEXIST());
+            } else {
+                if (existingDirectory && !file)
+                    throw new FsError(ErrorCodes.EISDIR());
+                if (!file)
+                    node.putSharedFile(target.root().unitId(), target.user().data.userId(),
+                            sharedKey(fullPath), new byte[0]);
+            }
+        }
+    }
+
     private int createEntry(String path, boolean directory) {
         return execute(() -> {
-            Destination target = destination(path);
-            String fullPath = childPath(target.parent(), target.name());
-            if (target.root().home()) {
-                if (target.user().exists(fullPath))
-                    throw new FsError(ErrorCodes.EEXIST());
-                try {
-                    if (directory)
-                        target.user().createDirectory(fullPath);
-                    else
-                        target.user().createFile(fullPath);
-                } catch (IllegalArgumentException error) {
-                    throw new FsError(ErrorCodes.ENOENT());
-                }
-            } else {
-                boolean file = sharedFileExists(target.user(), target.root(), fullPath);
-                boolean existingDirectory = sharedDirectoryExists(target.user(), target.root(), fullPath);
-                if (directory) {
-                    if (file || existingDirectory)
-                        throw new FsError(ErrorCodes.EEXIST());
-                } else {
-                    if (existingDirectory && !file)
-                        throw new FsError(ErrorCodes.EISDIR());
-                    if (!file)
-                        node.putSharedFile(target.root().unitId(), target.user().data.userId(),
-                                sharedKey(fullPath), new byte[0]);
-                }
-            }
+            createEntryValue(path, directory);
             return 0;
         });
+    }
+
+    /** Lists a directory through the same combined view the FUSE mount exposes. */
+    public List<FsEntry> list(String path) {
+        return executeValue(() -> listValue(resolve(path)));
+    }
+
+    private List<FsEntry> listValue(UserPath target) {
+        var result = new ArrayList<FsEntry>();
+        if (target.user() == null) {
+            node.listUsers().forEach(user -> result.add(new FsEntry(user.localName(), true, 0)));
+            return result;
+        }
+        if (target.root() == null) {
+            node.listRootEntries(target.user().data.userId())
+                    .forEach(entry -> result.add(new FsEntry(entry.label(), true, 0)));
+            return result;
+        }
+        if (target.root().home()) {
+            if (!target.user().exists(target.path()))
+                throw new FsError(ErrorCodes.ENOENT());
+            if (!target.user().isDirectory(target.path()))
+                throw new FsError(ErrorCodes.ENOTDIR());
+            target.user().forEachDirectory(target.path(), entry -> {
+                String child = childPath(target.path(), entry.name());
+                long size = entry.directory() ? 0 : target.user().fileSize(child);
+                result.add(new FsEntry(entry.name(), entry.directory(), size));
+            });
+            return result;
+        }
+        if (!sharedKey(target.path()).isEmpty()
+                && !sharedDirectoryExists(target.user(), target.root(), target.path()))
+            throw new FsError(ErrorCodes.ENOTDIR());
+        forEachSharedDirectory(target.user(), target.root(), target.path(), entry -> {
+            String child = childPath(target.path(), entry.name());
+            long size = entry.directory() ? 0
+                    : Math.max(0, node.sharedFileSize(target.root().unitId(), target.user().data.userId(),
+                            sharedKey(child)));
+            result.add(new FsEntry(entry.name(), entry.directory(), size));
+        });
+        return result;
+    }
+
+    /** Returns metadata for one path without mounting the filesystem. */
+    public FsEntry stat(String path) {
+        return executeValue(() -> {
+            UserPath target = resolve(path);
+            if (target.user() == null || target.root() == null)
+                return new FsEntry(leafName(target.path()), true, 0);
+            if (target.root().home()) {
+                if (!target.user().exists(target.path()))
+                    throw new FsError(ErrorCodes.ENOENT());
+                boolean directory = target.user().isDirectory(target.path());
+                return new FsEntry(leafName(target.path()), directory,
+                        directory ? 0 : target.user().fileSize(target.path()));
+            }
+            String key = sharedKey(target.path());
+            if (key.isEmpty())
+                return new FsEntry("", true, 0);
+            long size = node.sharedFileSize(target.root().unitId(), target.user().data.userId(), key);
+            if (size >= 0)
+                return new FsEntry(leafName(target.path()), false, size);
+            if (sharedDirectoryExists(target.user(), target.root(), target.path()))
+                return new FsEntry(leafName(target.path()), true, 0);
+            throw new FsError(ErrorCodes.ENOENT());
+        });
+    }
+
+    /** Reads a complete file through the combined root view. */
+    public byte[] readFile(String path) {
+        return executeValue(() -> {
+            UserPath target = resolve(path);
+            if (target.user() == null || target.root() == null
+                    || isDirectory(target.user(), target.root(), target.path()))
+                throw new FsError(ErrorCodes.EISDIR());
+            byte[] content = target.root().home()
+                    ? target.user().readFile(target.path())
+                    : node.readSharedFile(target.root().unitId(), target.user().data.userId(),
+                            sharedKey(target.path()));
+            if (content == null)
+                throw new FsError(ErrorCodes.ENOENT());
+            return content;
+        });
+    }
+
+    /**
+     * Replaces a file's content, creating it when its parent directory exists.
+     * Shared-folder paths are created implicitly, matching the FUSE write path.
+     */
+    public void writeFile(String path, byte[] bytes) {
+        Objects.requireNonNull(bytes, "bytes");
+        executeValue(() -> {
+            UserPath target = resolve(path);
+            if (target.user() == null || target.root() == null)
+                throw new FsError(ErrorCodes.EBUSY());
+            if (target.root().home()) {
+                if (target.user().exists(target.path()) && target.user().isDirectory(target.path()))
+                    throw new FsError(ErrorCodes.EISDIR());
+                if (!target.user().exists(parentPath(target.path())))
+                    throw new FsError(ErrorCodes.ENOENT());
+                if (!target.user().exists(target.path()))
+                    target.user().createFile(target.path());
+                target.user().writeFile(target.path(), 0, bytes);
+                target.user().truncateFile(target.path(), bytes.length);
+            } else {
+                if (sharedKey(target.path()).isEmpty())
+                    throw new FsError(ErrorCodes.EBUSY());
+                if (sharedDirectoryExists(target.user(), target.root(), target.path()))
+                    throw new FsError(ErrorCodes.EISDIR());
+                node.putSharedFile(target.root().unitId(), target.user().data.userId(),
+                        sharedKey(target.path()), bytes);
+            }
+            return null;
+        });
+    }
+
+    public void createDirectory(String path) {
+        executeValue(() -> {
+            createEntryValue(path, true);
+            return null;
+        });
+    }
+
+    public void createFile(String path) {
+        executeValue(() -> {
+            createEntryValue(path, false);
+            return null;
+        });
+    }
+
+    /** Deletes a file or directory; directories may be removed recursively. */
+    public void delete(String path, boolean recursive) {
+        executeValue(() -> {
+            UserPath target = resolve(path);
+            if (target.user() == null || target.root() == null || target.path().equals("/"))
+                throw new FsError(ErrorCodes.EBUSY());
+            deleteValue(target, recursive);
+            return null;
+        });
+    }
+
+    private void deleteValue(UserPath target, boolean recursive) {
+        if (target.root().home()) {
+            if (!target.user().exists(target.path()))
+                throw new FsError(ErrorCodes.ENOENT());
+            if (!target.user().isDirectory(target.path())) {
+                target.user().delete(target.path());
+                return;
+            }
+            var children = target.user().listDirectory(target.path());
+            if (!children.isEmpty() && !recursive)
+                throw new FsError(ErrorCodes.ENOTEMPTY());
+            if (recursive)
+                for (var child : children)
+                    deleteValue(new UserPath(target.user(), target.root(),
+                            childPath(target.path(), child.name())), true);
+            target.user().delete(target.path());
+            return;
+        }
+        String key = sharedKey(target.path());
+        if (key.isEmpty())
+            throw new FsError(ErrorCodes.EBUSY());
+        if (sharedFileExists(target.user(), target.root(), target.path())) {
+            node.deleteSharedFile(target.root().unitId(), target.user().data.userId(), key);
+            return;
+        }
+        if (!sharedDirectoryExists(target.user(), target.root(), target.path()))
+            throw new FsError(ErrorCodes.ENOENT());
+        var files = new ArrayList<String>();
+        String prefix = key + "/";
+        node.forEachSharedFile(target.root().unitId(), target.user().data.userId(), (filePath, size) -> {
+            if (filePath.startsWith(prefix))
+                files.add(filePath);
+        });
+        if (!files.isEmpty() && !recursive)
+            throw new FsError(ErrorCodes.ENOTEMPTY());
+        files.forEach(file -> node.deleteSharedFile(target.root().unitId(), target.user().data.userId(), file));
+    }
+
+    /** Moves or renames an entry through the combined root view. */
+    public void move(String path, String newPath) {
+        int result = rename(path, newPath);
+        if (result < 0)
+            throw new FsException(-result);
     }
 
     @Override

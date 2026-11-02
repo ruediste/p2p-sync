@@ -12,6 +12,7 @@ import com.github.ruediste.p2psync.libp2p.core.PeerId;
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 import com.github.ruediste.p2psync.node.Node.NodeUserData;
 import com.github.ruediste.p2psync.proto.Sync;
+import com.github.ruediste.p2psync.util.FullGuid;
 
 public class NodeUserHandle {
     private final Node node;
@@ -88,47 +89,50 @@ public class NodeUserHandle {
 
     public String sendMessage(PubKey recipientUserId, Sync.UserMessage.Type type, String subject, String body,
             java.util.List<Sync.SyncUnitAttachment> attachments, SyncUnitId invitedSyncUnitId) {
-        java.util.Objects.requireNonNull(recipientUserId);
-        java.util.Objects.requireNonNull(type);
-        if (type == Sync.UserMessage.Type.UNRECOGNIZED)
-            throw new IllegalArgumentException("Unknown user message type");
-        boolean invitation = type == Sync.UserMessage.Type.SHARED_FOLDER_INVITATION
-                || type == Sync.UserMessage.Type.MESSAGE_CHANNEL_INVITATION
-                || type == Sync.UserMessage.Type.TODO_LIST_INVITATION;
-        if (invitation != (invitedSyncUnitId != null))
-            throw new IllegalArgumentException("Invitation messages require exactly one SyncUnit ID");
-        if (invitation) {
-            var unit = node.syncUnits.get(invitedSyncUnitId);
-            var expectedType = switch (type) {
-                case SHARED_FOLDER_INVITATION -> SyncUnitAuthorization.Type.SHARED_FOLDER;
-                case TODO_LIST_INVITATION -> SyncUnitAuthorization.Type.TODO_LIST;
-                case MESSAGE_CHANNEL_INVITATION -> SyncUnitAuthorization.Type.MESSAGE_CHANNEL;
-                default -> throw new IllegalArgumentException("Not a SyncUnit invitation message");
-            };
-            if (unit == null || unit.type != expectedType
-                    || !unit.authorization.pendingInvitations().containsKey(recipientUserId))
-                throw new IllegalArgumentException(
-                        "Invitation message requires a pending invitation for its recipient");
-            SyncUnitAuthorization.requireAuthorized(unit.type, unit.creator, unit.authorization.members(),
-                    data.userId(), SyncUnitAuthorization.Action.INVITE);
+        String messageId;
+        synchronized (node) {
+            java.util.Objects.requireNonNull(recipientUserId);
+            java.util.Objects.requireNonNull(type);
+            if (type == Sync.UserMessage.Type.UNRECOGNIZED)
+                throw new IllegalArgumentException("Unknown user message type");
+            boolean invitation = type == Sync.UserMessage.Type.SHARED_FOLDER_INVITATION
+                    || type == Sync.UserMessage.Type.MESSAGE_CHANNEL_INVITATION
+                    || type == Sync.UserMessage.Type.TODO_LIST_INVITATION;
+            if (invitation != (invitedSyncUnitId != null))
+                throw new IllegalArgumentException("Invitation messages require exactly one SyncUnit ID");
+            if (invitation) {
+                var unit = node.syncUnits.get(invitedSyncUnitId);
+                var expectedType = switch (type) {
+                    case SHARED_FOLDER_INVITATION -> SyncUnitAuthorization.Type.SHARED_FOLDER;
+                    case TODO_LIST_INVITATION -> SyncUnitAuthorization.Type.TODO_LIST;
+                    case MESSAGE_CHANNEL_INVITATION -> SyncUnitAuthorization.Type.MESSAGE_CHANNEL;
+                    default -> throw new IllegalArgumentException("Not a SyncUnit invitation message");
+                };
+                if (unit == null || unit.type != expectedType
+                        || !unit.authorization.pendingInvitations().containsKey(recipientUserId))
+                    throw new IllegalArgumentException(
+                            "Invitation message requires a pending invitation for its recipient");
+                SyncUnitAuthorization.requireAuthorized(unit.type, unit.creator, unit.authorization.members(),
+                        data.userId(), SyncUnitAuthorization.Action.INVITE);
+            }
+            messageId = UUID.randomUUID().toString();
+            var message = Sync.UserMessage.newBuilder()
+                    .setMessageId(messageId)
+                    .setSenderUserId(com.google.protobuf.ByteString.copyFrom(data.userId().bytes()))
+                    .setRecipientUserId(com.google.protobuf.ByteString.copyFrom(recipientUserId.bytes()))
+                    .setType(type)
+                    .setSubject(subject == null ? "" : subject)
+                    .setBody(body == null ? "" : body)
+                    .addAllAttachments(attachments == null ? java.util.List.of() : attachments);
+            if (invitedSyncUnitId != null)
+                message.setInvitedSyncUnitId(com.google.protobuf.ByteString.copyFrom(invitedSyncUnitId.bytes()));
+            recordOperation(Sync.UserOperation.newBuilder()
+                    .setKind(Sync.UserOperation.Kind.DIRECT_MESSAGE)
+                    .setMessageId(messageId)
+                    .setRecipientUserId(com.google.protobuf.ByteString.copyFrom(recipientUserId.bytes()))
+                    .setMessagePayload(message.build().toByteString())
+                    .build());
         }
-        String messageId = UUID.randomUUID().toString();
-        var message = Sync.UserMessage.newBuilder()
-                .setMessageId(messageId)
-                .setSenderUserId(com.google.protobuf.ByteString.copyFrom(data.userId().bytes()))
-                .setRecipientUserId(com.google.protobuf.ByteString.copyFrom(recipientUserId.bytes()))
-                .setType(type)
-                .setSubject(subject == null ? "" : subject)
-                .setBody(body == null ? "" : body)
-                .addAllAttachments(attachments == null ? java.util.List.of() : attachments);
-        if (invitedSyncUnitId != null)
-            message.setInvitedSyncUnitId(com.google.protobuf.ByteString.copyFrom(invitedSyncUnitId.bytes()));
-        recordOperation(Sync.UserOperation.newBuilder()
-                .setKind(Sync.UserOperation.Kind.DIRECT_MESSAGE)
-                .setMessageId(messageId)
-                .setRecipientUserId(com.google.protobuf.ByteString.copyFrom(recipientUserId.bytes()))
-                .setMessagePayload(message.build().toByteString())
-                .build());
         node.deliverPendingMessages();
         return messageId;
     }
@@ -365,28 +369,36 @@ public class NodeUserHandle {
     }
 
     Sync.RemoteSyncRequest buildRemoteSyncRequest(int maxOperations, int byteBudget) {
-        var sources = new java.util.TreeSet<String>();
-        sources.addAll(data.activeNodeSet.nodes);
-        sources.addAll(data.maxOperationClock.keySet());
-        sources.addAll(data.operationSources());
-        var request = Sync.RemoteSyncRequest.newBuilder()
-                .setUserId(com.google.protobuf.ByteString.copyFrom(data.userId().bytes()))
-                .setMaxOperations(maxOperations)
-                .setByteBudget(byteBudget);
-        for (String source : sources) {
-            request.addFromClock(Sync.OperationClock.newBuilder()
-                    .setNodeId(source)
-                    .setClock(data.maxOperationClock.getOrDefault(source, 0L)));
-            var partial = data.retrievalTree.get(source);
-            if (partial != null)
-                request.addOffsets(Sync.OperationOffset.newBuilder()
+        synchronized (node) {
+            var sources = new java.util.TreeSet<String>();
+            sources.addAll(data.activeNodeSet.nodes);
+            sources.addAll(data.maxOperationClock.keySet());
+            sources.addAll(data.operationSources());
+            var request = Sync.RemoteSyncRequest.newBuilder()
+                    .setUserId(com.google.protobuf.ByteString.copyFrom(data.userId().bytes()))
+                    .setMaxOperations(maxOperations)
+                    .setByteBudget(byteBudget);
+            for (String source : sources) {
+                request.addFromClock(Sync.OperationClock.newBuilder()
                         .setNodeId(source)
-                        .setOffset(partial.receivedLength));
+                        .setClock(data.maxOperationClock.getOrDefault(source, 0L)));
+                var partial = data.retrievalTree.get(source);
+                if (partial != null)
+                    request.addOffsets(Sync.OperationOffset.newBuilder()
+                            .setNodeId(source)
+                            .setOffset(partial.receivedLength));
+            }
+            return Node.signRemoteRequest(request.build(), data.userKey);
         }
-        return request.build();
     }
 
     void applyRemoteSyncResponse(PeerId peerId, Sync.RemoteSyncResponse response) {
+        synchronized (node) {
+            applyRemoteSyncResponseLocked(peerId, response);
+        }
+    }
+
+    private void applyRemoteSyncResponseLocked(PeerId peerId, Sync.RemoteSyncResponse response) {
         if (!response.getUserFound())
             throw new IllegalArgumentException("Remote peer does not host user " + data.userId());
         // The response advertises every source the remote knows, including nodes this
@@ -415,27 +427,34 @@ public class NodeUserHandle {
     }
 
     public java.util.List<DirectoryEntry> listDirectory(String path) {
-        var result = new java.util.ArrayList<DirectoryEntry>();
-        forEachDirectory(path, result::add);
-        return result;
+        synchronized (node) {
+            var result = new java.util.ArrayList<DirectoryEntry>();
+            forEachDirectory(path, result::add);
+            return result;
+        }
     }
 
-    /** Streams directory entries to the consumer without materializing the list. */
+    /**
+     * Streams directory entries to the consumer without materializing the list.
+     * The node lock is held while iterating; the consumer must not call back
+     * into the node or perform blocking work.
+     */
     public void forEachDirectory(String path, java.util.function.Consumer<DirectoryEntry> consumer) {
-        data.fileSystem.forEachDirectory(path,
-                entry -> consumer.accept(new DirectoryEntry(entry.name(), entry.directory())));
+        synchronized (node) {
+            data.fileSystem.forEachDirectory(path,
+                    entry -> consumer.accept(new DirectoryEntry(entry.name(), entry.directory())));
+        }
     }
 
     public void createDirectory(String path) {
         synchronized (node) {
-            String parentId = data.fileSystem.resolveParent(path);
+            FullGuid parentId = data.fileSystem.resolveParent(path);
             String name = data.fileSystem.leafName(path);
             data.fileSystem.requireAvailableName(parentId, name, null);
             recordOperation(Sync.UserOperation.newBuilder()
                     .setKind(Sync.UserOperation.Kind.CREATE_DIRECTORY)
                     .setEntityId(com.google.protobuf.ByteString.copyFrom(node.nextEntityId(data, data.fileUnitId())))
-                    .setParentId(
-                            com.google.protobuf.ByteString.copyFrom(java.util.HexFormat.of().parseHex(parentId)))
+                    .setParentId(com.google.protobuf.ByteString.copyFrom(parentId.bytes()))
                     .setName(name)
                     .build());
         }
@@ -443,43 +462,50 @@ public class NodeUserHandle {
 
     public void createFile(String path) {
         synchronized (node) {
-            String parentId = data.fileSystem.resolveParent(path);
+            FullGuid parentId = data.fileSystem.resolveParent(path);
             String name = data.fileSystem.leafName(path);
             data.fileSystem.requireAvailableName(parentId, name, null);
             recordOperation(Sync.UserOperation.newBuilder()
                     .setKind(Sync.UserOperation.Kind.CREATE_FILE)
                     .setEntityId(com.google.protobuf.ByteString.copyFrom(node.nextEntityId(data, data.fileUnitId())))
-                    .setParentId(
-                            com.google.protobuf.ByteString.copyFrom(java.util.HexFormat.of().parseHex(parentId)))
+                    .setParentId(com.google.protobuf.ByteString.copyFrom(parentId.bytes()))
                     .setName(name)
                     .build());
         }
     }
 
     public byte[] readFile(String path) {
-        return data.fileSystem.readFile(path);
+        synchronized (node) {
+            return data.fileSystem.readFile(path);
+        }
     }
 
     public boolean exists(String path) {
-        return data.fileSystem.exists(path);
+        synchronized (node) {
+            return data.fileSystem.exists(path);
+        }
     }
 
     public boolean isDirectory(String path) {
-        return data.fileSystem.isDirectory(path);
+        synchronized (node) {
+            return data.fileSystem.isDirectory(path);
+        }
     }
 
     public long fileSize(String path) {
-        return data.fileSystem.fileSize(path);
+        synchronized (node) {
+            return data.fileSystem.fileSize(path);
+        }
     }
 
     public void writeFile(String path, long offset, byte[] bytes) {
         synchronized (node) {
-            String entityId = data.fileSystem.resolveFile(path);
+            FullGuid entityId = data.fileSystem.resolveFile(path);
             if (offset < 0 || offset > Integer.MAX_VALUE || bytes.length > Integer.MAX_VALUE - offset)
                 throw new IllegalArgumentException("File range exceeds the supported size");
             recordOperation(Sync.UserOperation.newBuilder()
                     .setKind(Sync.UserOperation.Kind.WRITE_FILE)
-                    .setEntityId(com.google.protobuf.ByteString.copyFrom(java.util.HexFormat.of().parseHex(entityId)))
+                    .setEntityId(com.google.protobuf.ByteString.copyFrom(entityId.bytes()))
                     .setOffset(offset)
                     .setData(com.google.protobuf.ByteString.copyFrom(bytes))
                     .build());
@@ -488,12 +514,12 @@ public class NodeUserHandle {
 
     public void truncateFile(String path, long size) {
         synchronized (node) {
-            String entityId = data.fileSystem.resolveFile(path);
+            FullGuid entityId = data.fileSystem.resolveFile(path);
             if (size < 0 || size > Integer.MAX_VALUE)
                 throw new IllegalArgumentException("File size exceeds the supported range");
             recordOperation(Sync.UserOperation.newBuilder()
                     .setKind(Sync.UserOperation.Kind.TRUNCATE_FILE)
-                    .setEntityId(com.google.protobuf.ByteString.copyFrom(java.util.HexFormat.of().parseHex(entityId)))
+                    .setEntityId(com.google.protobuf.ByteString.copyFrom(entityId.bytes()))
                     .setSize(size)
                     .build());
         }
@@ -501,14 +527,14 @@ public class NodeUserHandle {
 
     public void rename(String path, String newName) {
         synchronized (node) {
-            String entityId = data.fileSystem.resolve(path);
-            String parentId = data.fileSystem.resolveParent(path);
-            if (entityId.equals(java.util.HexFormat.of().formatHex(data.rootDirectoryGuid)))
+            FullGuid entityId = data.fileSystem.resolve(path);
+            FullGuid parentId = data.fileSystem.resolveParent(path);
+            if (isRootDirectory(entityId))
                 throw new IllegalArgumentException("Cannot rename the user root directory");
             data.fileSystem.requireAvailableName(parentId, newName, entityId);
             recordOperation(Sync.UserOperation.newBuilder()
                     .setKind(Sync.UserOperation.Kind.RENAME)
-                    .setEntityId(com.google.protobuf.ByteString.copyFrom(java.util.HexFormat.of().parseHex(entityId)))
+                    .setEntityId(com.google.protobuf.ByteString.copyFrom(entityId.bytes()))
                     .setNewName(newName)
                     .build());
         }
@@ -516,15 +542,14 @@ public class NodeUserHandle {
 
     public void move(String path, String newPath) {
         synchronized (node) {
-            String entityId = data.fileSystem.resolve(path);
-            String newParentId = data.fileSystem.resolveParent(newPath);
+            FullGuid entityId = data.fileSystem.resolve(path);
+            FullGuid newParentId = data.fileSystem.resolveParent(newPath);
             String newName = data.fileSystem.leafName(newPath);
             data.fileSystem.validateMove(entityId, newParentId, newName);
             recordOperation(Sync.UserOperation.newBuilder()
                     .setKind(Sync.UserOperation.Kind.MOVE)
-                    .setEntityId(com.google.protobuf.ByteString.copyFrom(java.util.HexFormat.of().parseHex(entityId)))
-                    .setNewParentId(
-                            com.google.protobuf.ByteString.copyFrom(java.util.HexFormat.of().parseHex(newParentId)))
+                    .setEntityId(com.google.protobuf.ByteString.copyFrom(entityId.bytes()))
+                    .setNewParentId(com.google.protobuf.ByteString.copyFrom(newParentId.bytes()))
                     .setNewName(newName)
                     .build());
         }
@@ -532,14 +557,18 @@ public class NodeUserHandle {
 
     public void delete(String path) {
         synchronized (node) {
-            String entityId = data.fileSystem.resolve(path);
-            if (entityId.equals(java.util.HexFormat.of().formatHex(data.rootDirectoryGuid)))
+            FullGuid entityId = data.fileSystem.resolve(path);
+            if (isRootDirectory(entityId))
                 throw new IllegalArgumentException("Cannot delete the user root directory");
             recordOperation(Sync.UserOperation.newBuilder()
                     .setKind(Sync.UserOperation.Kind.DELETE)
-                    .setEntityId(com.google.protobuf.ByteString.copyFrom(java.util.HexFormat.of().parseHex(entityId)))
+                    .setEntityId(com.google.protobuf.ByteString.copyFrom(entityId.bytes()))
                     .build());
         }
+    }
+
+    private boolean isRootDirectory(FullGuid id) {
+        return id.equals(FullGuid.fromBytes(data.rootDirectoryGuid));
     }
 
     private void recordOperation(Sync.UserOperation operation) {
@@ -583,9 +612,12 @@ public class NodeUserHandle {
     }
 
     void rebuildCurrentState() {
-        var state = UserState.replayFromState(node.dataStorage, data.guidMapper, data.snapshotState, data.userId(), data.allOperations().values());
-        data.fileSystem = state.fileSystem;
-        data.contacts = state.contacts;
+        synchronized (node) {
+            var state = UserState.replayFromState(node.dataStorage, data.guidMapper, data.snapshotState,
+                    data.userId(), data.allOperations().values());
+            data.fileSystem = state.fileSystem;
+            data.contacts = state.contacts;
+        }
     }
 
     public boolean truncateStableLog() {

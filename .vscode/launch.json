@@ -29,7 +29,7 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       // "args": ["${input:nodeDataDirectory}", "${input:nodeMountDirectory}"]
-      "args": ["node.db", "mount"]
+      "args": ["--drive", "9222", "node.db", "mount"]
     },
     {
       "type": "java",

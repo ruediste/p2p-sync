@@ -85,7 +85,7 @@ public final class DesktopApp implements AutoCloseable {
     private final JLabel peerLabel = Theme.mono("");
     private final JButton syncButton = Theme.primaryButton("Sync now");
 
-    private JFrame frame;
+    private volatile JFrame frame;
     private TrayIcon trayIcon;
     private MenuItem trayOpen;
     private MenuItem trayQuit;
@@ -109,6 +109,12 @@ public final class DesktopApp implements AutoCloseable {
         this.node = java.util.Objects.requireNonNull(node);
         this.mountPoint = java.util.Objects.requireNonNull(mountPoint);
         this.shutdown = java.util.Objects.requireNonNull(shutdown);
+        statusLabel.setName("status");
+        pendingLabel.setName("pending");
+        peerLabel.setName("peer");
+        userList.setName("users");
+        sectionList.setName("workspace-sections");
+        syncButton.setName("sync-now");
         for (UserWorkspacePanel.Section section : UserWorkspacePanel.Section.values())
             sectionModel.addElement(section);
         syncWorker.scheduleWithFixedDelay(() -> runSync(false), 0, syncDelay.toMillis(), TimeUnit.MILLISECONDS);
@@ -116,6 +122,11 @@ public final class DesktopApp implements AutoCloseable {
 
     public void showWindow() {
         SwingUtilities.invokeLater(this::createWindow);
+    }
+
+    /** The live application window, or {@code null} before it has been created. */
+    public JFrame frame() {
+        return frame;
     }
 
     private void createWindow() {

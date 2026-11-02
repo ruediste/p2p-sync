@@ -139,6 +139,10 @@ in the node's DataStorage state. Existing mechanisms include:
   can trigger an immediate round, and reports a combined pending operation count
   (local plus incoming) in both the table and tray menu.
 
+The node's mutable state is protected by a single per-node lock; FUSE requests, sync applies,
+and persistence all serialize on it. [`synchronization.md`](synchronization.md) describes the
+lock, the guarded state, and the rules for blocking boundaries.
+
 The [`Node.Network`](../src/main/java/com/github/ruediste/p2psync/node/Node.java)
 in-process network remains for tests. The desktop console runs the real host and
 sync protocol for separate processes; peers must be reachable over the configured

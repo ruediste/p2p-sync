@@ -22,3 +22,6 @@ This is not an automated test. It is fine to ask the user questions.
 
 ## DataStore File Versions
 This project is in early development. Do not update the file version number, and do not care about backward compatibility of the DataStore files.
+
+## Interacting with the Running Application
+By default, the development instance is started with drive port `9222` enabled. This allows UI inspection, interaction and taking screenshots, similar to the capabilities of playwright. See [Swing Drive](doc/swingdrive.md) for details. This can also be used to start a client and interact with it.

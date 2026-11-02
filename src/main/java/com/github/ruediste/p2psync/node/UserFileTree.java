@@ -2,19 +2,20 @@ package com.github.ruediste.p2psync.node;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HexFormat;
 import java.util.List;
 
 import com.github.ruediste.p2psync.proto.Sync;
 import com.github.ruediste.p2psync.storage.DataStorage;
 import com.github.ruediste.p2psync.storage.FileTree;
+import com.github.ruediste.p2psync.util.FullGuid;
 import com.github.ruediste.p2psync.util.ShortGuid;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 /**
  * User-visible file tree backed directly by {@link FileTree}. Full entity ids
- * are translated to short GUIDs through the owning SyncUnit's {@link GuidMapper}.
+ * are translated to short GUIDs through the owning SyncUnit's
+ * {@link GuidMapper}.
  */
 final class UserFileTree {
     record Entry(String name, boolean directory) {
@@ -43,7 +44,7 @@ final class UserFileTree {
     }
 
     String rootIdHex() {
-        return key(rootId);
+        return FullGuid.fromBytes(rootId).hex();
     }
 
     long rootOffset() {
@@ -63,8 +64,8 @@ final class UserFileTree {
             while (!pending.isEmpty()) {
                 int previousSize = pending.size();
                 pending.removeIf(entry -> {
-                    String id = key(entry.getEntityId().toByteArray());
-                    String parentId = key(entry.getParentId().toByteArray());
+                    FullGuid id = FullGuid.fromBytes(entry.getEntityId().toByteArray());
+                    FullGuid parentId = FullGuid.fromBytes(entry.getParentId().toByteArray());
                     if (result.tree.getDirectoryMeta(result.guid(parentId)) == null)
                         return false;
                     boolean created = entry.getDirectory()
@@ -113,29 +114,32 @@ final class UserFileTree {
     }
 
     void apply(Sync.UserOperation operation) {
-        String entityId = key(operation.getEntityId().toByteArray());
         switch (operation.getKind()) {
             case SET_STATUS -> statusMessage = operation.getStatusMessage();
-            case CREATE_DIRECTORY -> createDirectory(entityId, key(operation.getParentId().toByteArray()),
-                    operation.getName());
+            case CREATE_DIRECTORY -> createDirectory(full(operation.getEntityId()),
+                    full(operation.getParentId()), operation.getName());
             case CREATE_FILE -> {
-                if (createFile(entityId, key(operation.getParentId().toByteArray()), operation.getName())
+                if (createFile(full(operation.getEntityId()), full(operation.getParentId()),
+                        operation.getName())
                         && operation.getData().size() > 0)
-                    writeFile(entityId, 0, operation.getData().toByteArray());
+                    writeFile(full(operation.getEntityId()), 0, operation.getData().toByteArray());
             }
-            case WRITE_FILE -> writeFile(entityId, operation.getOffset(), operation.getData().toByteArray());
-            case TRUNCATE_FILE -> truncateFile(entityId, operation.getSize());
-            case MOVE -> move(entityId, key(operation.getNewParentId().toByteArray()), operation.getNewName());
-            case RENAME -> rename(entityId, operation.getNewName());
-            case DELETE -> delete(entityId);
+            case WRITE_FILE -> writeFile(full(operation.getEntityId()), operation.getOffset(),
+                    operation.getData().toByteArray());
+            case TRUNCATE_FILE -> truncateFile(full(operation.getEntityId()), operation.getSize());
+            case MOVE -> move(full(operation.getEntityId()), full(operation.getNewParentId()),
+                    operation.getNewName());
+            case RENAME -> rename(full(operation.getEntityId()), operation.getNewName());
+            case DELETE -> delete(full(operation.getEntityId()));
             case DIRECT_MESSAGE, PARTICIPATE_SYNC_UNIT, LEAVE_SYNC_UNIT, RECEIVE_MESSAGE,
-                    CONTACT_CREATE, CONTACT_UPDATE, CONTACT_DELETE -> {
-            }
+                    CONTACT_CREATE, CONTACT_UPDATE, CONTACT_DELETE ->
+                {
+                }
             case UNRECOGNIZED -> throw new IllegalArgumentException("Unknown user operation kind");
         }
     }
 
-    boolean createDirectory(String id, String parentId, String name) {
+    boolean createDirectory(FullGuid id, FullGuid parentId, String name) {
         ShortGuid parent = guid(parentId);
         ShortGuid entity = guid(id);
         if (!validName(name) || !isDirectoryGuid(parent) || tree.getDirectoryMeta(entity) != null
@@ -145,7 +149,7 @@ final class UserFileTree {
         return true;
     }
 
-    boolean createFile(String id, String parentId, String name) {
+    boolean createFile(FullGuid id, FullGuid parentId, String name) {
         ShortGuid parent = guid(parentId);
         ShortGuid entity = guid(id);
         if (!validName(name) || !isDirectoryGuid(parent) || tree.getDirectoryMeta(entity) != null
@@ -155,18 +159,18 @@ final class UserFileTree {
         return true;
     }
 
-    void writeFile(String id, long offset, byte[] bytes) {
+    void writeFile(FullGuid id, long offset, byte[] bytes) {
         tree.write(guid(id), offset, bytes);
     }
 
-    void truncateFile(String id, long size) {
+    void truncateFile(FullGuid id, long size) {
         tree.truncate(guid(id), size);
     }
 
-    boolean move(String id, String newParentId, String newName) {
+    boolean move(FullGuid id, FullGuid newParentId, String newName) {
         ShortGuid entity = guid(id);
         ShortGuid parent = guid(newParentId);
-        if (id.equals(key(rootId)) || !isDirectoryGuid(parent))
+        if (isRoot(id) || !isDirectoryGuid(parent))
             return false;
         if (tree.getDirectoryMeta(entity) == null && tree.getFileMeta(entity) == null)
             return false;
@@ -178,9 +182,9 @@ final class UserFileTree {
         return true;
     }
 
-    boolean rename(String id, String newName) {
+    boolean rename(FullGuid id, String newName) {
         ShortGuid entity = guid(id);
-        if (id.equals(key(rootId)) || !validName(newName))
+        if (isRoot(id) || !validName(newName))
             return false;
         if (tree.getDirectoryMeta(entity) == null && tree.getFileMeta(entity) == null)
             return false;
@@ -188,8 +192,8 @@ final class UserFileTree {
         return true;
     }
 
-    boolean delete(String id) {
-        if (id.equals(key(rootId)))
+    boolean delete(FullGuid id) {
+        if (isRoot(id))
             return false;
         ShortGuid entity = guid(id);
         if (tree.getDirectoryMeta(entity) == null && tree.getFileMeta(entity) == null)
@@ -216,12 +220,7 @@ final class UserFileTree {
     }
 
     boolean exists(String path) {
-        try {
-            resolve(path);
-            return true;
-        } catch (IllegalArgumentException missing) {
-            return false;
-        }
+        return tryResolve(path) != null;
     }
 
     boolean isDirectory(String path) {
@@ -233,32 +232,39 @@ final class UserFileTree {
         return meta == null ? 0 : meta.size;
     }
 
-    String resolve(String path) {
+    FullGuid resolve(String path) {
+        var result = tryResolve(path);
+        if (result == null)
+            throw new IllegalArgumentException("Path does not exist: " + path);
+        return result;
+    }
+
+    private FullGuid tryResolve(String path) {
         ShortGuid current = root;
         for (String name : components(path)) {
             var entry = tree.lookup(current, name);
             if (entry == null)
-                throw new IllegalArgumentException("Path does not exist: " + path);
+                return null;
             current = entry.guid();
         }
-        return key(mapper.toFull(current));
+        return mapper.toFull(current);
     }
 
-    String resolveDirectory(String path) {
-        String id = resolve(path);
+    FullGuid resolveDirectory(String path) {
+        FullGuid id = resolve(path);
         if (!isDirectoryGuid(guid(id)))
             throw new IllegalArgumentException("Not a directory: " + path);
         return id;
     }
 
-    String resolveFile(String path) {
-        String id = resolve(path);
+    FullGuid resolveFile(String path) {
+        FullGuid id = resolve(path);
         if (tree.getFileMeta(guid(id)) == null)
             throw new IllegalArgumentException("Not a file: " + path);
         return id;
     }
 
-    String resolveParent(String path) {
+    FullGuid resolveParent(String path) {
         List<String> components = components(path);
         if (components.isEmpty())
             throw new IllegalArgumentException("The root has no parent");
@@ -273,7 +279,7 @@ final class UserFileTree {
         return components.get(components.size() - 1);
     }
 
-    void requireAvailableName(String parentId, String name, String exceptId) {
+    void requireAvailableName(FullGuid parentId, String name, FullGuid exceptId) {
         if (!validName(name))
             throw new IllegalArgumentException("Invalid file name");
         ShortGuid parent = guid(parentId);
@@ -284,9 +290,8 @@ final class UserFileTree {
             throw new IllegalArgumentException("Directory entry already exists: " + name);
     }
 
-    void validateMove(String entityId, String newParentId, String newName) {
-        String rootEntity = key(rootId);
-        if (entityId.equals(rootEntity))
+    void validateMove(FullGuid entityId, FullGuid newParentId, String newName) {
+        if (isRoot(entityId))
             throw new IllegalArgumentException("Cannot move the user root directory");
         if (!validName(newName))
             throw new IllegalArgumentException("Invalid file name");
@@ -319,19 +324,19 @@ final class UserFileTree {
 
     private void addEntries(Sync.UserTreeState.Builder state, ShortGuid directory) {
         for (var entry : tree.listDirectory(directory)) {
-            byte[] entityId = mapper.toFull(entry.guid());
-            byte[] parentId = mapper.toFull(directory);
+            FullGuid entityId = mapper.toFull(entry.guid());
+            FullGuid parentId = mapper.toFull(directory);
             if (entry.directory()) {
                 state.addEntries(Sync.UserTreeEntry.newBuilder()
-                        .setEntityId(ByteString.copyFrom(entityId))
-                        .setParentId(ByteString.copyFrom(parentId))
+                        .setEntityId(ByteString.copyFrom(entityId.bytes()))
+                        .setParentId(ByteString.copyFrom(parentId.bytes()))
                         .setName(entry.name())
                         .setDirectory(true));
                 addEntries(state, entry.guid());
             } else {
                 state.addEntries(Sync.UserTreeEntry.newBuilder()
-                        .setEntityId(ByteString.copyFrom(entityId))
-                        .setParentId(ByteString.copyFrom(parentId))
+                        .setEntityId(ByteString.copyFrom(entityId.bytes()))
+                        .setParentId(ByteString.copyFrom(parentId.bytes()))
                         .setName(entry.name())
                         .setContent(ByteString.copyFrom(tree.read(entry.guid()))));
             }
@@ -352,8 +357,16 @@ final class UserFileTree {
         return tree.getDirectoryMeta(guid) != null;
     }
 
-    private ShortGuid guid(String id) {
-        return mapper.toShort(HexFormat.of().parseHex(id));
+    private ShortGuid guid(FullGuid id) {
+        return mapper.toShort(id);
+    }
+
+    private static FullGuid full(ByteString bytes) {
+        return FullGuid.fromBytes(bytes.toByteArray());
+    }
+
+    private boolean isRoot(FullGuid id) {
+        return id.equals(FullGuid.fromBytes(rootId));
     }
 
     private static boolean sameGuid(ShortGuid left, ShortGuid right) {
@@ -377,9 +390,5 @@ final class UserFileTree {
     private static boolean validName(String name) {
         return name != null && !name.isBlank() && !name.equals(".") && !name.equals("..")
                 && name.indexOf('/') < 0 && name.indexOf('\0') < 0;
-    }
-
-    private static String key(byte[] id) {
-        return HexFormat.of().formatHex(id);
     }
 }

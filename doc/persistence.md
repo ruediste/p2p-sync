@@ -32,12 +32,14 @@ channels use Member and Manager, where Managers manage membership and the final
 Manager cannot be removed.
 
 A node is single-writer. All persisted state for a node lives in one
-`DataStorage` file, so one process must own it. `Node` serializes its
-state-mutating sections (including remote request handling on virtual threads) on
-the node instance, so the in-memory state and `DataStorage.commit()` are never
-touched by two writers at once. Network round trips happen outside that lock; a
-sync applies the request and the response in separate locked sections, so two
-nodes syncing each other cannot deadlock.
+`DataStorage` file, so one process must own it. `Node` serializes all access to
+its mutable state (reads as well as mutations, including remote request handling
+on virtual threads) on the node instance, so the in-memory state and
+`DataStorage.commit()` are never touched by two threads at once. Network round
+trips happen outside that lock; a sync applies the request and the response in
+separate locked sections, so two nodes syncing each other cannot deadlock. FUSE
+requests hold the same lock for a complete request. See
+[`synchronization.md`](synchronization.md) for the full lock concept and rules.
 
 ### Identity and ordering
 

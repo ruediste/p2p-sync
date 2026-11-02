@@ -551,6 +551,7 @@ final class UnitsPanel extends JPanel {
         ContactPicker invitee = new ContactPicker(node, user, status);
         invite.add(invitee);
         JPanel inviteRow = Theme.row(6);
+        inviteRow.setAlignmentX(LEFT_ALIGNMENT);
         inviteRow.add(roleBox);
         JButton inviteButton = Theme.secondaryButton("Invite");
         inviteButton.setEnabled(canManage);
@@ -593,6 +594,7 @@ final class UnitsPanel extends JPanel {
         changeLabel.setAlignmentX(LEFT_ALIGNMENT);
         change.add(changeLabel);
         JPanel changeRow = Theme.row(6);
+        changeRow.setAlignmentX(LEFT_ALIGNMENT);
         JComboBox<SyncUnitAuthorization.Role> changeBox = new JComboBox<>(roles);
         changeRow.add(changeBox);
         JButton changeButton = Theme.secondaryButton("Change role");

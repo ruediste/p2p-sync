@@ -125,4 +125,46 @@ class NodeFuseFSTest {
             node.close();
         }
     }
+
+    /**
+     * Verifies the direct helpers used by the development server expose the same
+     * combined home/shared-folder tree as the FUSE callbacks.
+     */
+    @Test
+    void directHelpersReadAndWriteTheMountedView() {
+        var network = new Node.Network();
+        var node = new Node(network);
+        try {
+            var handle = node.createNewUser("alice");
+            var folder = node.createSyncUnit(handle.data.userId(), SyncUnitAuthorization.Type.SHARED_FOLDER);
+            node.setSharedFolderLabel(handle.data.userId(), folder, "team");
+            var fs = new NodeFuseFS(node);
+
+            assertTrue(fs.list("/").stream().anyMatch(entry -> entry.name().equals("alice")));
+            assertTrue(fs.list("/alice").stream().anyMatch(entry -> entry.name().equals("home")));
+            assertTrue(fs.list("/alice").stream().anyMatch(entry -> entry.name().equals("team")));
+
+            fs.createDirectory("/alice/home/docs");
+            fs.writeFile("/alice/home/docs/note.txt", "hello".getBytes(StandardCharsets.UTF_8));
+            assertEquals("docs", fs.stat("/alice/home/docs").name());
+            assertTrue(fs.stat("/alice/home/docs").directory());
+            assertArrayEquals("hello".getBytes(StandardCharsets.UTF_8),
+                    fs.readFile("/alice/home/docs/note.txt"));
+
+            fs.writeFile("/alice/home/docs/note.txt", "hi".getBytes(StandardCharsets.UTF_8));
+            assertEquals("hi", new String(fs.readFile("/alice/home/docs/note.txt"), StandardCharsets.UTF_8));
+
+            fs.writeFile("/alice/team/notes.txt", "shared".getBytes(StandardCharsets.UTF_8));
+            assertTrue(fs.list("/alice/team").stream()
+                    .anyMatch(entry -> entry.name().equals("notes.txt") && !entry.directory()));
+            assertEquals(6, fs.stat("/alice/team/notes.txt").size());
+
+            fs.move("/alice/home/docs/note.txt", "/alice/home/docs/moved.txt");
+            assertEquals("hi", new String(fs.readFile("/alice/home/docs/moved.txt"), StandardCharsets.UTF_8));
+            fs.delete("/alice/home/docs", true);
+            assertTrue(fs.list("/alice/home").isEmpty());
+        } finally {
+            node.close();
+        }
+    }
 }
