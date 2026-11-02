@@ -2,10 +2,8 @@ package com.github.ruediste.p2psync.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.Font;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,6 +16,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -233,20 +232,17 @@ final class UnitsPanel extends JPanel {
     }
 
     private static JPanel stack() {
-        JPanel panel = new JPanel(new GridBagLayout());
+        JPanel panel = Theme.column();
         panel.setBackground(Theme.PAPER);
         return panel;
     }
 
-    private static void addStack(JPanel panel, java.awt.Component component, int topGap) {
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridx = 0;
-        constraints.gridy = panel.getComponentCount();
-        constraints.weightx = 1;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.anchor = GridBagConstraints.NORTHWEST;
-        constraints.insets = new Insets(topGap, 0, 0, 0);
-        panel.add(component, constraints);
+    private static void addStack(JPanel panel, Component component, int topGap) {
+        if (topGap > 0)
+            panel.add(Box.createVerticalStrut(topGap));
+        if (component instanceof JComponent swing)
+            swing.setAlignmentX(LEFT_ALIGNMENT);
+        panel.add(component);
     }
 
     private JPanel buildUnitHeader(Node.SyncUnitStatus unit) {

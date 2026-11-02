@@ -240,6 +240,13 @@ public final class Theme {
             public Dimension getMaximumSize() {
                 return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
             }
+
+            @Override
+            protected void addImpl(Component comp, Object constraints, int index) {
+                if (comp instanceof JComponent swing)
+                    swing.setAlignmentX(LEFT_ALIGNMENT);
+                super.addImpl(comp, constraints, index);
+            }
         };
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(new EmptyBorder(18, 20, 18, 20));

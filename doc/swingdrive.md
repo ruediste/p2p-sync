@@ -245,3 +245,6 @@ curl -s -X POST http://127.0.0.1:9222/ui/click \
 curl -s http://127.0.0.1:9222/state
 curl -s 'http://127.0.0.1:9222/fs/list?path=/alice/home'
 ```
+
+# Missing Features
+If you find any missing features, feel free to improve and extend the server. 
