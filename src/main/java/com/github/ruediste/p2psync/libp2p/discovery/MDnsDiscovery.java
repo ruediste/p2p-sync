@@ -19,6 +19,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -97,11 +98,18 @@ public final class MDnsDiscovery implements Discoverer {
         return t;
     });
 
+    /** TXT property carrying the stable peer id, independent of the instance name. */
+    private static final String PEER_ID_PROPERTY = "peerId";
+
     /**
      * Active JmDNS instances, keyed by the local interface address they are bound
      * to.
      */
     private final Map<InetAddress, ManagedInstance> instances = new LinkedHashMap<>();
+
+    /** Resolved peers keyed by service instance name, for removal notifications. */
+    private final Map<String, PeerInfo> knownPeers = new ConcurrentHashMap<>();
+
     private ScheduledExecutorService poller;
 
     public MDnsDiscovery(PeerId peerId, List<Multiaddr> listenAddresses) {
@@ -145,6 +153,10 @@ public final class MDnsDiscovery implements Discoverer {
             for (InetAddress a : new ArrayList<>(instances.keySet())) {
                 closeInstance(a);
             }
+            knownPeers.clear();
+            // The executor is dedicated to this discoverer; release it once the
+            // shutdown task itself has completed.
+            executor.shutdown();
         }, executor);
     }
 
@@ -169,6 +181,14 @@ public final class MDnsDiscovery implements Discoverer {
             newPeerFoundListener.peerFound(peerInfo);
         } catch (RuntimeException e) {
             LOG.warn("Peer listener failed for {}", peerInfo.getPeerId(), e);
+        }
+    }
+
+    private void peerLost(PeerInfo peerInfo) {
+        try {
+            newPeerFoundListener.peerLost(peerInfo);
+        } catch (RuntimeException e) {
+            LOG.warn("Peer removal listener failed for {}", peerInfo.getPeerId(), e);
         }
     }
 
@@ -255,7 +275,17 @@ public final class MDnsDiscovery implements Discoverer {
     }
 
     private static boolean isWildcardAddress(InetAddress address) {
-        return address.isAnyLocalAddress();
+        if (address.isAnyLocalAddress()) {
+            return true;
+        }
+        // Some JDKs/providers don't report 0.0.0.0 / :: as any-local, so also
+        // check the raw bytes explicitly.
+        for (byte b : address.getAddress()) {
+            if (b != 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -316,7 +346,8 @@ public final class MDnsDiscovery implements Discoverer {
             try {
 String peerIdStr = peerId.toBase58();
             for (int port : ports) {
-                dns.registerService(ServiceInfo.create(serviceTag, peerIdStr, port, peerIdStr));
+                dns.registerService(ServiceInfo.create(serviceTag, peerIdStr, port, 0, 0,
+                        Map.of(PEER_ID_PROPERTY, peerIdStr)));
             }
                 dns.addServiceListener(serviceTag, new Listener());
             } catch (Exception e) {
@@ -439,7 +470,10 @@ String peerIdStr = peerId.toBase58();
 
         @Override
         public void serviceRemoved(ServiceEvent event) {
-            // Expiry of a peer's records is intentionally ignored for now.
+            PeerInfo info = knownPeers.remove(event.getName());
+            if (info != null) {
+                peerLost(info);
+            }
         }
 
         @Override
@@ -448,17 +482,8 @@ String peerIdStr = peerId.toBase58();
             if (info == null) {
                 return;
             }
-            // The unqualified instance name is the base58 PeerId (we register it that way),
-            // and is reliably present regardless of how the library encodes TXT records.
-            String peerIdStr = info.getName();
-            if (peerIdStr == null || peerIdStr.isEmpty()) {
-                return;
-            }
-            PeerId peerId;
-            try {
-                peerId = PeerId.fromBase58(peerIdStr);
-            } catch (RuntimeException e) {
-                LOG.warn("Ignoring mDNS peer with invalid base58 id '{}'", peerIdStr);
+            PeerId peerId = peerIdOf(info);
+            if (peerId == null) {
                 return;
             }
             int port = info.getPort();
@@ -472,7 +497,44 @@ String peerIdStr = peerId.toBase58();
             if (addrs.isEmpty()) {
                 return;
             }
-            peerFound(new PeerInfo(peerId, addrs));
+            PeerInfo peerInfo = new PeerInfo(peerId, addrs);
+            knownPeers.put(event.getName(), peerInfo);
+            peerFound(peerInfo);
+        }
+
+        /**
+         * Resolves the peer id from the stable TXT property. The instance name
+         * is only used as a fallback: JmDNS may rename a conflicting instance
+         * (for example to {@code <peerId> (2)}), and a TXT/name mismatch must
+         * be rejected.
+         */
+        private PeerId peerIdOf(ServiceInfo info) {
+            PeerId fromTxt = parsePeerId(info.getPropertyString(PEER_ID_PROPERTY));
+            PeerId fromName = parsePeerId(info.getName());
+            if (fromTxt != null && fromName != null && !fromTxt.equals(fromName)) {
+                LOG.warn("Ignoring mDNS peer with inconsistent identity: TXT {} vs instance '{}'",
+                        fromTxt, info.getName());
+                return null;
+            }
+            if (fromTxt != null) {
+                return fromTxt;
+            }
+            if (fromName != null) {
+                return fromName;
+            }
+            LOG.warn("Ignoring mDNS peer without a valid peer id (instance '{}')", info.getName());
+            return null;
+        }
+
+        private PeerId parsePeerId(String value) {
+            if (value == null || value.isEmpty()) {
+                return null;
+            }
+            try {
+                return PeerId.fromBase58(value);
+            } catch (RuntimeException e) {
+                return null;
+            }
         }
 
         private void addUniqueAddr(List<Multiaddr> addrs, String s) {

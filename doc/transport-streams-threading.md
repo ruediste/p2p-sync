@@ -29,8 +29,8 @@ Consequently: **no Netty dependency anywhere in this project.** No `ByteBuf`/`Un
 no `ChannelFuture`/`Promise`. Where the original, Netty-based plan had a
 `ByteBuf`-based-buffer-utility need unrelated to networking (varint/multiaddr encoding), it was
 replaced by a small project-owned `core/multiaddr/ByteBuf.java` implementing just the needed
-subset (see `ImplementationPlan.md`'s M1 deviation note) — this is not a networking
-abstraction, just a growable-byte-array helper, and does not participate in the design below.
+subset — this is not a networking abstraction, just a growable-byte-array helper, and does not
+participate in the design below.
 
 ## The core abstraction: `P2PInputStream` / `P2POutputStream` / `P2PStream`
 
@@ -61,10 +61,12 @@ the same idioms they already know) but expose only the minimal surface every lay
 needs: bulk `read`/`write` (the primary, abstract methods every implementation must provide),
 single-byte `read`/`write` (concrete convenience methods, defined once on the base classes so
 no subclass has to re-implement them), and `close`. There is deliberately no `available()`,
-`mark`/`reset`, `flush()`, or any of the rest of the standard `java.io` surface. (A tiny
-`readFully(byte[])` instance method, looping `read()` until the buffer is full or EOF, lives on
-`P2PInputStream` itself and is used by every frame-parsing layer below — multistream-select,
-the Noise handshake/framing, Yamux frame headers.)
+`mark`/`reset`, or any of the rest of the standard `java.io` surface. `P2POutputStream`
+additionally exposes a no-op `flush()` that buffered implementations override; the convenience
+helpers `write(byte[])` and `readFully(byte[])` live on the base classes. `readFully` loops bulk
+`read(byte[], int, int)` calls until the buffer is full or EOF, and is used by every
+frame-parsing layer below — multistream-select, the Noise handshake/framing, Yamux frame
+headers.
 
 **No checked exceptions.** Unlike `java.io.InputStream`/`OutputStream`, none of these methods
 declare `throws IOException` — every implementation instead catches any underlying
@@ -86,45 +88,48 @@ virtual thread per unit of independent blocking work:
 TcpServer accept-loop thread (1 per listen address)
  └─ spawns → per-connection worker thread (1 per accepted/dialed connection)
               runs: Noise handshake → Yamux muxer negotiation → app ConnectionHandler
-              then becomes ↓
+              then spawns ↓
              Yamux connection reader thread (1 per connection, reads frames, dispatches)
               └─ spawns → per-stream worker thread (1 per Yamux stream, inbound SYN)
                            runs: multistream-select → app StreamHandler
 ```
 
-- **`TcpServer`** (M4): one virtual thread runs `serverSocket.accept()` in a loop; each accepted
+- **`TcpServer`**: one virtual thread runs `serverSocket.accept()` in a loop; each accepted
   `Socket` is handed to a brand-new virtual thread (`Thread.ofVirtual().start(...)`) that runs
   the entire connection-upgrade sequence — Noise handshake, Yamux negotiation, invoking the
   application's `ConnectionHandler` — as ordinary sequential, blocking Java method calls. Dialing
-  (`TcpTransport.dial`) runs the identical sequence on the calling virtual thread.
-- **Per-connection Yamux reader thread** (M6): once the muxer is established, one dedicated
-  virtual thread owns reading frames off the connection's `P2PInputStream` in a loop and
-  dispatching them: `DATA` → append to the target stream's incoming queue; `WINDOW_UPDATE` →
-  bump that stream's send-window counter and wake any writer parked on it; inbound `SYN` → spawn
-  yet another virtual thread to run per-stream multistream-select + the application
-  `StreamHandler`. This is the one place a background thread runs for the lifetime of a
-  connection (as opposed to for the duration of one blocking call) — everything else is workers
-  that run to completion and exit.
-- **Writes are synchronized, reads are not**: many virtual threads (one per open stream) can
-  call `YamuxStream#write` concurrently, but they all funnel through the _one_ underlying
-  connection `P2POutputStream`. Netty gets this serialization for free (a channel's pipeline
-  runs on a single event-loop thread); with blocking I/O it needs an explicit
+  (`TcpDiallingTransport.dial`) runs the identical sequence on the calling virtual thread.
+- **Per-connection Yamux reader thread**: once the muxer is established, one dedicated virtual
+  thread owns reading frames off the connection's `P2PInputStream` in a loop and dispatching
+  them: `DATA` → append to the target stream's incoming queue; `WINDOW_UPDATE` → bump that
+  stream's send-window counter and wake any writer parked on it; inbound `SYN` → spawn yet
+  another virtual thread to run per-stream multistream-select + the application `StreamHandler`.
+  The `YamuxSession` constructor starts this thread; the per-connection worker does not become
+  the reader. This is the one place a background thread runs for the lifetime of a connection
+  (as opposed to for the duration of one blocking call) — everything else is workers that run
+  to completion and exit.
+- **Writes are serialized through the shared output stream**: many virtual threads (one per open
+  stream) can call `YamuxStream#write` concurrently, but they all funnel through the _one_
+  underlying connection `P2POutputStream`. Netty gets this serialization for free (a channel's
+  pipeline runs on a single event-loop thread); with blocking I/O it needs an explicit
   `java.util.concurrent.locks.ReentrantLock` (or `synchronized`) around that shared output
-  stream. Reads don't need this: each stream's incoming-data queue is only ever written to by
-  the single connection reader thread and only ever read from by that stream's own consumer.
+  stream. The Noise framed input and output streams are likewise `synchronized` per frame, and
+  each Yamux stream serializes its incoming-queue reads and writes with `incomingLock`; the
+  connection reader remains the only producer for a stream's queue.
 - **Blocking-on-backpressure is fine, and preferred over buffering**: when a Yamux stream's send
   window is exhausted, `YamuxStream#write` simply parks the calling virtual thread on a
   condition variable until a `WINDOW_UPDATE` arrives, instead of buffering the write (capped at
   some limit, resetting the stream on overflow) the way the original Netty-based plan needed to
   in order to avoid blocking a shared event-loop thread. Parking a virtual thread is cheap, so
   "just block" is both simpler and has no arbitrary buffer-size limit to tune.
-- **Shutdown is just closing sockets**: there is no `EventLoopGroup`/executor to shut down.
-  Closing a `Socket` (or `ServerSocket`) causes any thread currently blocked in a `read`/`write`/
-  `accept` call on it to wake up with an `IOException`/`SocketException` (surfacing to callers
-  above the transport layer as `UncheckedIOException`, per the "No checked exceptions" note
-  above), which every loop in this system treats as its normal "stop" signal. `Host.stop()`
-  therefore just needs to close every `TcpServer` and every open `Connection`; every virtual
-  thread this system spawned unwinds on its own shortly after.
+- **Shutdown is closing sockets and sessions**: there is no `EventLoopGroup`. Closing a
+  `ServerSocket` wakes the blocked `accept` loop, and closing a `Socket` wakes a thread blocked
+  in a read on it (surfacing as `UncheckedIOException`). `Host.stop()` closes every `TcpServer`
+  and every open `Connection`; `Connection.close()` closes the muxer session, which terminates
+  its streams (signalling readers and writers parked on Yamux condition variables) before
+  closing the raw stream and socket. The network's virtual-thread-per-task executor is then shut
+  down. Application worker threads blocked somewhere other than those sockets or stream queues
+  are not interrupted, so they must observe the closed stream or use their own timeouts.
 - **Async-looking public API, synchronous internals**: at the outermost boundary (`Host.start()`,
   `Network.connect()`), callers may still want something they can attach callbacks to or
   `.get()` on. That's provided with a plain `CompletableFuture`, produced via
@@ -148,14 +153,15 @@ security.noise.NoiseXXFramed{In,Out}putStream  ── AEAD encrypt/decrypt per f
         ▲
         │ P2PInputStream / P2POutputStream (one pair per connection)
         │
-transport.tcp.SocketP2P{In,Out}putStream       ── thin adapter over java.net.Socket
+transport.tcp.SocketUtils                      ── thin adapters over java.net.Socket
         ▲
-        │ java.net.Socket (accepted by TcpServer, or opened by TcpTransport.dial)
+        │ java.net.Socket (accepted by TcpServer, or opened by TcpDiallingTransport.dial)
 ```
 
-Multistream-select (`multistream.Multistream`/`ProtocolSelect`) is not a distinct
-layer in this diagram — it's a stateless blocking call, `Multistream#negotiate(P2PStream)`,
-invoked at three points: once for security (a `P2PStream` wrapping the raw TCP streams → agree
+Multistream-select (`multistream.Multistream`) is not a distinct
+layer in this diagram — it's a stateless blocking call,
+`Multistream#negotiateInitiator(P2PStream)` / `#negotiateResponder(P2PStream)`, invoked at three
+points: once for security (a `P2PStream` wrapping the raw TCP streams → agree
 on `/noise`), once for muxing (a `P2PStream` wrapping the Noise-framed streams → agree on
 `/yamux/1.0.0`), and once per application stream (a `P2PStream` wrapping a Yamux stream's
 streams → agree on the app protocol id).

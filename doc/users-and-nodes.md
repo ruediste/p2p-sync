@@ -90,10 +90,12 @@ in the node's DataStorage state. Existing mechanisms include:
 
 - [`Node`](../src/main/java/com/github/ruediste/p2psync/node/Node.java) identifies
   users by public key in a node-local map. `createNewUser()` generates an
-  Ed25519 key pair; `join()` looks for a peer hosting the same public key.
-- [`StorageUserRoot`](../src/main/java/com/github/ruediste/p2psync/node/StorageUserRoot.java)
-  contains block identifiers for user data structures. [`DataUserRoot`](../src/main/java/com/github/ruediste/p2psync/node/DataUserRoot.java)
-  currently contains a status message and a root-directory identifier.
+  Ed25519 key pair. `join()` looks only for a user hosted by the in-process
+  `Node.Network`; the desktop application joins remote users through
+  `joinRemote()`, which probes known mDNS/manual peers.
+- [`DataUserRoot`](../src/main/java/com/github/ruediste/p2psync/node/DataUserRoot.java)
+  is the in-memory facade over a user's status message, root-directory GUID,
+  and materialized contact list.
 - [`NodeUserHandle`](../src/main/java/com/github/ruediste/p2psync/node/NodeUserHandle.java)
   records signed status and filesystem operations, transfers them in per-origin
   order with resumable truncation, reconciles the main/local/staging histories,
@@ -116,24 +118,26 @@ in the node's DataStorage state. Existing mechanisms include:
   materializes the per-user contact list from signed User SyncUnit operations
   and snapshot state. [`contacts.md`](contacts.md) describes the contact
   model, replication, conflict handling, and UI integration.
-- [`BlockStorage`](../src/main/java/com/github/ruediste/p2psync/node/BlockStorage.java)
-  is a content-addressed adapter over `DataStorage`. Its hash index and typed
-  chunk/manifest blocks are stored in the same file as the node catalog and
-  user roots. The node's own DataStorage file is not encrypted; exported user
-  credentials use password-derived AES-GCM encryption.
+- [`BlobStorage`](../src/main/java/com/github/ruediste/p2psync/node/BlobStorage.java)
+  stores caller-identified blobs, including the `NodeState` metadata document,
+  in a B-tree whose chains of DATA blocks live in the same file as the node
+  catalog and user roots. The node's own DataStorage file is not encrypted;
+  exported user credentials use password-derived AES-GCM encryption.
 - [`NodeFuseFS`](../src/main/java/com/github/ruediste/p2psync/node/NodeFuseFS.java)
   exposes `/<local-user-name>/...` as isolated per-user trees.
   [`DesktopApp`](../src/main/java/com/github/ruediste/p2psync/ui/DesktopApp.java)
   provides the single-window management UI with left-hand navigation, optional
   tray status menu, a chat view, an email-client style mail view, and per-user
-  SyncUnit/account panels. Actions use inline forms instead of modal dialogs.
+  SyncUnit/account panels. Actions use inline forms; file selection and discard
+  confirmations use standard dialogs.
 - [`UserSyncProtocol`](../src/main/java/com/github/ruediste/p2psync/node/UserSyncProtocol.java)
   carries framed protobuf sync requests over the existing TCP, Noise, and Yamux
   host. The desktop launcher enables mDNS discovery; remote joins can probe known
   peers for the imported user ID or use an explicit peer ID and optional listen
-  multiaddress with a password-protected user credential file. The dashboard can
-  initiate synchronization with known active peers and reports pending local and
-  incoming operation counts in both the table and tray menu.
+  multiaddress with a password-protected user credential file. The dashboard
+  synchronizes with known active peers in the background every four seconds,
+  can trigger an immediate round, and reports a combined pending operation count
+  (local plus incoming) in both the table and tray menu.
 
 The [`Node.Network`](../src/main/java/com/github/ruediste/p2psync/node/Node.java)
 in-process network remains for tests. The desktop console runs the real host and

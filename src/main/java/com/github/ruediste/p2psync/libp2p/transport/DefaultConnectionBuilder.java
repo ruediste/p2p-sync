@@ -5,10 +5,12 @@ import java.util.List;
 
 import com.github.ruediste.p2psync.libp2p.core.Connection;
 import com.github.ruediste.p2psync.libp2p.core.P2PStream;
+import com.github.ruediste.p2psync.libp2p.core.PeerId;
 import com.github.ruediste.p2psync.libp2p.core.RawConnection;
 import com.github.ruediste.p2psync.libp2p.multistream.Multistream;
 import com.github.ruediste.p2psync.libp2p.multistream.ProtocolBinding;
 import com.github.ruediste.p2psync.libp2p.mux.MuxerSession;
+import com.github.ruediste.p2psync.libp2p.security.InvalidRemotePubKeyException;
 import com.github.ruediste.p2psync.libp2p.security.SecureSession;
 
 /**
@@ -30,12 +32,25 @@ public final class DefaultConnectionBuilder implements ConnectionBuilder {
     }
 
     public Connection upgrade(RawConnection rawConnection) {
+        return upgrade(rawConnection, null);
+    }
+
+    @Override
+    public Connection upgrade(RawConnection rawConnection, PeerId expectedRemotePeerId) {
         P2PStream stream = rawConnection.stream();
         SecureSession secureSession;
         MuxerSession muxerSession;
         if (stream.isInitiator()) {
             // establish secure channel
             secureSession = new Multistream<>(secureChannels).negotiateInitiator(stream).getController();
+
+            // Verify the authenticated identity before any further negotiation
+            // or handing the connection to the application.
+            if (expectedRemotePeerId != null
+                    && !expectedRemotePeerId.equals(secureSession.getRemoteId())) {
+                throw new InvalidRemotePubKeyException("Peer id mismatch: expected "
+                        + expectedRemotePeerId + " but got " + secureSession.getRemoteId());
+            }
 
             // establish muxer
             muxerSession = new Multistream<>(muxers).negotiateInitiator(secureSession.getStream()).getController();

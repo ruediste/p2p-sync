@@ -7,9 +7,9 @@ import java.util.Arrays;
  *
  * <p>
  * This project used to depend on Netty's {@code io.netty.buffer.ByteBuf}/{@code Unpooled} for
- * exactly this purpose. Netty has since been dropped entirely (see the "Technology choices"
- * section of {@code ImplementationPlan.md} — the transport/stream layer now uses plain blocking
- * JDK I/O on virtual threads instead), so this class reimplements the tiny subset of that API
+ * exactly this purpose. Netty has since been dropped entirely (the transport/stream layer now
+ * uses plain blocking JDK I/O on virtual threads instead; see
+ * {@code doc/transport-streams-threading.md}), so this class reimplements the tiny subset of that API
  * actually used here: sequential big-endian writes with auto-growth, sequential reads with a
  * rewindable reader index (needed by {@link Varint#readUvarint} to "un-read" an incomplete
  * varint), and a couple of read-only view helpers used by tests.

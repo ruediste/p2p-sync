@@ -576,6 +576,24 @@ public class SyncFlowTest {
     }
 
     /**
+     * Verifies accepting an invitation without a peer ID probes known peers for a
+     * node that hosts the invitation.
+     */
+    @Test
+    public void joinSyncUnitProbesKnownPeers() {
+        var recipient = nodeB.createNewUser("recipient");
+        var folderId = nodeA.createSyncUnit(handleA.data.userId(), SyncUnitAuthorization.Type.SHARED_FOLDER);
+        nodeA.putSharedFile(folderId, handleA.data.userId(), "probe.txt", "probed".getBytes());
+        nodeA.inviteToSyncUnit(folderId, handleA.data.userId(), recipient.data.userId(),
+                SyncUnitAuthorization.Role.VIEWER);
+
+        nodeB.joinSyncUnit(folderId, recipient.data.userId());
+
+        assertArrayEquals("probed".getBytes(),
+                nodeB.readSharedFile(folderId, recipient.data.userId(), "probe.txt"));
+    }
+
+    /**
      * Verifies accepted-unit participation is replicated through the user's signed
      * history to another node.
      */

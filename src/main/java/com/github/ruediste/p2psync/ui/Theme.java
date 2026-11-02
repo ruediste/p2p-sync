@@ -60,6 +60,9 @@ public final class Theme {
     public static final Color INCOMING_BUBBLE = Color.WHITE;
     public static final Color OUTGOING_BUBBLE = new Color(214, 236, 224);
 
+    /** Upper bound for files read into memory for attachments and uploads. */
+    public static final long MAX_FILE_BYTES = 50L * 1024 * 1024;
+
     public static final Font TITLE = new Font(Font.SERIF, Font.BOLD, 27);
     public static final Font HEADING = new Font(Font.SANS_SERIF, Font.BOLD, 18);
     public static final Font SUBHEADING = new Font(Font.SANS_SERIF, Font.BOLD, 14);
@@ -340,6 +343,24 @@ public final class Theme {
                 : null;
     }
 
+    /** Reads a file, rejecting files above {@link #MAX_FILE_BYTES}. */
+    public static byte[] readFileLimited(Path path) throws java.io.IOException {
+        long size = Files.size(path);
+        if (size > MAX_FILE_BYTES)
+            throw new java.io.IOException("File is too large (limit " + MAX_FILE_BYTES / (1024 * 1024) + " MB)");
+        return Files.readAllBytes(path);
+    }
+
+    /** Reads a file into an attachment, rejecting files above {@link #MAX_FILE_BYTES}. */
+    public static Sync.SyncUnitAttachment readAttachment(Path path) throws java.io.IOException {
+        String mediaType = Files.probeContentType(path);
+        return Sync.SyncUnitAttachment.newBuilder()
+                .setName(path.getFileName().toString())
+                .setMediaType(mediaType == null ? "application/octet-stream" : mediaType)
+                .setContent(com.google.protobuf.ByteString.copyFrom(readFileLimited(path)))
+                .build();
+    }
+
     public static JPanel attachmentList(List<Sync.SyncUnitAttachment> attachments, Consumer<String> status) {
         JPanel panel = column();
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -360,18 +381,21 @@ public final class Theme {
         chip.add(name);
         JButton save = ghostButton("Save");
         save.addActionListener(event -> {
-            try {
-                String fileName = Path.of(attachment.getName()).getFileName().toString();
-                if (fileName.isBlank() || fileName.equals(".") || fileName.equals(".."))
-                    fileName = "attachment";
-                Path target = chooseSaveFile(chip, "Save attachment", fileName);
-                if (target == null)
-                    return;
-                Files.write(target, attachment.getContent().toByteArray());
-                status.accept("Saved attachment to " + target);
-            } catch (Exception error) {
-                status.accept("Could not save attachment: " + error.getMessage());
-            }
+            String fileName = Path.of(attachment.getName()).getFileName().toString();
+            if (fileName.isBlank() || fileName.equals(".") || fileName.equals(".."))
+                fileName = "attachment";
+            Path target = chooseSaveFile(chip, "Save attachment", fileName);
+            if (target == null)
+                return;
+            byte[] content = attachment.getContent().toByteArray();
+            Background.run("save attachment", () -> {
+                try {
+                    Files.write(target, content);
+                } catch (java.io.IOException error) {
+                    throw new java.io.UncheckedIOException(error);
+                }
+            }, () -> status.accept("Saved attachment to " + target),
+                    error -> status.accept("Could not save attachment: " + error.getMessage()));
         });
         chip.add(save);
         return chip;

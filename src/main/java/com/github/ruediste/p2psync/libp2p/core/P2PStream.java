@@ -12,8 +12,8 @@ import java.io.Closeable;
  * whole connection's raw/Noise-encrypted streams before security/muxer negotiation, or a
  * single Yamux stream's streams for per-application-protocol negotiation. Bundling the
  * initiator/responder flag together with the streams themselves (rather than passing it around
- * as a separate {@code boolean}) means a single {@code negotiate(P2PStream)} call can pick the
- * right negotiation role on its own — see {@code ARCHITECTURE.md}.
+ * as a separate {@code boolean}) means a single negotiate call can pick the
+ * right negotiation role on its own — see {@code doc/transport-streams-threading.md}.
  */
 public final class P2PStream implements Closeable {
 

@@ -9,8 +9,8 @@ import java.io.UncheckedIOException;
 /**
  * Minimal blocking input stream abstraction used throughout the libp2p port
  * instead of a
- * Netty {@code Channel}/{@code ByteBuf}. See {@code ARCHITECTURE.md} for the
- * full rationale.
+ * Netty {@code Channel}/{@code ByteBuf}. See
+ * {@code doc/transport-streams-threading.md} for the full rationale.
  *
  * <p>
  * Every layer of the stack (raw TCP socket, Noise-encrypted connection, an
@@ -23,10 +23,8 @@ import java.io.UncheckedIOException;
  *
  * <p>
  * Unlike {@link InputStream}, none of these methods declare a checked
- * exception: this mirrors
- * the M1 deviation note in {@code ImplementationPlan.md} (no bespoke exception
- * hierarchy, just
- * plain JDK exceptions) — implementations must catch any underlying
+ * exception: there is no bespoke exception hierarchy, just plain JDK
+ * exceptions — implementations must catch any underlying
  * {@link IOException} and
  * rethrow it wrapped in {@link UncheckedIOException} instead of declaring
  * {@code throws

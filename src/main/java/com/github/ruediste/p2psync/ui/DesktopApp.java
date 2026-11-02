@@ -50,12 +50,11 @@ import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
 import com.github.ruediste.p2psync.libp2p.crypto.PrivKey;
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 import com.github.ruediste.p2psync.node.Node;
-import com.github.ruediste.p2psync.node.NodeUserHandle;
 
 /**
  * Single-window desktop application. Users and workspace sections are selected
- * in the left navigation; every workflow is rendered inline in the content
- * area instead of opening dialogs.
+ * in the left navigation; workflows are rendered inline in the content area.
+ * File selection and discard confirmations still use standard dialogs.
  */
 public final class DesktopApp implements AutoCloseable {
     private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(DesktopApp.class);
@@ -88,6 +87,8 @@ public final class DesktopApp implements AutoCloseable {
 
     private JFrame frame;
     private TrayIcon trayIcon;
+    private MenuItem trayOpen;
+    private MenuItem trayQuit;
     private Timer refreshTimer;
     private PubKey selectedUserId;
     private boolean refreshing;
@@ -453,15 +454,15 @@ public final class DesktopApp implements AutoCloseable {
     }
 
     private void createUser() {
-        try {
-            NodeUserHandle handle = node.createNewUser(addName.getText().trim());
+        String name = addName.getText().trim();
+        Background.run("create user", () -> node.createNewUser(name), handle -> {
+            if (closed.get())
+                return;
             refresh();
             openWorkspace(handle.data.userId());
             addName.setText("");
             status("User created");
-        } catch (RuntimeException error) {
-            status("Could not create user: " + error.getMessage());
-        }
+        }, error -> status("Could not create user: " + error.getMessage()));
     }
 
     private void pasteCredential() {
@@ -476,13 +477,17 @@ public final class DesktopApp implements AutoCloseable {
 
     private void joinUser() {
         char[] passphrase = joinPassphrase.getPassword();
-        try {
-            PrivKey userKey = importCredential(passphrase);
-            if (userKey == null)
-                return;
-            String localName = joinName.getText().trim().isEmpty() ? "joined" : joinName.getText().trim();
-            String peerText = joinPeer.getText().trim();
-            String addressText = joinAddress.getText().trim();
+        String credentialPath = joinCredentialPath.getText().trim();
+        String credentialText = joinCredentialText.getText().trim();
+        String localName = joinName.getText().trim().isEmpty() ? "joined" : joinName.getText().trim();
+        String peerText = joinPeer.getText().trim();
+        String addressText = joinAddress.getText().trim();
+        Runnable clearPassphrase = () -> {
+            Arrays.fill(passphrase, '\0');
+            joinPassphrase.setText("");
+        };
+        Background.run("join user", () -> {
+            PrivKey userKey = importCredential(credentialPath, credentialText, passphrase);
             if (peerText.isEmpty()) {
                 if (!addressText.isEmpty())
                     throw new IllegalArgumentException("Enter a peer ID when specifying a multiaddress");
@@ -494,6 +499,11 @@ public final class DesktopApp implements AutoCloseable {
                 else
                     node.joinRemote(userKey, localName, peer, new Multiaddr(addressText));
             }
+            return localName;
+        }, joinedName -> {
+            clearPassphrase.run();
+            if (closed.get())
+                return;
             joinCredentialPath.setText("");
             joinCredentialText.setText("");
             joinPeer.setText("");
@@ -502,38 +512,26 @@ public final class DesktopApp implements AutoCloseable {
             refresh();
             for (int index = 0; index < userModel.size(); index++) {
                 Node.UserStatus joined = userModel.get(index);
-                if (joined.localName().equals(localName))
+                if (joined.localName().equals(joinedName))
                     openWorkspace(joined.userId());
             }
             status("User joined");
-        } catch (RuntimeException error) {
-            status("Could not join user: " + error.getMessage());
-        } finally {
-            Arrays.fill(passphrase, '\0');
-            joinPassphrase.setText("");
-        }
+        }, error -> {
+            clearPassphrase.run();
+            String message = error.getMessage() == null ? error.toString() : error.getMessage();
+            if (message.contains("passphrase") || message.contains("decrypt"))
+                status("The credential could not be unlocked. Check the passphrase.");
+            else
+                status("Could not join user: " + message);
+        });
     }
 
-    private PrivKey importCredential(char[] passphrase) {
-        try {
-            if (!joinCredentialPath.getText().isBlank())
-                return Node.importUserKey(Path.of(joinCredentialPath.getText().trim()), passphrase);
-            if (!joinCredentialText.getText().isBlank())
-                return Node.importUserKeyFromClipboard(joinCredentialText.getText().trim(), passphrase);
-            throw new IllegalArgumentException("Provide a credential file path or paste the credential text");
-        } catch (IllegalArgumentException error) {
-            if (error.getMessage() != null && error.getMessage().contains("passphrase")) {
-                status("The credential could not be unlocked. Check the passphrase.");
-                return null;
-            }
-            if (error.getMessage() != null && (error.getMessage().contains("decrypt")
-                    || error.getMessage().contains("credential"))) {
-                status("Could not import credential: " + error.getMessage());
-                return null;
-            }
-            status("Could not import credential: " + error.getMessage());
-            return null;
-        }
+    private PrivKey importCredential(String path, String text, char[] passphrase) {
+        if (!path.isBlank())
+            return Node.importUserKey(Path.of(path), passphrase);
+        if (!text.isBlank())
+            return Node.importUserKeyFromClipboard(text, passphrase);
+        throw new IllegalArgumentException("Provide a credential file path or paste the credential text");
     }
 
     private void openWorkspace(PubKey userId) {
@@ -688,13 +686,13 @@ public final class DesktopApp implements AutoCloseable {
             return;
         }
         PopupMenu menu = new PopupMenu();
-        MenuItem open = new MenuItem("Open p2p-sync");
-        open.addActionListener(event -> frame.setVisible(true));
-        menu.add(open);
+        trayOpen = new MenuItem("Open p2p-sync");
+        trayOpen.addActionListener(event -> frame.setVisible(true));
+        menu.add(trayOpen);
         menu.addSeparator();
-        MenuItem quit = new MenuItem("Quit p2p-sync");
-        quit.addActionListener(event -> close());
-        menu.add(quit);
+        trayQuit = new MenuItem("Quit p2p-sync");
+        trayQuit.addActionListener(event -> close());
+        menu.add(trayQuit);
         trayIcon = new TrayIcon(createTrayImage(), "p2p-sync", menu);
         trayIcon.setImageAutoSize(true);
         trayIcon.addActionListener(event -> frame.setVisible(true));
@@ -711,8 +709,9 @@ public final class DesktopApp implements AutoCloseable {
             return;
         trayIcon.setToolTip("p2p-sync: " + users.size() + " users, " + pending + " pending");
         PopupMenu menu = trayIcon.getPopupMenu();
-        while (menu.getItemCount() > 2)
-            menu.remove(1);
+        menu.removeAll();
+        menu.add(trayOpen);
+        menu.addSeparator();
         for (Node.UserStatus user : users) {
             MenuItem item = new MenuItem(user.localName() + "  -  "
                     + (user.pendingIncomingOperationCount() + user.pendingLocalOperationCount()) + " pending");
@@ -720,8 +719,10 @@ public final class DesktopApp implements AutoCloseable {
                 frame.setVisible(true);
                 SwingUtilities.invokeLater(() -> openWorkspace(user.userId()));
             });
-            menu.insert(item, menu.getItemCount() - 1);
+            menu.add(item);
         }
+        menu.addSeparator();
+        menu.add(trayQuit);
     }
 
     private static Image createTrayImage() {

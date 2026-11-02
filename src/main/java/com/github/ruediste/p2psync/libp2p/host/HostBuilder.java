@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.github.ruediste.p2psync.libp2p.core.ConnectionEstablishedListener;
 import com.github.ruediste.p2psync.libp2p.core.Host;
@@ -44,8 +45,8 @@ public final class HostBuilder {
 
     private PrivKey privateKey;
     private final List<String> listenAddresses = new ArrayList<>();
-    private final List<ConnectionEstablishedListener> connectionHandlers = new ArrayList<>();
-    private final List<ProtocolBinding<?, ?>> protocolHandlers = new ArrayList<>();
+    private final CopyOnWriteArrayList<ConnectionEstablishedListener> connectionHandlers = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<ProtocolBinding<?, ?>> protocolHandlers = new CopyOnWriteArrayList<>();
     private boolean discoverMdns;
     private Optional<InetAddress> mdnsAddress = Optional.empty();
 
@@ -96,7 +97,7 @@ public final class HostBuilder {
         // Build the app-level multistream for inbound Yamux streams
         @SuppressWarnings("unchecked")
         Multistream<Object, Object> appMultistream = new Multistream<>(
-                List.copyOf((List<ProtocolBinding<Object, Object>>) (List<?>) protocolHandlers));
+                (List<ProtocolBinding<Object, Object>>) (List<?>) protocolHandlers);
 
         // Wire muxer (Yamux) -> secure channel (Noise XX) -> upgrader
         YamuxProtocolBinding yamuxBinding = new YamuxProtocolBinding(appMultistream);
@@ -135,8 +136,8 @@ public final class HostBuilder {
                 .toList();
 
         return new HostImpl(key, network, addressBook, listenAddrs,
-                new ArrayList<>(protocolHandlers),
-                new ArrayList<>(connectionHandlers),
+                protocolHandlers,
+                connectionHandlers,
                 discoverMdns, mdnsAddress);
     }
 }

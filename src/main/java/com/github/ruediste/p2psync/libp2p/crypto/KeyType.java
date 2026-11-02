@@ -9,10 +9,8 @@ import com.github.ruediste.p2psync.proto.Libp2P;
  * Ported (trimmed) from {@code io.libp2p.core.crypto.KeyType} (jvm-libp2p).
  * Upstream also lists
  * {@code RSA}/{@code SECP256K1}/{@code ECDSA}; only {@code ED25519} is
- * implemented here (see
- * "Future extension points" in {@code ImplementationPlan.md}) — adding a case
- * for another type
- * is a small, mechanical change once the underlying signature primitive exists.
+ * implemented here — adding a case for another type is a small, mechanical
+ * change once the underlying signature primitive exists.
  */
 public enum KeyType {
 

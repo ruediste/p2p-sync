@@ -26,9 +26,6 @@ import com.github.ruediste.p2psync.libp2p.host.HostBuilder;
  * <p>
  * Also exercises an application stream via {@link TrivialEchoProtocol} to prove
  * the per-stream multistream-select + Yamux data path end-to-end.
- *
- * <p>
- * Corresponds to milestone M8 in {@code ImplementationPlan.md}.
  */
 public class EndToEndConnectionTest {
 

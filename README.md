@@ -23,7 +23,8 @@ configured user below its node-local name. Each user directory is a combined roo
 view: `home` plus the user's accepted shared folders by label. Users and workspace
 sections are selected in the left navigation. Chat, mail (an email-client style
 inbox/sent view), contacts, SyncUnits, and account settings stay in the main
-window; workflows use inline forms rather than modal dialogs. On Linux, install
+window; workflows use inline forms, and file selection and discard confirmations
+use standard dialogs. On Linux, install
 the FUSE 2 compatibility library
 (`libfuse2` or `libfuse2t64`), mount tools, and make `/dev/fuse` available to
 your user.
@@ -31,13 +32,15 @@ your user.
 ```bash
 mvn compile org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
 	-Dexec.mainClass=com.github.ruediste.p2psync.ui.DesktopMain \
-	-Dexec.args="/absolute/path/node-data /absolute/path/user-mount"
+	-Dexec.args="/absolute/path/node.db /absolute/path/user-mount"
 ```
 
-The mount directory is optional; when omitted, a sibling directory is created.
-The node stores its state, per-SyncUnit operation B-trees, GUID mappings, and
-`FileTree` file data in `node.db` inside the data directory. Node storage is not
-password-locked; protect `node.db` with filesystem permissions. Run one process per node-data directory.
+The first argument is the node database file, created if absent. The mount
+directory is optional; when omitted, a sibling directory named
+`<node-db-file>-mount` is created. The node stores its state, per-SyncUnit
+operation B-trees, GUID mappings, and `FileTree` file data in that single file.
+Node storage is not password-locked; protect the database file with filesystem
+permissions. Run one process per node database file.
 The main window remains available when the desktop environment has no system tray.
 The tray uses Java AWT and requires legacy X11 tray support. On XFCE, add the
 `Status Tray Plugin` (or `Notification Area` on older versions) to the panel
@@ -50,8 +53,10 @@ the peer ID blank to probe known mDNS/manual peers, or specify a peer ID and
 optional listen multiaddress. A credential file or pasted credential is required,
 but its passphrase may be empty. Import errors and other action results are shown in the
 window's status bar.
-Use `Sync now` to reconcile with known active peers; the tray menu shows per-user
-pending operation counts.
+The dashboard also synchronizes with known active peers in the background every
+four seconds and refreshes the user list and active workspace on the same
+interval. Use `Sync now` to trigger an immediate round; the tray menu shows a
+combined per-user pending operation count (local plus incoming).
 
 The node uses the existing TCP, Noise, Yamux, and mDNS stack for cross-process
 user synchronization. `Node.Network` remains as an in-process test transport.
@@ -78,7 +83,11 @@ foreground. Unmount from another terminal with `fusermount -u /absolute/path/mou
 Remount with the same backing file to recover committed files and directories.
 
 The filesystem supports regular files, directories, offset reads/writes,
-truncation, rename, and removal. Each mutation is committed. Permissions are fixed
+truncation, rename, and removal. Mutations mark the tree dirty rather than
+committing immediately: the filesystem commits on `flush`/`fsync`, every five
+seconds, and when the mount is shut down after the kernel flushes it. A dirty
+tree is not committed by `close()` itself, so a crash or abrupt exit can lose up
+to five seconds of changes. Permissions are fixed
 at 0644 for files and 0755 for directories, owned by the mounting user. This is a
 simple path-based filesystem: links, extended attributes, permission changes, and
 continued access through open descriptors after unlink or rename are not supported.
@@ -103,10 +112,12 @@ Run them with the `it` profile:
 mvn test -Pit
 ```
 
-To run everything (unit + integration tests):
+To run everything (unit + integration tests), run the two default test goals in
+sequence:
 
 ```bash
-mvn test test -Pit
+mvn test
+mvn test -Pit
 ```
 
 Integration tests skip gracefully (via JUnit assumptions) when multicast is not available in the environment.

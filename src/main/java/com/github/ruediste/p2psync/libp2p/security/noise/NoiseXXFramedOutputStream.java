@@ -22,9 +22,9 @@ import com.github.ruediste.p2psync.libp2p.core.P2POutputStream;
  * observed (by the remote decryptor) with their counters out of order.
  *
  * <p>
- * From the muxer's (M6) point of view this is just another
+ * From the muxer's point of view this is just another
  * {@link P2POutputStream}, identical in shape to the raw TCP one
- * (see {@code ARCHITECTURE.md}).
+ * (see {@code doc/transport-streams-threading.md}).
  */
 public final class NoiseXXFramedOutputStream extends P2POutputStream {
 

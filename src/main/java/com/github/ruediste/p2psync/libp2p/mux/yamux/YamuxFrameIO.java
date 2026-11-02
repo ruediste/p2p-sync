@@ -1,7 +1,5 @@
 package com.github.ruediste.p2psync.libp2p.mux.yamux;
 
-import java.io.EOFException;
-import java.io.UncheckedIOException;
 import java.util.Set;
 
 import com.github.ruediste.p2psync.libp2p.core.P2PInputStream;
@@ -30,14 +28,7 @@ public final class YamuxFrameIO {
      */
     public static YamuxFrame readFrame(P2PInputStream in) {
         byte[] header = new byte[HEADER_SIZE];
-        try {
-            in.readFully(header);
-        } catch (UncheckedIOException e) {
-            if (e.getCause() instanceof EOFException) {
-                throw e;
-            }
-            throw e;
-        }
+        in.readFully(header);
 
         int version = header[0] & 0xFF;
         if (version != 0) {
@@ -57,12 +48,21 @@ public final class YamuxFrameIO {
         YamuxType yamuxType = YamuxType.fromInt(type);
         Set<YamuxFlag> yamuxFlags = YamuxFlag.fromInt(flags);
 
-        if (yamuxType != YamuxType.DATA || length <= 0) {
+        if (yamuxType != YamuxType.DATA) {
+            // Control-frame payloads (window deltas, ping opaque values, go-away
+            // codes) are unsigned 32-bit values. Anything beyond the int range
+            // cannot be represented here and is a protocol violation.
+            if (length > Integer.MAX_VALUE) {
+                throw new RuntimeException("Yamux control frame length out of range: " + length);
+            }
             return new YamuxFrame(streamId, yamuxType, yamuxFlags, (int) length);
         }
 
         if (length > MAX_FRAME_DATA_LENGTH) {
             throw new RuntimeException("Yamux frame too large: " + length);
+        }
+        if (length == 0) {
+            return new YamuxFrame(streamId, yamuxType, yamuxFlags, 0);
         }
 
         byte[] data = new byte[(int) length];
@@ -98,5 +98,8 @@ public final class YamuxFrameIO {
         if (frame.data != null && frame.data.length > 0) {
             out.write(frame.data);
         }
+        // Yamux is a request/response multiplexer: the peer may be blocked
+        // waiting for the frame, so never leave it in a buffered sink.
+        out.flush();
     }
 }

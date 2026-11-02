@@ -4,7 +4,11 @@ import java.io.EOFException;
 import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.ruediste.p2psync.libp2p.core.P2PInputStream;
 import com.github.ruediste.p2psync.libp2p.core.P2POutputStream;
@@ -21,7 +25,16 @@ import com.github.ruediste.p2psync.libp2p.mux.MuxerSession;
  */
 public final class YamuxSession implements MuxerSession {
 
+    private static final Logger LOG = LoggerFactory.getLogger(YamuxSession.class);
+
     static final int INITIAL_WINDOW_SIZE = 256 * 1024;
+
+    /**
+     * Upper bound on concurrently accepted inbound streams. Beyond this the
+     * session refuses new SYNs with RST instead of spawning unbounded worker
+     * threads.
+     */
+    static final int MAX_INBOUND_STREAMS = 256;
 
     private final P2PInputStream in;
     private final P2POutputStream out;
@@ -32,6 +45,10 @@ public final class YamuxSession implements MuxerSession {
     private final YamuxStreamIdGenerator idGenerator;
     final ConcurrentHashMap<Long, YamuxStream> streams = new ConcurrentHashMap<>();
     private final Object streamMonitor = new Object();
+    private final Semaphore inboundStreamSlots = new Semaphore(MAX_INBOUND_STREAMS);
+
+    /** Highest remote SYN stream id seen, read only by the session reader. */
+    private long lastRemoteSynId;
 
     final ReentrantLock writerLock = new ReentrantLock();
     private volatile boolean closed;
@@ -59,6 +76,11 @@ public final class YamuxSession implements MuxerSession {
         return initiator;
     }
 
+    @Override
+    public boolean isClosed() {
+        return closed;
+    }
+
     // ---- reader loop ----
 
     private void readerLoop() {
@@ -80,10 +102,11 @@ public final class YamuxSession implements MuxerSession {
             }
         } catch (RuntimeException e) {
             if (!closed) {
-                System.err.println("Yamux reader error: " + e.getMessage());
+                LOG.warn("Yamux reader error", e);
             }
         } finally {
             closeAllStreams();
+            notifyStreamsChanged();
         }
     }
 
@@ -97,21 +120,23 @@ public final class YamuxSession implements MuxerSession {
     }
 
     private void handleDataOrControl(YamuxFrame frame) {
+        if (frame.flags.contains(YamuxFlag.RST)) {
+            handleRst(frame);
+            return;
+        }
         if (frame.flags.contains(YamuxFlag.SYN)) {
             handleSyn(frame);
-        } else if (frame.flags.contains(YamuxFlag.FIN)) {
+        }
+        if (frame.flags.contains(YamuxFlag.FIN)) {
             handleFin(frame);
-        } else if (frame.flags.contains(YamuxFlag.RST)) {
-            handleRst(frame);
-        } else if (frame.flags.contains(YamuxFlag.ACK)) {
-            handleAck(frame);
         }
 
         if (frame.type == YamuxType.DATA && frame.data != null && frame.data.length > 0) {
             YamuxStream stream = streams.get(frame.streamId);
-            if (stream != null) {
-                stream.receiveData(frame.data);
-                updateReceiveWindow(stream, frame.data.length);
+            if (stream != null && !stream.receiveData(frame.data)) {
+                LOG.warn("Yamux stream {} exceeded its receive window; resetting",
+                        frame.streamId);
+                doReset(stream);
             }
         }
     }
@@ -121,18 +146,49 @@ public final class YamuxSession implements MuxerSession {
         if (!YamuxStreamIdGenerator.isRemoteSynStreamIdValid(!initiator, frame.streamId)) {
             throw new RuntimeException("Invalid remote SYN stream ID: " + frame.streamId);
         }
-        YamuxStream stream = new YamuxStream(frame.streamId, this, false);
-        streams.put(frame.streamId, stream);
-        notifyStreamsChanged();
+        if (frame.streamId <= lastRemoteSynId) {
+            throw new RuntimeException("Non-monotonic remote SYN stream ID: " + frame.streamId
+                    + " (last was " + lastRemoteSynId + ")");
+        }
+        lastRemoteSynId = frame.streamId;
+        if (streams.containsKey(frame.streamId)) {
+            throw new RuntimeException("Duplicate remote SYN stream ID: " + frame.streamId);
+        }
+        if (!inboundStreamSlots.tryAcquire()) {
+            // Refuse new streams instead of spawning unbounded handlers.
+            writeFrameLocked(new YamuxFrame(frame.streamId, YamuxType.DATA, YamuxFlag.RST.asSet(), 0));
+            return;
+        }
 
-        writeFrameLocked(new YamuxFrame(frame.streamId, YamuxType.WINDOW_UPDATE, YamuxFlag.ACK.asSet(), 0));
+        YamuxStream stream;
+        try {
+            stream = new YamuxStream(frame.streamId, this, false);
+            streams.put(frame.streamId, stream);
+            notifyStreamsChanged();
+
+            writeFrameLocked(new YamuxFrame(frame.streamId, YamuxType.WINDOW_UPDATE,
+                    YamuxFlag.ACK.asSet(), 0));
+        } catch (RuntimeException e) {
+            inboundStreamSlots.release();
+            throw e;
+        }
+
+        if (appMultistream == null) {
+            inboundStreamSlots.release();
+            return;
+        }
 
         Thread.ofVirtual().name("yamux-stream-" + frame.streamId).start(() -> {
             try {
                 P2PStream p2pStream = stream.asP2PStream(false);
                 ((Multistream<Object, Object>) appMultistream).negotiateResponder(p2pStream);
             } catch (RuntimeException e) {
-                // Stream handler failed
+                if (!closed) {
+                    LOG.debug("Yamux stream {} handler failed", frame.streamId, e);
+                    stream.resetStream();
+                }
+            } finally {
+                inboundStreamSlots.release();
             }
         });
     }
@@ -148,21 +204,8 @@ public final class YamuxSession implements MuxerSession {
     private void handleRst(YamuxFrame frame) {
         YamuxStream stream = streams.remove(frame.streamId);
         if (stream != null) {
-            stream.reset = true;
-            stream.signalIncomingClosed();
-            stream.windowLock.lock();
-            try {
-                stream.windowAvailable.signalAll();
-            } finally {
-                stream.windowLock.unlock();
-            }
-        }
-    }
-
-    private void handleAck(YamuxFrame frame) {
-        YamuxStream stream = streams.get(frame.streamId);
-        if (stream != null) {
-            stream.acknowledged = true;
+            stream.terminate();
+            notifyStreamsChanged();
         }
     }
 
@@ -176,21 +219,30 @@ public final class YamuxSession implements MuxerSession {
 
         stream.windowLock.lock();
         try {
-            stream.sendWindow += frame.length;
+            long updated = (long) stream.sendWindow + frame.length;
+            stream.sendWindow = (int) Math.min(updated, Integer.MAX_VALUE);
             stream.windowAvailable.signalAll();
         } finally {
             stream.windowLock.unlock();
         }
     }
 
-    private void updateReceiveWindow(YamuxStream stream, int bytesRead) {
-        int newWindow = stream.receiveWindowSize - bytesRead;
-        stream.receiveWindowSize = newWindow;
-        if (newWindow < initialWindowSize / 2) {
-            int delta = initialWindowSize - newWindow;
-            stream.receiveWindowSize += delta;
-            writeFrameLocked(
-                    new YamuxFrame(stream.streamId(), YamuxType.WINDOW_UPDATE, YamuxFlag.NONE, delta));
+    /**
+     * Called by a consumer after it read {@code bytes} from {@code stream};
+     * replenishes the receive window and publishes an update if it has fallen
+     * below half.
+     */
+    void onBytesConsumed(YamuxStream stream, int bytes) {
+        int delta = stream.bytesConsumed(bytes);
+        if (delta > 0 && !closed) {
+            try {
+                writeFrameLocked(new YamuxFrame(stream.streamId(), YamuxType.WINDOW_UPDATE,
+                        YamuxFlag.NONE, delta));
+            } catch (RuntimeException e) {
+                if (!closed) {
+                    throw e;
+                }
+            }
         }
     }
 
@@ -263,36 +315,35 @@ public final class YamuxSession implements MuxerSession {
     }
 
     void doCloseForWriting(YamuxStream stream) {
+        if (stream.closedForWriting) {
+            return;
+        }
         stream.closedForWriting = true;
         writeFrameLocked(new YamuxFrame(stream.streamId(), YamuxType.DATA, YamuxFlag.FIN.asSet(), 0));
     }
 
     void doReset(YamuxStream stream) {
         streams.remove(stream.streamId());
-        stream.reset = true;
-        stream.signalIncomingClosed();
-        stream.windowLock.lock();
+        stream.terminate();
+        notifyStreamsChanged();
         try {
-            stream.windowAvailable.signalAll();
-        } finally {
-            stream.windowLock.unlock();
+            writeFrameLocked(new YamuxFrame(stream.streamId(), YamuxType.DATA, YamuxFlag.RST.asSet(), 0));
+        } catch (RuntimeException e) {
+            if (!closed) {
+                throw e;
+            }
         }
-        writeFrameLocked(new YamuxFrame(stream.streamId(), YamuxType.DATA, YamuxFlag.RST.asSet(), 0));
     }
 
     void doCloseStream(YamuxStream stream) {
         streams.remove(stream.streamId());
+        stream.terminateLocally();
+        notifyStreamsChanged();
     }
 
     private void closeAllStreams() {
         for (YamuxStream stream : streams.values()) {
-            stream.signalIncomingClosed();
-            stream.windowLock.lock();
-            try {
-                stream.windowAvailable.signalAll();
-            } finally {
-                stream.windowLock.unlock();
-            }
+            stream.terminate();
         }
         streams.clear();
     }
@@ -309,16 +360,23 @@ public final class YamuxSession implements MuxerSession {
     private <TInitiator, TResponder> TInitiator createStreamHelper(
             List<ProtocolBinding<TInitiator, TResponder>> protocols) {
         YamuxStream yamuxStream = openStream();
-        Multistream<TInitiator, ?> ms = new Multistream<>(protocols);
-        P2PStream p2pStream = yamuxStream.asP2PStream(true);
-        Multistream.Result<TInitiator> result = ms.negotiateInitiator(p2pStream);
-        return result.getController();
+        try {
+            Multistream<TInitiator, ?> ms = new Multistream<>(protocols);
+            P2PStream p2pStream = yamuxStream.asP2PStream(true);
+            Multistream.Result<TInitiator> result = ms.negotiateInitiator(p2pStream);
+            return result.getController();
+        } catch (RuntimeException e) {
+            yamuxStream.resetStream();
+            throw e;
+        }
     }
 
     // ---- lifecycle ----
 
     public void close() {
         closed = true;
+        closeAllStreams();
+        notifyStreamsChanged();
         try {
             in.close();
         } catch (RuntimeException ignored) {

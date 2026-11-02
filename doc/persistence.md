@@ -144,7 +144,8 @@ systemDeferredFreeBlockList    uint64
 metaDeferredFreeBlockList      uint64
 dataDeferredFreeBlockList      uint64
 pendingMetaFreeTreeRemovalList uint64
-refHandles             uint16 count, then uint16 handle ids, then uint64 offsets
+refHandles             uint16 handle id count, then uint16 handle ids,
+                       then uint16 offset count, then uint64 offsets
 longHandleIds          uint16 count + uint16 ids
 longHandles            uint16 count + uint64 values
 ```
@@ -159,14 +160,15 @@ application registers `getRootRefHandle(id, area, blockType)`, writes the block
 through the handle, and the handle's offset is stored in the root block. The ids
 in use today:
 
-| Handle id | Owner | Area | Type |
-| --- | --- | --- | --- |
-| 1 | `BlobStorage` index B+tree | META | `BTree.NodeBlock` (32-byte key) |
-| 2 | `UnitRootStore` per-SyncUnit root registry | META | `BTree.NodeBlock` (33-byte key) |
-| 1 | `SimpleFuseFS` (`files.db`) | META | `FileTree.BLOCK_TYPE` |
+| Database file | Handle id | Owner | Area | Type |
+| --- | --- | --- | --- | --- |
+| node database | 1 | `BlobStorage` index B+tree | META | `BTree.NodeBlock` (32-byte key) |
+| node database | 2 | `UnitRootStore` per-SyncUnit root registry | META | `BTree.NodeBlock` (33-byte key) |
+| `files.db` | 1 | `SimpleFuseFS` file tree | META | `FileTree.BLOCK_TYPE` |
 
-Handle IDs are globally reserved even though `Node` and `SimpleFuseFS` use
-separate files.
+Handle IDs are reserved per `DataStorage` file, not globally: `Node` and
+`SimpleFuseFS` each use their own database file, so both may use handle id 1
+for different trees. Within one file an id has exactly one owner.
 
 `guidMappingTree` is now implemented per SyncUnit through `GuidMapper`
 (`GUID_FORWARD`/`GUID_REVERSE` roots in `UnitRootStore`). Each SyncUnit also has
@@ -274,18 +276,19 @@ commit from recursively needing new free-space updates in all areas.
    switch to new deferred free lists, and fold the previous transaction's
    deferred frees plus the list blocks into the free-space trees.
 
-Block writes are buffered in `modifiedBlocks` (data + reference list) and only
-hit the file in step 6; `readBlock` serves transaction-local data from that
-buffer.
+Block writes are normally buffered in `modifiedBlocks` (data + reference list)
+and only hit the file in step 6; `readBlock` serves transaction-local data from
+that buffer. The `writeBlockDirect` / `writeNewBlockDirect` variants bypass this
+buffer and write the block to disk immediately, before the commit point.
 
 ### 4.10 Open, validation and crash behavior
 
 `open(path)` formats the file if it is missing or empty, otherwise it reads the
-superblock, root block, info block, free-space trees, ref-count tree, and then
-replays the pending-removal list and the deferred free lists. It then truncates
-the file to `rootBlock.fileLength`, which discards bytes written by a transaction
-that never committed. `openReadOnly` loads only the committed state for
-inspection.
+superblock and root block and immediately truncates the file to
+`rootBlock.fileLength`, which discards bytes written by a transaction that never
+committed. It then reads the info block, free-space trees, and ref-count tree and
+replays the pending-removal list and the deferred free lists. `openReadOnly`
+loads only the committed state for inspection.
 
 Validation performed while opening: magic, format version, block sizes, root
 block size, root block offset, committed file length, list cycles, duplicate
@@ -489,9 +492,11 @@ handle collisions. Data is stored inline while the file is at most
 above that size. FileTree keys and values are big-endian; the enclosing B+tree
 node header and item offsets are little-endian as described in 4.6.
 
-`SimpleFuseFS` commits after every mutating FUSE operation (`dirty` flag) and
-additionally every 5 seconds from a scheduler thread; a failed periodic commit
-permanently fails the mount (later operations return `EIO`).
+`SimpleFuseFS` marks the tree dirty on every mutating FUSE operation; it commits
+on `flush`/`fsync`, every 5 seconds from a scheduler thread, and when the mount is
+shut down after the kernel flushes it. Its `close()` does not commit a dirty tree,
+so an abrupt exit can lose up to five seconds of changes. A failed periodic
+commit permanently fails the mount (later operations return `EIO`).
 
 ## 7. Synchronization
 
@@ -558,7 +563,7 @@ in the USER log until a materialized message snapshot replaces them.
 | receiving/staging/merging remote operations, SyncUnit joins, invitations, role changes | `persistState()` |
 | sync with peers (`Sync now`) | `persistState()` after each ingested batch |
 | stable-log truncation (`truncateStableLog`) | new `snapshotState` + `persistState()` |
-| `SimpleFuseFS` mutation / 5 s timer | `DataStorage.commit()` of the `FileTree` root handle |
+| `SimpleFuseFS` `flush`/`fsync` / 5 s timer / clean unmount | `DataStorage.commit()` of the dirty `FileTree` root handle |
 | explicit close (`Node.close`) | one final `persistState()` before the storage file is closed |
 
 The node writes new tree roots and rewrites the `NodeState` metadata blob on

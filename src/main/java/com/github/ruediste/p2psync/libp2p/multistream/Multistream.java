@@ -1,5 +1,6 @@
 package com.github.ruediste.p2psync.libp2p.multistream;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,14 +16,12 @@ import com.github.ruediste.p2psync.libp2p.core.P2PStream;
  * winning binding's {@link ProtocolBinding#init}.
  *
  * <p>
- * This exact combination is reused three times by later milestones: once per
- * connection for
- * security negotiation (bindings = {@code [NoiseXXSecureChannel]}), once per
- * connection for
- * muxer negotiation (bindings = {@code [YamuxStreamMuxer]}), and once per
- * application stream
- * for protocol negotiation (bindings = the {@code Host}'s registered app
- * protocols).
+ * This exact combination is reused three times: once per connection for
+ * security negotiation (bindings = {@link com.github.ruediste.p2psync.libp2p.security.noise.NoiseXXProtocolBinding}),
+ * once per connection for muxer negotiation (bindings =
+ * {@link com.github.ruediste.p2psync.libp2p.mux.yamux.YamuxProtocolBinding}),
+ * and once per application stream for protocol negotiation (bindings = the
+ * {@code Host}'s registered app protocols).
  *
  * <p>
  * Ported from {@code io.libp2p.multistream.MultistreamImpl} (jvm-libp2p);
@@ -40,10 +39,22 @@ public final class Multistream<TInitiator, TResponder> {
     static final String MULTISTREAM_PROTOCOL = "/multistream/1.0.0";
     private static final String NOT_ACCEPTED = "na";
 
+    /**
+     * Upper bound on proposals accepted from one peer during negotiation. A
+     * malicious peer could otherwise keep answering {@code na} forever.
+     */
+    static final int MAX_PROPOSALS = 256;
+
     private final List<ProtocolBinding<TInitiator, TResponder>> bindings;
 
+    /**
+     * @param bindings the bindings to negotiate. The list is retained (not
+     *                 copied) so callers such as the {@code Host} can register
+     *                 protocols dynamically; callers that mutate it
+     *                 concurrently must provide a thread-safe list.
+     */
     public Multistream(List<ProtocolBinding<TInitiator, TResponder>> bindings) {
-        this.bindings = List.copyOf(bindings);
+        this.bindings = bindings;
     }
 
     public List<ProtocolBinding<TInitiator, TResponder>> getBindings() {
@@ -100,8 +111,12 @@ public final class Multistream<TInitiator, TResponder> {
             throw new IllegalArgumentException("No protocol candidates to negotiate");
         }
         for (String protocol : protocols) {
-            if (protocol.length() > MultistreamFraming.MAX_MESSAGE_LENGTH - 1) {
+            int length = protocol.getBytes(StandardCharsets.UTF_8).length;
+            if (length > MultistreamFraming.MAX_MESSAGE_LENGTH - 1) {
                 throw new IllegalArgumentException("Too long protocol id: '" + protocol + "'");
+            }
+            if (length == 0) {
+                throw new IllegalArgumentException("Empty protocol id");
             }
         }
 
@@ -122,6 +137,9 @@ public final class Multistream<TInitiator, TResponder> {
             }
             if (msg.equals(protocols.get(i))) {
                 return msg;
+            }
+            if (!NOT_ACCEPTED.equals(msg)) {
+                throw new RuntimeException("Unexpected multistream response: '" + msg + "'");
             }
             if (i == protocols.size() - 1) {
                 throw new RuntimeException(
@@ -148,12 +166,17 @@ public final class Multistream<TInitiator, TResponder> {
         MultistreamFraming.writeMessage(out, MULTISTREAM_PROTOCOL);
 
         boolean headerReceived = false;
+        int proposals = 0;
         while (true) {
             String msg = MultistreamFraming.readMessage(in);
             if (!headerReceived) {
                 expectHeader(msg);
                 headerReceived = true;
                 continue;
+            }
+            if (++proposals > MAX_PROPOSALS) {
+                throw new RuntimeException("Too many multistream proposals (limit "
+                        + MAX_PROPOSALS + ")");
             }
             boolean matched = matchers.stream().anyMatch(matcher -> matcher.matches(msg));
             if (matched) {

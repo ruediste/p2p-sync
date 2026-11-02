@@ -106,6 +106,38 @@ public class PeerIdTest {
         assertEquals(id, PeerId.fromPubKey(reconstructed));
     }
 
+    @Test
+    public void fromHexRejectsOddLengthAndNonHex() {
+        // Both malformed inputs must fail instead of silently producing a
+        // truncated/zeroed peer id.
+        try {
+            PeerId.fromHex("abc");
+            fail("expected IllegalArgumentException for odd length");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+        try {
+            PeerId.fromHex("zz" + "00".repeat(31));
+            fail("expected IllegalArgumentException for non-hex characters");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+    }
+
+    @Test
+    public void bytesAreDefensivelyCopied() {
+        // Mutating either input or output arrays must not change the PeerId.
+        byte[] input = new byte[32];
+        input[0] = 1;
+        PeerId id = new PeerId(input);
+        input[0] = 2;
+        assertEquals(1, id.getBytes()[0]);
+
+        byte[] output = id.getBytes();
+        output[0] = 3;
+        assertEquals(1, id.getBytes()[0]);
+    }
+
     private static byte[] fromHex(String hex) {
         byte[] data = new byte[hex.length() / 2];
         for (int i = 0; i < data.length; i++) {

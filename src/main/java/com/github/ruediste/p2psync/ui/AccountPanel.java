@@ -17,9 +17,10 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
+import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 import com.github.ruediste.p2psync.node.Node;
 
-/** Account and node settings, rendered inline instead of using modal dialogs. */
+/** Account and node settings, rendered inline; file selection uses the platform chooser. */
 final class AccountPanel extends JPanel {
     private final Node node;
     private final Path mountPoint;
@@ -33,6 +34,7 @@ final class AccountPanel extends JPanel {
     private final JTextField exportPath = Theme.textField(26);
     private final JPasswordField exportPassword = Theme.passwordField(18);
     private final JLabel nodeMeta = Theme.mono("");
+    private String defaultExportPathValue;
 
     AccountPanel(Node node, Node.UserStatus user, Path mountPoint, Consumer<String> status, Runnable onChanged) {
         this.node = node;
@@ -47,13 +49,25 @@ final class AccountPanel extends JPanel {
     }
 
     void setUser(Node.UserStatus user) {
-        boolean changed = this.user == null || !this.user.localName().equals(user.localName());
+        boolean changed = this.user == null || !this.user.userId().equals(user.userId())
+                || !this.user.localName().equals(user.localName());
         this.user = user;
         updateLabels();
         if (changed) {
             nameField.setText(user.localName());
-            exportPath.setText(mountPoint.resolve(user.localName() + ".userkey").toString());
+            String newDefault = defaultCredentialPath(user).toString();
+            if (exportPath.getText().isBlank() || exportPath.getText().equals(defaultExportPathValue))
+                exportPath.setText(newDefault);
+            defaultExportPathValue = newDefault;
         }
+    }
+
+    private Path defaultCredentialPath(Node.UserStatus user) {
+        String home = System.getProperty("user.home");
+        Path base = home == null || home.isBlank() ? mountPoint.getParent() : Path.of(home);
+        if (base == null)
+            base = Path.of(".");
+        return base.resolve(user.localName() + ".userkey");
     }
 
     private void render() {
@@ -158,7 +172,9 @@ final class AccountPanel extends JPanel {
         add(Theme.verticalScroll(content), BorderLayout.CENTER);
         updateLabels();
         nameField.setText(user.localName());
-        exportPath.setText(mountPoint.resolve(user.localName() + ".userkey").toString());
+        defaultExportPathValue = defaultCredentialPath(user).toString();
+        if (exportPath.getText().isBlank())
+            exportPath.setText(defaultExportPathValue);
     }
 
     private void updateLabels() {
@@ -174,48 +190,77 @@ final class AccountPanel extends JPanel {
     }
 
     private void rename() {
-        try {
-            node.renameUser(user.userId(), nameField.getText().trim());
+        PubKey userId = user.userId();
+        String newName = nameField.getText().trim();
+        Background.run("rename user", () -> node.renameUser(userId, newName), () -> {
             status.accept("User renamed");
             onChanged.run();
-        } catch (RuntimeException error) {
-            status.accept("Could not rename user: " + error.getMessage());
-        }
+        }, error -> status.accept("Could not rename user: " + error.getMessage()));
     }
 
     private void openFolder() {
-        try {
-            Desktop.getDesktop().open(mountPoint.resolve(user.localName()).toFile());
-        } catch (Exception error) {
-            status.accept("Could not open folder: " + error.getMessage());
-        }
+        Path folder = mountPoint.resolve(user.localName());
+        Background.run("open folder", () -> {
+            Desktop.getDesktop().open(folder.toFile());
+            return null;
+        }, null, error -> status.accept("Could not open folder: " + error.getMessage()));
     }
 
     private void exportCredential() {
         char[] password = exportPassword.getPassword();
-        try {
-            node.exportUserKey(user.userId(), Path.of(exportPath.getText().trim()), password);
-            status.accept("Protected credential exported");
-        } catch (Exception error) {
-            status.accept("Could not export credential: " + error.getMessage());
-        } finally {
+        String pathText = exportPath.getText().trim();
+        if (pathText.isEmpty()) {
             Arrays.fill(password, '\0');
             exportPassword.setText("");
+            status.accept("Enter a credential file path");
+            return;
         }
+        Path target;
+        try {
+            target = Path.of(pathText);
+        } catch (RuntimeException error) {
+            Arrays.fill(password, '\0');
+            exportPassword.setText("");
+            status.accept("Could not export credential: " + error.getMessage());
+            return;
+        }
+        PubKey userId = user.userId();
+        Runnable clearPassword = () -> {
+            Arrays.fill(password, '\0');
+            exportPassword.setText("");
+        };
+        Background.run("export credential", () -> {
+            node.exportUserKey(userId, target, password);
+            return null;
+        }, ignored -> {
+            clearPassword.run();
+            status.accept("Protected credential exported");
+        }, error -> {
+            clearPassword.run();
+            status.accept("Could not export credential: " + error.getMessage());
+        });
     }
 
     private void copyCredential() {
         char[] password = exportPassword.getPassword();
-        try {
-            String credential = node.exportUserKeyToClipboard(user.userId(), password);
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(credential), null);
-            status.accept("Encrypted credential copied to the clipboard");
-        } catch (Exception error) {
-            status.accept("Could not copy credential: " + error.getMessage());
-        } finally {
+        PubKey userId = user.userId();
+        Runnable clearPassword = () -> {
             Arrays.fill(password, '\0');
             exportPassword.setText("");
-        }
+        };
+        Background.run("copy credential", () -> node.exportUserKeyToClipboard(userId, password), credential -> {
+            try {
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(credential), null);
+                status.accept("Encrypted credential copied to the clipboard");
+            } catch (Exception error) {
+                status.accept("Could not copy credential: " + error.getMessage());
+            } finally {
+                clearPassword.run();
+            }
+        }, error -> {
+            clearPassword.run();
+            status.accept("Could not copy credential: " + error.getMessage());
+        });
     }
 
     private void copyToClipboard(String text, String message) {

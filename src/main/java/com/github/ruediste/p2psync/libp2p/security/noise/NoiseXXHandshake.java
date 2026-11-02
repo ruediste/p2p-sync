@@ -42,7 +42,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
  *
  * <p>
  * This is the blocking-I/O deviation from the original Netty-based plan (see
- * {@code ARCHITECTURE.md}): upstream jvm-libp2p implements the same handshake
+ * {@code doc/transport-streams-threading.md}): upstream jvm-libp2p implements the same handshake
  * as
  * a Netty {@code channelRead} state machine wrapped in a
  * {@code UShortLengthCodec}. Here {@link #run(P2PInputStream, P2POutputStream,
@@ -75,8 +75,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
  *
  * <p>
  * Protocol-level violations (bad signature, wrong peer id, failed AEAD
- * authentication) surface as plain {@link RuntimeException}s (per the M1
- * deviation note); real I/O failures already surface as
+ * authentication) surface as plain {@link RuntimeException}s; real I/O
+ * failures already surface as
  * {@link UncheckedIOException} from the underlying streams.
  */
 public final class NoiseXXHandshake {
@@ -155,7 +155,12 @@ public final class NoiseXXHandshake {
             return new Result(localId, remoteId, remotePubKey, keys.outbound, keys.inbound);
         } else {
             byte[] msg1 = readFrame(rawIn);
-            state.readMessage(msg1);
+            byte[] payload1 = state.readMessage(msg1);
+            if (payload1.length != 0) {
+                throw new MalformedNoiseHandshakeException(
+                        "Noise XX message 1 must not carry a payload (" + payload1.length
+                                + " trailing bytes)");
+            }
 
             byte[] msg2 = state.writeMessage(identityPayload);
             writeFrame(rawOut, msg2);
@@ -245,9 +250,6 @@ public final class NoiseXXHandshake {
             throw new UncheckedIOException(new EOFException("Truncated Noise frame length header"));
         }
         int length = (hi << 8) | lo;
-        if (length > MAX_FRAME_LENGTH) {
-            throw new IllegalStateException("Noise frame length out of range: " + length);
-        }
         byte[] message = new byte[length];
         in.readFully(message);
         return message;
@@ -330,16 +332,17 @@ public final class NoiseXXHandshake {
     public static final class CipherState {
 
         /**
-         * Largest Noise AEAD nonce (2^64 - 1). The Noise spec mandates the
-         * counter must never wrap: reaching this value is a fatal error and no
-         * further encryption/decryption may be attempted, lest the nonce be
-         * reused against the same key (catastrophic for ChaCha20-Poly1305).
+         * Conservative per-key AEAD usage cap. The Noise nonce is 64-bit, but
+         * ChaCha20-Poly1305 has a much lower safe message count per key. Once
+         * this many messages have been processed we refuse to continue rather
+         * than risk nonce/counter exhaustion; the connection is expected to be
+         * re-established (this implementation does not rekey in place).
          *
          * <p>
-         * Matches upstream noise-java's {@code CipherState} guard
-         * ({@code "Nonce has wrapped around"}).
+         * 2^60 messages is far beyond any realistic session lifetime while
+         * leaving a wide margin below the 2^64 nonce limit.
          */
-        private static final long MAX_NONCE = 0xFFFFFFFFFFFFFFFFL;
+        private static final long MAX_MESSAGES = 1L << 60;
 
         private final byte[] key;
         private long nonce;
@@ -365,8 +368,9 @@ public final class NoiseXXHandshake {
             if (!hasKey()) {
                 return plaintext.clone();
             }
-            if (nonce == MAX_NONCE) {
-                throw new IllegalStateException("Noise AEAD nonce exhausted (2^64 - 1); refusing to reuse the counter");
+            if (nonce < 0 || nonce >= MAX_MESSAGES) {
+                throw new IllegalStateException(
+                        "Noise AEAD usage cap reached (" + MAX_MESSAGES + " messages); re-establish the connection");
             }
             try {
                 byte[] ciphertext = IvCipher.aead(Cipher.ENCRYPT_MODE, key, buildNonce(nonce), ad, plaintext);
@@ -390,8 +394,9 @@ public final class NoiseXXHandshake {
             if (!hasKey()) {
                 return ciphertext.clone();
             }
-            if (nonce == MAX_NONCE) {
-                throw new IllegalStateException("Noise AEAD nonce exhausted (2^64 - 1); refusing to reuse the counter");
+            if (nonce < 0 || nonce >= MAX_MESSAGES) {
+                throw new IllegalStateException(
+                        "Noise AEAD usage cap reached (" + MAX_MESSAGES + " messages); re-establish the connection");
             }
             try {
                 byte[] plaintext = IvCipher.aead(Cipher.DECRYPT_MODE, key, buildNonce(nonce), ad, ciphertext);

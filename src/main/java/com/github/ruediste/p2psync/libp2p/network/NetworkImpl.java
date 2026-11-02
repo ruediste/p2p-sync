@@ -1,7 +1,6 @@
 package com.github.ruediste.p2psync.libp2p.network;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -78,6 +77,7 @@ public final class NetworkImpl implements Network {
                             connectionEstablishedListener.handleConnection(conn);
                         } catch (RuntimeException e) {
                             connections.remove(conn);
+                            conn.close();
                             throw e;
                         }
                     });
@@ -116,40 +116,55 @@ public final class NetworkImpl implements Network {
     @Override
     public CompletableFuture<Connection> connect(PeerId id, Multiaddr... addrs) {
         return CompletableFuture.supplyAsync(() -> {
-            // Reuse existing connection to this peer if present
+            // Reuse an existing, still-open connection to this peer if present
             for (Connection conn : connections) {
-                if (conn.secureSession().getRemoteId() != null && id.equals(conn.secureSession().getRemoteId())) {
+                if (conn.muxerSession() != null && !conn.muxerSession().isClosed()
+                        && id.equals(conn.secureSession().getRemoteId())) {
                     return conn;
                 }
             }
 
-            // Append /p2p/<peerId> to each address for post-Noise identity verification
-            List<Multiaddr> addrsWithP2P = new ArrayList<>();
-            for (Multiaddr addr : addrs) {
-                addrsWithP2P.add(addr.withP2P(id));
-            }
-
-            // Try each transport / address in sequence, return first success
+            // Try each transport / address in sequence, return first success.
             Exception lastError = null;
-            for (Multiaddr addr : addrsWithP2P) {
+            for (Multiaddr addr : addrs) {
+                Multiaddr addrWithP2P;
+                try {
+                    addrWithP2P = addr.withP2P(id);
+                } catch (IllegalArgumentException e) {
+                    lastError = e;
+                    continue;
+                }
                 for (DiallingTransport transport : transports) {
-                    if (transport.handles(addr)) {
+                    if (!transport.handles(addrWithP2P)) {
+                        continue;
+                    }
+                    RawConnection raw = null;
+                    Connection conn = null;
+                    try {
+                        raw = transport.dial(addrWithP2P);
+                        // The expected identity is verified as part of the
+                        // upgrade, before the application listener sees it.
+                        conn = connectionBuilder.upgrade(raw, id);
+                        if (!id.equals(conn.secureSession().getRemoteId())) {
+                            throw new RuntimeException("Remote peer identity mismatch: expected " + id
+                                    + ", got " + conn.secureSession().getRemoteId());
+                        }
+                        connections.add(conn);
                         try {
-                            RawConnection raw = transport.dial(addr);
-                            Connection conn = connectionBuilder.upgrade(raw);
-                            connections.add(conn);
                             connectionEstablishedListener.handleConnection(conn);
-                            // Verify the remote peer identity matches what we expect
-                            if (!id.equals(conn.secureSession().getRemoteId())) {
-                                conn.close();
-                                connections.remove(conn);
-                                throw new RuntimeException(
-                                        "Remote peer identity mismatch: expected " + id
-                                                + ", got " + conn.secureSession().getRemoteId());
-                            }
-                            return conn;
-                        } catch (Exception e) {
-                            lastError = e;
+                        } catch (RuntimeException e) {
+                            connections.remove(conn);
+                            conn.close();
+                            throw e;
+                        }
+                        return conn;
+                    } catch (Exception e) {
+                        lastError = e;
+                        if (conn != null) {
+                            connections.remove(conn);
+                            closeQuietly(conn);
+                        } else if (raw != null) {
+                            closeQuietly(raw);
                         }
                     }
                 }
@@ -157,6 +172,22 @@ public final class NetworkImpl implements Network {
             throw new RuntimeException("Failed to connect to " + id + " via " + List.of(addrs),
                     lastError);
         }, executor);
+    }
+
+    private static void closeQuietly(Connection conn) {
+        try {
+            conn.close();
+        } catch (RuntimeException ignored) {
+            // already failing; keep the original cause
+        }
+    }
+
+    private static void closeQuietly(RawConnection raw) {
+        try {
+            raw.stream().close();
+        } catch (RuntimeException ignored) {
+            // already failing; keep the original cause
+        }
     }
 
     @Override

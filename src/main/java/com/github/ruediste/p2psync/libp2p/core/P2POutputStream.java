@@ -8,8 +8,8 @@ import java.io.UncheckedIOException;
 /**
  * Minimal blocking output stream abstraction used throughout the libp2p port
  * instead of a
- * Netty {@code Channel}/{@code ByteBuf}. See {@code ARCHITECTURE.md} for the
- * full rationale.
+ * Netty {@code Channel}/{@code ByteBuf}. See
+ * {@code doc/transport-streams-threading.md} for the full rationale.
  *
  * <p>
  * Every layer of the stack (raw TCP socket, Noise-encrypted connection, an

@@ -49,6 +49,8 @@ final class ContactsPanel extends JPanel {
     private String selectedContactId;
     private boolean editingNew;
     private boolean refreshing;
+    private boolean dirty;
+    private boolean loading;
 
     ContactsPanel(Node node, Node.UserStatus user, Consumer<String> status) {
         this.node = node;
@@ -74,6 +76,7 @@ final class ContactsPanel extends JPanel {
                 refresh();
             }
         });
+        trackDirty(userId, firstName, lastName, email, phone, notes);
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, buildContactList(), buildDetail());
         split.setBorder(BorderFactory.createEmptyBorder(12, 0, 0, 0));
@@ -137,7 +140,13 @@ final class ContactsPanel extends JPanel {
     }
 
     void setUser(Node.UserStatus user) {
+        boolean changed = this.user == null || !this.user.userId().equals(user.userId());
         this.user = user;
+        if (changed) {
+            selectedContactId = null;
+            editingNew = false;
+            dirty = false;
+        }
         refresh();
     }
 
@@ -164,10 +173,13 @@ final class ContactsPanel extends JPanel {
                     } finally {
                         refreshing = false;
                     }
-                    showContact(contactModel.get(index));
+                    if (!dirty)
+                        showContact(contactModel.get(index));
                     return;
                 }
             }
+            if (dirty)
+                return;
         }
         if (!contactModel.isEmpty()) {
             contactList.setSelectedIndex(0);
@@ -183,28 +195,61 @@ final class ContactsPanel extends JPanel {
         }
     }
 
+    private void trackDirty(javax.swing.text.JTextComponent... fields) {
+        DocumentListener listener = new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent event) {
+                markDirty();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent event) {
+                markDirty();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent event) {
+                markDirty();
+            }
+        };
+        for (var field : fields)
+            field.getDocument().addDocumentListener(listener);
+    }
+
+    private void markDirty() {
+        if (!loading)
+            dirty = true;
+    }
+
+    private void loadFields(String linkedUserId, String first, String last, String mail, String phoneNumber,
+            String noteText) {
+        loading = true;
+        try {
+            userId.setText(linkedUserId);
+            firstName.setText(first);
+            lastName.setText(last);
+            email.setText(mail);
+            phone.setText(phoneNumber);
+            notes.setText(noteText);
+        } finally {
+            loading = false;
+        }
+        dirty = false;
+    }
+
     private void startNew() {
         selectedContactId = null;
         editingNew = true;
         contactList.clearSelection();
-        userId.setText("");
-        firstName.setText("");
-        lastName.setText("");
-        email.setText("");
-        phone.setText("");
-        notes.setText("");
+        loadFields("", "", "", "", "", "");
         renderDetail("New contact", "All fields are optional, but at least one must be filled.", false);
     }
 
     private void showContact(Contact contact) {
         selectedContactId = contact.contactId();
         editingNew = false;
-        userId.setText(contact.userId() == null ? "" : HexFormat.of().formatHex(contact.userId().bytes()));
-        firstName.setText(contact.firstName());
-        lastName.setText(contact.lastName());
-        email.setText(contact.email());
-        phone.setText(contact.phone());
-        notes.setText(contact.notes());
+        loadFields(contact.userId() == null ? "" : HexFormat.of().formatHex(contact.userId().bytes()),
+                contact.firstName(), contact.lastName(), contact.email(), contact.phone(), contact.notes());
         renderDetail("Edit contact", "Contact ID " + contact.contactId().substring(0, 8), true);
     }
 
@@ -220,7 +265,7 @@ final class ContactsPanel extends JPanel {
 
         JPanel form = Theme.column();
         form.setBackground(Theme.PAPER);
-        form.add(Theme.formField("User key (hex, optional)", userId));
+        form.add(Theme.formField("User ID (hex, optional)", userId));
         form.add(Box.createVerticalStrut(8));
         form.add(Theme.formField("First name", firstName));
         form.add(Box.createVerticalStrut(8));
@@ -258,37 +303,46 @@ final class ContactsPanel extends JPanel {
     }
 
     private void save(boolean existing) {
+        PubKey linked;
         try {
-            PubKey linked = parseUserId();
-            NodeUserHandle handle = node.getUser(user.userId());
-            Contact contact;
-            if (existing && selectedContactId != null) {
-                contact = handle.updateContact(selectedContactId, linked, firstName.getText(), lastName.getText(),
-                        email.getText(), phone.getText(), notes.getText());
-            } else {
-                contact = handle.createContact(linked, firstName.getText(), lastName.getText(), email.getText(),
-                        phone.getText(), notes.getText());
-            }
-            selectedContactId = contact.contactId();
-            editingNew = false;
-            status.accept(existing ? "Contact saved" : "Contact created");
-            refresh();
+            linked = parseUserId();
         } catch (RuntimeException error) {
             status.accept("Could not save contact: " + error.getMessage());
+            return;
         }
+        PubKey userId = user.userId();
+        String contactId = selectedContactId;
+        String first = firstName.getText();
+        String last = lastName.getText();
+        String mail = email.getText();
+        String phoneNumber = phone.getText();
+        String noteText = notes.getText();
+        boolean update = existing && contactId != null;
+        Background.run("save contact", () -> {
+            NodeUserHandle handle = node.getUser(userId);
+            if (update)
+                return handle.updateContact(contactId, linked, first, last, mail, phoneNumber, noteText);
+            return handle.createContact(linked, first, last, mail, phoneNumber, noteText);
+        }, contact -> {
+            selectedContactId = contact.contactId();
+            editingNew = false;
+            dirty = false;
+            status.accept(update ? "Contact saved" : "Contact created");
+            refresh();
+        }, error -> status.accept("Could not save contact: " + error.getMessage()));
     }
 
     private void delete() {
         if (selectedContactId == null)
             return;
-        try {
-            node.getUser(user.userId()).deleteContact(selectedContactId);
+        PubKey userId = user.userId();
+        String contactId = selectedContactId;
+        Background.run("delete contact", () -> node.getUser(userId).deleteContact(contactId), () -> {
             selectedContactId = null;
+            dirty = false;
             status.accept("Contact deleted");
             refresh();
-        } catch (RuntimeException error) {
-            status.accept("Could not delete contact: " + error.getMessage());
-        }
+        }, error -> status.accept("Could not delete contact: " + error.getMessage()));
     }
 
     private final class ContactRenderer extends JPanel implements ListCellRenderer<Contact> {

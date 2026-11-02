@@ -14,26 +14,30 @@ import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
  * Ported from {@code io.libp2p.core.PeerId} (jvm-libp2p).
  */
 public final class PeerId {
-    private static SecureRandom random = new SecureRandom();
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final byte[] bytes;
 
     /**
-     * @param bytes peer id bytes, size must be &gt;= 32 and &lt;= 50
+     * @param bytes peer id bytes, size must be &gt;= 32 and &lt;= 50. The array
+     *              is defensively copied.
      */
     public PeerId(byte[] bytes) {
         if (bytes.length < 32 || bytes.length > 50) {
             throw new IllegalArgumentException("Invalid peerId length: " + bytes.length);
         }
-        this.bytes = bytes;
+        this.bytes = bytes.clone();
     }
 
     public int compareTo(PeerId other) {
         return Arrays.compareUnsigned(bytes, other.bytes);
     }
 
+    /**
+     * Returns a copy of the peer id bytes.
+     */
     public byte[] getBytes() {
-        return bytes;
+        return bytes.clone();
     }
 
     /**
@@ -86,13 +90,23 @@ public final class PeerId {
 
     /**
      * Creates {@link PeerId} from hex string representation.
+     *
+     * @throws IllegalArgumentException if the string has odd length or contains
+     *                                  non-hex characters
      */
     public static PeerId fromHex(String str) {
         int len = str.length();
+        if ((len & 1) != 0) {
+            throw new IllegalArgumentException("Hex peer id must have an even length: " + len);
+        }
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(str.charAt(i), 16) << 4)
-                    + Character.digit(str.charAt(i + 1), 16));
+            int high = Character.digit(str.charAt(i), 16);
+            int low = Character.digit(str.charAt(i + 1), 16);
+            if (high < 0 || low < 0) {
+                throw new IllegalArgumentException("Invalid hex peer id: '" + str + "'");
+            }
+            data[i / 2] = (byte) ((high << 4) + low);
         }
         return new PeerId(data);
     }
@@ -104,7 +118,7 @@ public final class PeerId {
      */
     public static PeerId random() {
         byte[] data = new byte[32];
-        random.nextBytes(data);
+        RANDOM.nextBytes(data);
         return new PeerId(data);
     }
 

@@ -22,7 +22,7 @@ import com.github.ruediste.p2psync.libp2p.core.P2PStream;
  * {@link #initInitiator} / {@link #initResponder} are
  * plain blocking methods — since everything here already runs on its own virtual
  * thread (see
- * {@code ARCHITECTURE.md}), there is no need for the caller to get a future
+ * {@code doc/transport-streams-threading.md}), there is no need for the caller to get a future
  * back; it simply
  * calls the appropriate method and gets the controller directly (or an exception).
  *

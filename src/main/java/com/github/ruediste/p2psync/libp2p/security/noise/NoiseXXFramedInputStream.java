@@ -18,9 +18,9 @@ import com.github.ruediste.p2psync.libp2p.security.CantDecryptInboundException;
  * from the wire only when the previous one is exhausted.
  *
  * <p>
- * From the muxer's (M6) point of view this is just another
+ * From the muxer's point of view this is just another
  * {@link P2PInputStream}, identical in shape to the raw TCP one
- * (see {@code ARCHITECTURE.md}).
+ * (see {@code doc/transport-streams-threading.md}).
  *
  * <p>
  * This stream is <b>thread-safe</b>: {@link #read(byte[], int, int)} is
@@ -85,8 +85,10 @@ public final class NoiseXXFramedInputStream extends P2PInputStream {
             throw new UncheckedIOException(new EOFException("Truncated Noise frame length header"));
         }
         int length = (hi << 8) | lo;
-        if (length > NoiseXXHandshake.MAX_FRAME_LENGTH) {
-            throw new IllegalStateException("Noise frame length out of range: " + length);
+        if (length < NoiseXXHandshake.TAG_LENGTH) {
+            // A frame shorter than the AEAD tag cannot be authentic and would
+            // fail inside the cipher with a less precise error.
+            throw new IllegalStateException("Noise transport frame too short: " + length);
         }
         byte[] ciphertext = new byte[length];
         in.readFully(ciphertext);

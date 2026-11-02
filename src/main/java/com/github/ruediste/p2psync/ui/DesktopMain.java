@@ -31,12 +31,20 @@ public final class DesktopMain {
             return;
         }
 
-        Node node;
         try {
             Files.createDirectories(mountDirectory);
+        } catch (Exception error) {
+            System.err.println("Could not create mount directory: " + error.getMessage());
+            System.exit(1);
+            return;
+        }
+
+        Node node;
+        try {
             node = new Node(new Node.Network(), dataFile);
         } catch (Exception error) {
             System.err.println("Could not open node storage: " + error.getMessage());
+            System.exit(1);
             return;
         }
 
@@ -45,8 +53,13 @@ public final class DesktopMain {
             System.out.println("Peer ID: " + node.peerId.toBase58());
             addresses.forEach(address -> System.out.println("Listen address: " + address));
         } catch (RuntimeException error) {
-            node.close();
+            try {
+                node.close();
+            } catch (RuntimeException closeError) {
+                error.addSuppressed(closeError);
+            }
             System.err.println("Could not start peer networking: " + error.getMessage());
+            System.exit(1);
             return;
         }
 
@@ -57,9 +70,14 @@ public final class DesktopMain {
                 return;
             try {
                 filesystem.umount();
-            } catch (RuntimeException ignored) {
+            } catch (RuntimeException error) {
+                System.err.println("Could not unmount the user filesystem: " + error.getMessage());
             }
-            node.close();
+            try {
+                node.close();
+            } catch (RuntimeException error) {
+                System.err.println("Could not close the node: " + error.getMessage());
+            }
         };
         Runtime.getRuntime().addShutdownHook(new Thread(cleanup, "p2p-sync-shutdown-hook"));
 

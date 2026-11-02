@@ -23,4 +23,11 @@ public interface MuxerSession {
      * Closes the muxer session and releases all resources.
      */
     void close();
+
+    /**
+     * Whether the underlying connection/session has been closed.
+     */
+    default boolean isClosed() {
+        return false;
+    }
 }

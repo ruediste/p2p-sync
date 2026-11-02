@@ -15,9 +15,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
  * <p>
  * Ported from the marshaling functions in {@code io.libp2p.core.crypto.Key}
  * (jvm-libp2p);
- * trimmed to dispatch only to the Ed25519 implementation (see "Future extension
- * points" in
- * {@code ImplementationPlan.md}).
+ * trimmed to dispatch only to the Ed25519 implementation.
  */
 public final class Marshaling {
 

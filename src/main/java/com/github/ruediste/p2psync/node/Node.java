@@ -1345,6 +1345,42 @@ public class Node implements AutoCloseable {
         }
     }
 
+    /**
+     * Accepts a pending SyncUnit invitation by probing known peers for a node
+     * that hosts the invitation.
+     */
+    public void joinSyncUnit(SyncUnitId id, PubKey inviteeId) {
+        requireConfiguredUser(inviteeId);
+        RuntimeException lastFailure = null;
+        for (var peer : List.copyOf(network.nodes.values())) {
+            if (peer == this || !peer.syncUnits.containsKey(id))
+                continue;
+            try {
+                joinSyncUnit(peer.peerId, id, inviteeId);
+                return;
+            } catch (RuntimeException error) {
+                lastFailure = error;
+            }
+        }
+        var candidates = new TreeSet<PeerId>(PeerId::compareTo);
+        if (remoteHost != null)
+            candidates.addAll(remoteHost.addressBook().getPeerIds());
+        candidates.addAll(remoteAddresses.keySet());
+        candidates.remove(peerId);
+        for (PeerId candidate : candidates) {
+            try {
+                joinSyncUnit(candidate, id, inviteeId);
+                return;
+            } catch (RuntimeException error) {
+                lastFailure = error;
+            }
+        }
+        var error = new IllegalArgumentException("No known peer hosts this SyncUnit invitation");
+        if (lastFailure != null)
+            error.addSuppressed(lastFailure);
+        throw error;
+    }
+
     public void joinSyncUnit(PeerId sourcePeerId, SyncUnitId id, PubKey inviteeId) {
         var source = network.nodes.get(sourcePeerId);
         requireConfiguredUser(inviteeId);

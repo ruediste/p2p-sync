@@ -22,4 +22,11 @@ public interface AddressBook {
     void setAddrs(PeerId id, long ttl, Multiaddr... addrs);
 
     void addAddrs(PeerId id, long ttl, Multiaddr... addrs);
+
+    /**
+     * Removes all known addresses for {@code id}. Default is a no-op for
+     * read-only/immutable address books.
+     */
+    default void removePeer(PeerId id) {
+    }
 }

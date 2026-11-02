@@ -13,12 +13,24 @@ import com.github.ruediste.p2psync.libp2p.core.P2PStream;
  * A single Yamux multiplexed stream. Exposes its read side as a
  * {@link P2PInputStream} and its write side as a {@link P2POutputStream},
  * accessible via {@link #getInputStream()} and {@link #getOutputStream()}.
+ *
+ * <p>
+ * Receive-side flow control is applied where the application actually consumes
+ * data: {@link #receiveData(byte[])} deducts from the advertised receive window
+ * and the window is only replenished from {@link StreamInput#read}. This keeps
+ * the incoming queue bounded by the receive window even if the consumer is
+ * slow.
  */
 public final class YamuxStream {
 
     private final long streamId;
     final YamuxSession connection;
-    int receiveWindowSize;
+
+    /** Remaining bytes the remote peer may still send before an update. */
+    private int receiveWindowSize;
+
+    /** Bytes consumed since the last WINDOW_UPDATE was sent. */
+    private int consumedSinceUpdate;
 
     /** Incoming data queue, written by connection reader thread. */
     private final Queue<byte[]> incoming = new ArrayDeque<>();
@@ -33,7 +45,6 @@ public final class YamuxStream {
     final Condition windowAvailable = windowLock.newCondition();
     int sendWindow;
 
-    volatile boolean acknowledged;
     volatile boolean closedForWriting;
     volatile boolean remoteClosed;
     volatile boolean reset;
@@ -73,44 +84,56 @@ public final class YamuxStream {
         public int read(byte[] buf, int off, int len) {
             if (len == 0)
                 return 0;
+            int n;
             incomingLock.lock();
             try {
-                while (true) {
-                    if (reset)
-                        throw new RuntimeException("Yamux stream " + streamId + " has been reset");
-                    if (currentChunk != null) {
-                        int remaining = currentChunk.length - currentOffset;
-                        if (remaining > 0) {
-                            int n = Math.min(len, remaining);
-                            System.arraycopy(currentChunk, currentOffset, buf, off, n);
-                            currentOffset += n;
-                            if (currentOffset >= currentChunk.length) {
-                                currentChunk = null;
-                                currentOffset = 0;
-                            }
-                            return n;
-                        }
-                        currentChunk = null;
-                        currentOffset = 0;
-                    }
-                    if (incomingClosed && incoming.isEmpty()) {
-                        return -1;
-                    }
-                    if (!incoming.isEmpty()) {
-                        currentChunk = incoming.poll();
-                        currentOffset = 0;
-                        continue;
-                    }
-                    try {
-                        incomingAvailable.await();
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        throw new RuntimeException(
-                                "Interrupted while reading from Yamux stream " + streamId, e);
-                    }
-                }
+                n = readLocked(buf, off, len);
             } finally {
                 incomingLock.unlock();
+            }
+            if (n > 0) {
+                // Replenish the receive window only now that the application
+                // has actually consumed the bytes. Never write a frame while
+                // holding incomingLock: that would stall the session reader.
+                connection.onBytesConsumed(YamuxStream.this, n);
+            }
+            return n;
+        }
+
+        private int readLocked(byte[] buf, int off, int len) {
+            while (true) {
+                if (reset)
+                    throw new RuntimeException("Yamux stream " + streamId + " has been reset");
+                if (currentChunk != null) {
+                    int remaining = currentChunk.length - currentOffset;
+                    if (remaining > 0) {
+                        int n = Math.min(len, remaining);
+                        System.arraycopy(currentChunk, currentOffset, buf, off, n);
+                        currentOffset += n;
+                        if (currentOffset >= currentChunk.length) {
+                            currentChunk = null;
+                            currentOffset = 0;
+                        }
+                        return n;
+                    }
+                    currentChunk = null;
+                    currentOffset = 0;
+                }
+                if (incomingClosed && incoming.isEmpty()) {
+                    return -1;
+                }
+                if (!incoming.isEmpty()) {
+                    currentChunk = incoming.poll();
+                    currentOffset = 0;
+                    continue;
+                }
+                try {
+                    incomingAvailable.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(
+                            "Interrupted while reading from Yamux stream " + streamId, e);
+                }
             }
         }
 
@@ -120,11 +143,45 @@ public final class YamuxStream {
         }
     }
 
-    void receiveData(byte[] data) {
+    /**
+     * Queues newly received data, enforcing the advertised receive window.
+     *
+     * @return {@code false} if the peer violated the receive window and the
+     *         stream must be reset.
+     */
+    boolean receiveData(byte[] data) {
         incomingLock.lock();
         try {
+            if (reset || incomingClosed) {
+                return true;
+            }
+            if (data.length > receiveWindowSize) {
+                return false;
+            }
+            receiveWindowSize -= data.length;
             incoming.add(data);
             incomingAvailable.signalAll();
+            return true;
+        } finally {
+            incomingLock.unlock();
+        }
+    }
+
+    /**
+     * Accounts for {@code n} bytes consumed by the application and returns the
+     * window increment to advertise, or {@code 0} if no update is needed.
+     */
+    int bytesConsumed(int n) {
+        incomingLock.lock();
+        try {
+            consumedSinceUpdate += n;
+            if (consumedSinceUpdate >= connection.initialWindowSize / 2) {
+                int delta = consumedSinceUpdate;
+                consumedSinceUpdate = 0;
+                receiveWindowSize += delta;
+                return delta;
+            }
+            return 0;
         } finally {
             incomingLock.unlock();
         }
@@ -137,6 +194,42 @@ public final class YamuxStream {
             incomingAvailable.signalAll();
         } finally {
             incomingLock.unlock();
+        }
+    }
+
+    /** Wakes both blocked readers and writers after an abnormal termination. */
+    void terminate() {
+        reset = true;
+        incomingLock.lock();
+        try {
+            incomingClosed = true;
+            incomingAvailable.signalAll();
+        } finally {
+            incomingLock.unlock();
+        }
+        windowLock.lock();
+        try {
+            windowAvailable.signalAll();
+        } finally {
+            windowLock.unlock();
+        }
+    }
+
+    /** Wakes both blocked readers and writers after a normal local close. */
+    void terminateLocally() {
+        closedForWriting = true;
+        incomingLock.lock();
+        try {
+            incomingClosed = true;
+            incomingAvailable.signalAll();
+        } finally {
+            incomingLock.unlock();
+        }
+        windowLock.lock();
+        try {
+            windowAvailable.signalAll();
+        } finally {
+            windowLock.unlock();
         }
     }
 
@@ -191,7 +284,7 @@ public final class YamuxStream {
     private void waitForSendWindow() {
         windowLock.lock();
         try {
-            while (sendWindow <= 0 && !reset) {
+            while (sendWindow <= 0 && !reset && !closedForWriting) {
                 try {
                     windowAvailable.await();
                 } catch (InterruptedException e) {
@@ -214,9 +307,12 @@ public final class YamuxStream {
     }
 
     public void close() {
-        if (!closedForWriting && !reset) {
-            closeForWriting();
+        try {
+            if (!closedForWriting && !reset) {
+                closeForWriting();
+            }
+        } finally {
+            connection.doCloseStream(this);
         }
-        connection.doCloseStream(this);
     }
 }

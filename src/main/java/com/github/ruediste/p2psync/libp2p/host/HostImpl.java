@@ -56,8 +56,10 @@ public final class HostImpl implements Host {
         this.network = network;
         this.addressBook = addressBook;
         this.listenAddrs = List.copyOf(listenAddrs);
-        this.protocolHandlers = new ArrayList<>(protocolHandlers);
-        this.connectionHandlers = new ArrayList<>(connectionHandlers);
+        // Keep the shared mutable lists: protocol handlers and connection
+        // listeners registered after build() must take effect immediately.
+        this.protocolHandlers = protocolHandlers;
+        this.connectionHandlers = connectionHandlers;
         this.mdnsDiscovery = mdnsDiscovery;
         this.mdnsAddress = mdnsAddress;
     }
@@ -100,10 +102,20 @@ public final class HostImpl implements Host {
             }
             MDnsDiscovery mdns = new MDnsDiscovery(peerId, network.listenAddresses(),
                     MDnsDiscovery.SERVICE_TAG_LOCAL, mdnsAddress);
-            return mdns.start(peerInfo -> {
-                if (!peerInfo.getPeerId().equals(peerId)) {
-                    addressBook.addAddrs(peerInfo.getPeerId(), DISCOVERED_ADDR_TTL,
-                            peerInfo.getAddresses().toArray(new Multiaddr[0]));
+            return mdns.start(new com.github.ruediste.p2psync.libp2p.core.PeerListener() {
+                @Override
+                public void peerFound(com.github.ruediste.p2psync.libp2p.core.PeerInfo peerInfo) {
+                    if (!peerInfo.getPeerId().equals(peerId)) {
+                        addressBook.addAddrs(peerInfo.getPeerId(), DISCOVERED_ADDR_TTL,
+                                peerInfo.getAddresses().toArray(new Multiaddr[0]));
+                    }
+                }
+
+                @Override
+                public void peerLost(com.github.ruediste.p2psync.libp2p.core.PeerInfo peerInfo) {
+                    if (!peerInfo.getPeerId().equals(peerId)) {
+                        addressBook.removePeer(peerInfo.getPeerId());
+                    }
                 }
             }).thenRun(() -> discoverers.add(mdns));
         });

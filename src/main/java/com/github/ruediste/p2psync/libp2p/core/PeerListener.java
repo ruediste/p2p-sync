@@ -10,4 +10,12 @@ package com.github.ruediste.p2psync.libp2p.core;
 public interface PeerListener {
 
     void peerFound(PeerInfo peerInfo);
+
+    /**
+     * Called when a previously-discovered peer is no longer advertised (for
+     * example an mDNS goodbye/expiry). The default is a no-op for discoverers
+     * that only add peers.
+     */
+    default void peerLost(PeerInfo peerInfo) {
+    }
 }

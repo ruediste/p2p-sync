@@ -6,7 +6,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
@@ -24,6 +26,11 @@ import com.github.ruediste.p2psync.libp2p.transport.ListeningTransport;
  * full connection upgrade sequence synchronously before invoking the
  * application's
  * {@link ConnectionEstablishedListener}.
+ *
+ * <p>
+ * Accepted sockets are tracked until they are closed by the layers above (or by
+ * this server), so {@link #close()} can also abort connections that are still
+ * stuck in the Noise handshake.
  */
 public final class TcpServer implements ListeningTransport {
 
@@ -31,7 +38,7 @@ public final class TcpServer implements ListeningTransport {
     private final Consumer<RawConnection> connectionHandler;
     private final AtomicBoolean closed = new AtomicBoolean();
     private final ReentrantLock lock = new ReentrantLock();
-    private final List<RawConnection> connections = new ArrayList<>();
+    private final Map<Socket, RawConnection> connections = new LinkedHashMap<>();
     private Thread acceptThread;
 
     public TcpServer(ServerSocket serverSocket, Consumer<RawConnection> connectionHandler) {
@@ -41,8 +48,7 @@ public final class TcpServer implements ListeningTransport {
 
     @Override
     public Multiaddr getActualListeningAddr() {
-        return new Multiaddr("/ip4/" + serverSocket.getInetAddress().getHostAddress()
-                + "/tcp/" + serverSocket.getLocalPort());
+        return SocketUtils.toMultiaddr(serverSocket.getInetAddress(), serverSocket.getLocalPort());
     }
 
     public void start() {
@@ -82,10 +88,11 @@ public final class TcpServer implements ListeningTransport {
     }
 
     private void handleAccepted(Socket socket) {
-        RawConnection connection = SocketUtils.toConnection(socket, false);
+        RawConnection connection = SocketUtils.toConnection(socket, false,
+                () -> removeConnection(socket));
         lock.lock();
         try {
-            connections.add(connection);
+            connections.put(socket, connection);
         } finally {
             lock.unlock();
         }
@@ -96,6 +103,7 @@ public final class TcpServer implements ListeningTransport {
             // owns the socket anymore, so close it. On success the socket
             // stays open: its lifecycle is now owned by the layers above
             // (they close it via Connection.close()).
+            removeConnection(socket);
             try {
                 socket.close();
             } catch (IOException ignored) {
@@ -105,34 +113,56 @@ public final class TcpServer implements ListeningTransport {
         }
     }
 
-    @Override
-    public void close() {
+    private void removeConnection(Socket socket) {
         lock.lock();
         try {
-            if (closed.compareAndSet(false, true)) {
-                try {
-                    serverSocket.close();
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-                if (acceptThread != null) {
-                    try {
-                        acceptThread.join();
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                    acceptThread = null;
-                }
-            }
+            connections.remove(socket);
         } finally {
             lock.unlock();
+        }
+    }
+
+    @Override
+    public void close() {
+        List<Socket> toClose;
+        Thread thread;
+        lock.lock();
+        try {
+            if (!closed.compareAndSet(false, true)) {
+                return;
+            }
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+            toClose = new ArrayList<>(connections.keySet());
+            connections.clear();
+            thread = acceptThread;
+            acceptThread = null;
+        } finally {
+            lock.unlock();
+        }
+        for (Socket socket : toClose) {
+            try {
+                socket.close();
+            } catch (IOException ignored) {
+                // best-effort shutdown
+            }
+        }
+        if (thread != null) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
     public List<RawConnection> getConnections() {
         lock.lock();
         try {
-            return Collections.unmodifiableList(new ArrayList<>(connections));
+            return Collections.unmodifiableList(new ArrayList<>(connections.values()));
         } finally {
             lock.unlock();
         }

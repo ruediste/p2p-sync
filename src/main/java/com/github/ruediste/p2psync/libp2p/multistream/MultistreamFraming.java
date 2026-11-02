@@ -25,8 +25,8 @@ import com.github.ruediste.p2psync.libp2p.core.P2POutputStream;
  * is read with {@link P2PInputStream#readFully(byte[])}. Neither method declares a checked
  * exception, matching {@link P2PInputStream}/{@link P2POutputStream}: a genuine I/O failure
  * (premature EOF) surfaces as {@link UncheckedIOException}; a malformed/oversized message is a
- * protocol violation and surfaces as a plain {@link RuntimeException} (per the M1 deviation
- * note in {@code ImplementationPlan.md} — no bespoke exception hierarchy).
+ * protocol violation and surfaces as a plain {@link RuntimeException} (no bespoke exception
+ * hierarchy).
  */
 public final class MultistreamFraming {
 
@@ -49,6 +49,9 @@ public final class MultistreamFraming {
         writeVarint(out, payloadLength);
         out.write(body);
         out.write(SUFFIX);
+        // Negotiation is a request/response exchange; a buffered sink must not
+        // hold the message back while the peer waits for it.
+        out.flush();
     }
 
     public static String readMessage(P2PInputStream in) {

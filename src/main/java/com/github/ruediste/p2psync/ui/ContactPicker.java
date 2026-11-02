@@ -61,9 +61,9 @@ final class ContactPicker extends JPanel {
         JPanel link = Theme.row(6);
         link.setOpaque(false);
         link.setAlignmentX(Component.LEFT_ALIGNMENT);
-        link.add(Theme.muted("Link key"));
+        link.add(Theme.muted("User ID"));
         link.add(linkKey);
-        JButton linkButton = Theme.secondaryButton("Add");
+        JButton linkButton = Theme.secondaryButton("Link");
         linkButton.addActionListener(event -> linkKey());
         link.add(linkButton);
         add(link);
@@ -88,7 +88,13 @@ final class ContactPicker extends JPanel {
     }
 
     void setUser(Node.UserStatus user) {
+        boolean changed = this.user == null || !this.user.userId().equals(user.userId());
         this.user = user;
+        if (changed) {
+            search.setText("");
+            linkKey.setText("");
+            matches.setSelectedItem(null);
+        }
         rebuild();
     }
 
@@ -111,7 +117,7 @@ final class ContactPicker extends JPanel {
         }
         matches.setSelectedItem(null);
         linkKey.setText(HexFormat.of().formatHex(userId.bytes()));
-        status.accept("No contact for this user yet. Add it with the Link key button.");
+        status.accept("No contact for this user yet. Link it with the user ID field.");
     }
 
     void clearSelection() {
@@ -122,21 +128,36 @@ final class ContactPicker extends JPanel {
     }
 
     private void linkKey() {
+        if (user == null)
+            return;
+        PubKey key;
         try {
-            PubKey key = PubKey.from(HexFormat.of().parseHex(linkKey.getText().trim()));
-            if (key.equals(user.userId())) {
-                status.accept("A contact cannot reference the owner");
-                return;
-            }
-            NodeUserHandle handle = node.getUser(user.userId());
-            handle.createContactFromUser(key);
+            key = PubKey.from(HexFormat.of().parseHex(linkKey.getText().trim()));
+        } catch (RuntimeException error) {
+            status.accept("Could not link contact: " + error.getMessage());
+            return;
+        }
+        if (key.equals(user.userId())) {
+            status.accept("A contact cannot reference the owner");
+            return;
+        }
+        Option option = (Option) matches.getSelectedItem();
+        Contact selectedContact = option == null ? null : option.contact();
+        boolean linkSelected = selectedContact != null && selectedContact.userId() == null;
+        PubKey userId = user.userId();
+        Background.run("link contact", () -> {
+            NodeUserHandle handle = node.getUser(userId);
+            if (linkSelected)
+                return handle.updateContact(selectedContact.contactId(), key, selectedContact.firstName(),
+                        selectedContact.lastName(), selectedContact.email(), selectedContact.phone(),
+                        selectedContact.notes());
+            return handle.createContactFromUser(key);
+        }, contact -> {
             linkKey.setText("");
             rebuild();
             setSelectedUserId(key);
             status.accept("Contact linked");
-        } catch (RuntimeException error) {
-            status.accept("Could not link contact: " + error.getMessage());
-        }
+        }, error -> status.accept("Could not link contact: " + error.getMessage()));
     }
 
     private void rebuild() {

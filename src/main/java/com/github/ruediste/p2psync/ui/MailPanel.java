@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +16,7 @@ import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -26,7 +26,6 @@ import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 
-import com.github.ruediste.p2psync.libp2p.core.PeerId;
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 import com.github.ruediste.p2psync.node.Node;
 import com.github.ruediste.p2psync.node.SyncUnitId;
@@ -111,14 +110,29 @@ final class MailPanel extends JPanel {
         folderList.addListSelectionListener(event -> {
             if (refreshing || event.getValueIsAdjusting() || folderList.getSelectedValue() == null)
                 return;
-            folder = folderList.getSelectedValue();
+            Folder selectedFolder = folderList.getSelectedValue();
+            if (selectedFolder == folder)
+                return;
+            if (!confirmDiscardDraft()) {
+                refreshing = true;
+                try {
+                    folderList.setSelectedValue(folder, false);
+                } finally {
+                    refreshing = false;
+                }
+                return;
+            }
+            folder = selectedFolder;
             composing = false;
             refresh();
         });
         panel.add(folderList, BorderLayout.CENTER);
 
         JButton compose = Theme.primaryButton("Compose");
-        compose.addActionListener(event -> showCompose(null, "", ""));
+        compose.addActionListener(event -> {
+            if (confirmDiscardDraft())
+                showCompose(null, "", "");
+        });
         JPanel bottom = new JPanel(new BorderLayout());
         bottom.setOpaque(false);
         bottom.add(compose, BorderLayout.NORTH);
@@ -141,6 +155,15 @@ final class MailPanel extends JPanel {
                 return;
             MailRow row = mailList.getSelectedValue();
             if (row != null) {
+                if (!confirmDiscardDraft()) {
+                    refreshing = true;
+                    try {
+                        mailList.clearSelection();
+                    } finally {
+                        refreshing = false;
+                    }
+                    return;
+                }
                 composing = false;
                 showReading(row);
             }
@@ -157,8 +180,21 @@ final class MailPanel extends JPanel {
         return detail;
     }
 
+    private boolean confirmDiscardDraft() {
+        if (!composing)
+            return true;
+        int choice = JOptionPane.showConfirmDialog(this, "Discard the current draft?", "Discard draft",
+                JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        return choice == JOptionPane.YES_OPTION;
+    }
+
     void setUser(Node.UserStatus user) {
+        boolean changed = this.user == null || !this.user.userId().equals(user.userId());
         this.user = user;
+        if (changed) {
+            composing = false;
+            pendingSelectionId = null;
+        }
         recipientPicker.setUser(user);
     }
 
@@ -281,7 +317,8 @@ final class MailPanel extends JPanel {
         }
         if (message.getInvitedSyncUnitId().size() == 32) {
             body.add(Box.createVerticalStrut(10));
-            body.add(buildInvitationAcceptance(SyncUnitId.fromBytes(message.getInvitedSyncUnitId().toByteArray())));
+            body.add(InvitationAcceptance.build(node, user,
+                    SyncUnitId.fromBytes(message.getInvitedSyncUnitId().toByteArray()), status, this::refresh));
         }
         view.add(body, BorderLayout.CENTER);
 
@@ -306,31 +343,6 @@ final class MailPanel extends JPanel {
         detail.repaint();
     }
 
-    private JPanel buildInvitationAcceptance(SyncUnitId id) {
-        JPanel panel = Theme.card(Theme.GREEN_SOFT);
-        panel.add(Theme.subheading("SyncUnit invitation"));
-        panel.add(Box.createVerticalStrut(4));
-        panel.add(Theme.muted("Enter the peer ID of a node hosting this invitation."));
-        panel.add(Box.createVerticalStrut(6));
-        JPanel row = Theme.row(6);
-        row.setBackground(Theme.GREEN_SOFT);
-        JTextField peer = Theme.textField(24);
-        row.add(peer);
-        JButton join = Theme.primaryButton("Accept invitation");
-        join.addActionListener(event -> {
-            try {
-                node.joinSyncUnit(PeerId.fromBase58(peer.getText().trim()), id, user.userId());
-                status.accept("Invitation accepted");
-                refresh();
-            } catch (RuntimeException error) {
-                status.accept("Could not accept invitation: " + error.getMessage());
-            }
-        });
-        row.add(join);
-        panel.add(row);
-        return panel;
-    }
-
     private void showCompose(PubKey recipient, String subject, String body) {
         composing = true;
         mailList.clearSelection();
@@ -340,7 +352,7 @@ final class MailPanel extends JPanel {
         attachments.clear();
         renderAttachmentChips();
         detailTitle.setText("New mail");
-        detailMeta.setText("Select a linked contact or link a user key");
+        detailMeta.setText("Select a linked contact or link a user ID");
         recipientPicker.requestFocusInWindow();
         renderCompose();
     }
@@ -401,22 +413,18 @@ final class MailPanel extends JPanel {
 
     private void attachFiles() {
         var paths = Theme.chooseOpenFiles(composeBody, "Attach files");
-        for (Path path : paths) {
-            try {
-                String mediaType = Files.probeContentType(path);
-                attachments.add(Sync.SyncUnitAttachment.newBuilder()
-                        .setName(path.getFileName().toString())
-                        .setMediaType(mediaType == null ? "application/octet-stream" : mediaType)
-                        .setContent(com.google.protobuf.ByteString.copyFrom(Files.readAllBytes(path)))
-                        .build());
-            } catch (Exception error) {
-                status.accept("Could not attach file: " + error.getMessage());
-            }
-        }
-        if (!paths.isEmpty()) {
+        if (paths.isEmpty())
+            return;
+        Background.run("attach files", () -> {
+            List<Sync.SyncUnitAttachment> loaded = new ArrayList<>();
+            for (Path path : paths)
+                loaded.add(Theme.readAttachment(path));
+            return loaded;
+        }, loaded -> {
+            attachments.addAll(loaded);
             renderAttachmentChips();
-            status.accept("Attached " + paths.size() + (paths.size() == 1 ? " file" : " files"));
-        }
+            status.accept("Attached " + loaded.size() + (loaded.size() == 1 ? " file" : " files"));
+        }, error -> status.accept("Could not attach file: " + error.getMessage()));
     }
 
     private void renderAttachmentChips() {
@@ -440,25 +448,26 @@ final class MailPanel extends JPanel {
     private void send() {
         PubKey recipient = recipientPicker.selectedUserId();
         if (recipient == null) {
-            status.accept("Select a contact with a linked user ID, or link a user key first");
+            status.accept("Select a contact with a linked user ID, or link a user ID first");
             return;
         }
-        try {
-            String messageId = node.getUserByName(user.localName()).sendMailMessage(recipient,
-                    composeSubject.getText(), composeBody.getText(), List.copyOf(attachments));
-            composing = false;
-            pendingSelectionId = messageId;
-            folder = Folder.SENT;
-            folderList.setSelectedValue(Folder.SENT, true);
-            composeSubject.setText("");
-            composeBody.setText("");
-            attachments.clear();
-            renderAttachmentChips();
-            refresh();
-            status.accept("Mail sent");
-        } catch (RuntimeException error) {
-            status.accept("Could not send mail: " + error.getMessage());
-        }
+        PubKey userId = user.userId();
+        String subject = composeSubject.getText();
+        String body = composeBody.getText();
+        List<Sync.SyncUnitAttachment> toSend = List.copyOf(attachments);
+        Background.run("send mail", () -> node.getUser(userId).sendMailMessage(recipient, subject, body, toSend),
+                messageId -> {
+                    composing = false;
+                    pendingSelectionId = messageId;
+                    folder = Folder.SENT;
+                    folderList.setSelectedValue(Folder.SENT, true);
+                    composeSubject.setText("");
+                    composeBody.setText("");
+                    attachments.clear();
+                    renderAttachmentChips();
+                    refresh();
+                    status.accept("Mail sent");
+                }, error -> status.accept("Could not send mail: " + error.getMessage()));
     }
 
     private String contactLabel(PubKey key) {

@@ -60,7 +60,7 @@ The display name is derived and not stored:
 1. First name and last name, omitting empty parts.
 2. Email address.
 3. Phone number.
-4. `User <short user key>` when a user ID is present.
+4. `User <short user ID>` when a user ID is present.
 5. `Contact <short contact ID>` for an otherwise empty contact.
 
 Search uses the individual fields plus the contact and user IDs, so a match is
@@ -92,7 +92,8 @@ the same contact concurrently.
 
 The materialized contact list is rebuilt from:
 
-1. the contact list stored in the user snapshot (`UserSnapshot`), and
+1. the contact list stored in the user snapshot (the `UserSnapshot` protobuf
+   message, not a separate class), and
 2. contact operations in the user's main/local/staging operation histories,
    applied in total operation order.
 
@@ -107,9 +108,9 @@ merges, local-state rebuilds, snapshot creation, joining, and state restoration.
 
 Contact operations are ordinary truncatable operations. When an operation is
 removed from the main user history during stable-log truncation, its effect is
-already present in the user snapshot. `UserSnapshot` stores both the file-tree
-snapshot and the materialized contact list, so contacts survive truncation and
-node restarts.
+already present in the user snapshot. The `UserSnapshot` protobuf message stores
+both the file-tree snapshot and the materialized contact list, so contacts
+survive truncation and node restarts.
 
 ## Conflict Resolution
 
@@ -150,7 +151,7 @@ Contact operations are exposed through `NodeUserHandle`:
 linked to another contact. `createContactFromUser` returns the existing contact
 when the user is already linked. `updateContact` emits one signed operation per
 changed field and returns the rebuilt contact. `contactLabel` resolves "you",
-the linked contact's display name, a local user name, or a short user key.
+the linked contact's display name, a local user name, or a short user ID.
 
 `Node.getUser(PubKey)` returns a handle for a configured user. `NodeUserHandle`
 does not expose another user's contact list.
@@ -162,10 +163,10 @@ The per-user **Contacts** section provides:
 - A search field matching any contact field.
 - A list showing display name, email or phone, and linked status.
 - An inline form for creating and editing contacts.
-- A user-key field for linking a contact.
+- A user-ID field for linking a contact.
 - Delete support.
 
-`ContactPicker` is used where the UI previously asked for a raw user key:
+`ContactPicker` is used where the UI previously asked for a raw user ID:
 
 - Mail compose recipient.
 - New direct chat.
@@ -173,12 +174,12 @@ The per-user **Contacts** section provides:
 
 The picker searches contacts and also lists other locally configured users.
 Unlinked contacts remain visible but cannot be selected for network operations.
-A user key can be linked inline. Sending mail, starting a chat, or inviting a
+A user ID can be linked inline. Sending mail, starting a chat, or inviting a
 user requires a linked contact or a linked local user.
 
 Labels in mail headers, chat conversations, SyncUnit member lists, and message
 views resolve through the current user's contacts first, then local user names,
-then a short user key. Inbound messages do not automatically create contacts;
+then a short user ID. Inbound messages do not automatically create contacts;
 the user can add one explicitly.
 
 ## Privacy

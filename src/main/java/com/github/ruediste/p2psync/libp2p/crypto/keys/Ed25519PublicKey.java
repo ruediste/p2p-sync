@@ -5,6 +5,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.Signature;
+import java.security.SignatureException;
 import java.security.spec.EdECPoint;
 import java.security.spec.EdECPublicKeySpec;
 import java.security.spec.NamedParameterSpec;
@@ -55,11 +56,20 @@ public final class Ed25519PublicKey extends PubKey {
 
     @Override
     public boolean verify(byte[] data, byte[] signature) {
+        if (signature == null || signature.length != 64) {
+            // A malformed signature is a failed verification, not an internal
+            // error.
+            return false;
+        }
         try {
             Signature verifier = Signature.getInstance(ALGORITHM);
             verifier.initVerify(pub);
             verifier.update(data);
             return verifier.verify(signature);
+        } catch (SignatureException e) {
+            // The provider rejects the signature encoding; treat it as an
+            // invalid signature so callers can surface InvalidRemotePubKey.
+            return false;
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException("Ed25519 verification failed", e);
         }

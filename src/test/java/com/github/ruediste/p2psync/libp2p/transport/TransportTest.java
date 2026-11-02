@@ -1,5 +1,6 @@
 package com.github.ruediste.p2psync.libp2p.transport;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -75,5 +76,19 @@ public class TransportTest {
         Multiaddr addr = server.getActualListeningAddr();
         assertTrue(addr.toString().contains("/tcp/" + port));
         server.close();
+    }
+
+    @Test
+    public void socketAddressUsesIp6ForIpv6Sockets() throws Exception {
+        // The multiaddr must use /ip6/ for IPv6 addresses so it can be parsed
+        // back, instead of always emitting /ip4/.
+        java.net.InetAddress ipv6 = java.net.InetAddress.getByName("2001:db8::1");
+        Multiaddr addr = com.github.ruediste.p2psync.libp2p.transport.tcp.SocketUtils
+                .toMultiaddr(ipv6, 4001);
+        assertTrue(addr.has(com.github.ruediste.p2psync.libp2p.core.multiaddr.Protocol.IP6),
+                addr.toString());
+        assertEquals(ipv6, java.net.InetAddress.getByName(
+                addr.getFirstComponent(com.github.ruediste.p2psync.libp2p.core.multiaddr.Protocol.IP6)
+                        .getStringValue()));
     }
 }

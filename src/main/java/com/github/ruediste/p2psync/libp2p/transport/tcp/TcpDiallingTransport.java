@@ -16,6 +16,9 @@ import com.github.ruediste.p2psync.libp2p.transport.DiallingTransport;
  */
 public final class TcpDiallingTransport implements DiallingTransport {
 
+    /** Maximum time to wait for a TCP handshake to complete. */
+    private static final int DIAL_TIMEOUT_MILLIS = 10_000;
+
     @Override
     public RawConnection dial(Multiaddr address) {
         var hostPort = SocketUtils.getHostPort(address)
@@ -23,8 +26,13 @@ public final class TcpDiallingTransport implements DiallingTransport {
 
         Socket socket = new Socket();
         try {
-            socket.connect(new InetSocketAddress(hostPort.host(), hostPort.port()));
+            socket.connect(new InetSocketAddress(hostPort.host(), hostPort.port()), DIAL_TIMEOUT_MILLIS);
         } catch (IOException e) {
+            try {
+                socket.close();
+            } catch (IOException ignored) {
+                // keep the original failure
+            }
             throw new UncheckedIOException("Failed to connect to " + hostPort, e);
         }
         return SocketUtils.toConnection(socket, true);

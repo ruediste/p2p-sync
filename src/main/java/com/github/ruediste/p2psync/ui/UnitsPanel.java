@@ -29,7 +29,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.AbstractTableModel;
 
-import com.github.ruediste.p2psync.libp2p.core.PeerId;
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 import com.github.ruediste.p2psync.node.Node;
 import com.github.ruediste.p2psync.node.SyncUnitAuthorization;
@@ -92,14 +91,12 @@ final class UnitsPanel extends JPanel {
     private JButton createButton(String label, SyncUnitAuthorization.Type type) {
         JButton button = Theme.secondaryButton(label);
         button.addActionListener(event -> {
-            try {
-                SyncUnitId id = node.createSyncUnit(user.userId(), type);
+            PubKey userId = user.userId();
+            Background.run("create unit", () -> node.createSyncUnit(userId, type), id -> {
                 status.accept(Theme.unitType(type) + " created");
                 refresh();
                 select(id);
-            } catch (RuntimeException error) {
-                status.accept("Could not create unit: " + error.getMessage());
-            }
+            }, error -> status.accept("Could not create unit: " + error.getMessage()));
         });
         return button;
     }
@@ -141,6 +138,8 @@ final class UnitsPanel extends JPanel {
     }
 
     void setUser(Node.UserStatus user) {
+        if (this.user == null || !this.user.userId().equals(user.userId()))
+            selectedId = null;
         this.user = user;
     }
 
@@ -216,7 +215,7 @@ final class UnitsPanel extends JPanel {
         JPanel content = stack();
         addStack(content, buildUnitHeader(unit), 0);
         if (unit.pendingInvitation()) {
-            addStack(content, buildPendingInvitation(unit), 10);
+            addStack(content, InvitationAcceptance.build(node, user, unit.id(), status, this::refresh), 10);
         } else {
             switch (unit.type()) {
                 case SHARED_FOLDER -> addStack(content, buildSharedFolder(unit), 10);
@@ -269,31 +268,6 @@ final class UnitsPanel extends JPanel {
         return panel;
     }
 
-    private JPanel buildPendingInvitation(Node.SyncUnitStatus unit) {
-        JPanel panel = Theme.card(Theme.GREEN_SOFT);
-        panel.add(Theme.subheading("Invitation pending"));
-        panel.add(Box.createVerticalStrut(4));
-        panel.add(Theme.muted("Enter the peer ID of a node hosting this SyncUnit invitation."));
-        panel.add(Box.createVerticalStrut(6));
-        JPanel row = Theme.row(6);
-        row.setBackground(Theme.GREEN_SOFT);
-        JTextField peer = Theme.textField(24);
-        row.add(peer);
-        JButton join = Theme.primaryButton("Join");
-        join.addActionListener(event -> {
-            try {
-                node.joinSyncUnit(PeerId.fromBase58(peer.getText().trim()), unit.id(), user.userId());
-                status.accept("Joined " + Theme.unitType(unit.type()));
-                refresh();
-            } catch (RuntimeException error) {
-                status.accept("Could not join unit: " + error.getMessage());
-            }
-        });
-        row.add(join);
-        panel.add(row);
-        return panel;
-    }
-
     private JPanel buildChannel(Node.SyncUnitStatus unit) {
         JPanel panel = Theme.card();
         panel.setAlignmentX(LEFT_ALIGNMENT);
@@ -323,13 +297,12 @@ final class UnitsPanel extends JPanel {
         labelRow.add(labelField);
         JButton saveLabel = Theme.secondaryButton("Save label");
         saveLabel.addActionListener(event -> {
-            try {
-                node.setSharedFolderLabel(user.userId(), unit.id(), labelField.getText().trim());
+            PubKey userId = user.userId();
+            String label = labelField.getText().trim();
+            Background.run("save label", () -> node.setSharedFolderLabel(userId, unit.id(), label), () -> {
                 status.accept("Shared folder label saved");
                 refresh();
-            } catch (RuntimeException error) {
-                status.accept("Could not save label: " + error.getMessage());
-            }
+            }, error -> status.accept("Could not save label: " + error.getMessage()));
         });
         labelRow.add(saveLabel);
         panel.add(labelRow);
@@ -370,18 +343,30 @@ final class UnitsPanel extends JPanel {
         uploadTargetRow.add(sharedPath);
         JButton uploadButton = Theme.secondaryButton("Upload");
         uploadButton.addActionListener(event -> {
+            String localText = localPath.getText().trim();
+            if (localText.isEmpty()) {
+                status.accept("Select a file to upload");
+                return;
+            }
+            Path file;
             try {
-                Path file = Path.of(localPath.getText().trim());
-                String path = sharedPath.getText().isBlank() ? file.getFileName().toString()
-                        : sharedPath.getText().trim();
-                node.putSharedFile(unit.id(), user.userId(), path, Files.readAllBytes(file));
+                file = Path.of(localText);
+            } catch (RuntimeException error) {
+                status.accept("Could not upload file: " + error.getMessage());
+                return;
+            }
+            String path = sharedPath.getText().isBlank() ? file.getFileName().toString()
+                    : sharedPath.getText().trim();
+            PubKey userId = user.userId();
+            Background.run("upload file", () -> {
+                node.putSharedFile(unit.id(), userId, path, Theme.readFileLimited(file));
+                return node.listSharedFileInfos(unit.id(), userId);
+            }, infos -> {
                 localPath.setText("");
                 sharedPath.setText("");
-                model.setInfos(node.listSharedFileInfos(unit.id(), user.userId()));
+                model.setInfos(infos);
                 status.accept("Uploaded " + path);
-            } catch (Exception error) {
-                status.accept("Could not upload file: " + error.getMessage());
-            }
+            }, error -> status.accept("Could not upload file: " + error.getMessage()));
         });
         uploadTargetRow.add(uploadButton);
         upload.add(uploadTargetRow);
@@ -419,18 +404,30 @@ final class UnitsPanel extends JPanel {
                 return;
             }
             String path = model.paths.get(table.convertRowIndexToModel(row));
+            if (model.sizeOf(path) > Theme.MAX_FILE_BYTES) {
+                status.accept("Could not download file: file is too large (limit "
+                        + Theme.MAX_FILE_BYTES / (1024 * 1024) + " MB)");
+                return;
+            }
+            Path target;
             try {
-                Path target = targetPath.getText().isBlank()
+                target = targetPath.getText().isBlank()
                         ? Theme.chooseSaveFile(downloadButton, "Save shared file",
                                 Path.of(path).getFileName().toString())
                         : Path.of(targetPath.getText());
-                if (target == null)
-                    return;
-                Files.write(target, node.readSharedFile(unit.id(), user.userId(), path));
-                status.accept("Saved " + target);
-            } catch (Exception error) {
+            } catch (RuntimeException error) {
                 status.accept("Could not download file: " + error.getMessage());
+                return;
             }
+            if (target == null)
+                return;
+            PubKey userId = user.userId();
+            Path destination = target;
+            Background.run("download file", () -> {
+                Files.write(destination, node.readSharedFile(unit.id(), userId, path));
+                return null;
+            }, ignored -> status.accept("Saved " + destination),
+                    error -> status.accept("Could not download file: " + error.getMessage()));
         });
         downloadRow.add(downloadButton);
         JButton delete = Theme.dangerButton("Delete");
@@ -440,12 +437,12 @@ final class UnitsPanel extends JPanel {
                 status.accept("Select a file first");
                 return;
             }
-            try {
-                node.deleteSharedFile(unit.id(), user.userId(), model.paths.get(table.convertRowIndexToModel(row)));
-                model.setInfos(node.listSharedFileInfos(unit.id(), user.userId()));
-            } catch (RuntimeException error) {
-                status.accept("Could not delete file: " + error.getMessage());
-            }
+            String path = model.paths.get(table.convertRowIndexToModel(row));
+            PubKey userId = user.userId();
+            Background.run("delete file", () -> {
+                node.deleteSharedFile(unit.id(), userId, path);
+                return node.listSharedFileInfos(unit.id(), userId);
+            }, model::setInfos, error -> status.accept("Could not delete file: " + error.getMessage()));
         });
         downloadRow.add(delete);
         download.add(downloadRow);
@@ -493,28 +490,32 @@ final class UnitsPanel extends JPanel {
                 status.accept("Enter an item ID first");
                 return;
             }
-            try {
-                node.putTodoItem(unit.id(), user.userId(), itemId.getText().trim(),
-                        content.getText().getBytes(StandardCharsets.UTF_8));
-                model.setItems(node.listTodoItems(unit.id(), user.userId()));
+            PubKey userId = user.userId();
+            String id = itemId.getText().trim();
+            byte[] bytes = content.getText().getBytes(StandardCharsets.UTF_8);
+            Background.run("save todo item", () -> {
+                node.putTodoItem(unit.id(), userId, id, bytes);
+                return node.listTodoItems(unit.id(), userId);
+            }, items -> {
+                model.setItems(items);
                 status.accept("Todo item saved");
-            } catch (RuntimeException error) {
-                status.accept("Could not save item: " + error.getMessage());
-            }
+            }, error -> status.accept("Could not save item: " + error.getMessage()));
         });
         actions.add(save);
         JButton delete = Theme.dangerButton("Delete item");
         delete.addActionListener(event -> {
             if (itemId.getText().isBlank())
                 return;
-            try {
-                node.deleteTodoItem(unit.id(), user.userId(), itemId.getText().trim());
+            PubKey userId = user.userId();
+            String id = itemId.getText().trim();
+            Background.run("delete todo item", () -> {
+                node.deleteTodoItem(unit.id(), userId, id);
+                return node.listTodoItems(unit.id(), userId);
+            }, items -> {
                 itemId.setText("");
                 content.setText("");
-                model.setItems(node.listTodoItems(unit.id(), user.userId()));
-            } catch (RuntimeException error) {
-                status.accept("Could not delete item: " + error.getMessage());
-            }
+                model.setItems(items);
+            }, error -> status.accept("Could not delete item: " + error.getMessage()));
         });
         actions.add(delete);
         panel.add(actions);
@@ -554,14 +555,15 @@ final class UnitsPanel extends JPanel {
         JButton inviteButton = Theme.secondaryButton("Invite");
         inviteButton.setEnabled(canManage);
         inviteButton.addActionListener(event -> {
-            try {
-                PubKey key = invitee.selectedUserId();
-                if (key == null) {
-                    status.accept("Select a contact with a linked user ID, or link a user key first");
-                    return;
-                }
-                SyncUnitAuthorization.Role role = (SyncUnitAuthorization.Role) roleBox.getSelectedItem();
-                node.inviteToSyncUnit(unit.id(), user.userId(), key, role);
+            PubKey key = invitee.selectedUserId();
+            if (key == null) {
+                status.accept("Select a contact with a linked user ID, or link a user ID first");
+                return;
+            }
+            SyncUnitAuthorization.Role role = (SyncUnitAuthorization.Role) roleBox.getSelectedItem();
+            PubKey userId = user.userId();
+            Background.run("invite user", () -> {
+                node.inviteToSyncUnit(unit.id(), userId, key, role);
                 var messageType = switch (unit.type()) {
                     case SHARED_FOLDER -> Sync.UserMessage.Type.SHARED_FOLDER_INVITATION;
                     case TODO_LIST -> Sync.UserMessage.Type.TODO_LIST_INVITATION;
@@ -569,16 +571,16 @@ final class UnitsPanel extends JPanel {
                     case USER -> null;
                 };
                 if (messageType != null)
-                    node.getUserByName(user.localName()).sendMessage(key, messageType, "SyncUnit invitation",
+                    node.getUser(userId).sendMessage(key, messageType, "SyncUnit invitation",
                             "You were invited to " + Theme.unitType(unit.type()).toLowerCase() + ".", List.of(),
                             unit.id());
+                return node.listSyncUnitMembers(unit.id());
+            }, members -> {
                 invitee.clearSelection();
-                model.setMembers(node.listSyncUnitMembers(unit.id()));
+                model.setMembers(members);
                 refreshWithoutDetailReset();
                 status.accept("Invitation sent");
-            } catch (RuntimeException error) {
-                status.accept("Could not invite user: " + error.getMessage());
-            }
+            }, error -> status.accept("Could not invite user: " + error.getMessage()));
         });
         inviteRow.add(inviteButton);
         invite.add(inviteRow);
@@ -606,14 +608,15 @@ final class UnitsPanel extends JPanel {
                 status.accept("Accept the invitation before changing its role");
                 return;
             }
-            try {
-                node.changeSyncUnitRole(unit.id(), user.userId(), member.userId(),
-                        (SyncUnitAuthorization.Role) changeBox.getSelectedItem());
-                model.setMembers(node.listSyncUnitMembers(unit.id()));
+            PubKey userId = user.userId();
+            SyncUnitAuthorization.Role role = (SyncUnitAuthorization.Role) changeBox.getSelectedItem();
+            Background.run("change role", () -> {
+                node.changeSyncUnitRole(unit.id(), userId, member.userId(), role);
+                return node.listSyncUnitMembers(unit.id());
+            }, members -> {
+                model.setMembers(members);
                 refreshWithoutDetailReset();
-            } catch (RuntimeException error) {
-                status.accept("Could not change role: " + error.getMessage());
-            }
+            }, error -> status.accept("Could not change role: " + error.getMessage()));
         });
         changeRow.add(changeButton);
         JButton remove = Theme.dangerButton("Remove");
@@ -624,14 +627,15 @@ final class UnitsPanel extends JPanel {
                 status.accept("Select a member first");
                 return;
             }
-            try {
-                node.removeFromSyncUnit(unit.id(), user.userId(),
-                        model.members.get(table.convertRowIndexToModel(row)).userId());
-                model.setMembers(node.listSyncUnitMembers(unit.id()));
+            PubKey userId = user.userId();
+            PubKey memberId = model.members.get(table.convertRowIndexToModel(row)).userId();
+            Background.run("remove member", () -> {
+                node.removeFromSyncUnit(unit.id(), userId, memberId);
+                return node.listSyncUnitMembers(unit.id());
+            }, members -> {
+                model.setMembers(members);
                 refreshWithoutDetailReset();
-            } catch (RuntimeException error) {
-                status.accept("Could not remove member: " + error.getMessage());
-            }
+            }, error -> status.accept("Could not remove member: " + error.getMessage()));
         });
         changeRow.add(remove);
         change.add(changeRow);
@@ -640,7 +644,9 @@ final class UnitsPanel extends JPanel {
     }
 
     private void refreshWithoutDetailReset() {
-        List<Node.SyncUnitStatus> units = node.listSyncUnits(user.userId());
+        List<Node.SyncUnitStatus> units = node.listSyncUnits(user.userId()).stream()
+                .filter(unit -> unit.type() != SyncUnitAuthorization.Type.USER)
+                .toList();
         unitModel.setUnits(units);
     }
 
@@ -716,6 +722,14 @@ final class UnitsPanel extends JPanel {
             fireTableDataChanged();
         }
 
+        long sizeOf(String path) {
+            return files.stream()
+                    .filter(file -> file.path().equals(path))
+                    .mapToLong(Node.SharedFileInfo::size)
+                    .findFirst()
+                    .orElse(0);
+        }
+
         @Override
         public int getRowCount() {
             return files.size();
@@ -772,7 +786,7 @@ final class UnitsPanel extends JPanel {
     }
 
     private final class MemberTableModel extends AbstractTableModel {
-        private static final String[] COLUMNS = { "User key", "Role", "Status" };
+        private static final String[] COLUMNS = { "Member", "Role", "Status" };
         private List<Node.SyncUnitMemberStatus> members = List.of();
 
         void setMembers(List<Node.SyncUnitMemberStatus> members) {

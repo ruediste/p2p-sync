@@ -7,7 +7,6 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HexFormat;
@@ -104,6 +103,8 @@ final class ChatPanel extends JPanel {
                 return;
             Conversation conversation = conversationList.getSelectedValue();
             if (conversation != null) {
+                if (selected == null || !selected.key().equals(conversation.key()))
+                    clearComposer();
                 selected = conversation;
                 pendingContact = conversation.channelId() == null ? conversation.contact() : null;
                 renderThread();
@@ -194,13 +195,20 @@ final class ChatPanel extends JPanel {
     }
 
     void setUser(Node.UserStatus user) {
+        boolean changed = this.user == null || !this.user.userId().equals(user.userId());
         this.user = user;
+        if (changed) {
+            selected = null;
+            pendingContact = null;
+            clearComposer();
+        }
         contactPicker.setUser(user);
     }
 
     void selectChannel(SyncUnitId id) {
         pendingContact = null;
         selected = null;
+        clearComposer();
         refresh();
         for (int index = 0; index < conversationModel.size(); index++) {
             Conversation conversation = conversationModel.get(index);
@@ -377,37 +385,49 @@ final class ChatPanel extends JPanel {
     private void startDirectChat() {
         PubKey contact = contactPicker.selectedUserId();
         if (contact == null) {
-            status.accept("Select a contact with a linked user ID, or link a user key first");
+            status.accept("Select a contact with a linked user ID, or link a user ID first");
             return;
         }
         if (contact.equals(user.userId())) {
             status.accept("A direct chat needs another user");
             return;
         }
+        clearComposer();
         pendingContact = contact;
         selected = null;
         refresh();
         status.accept("Started a new direct chat");
     }
 
+    private void clearComposer() {
+        composer.setText("");
+        attachments.clear();
+        renderAttachmentChips();
+    }
+
     private void attachFiles() {
         var paths = Theme.chooseOpenFiles(composer, "Attach files");
-        for (Path path : paths) {
-            try {
-                String mediaType = Files.probeContentType(path);
-                attachments.add(Sync.SyncUnitAttachment.newBuilder()
-                        .setName(path.getFileName().toString())
-                        .setMediaType(mediaType == null ? "application/octet-stream" : mediaType)
-                        .setContent(com.google.protobuf.ByteString.copyFrom(Files.readAllBytes(path)))
-                        .build());
-            } catch (Exception error) {
-                status.accept("Could not attach file: " + error.getMessage());
-            }
-        }
-        if (!paths.isEmpty()) {
+        if (paths.isEmpty())
+            return;
+        Conversation conversation = selected;
+        Background.run("attach files", () -> {
+            List<Sync.SyncUnitAttachment> loaded = new ArrayList<>();
+            for (Path path : paths)
+                loaded.add(Theme.readAttachment(path));
+            return loaded;
+        }, loaded -> {
+            if (!isCurrent(conversation))
+                return;
+            attachments.addAll(loaded);
             renderAttachmentChips();
-            status.accept("Attached " + paths.size() + (paths.size() == 1 ? " file" : " files"));
-        }
+            status.accept("Attached " + loaded.size() + (loaded.size() == 1 ? " file" : " files"));
+        }, error -> status.accept("Could not attach file: " + error.getMessage()));
+    }
+
+    private boolean isCurrent(Conversation conversation) {
+        if (conversation == null)
+            return selected == null;
+        return selected != null && selected.key().equals(conversation.key());
     }
 
     private void renderAttachmentChips() {
@@ -436,25 +456,30 @@ final class ChatPanel extends JPanel {
         String text = composer.getText();
         if (text.isBlank() && attachments.isEmpty())
             return;
-        try {
-            if (selected.channelId() != null) {
+        Conversation conversation = selected;
+        List<Sync.SyncUnitAttachment> toSend = List.copyOf(attachments);
+        PubKey userId = user.userId();
+        Background.run("send message", () -> {
+            if (conversation.channelId() != null) {
                 var message = Sync.SyncUnitMessage.newBuilder().setText(text);
-                attachments.forEach(message::addAttachments);
-                node.sendChannelMessage(selected.channelId(), user.userId(), message.build());
+                toSend.forEach(message::addAttachments);
+                node.sendChannelMessage(conversation.channelId(), userId, message.build());
             } else {
-                node.getUserByName(user.localName()).sendChatMessage(selected.contact(), text, List.copyOf(attachments));
+                node.getUser(userId).sendChatMessage(conversation.contact(), text, toSend);
             }
-            composer.setText("");
-            attachments.clear();
-            renderAttachmentChips();
-            if (selected.channelId() == null)
-                pendingContact = selected.contact();
+            return null;
+        }, ignored -> {
+            if (isCurrent(conversation)) {
+                composer.setText("");
+                attachments.clear();
+                renderAttachmentChips();
+                if (conversation.channelId() == null)
+                    pendingContact = conversation.contact();
+                SwingUtilities.invokeLater(this::scrollToBottom);
+            }
             refresh();
-            SwingUtilities.invokeLater(this::scrollToBottom);
             status.accept("Message sent");
-        } catch (RuntimeException error) {
-            status.accept("Could not send message: " + error.getMessage());
-        }
+        }, error -> status.accept("Could not send message: " + error.getMessage()));
     }
 
     private record Conversation(String key, String title, String subtitle, SyncUnitId channelId, PubKey contact) {
