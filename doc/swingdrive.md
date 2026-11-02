@@ -67,8 +67,33 @@ The main window names these components for convenient selectors:
 | `sync-now` | "Sync now" button |
 
 `GET /state` is a compact summary of the same information: window title and
-size, status/pending/peer text, users, workspace sections, and whether the sync
-button is enabled.
+size, status/pending/peer text, users, workspace sections, whether the sync
+button is enabled, and (when SwingDrive was started with a node) the full
+`peerId` and `networkPaused` flag.
+
+## Peer identity and network control
+
+`GET /peer` returns the node identity and the current networking state:
+
+```json
+{"peerId":"12D3KooW...","started":true,"paused":false,"listenAddresses":["/ip4/127.0.0.1/tcp/40001"]}
+```
+
+Pause and resume remote connectivity with `POST /network/pause` and
+`POST /network/resume`. Pausing closes the listening sockets, stops mDNS
+discovery, and drops open connections; the node identity and configured peer
+addresses are kept. Resuming listens again on the original address and restores
+any known peer addresses:
+
+```bash
+curl -s http://127.0.0.1:9222/peer
+curl -s -X POST http://127.0.0.1:9222/network/pause
+curl -s -X POST http://127.0.0.1:9222/network/resume
+```
+
+Both actions return the same shape as `GET /peer` plus `"ok":true`. These
+endpoints return `501` when SwingDrive was started without a node, and `409`
+when remote networking has not been started by the application.
 
 ## Selectors
 

@@ -51,6 +51,9 @@ public class Node implements AutoCloseable {
     private boolean restoringState;
     private Host remoteHost;
     private UserSyncProtocol remoteSyncProtocol;
+    private String remoteListenAddress;
+    private boolean remoteDiscoverMdns;
+    private boolean remotePaused;
     private final Map<PeerId, List<Multiaddr>> remoteAddresses = new HashMap<>();
 
     static final class OperationId implements Comparable<OperationId> {
@@ -227,31 +230,75 @@ public class Node implements AutoCloseable {
     public synchronized List<Multiaddr> startRemote(String listenAddress, boolean discoverMdns) {
         if (remoteHost != null)
             return remoteHost.network().listenAddresses();
+        remoteListenAddress = listenAddress;
+        remoteDiscoverMdns = discoverMdns;
+        remotePaused = false;
+        return buildAndStartRemote();
+    }
+
+    private List<Multiaddr> buildAndStartRemote() {
         remoteSyncProtocol = new UserSyncProtocol(this::handleRemoteSyncRequest);
         var builder = new HostBuilder()
                 .privateKey(peerPrivateKey)
-                .listenAddress(listenAddress)
+                .listenAddress(remoteListenAddress)
                 .protocolHandler(remoteSyncProtocol)
-                .discoverMdns(discoverMdns);
+                .discoverMdns(remoteDiscoverMdns);
         remoteHost = builder.build();
         remoteHost.start().join();
+        remoteAddresses.forEach((peer, addresses) -> addresses.forEach(
+                address -> remoteHost.addressBook().addAddrs(peer, 86_400_000L, address)));
         return remoteHost.network().listenAddresses();
     }
 
+    public synchronized void pauseRemote() {
+        if (remoteListenAddress == null)
+            throw new IllegalStateException("Remote networking has not been started");
+        if (remotePaused)
+            return;
+        remotePaused = true;
+        if (remoteHost != null) {
+            remoteHost.stop().join();
+            remoteHost = null;
+        }
+        remoteSyncProtocol = null;
+    }
+
+    public synchronized List<Multiaddr> resumeRemote() {
+        if (remoteListenAddress == null)
+            throw new IllegalStateException("Remote networking has not been started");
+        if (!remotePaused)
+            return remoteHost == null ? List.of() : remoteHost.network().listenAddresses();
+        remotePaused = false;
+        return buildAndStartRemote();
+    }
+
+    public synchronized boolean isRemotePaused() {
+        return remotePaused;
+    }
+
+    public synchronized boolean isRemoteStarted() {
+        return remoteListenAddress != null;
+    }
+
+    public synchronized List<Multiaddr> remoteListenAddresses() {
+        return remoteHost == null ? List.of() : List.copyOf(remoteHost.network().listenAddresses());
+    }
+
     public synchronized void addRemoteAddress(PeerId peerId, Multiaddr address) {
-        if (remoteHost == null)
+        if (remoteHost == null && !remotePaused)
             throw new IllegalStateException("Start remote networking before adding peer addresses");
         remoteAddresses.compute(peerId, (key, previous) -> {
             var result = new java.util.ArrayList<>(previous == null ? List.of() : previous);
             if (!result.contains(address))
                 result.add(address);
-            remoteHost.addressBook().addAddrs(peerId, 86_400_000L, address);
+            if (remoteHost != null)
+                remoteHost.addressBook().addAddrs(peerId, 86_400_000L, address);
             return List.copyOf(result);
         });
     }
 
     public synchronized void addRemotePeer(PeerId peerId) {
-        if (remoteHost == null)
+        if (remoteHost == null && !remotePaused)
             throw new IllegalStateException("Start remote networking before adding peers");
         remoteAddresses.putIfAbsent(peerId, List.of());
     }

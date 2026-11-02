@@ -38,6 +38,8 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
+import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
+import com.github.ruediste.p2psync.node.Node;
 import com.github.ruediste.p2psync.node.NodeFuseFS;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -53,13 +55,15 @@ public final class SwingDriveServer implements AutoCloseable {
 
     private final Supplier<? extends Component> rootSupplier;
     private final NodeFuseFS filesystem;
+    private final Node node;
     private final HttpServer server;
     private final ExecutorService executor;
 
-    private SwingDriveServer(Supplier<? extends Component> rootSupplier, NodeFuseFS filesystem, int port)
+    private SwingDriveServer(Supplier<? extends Component> rootSupplier, NodeFuseFS filesystem, Node node, int port)
             throws IOException {
         this.rootSupplier = Objects.requireNonNull(rootSupplier, "rootSupplier");
         this.filesystem = Objects.requireNonNull(filesystem, "filesystem");
+        this.node = node;
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0);
         executor = Executors.newVirtualThreadPerTaskExecutor();
         server.setExecutor(executor);
@@ -68,7 +72,12 @@ public final class SwingDriveServer implements AutoCloseable {
 
     public static SwingDriveServer start(int port, Supplier<? extends Component> rootSupplier,
             NodeFuseFS filesystem) throws IOException {
-        var result = new SwingDriveServer(rootSupplier, filesystem, port);
+        return start(port, rootSupplier, filesystem, null);
+    }
+
+    public static SwingDriveServer start(int port, Supplier<? extends Component> rootSupplier,
+            NodeFuseFS filesystem, Node node) throws IOException {
+        var result = new SwingDriveServer(rootSupplier, filesystem, node, port);
         result.server.start();
         return result;
     }
@@ -95,6 +104,9 @@ public final class SwingDriveServer implements AutoCloseable {
                         "description", "Development HTTP bridge for the p2p-sync Swing UI",
                         "endpoints", List.of(
                                 "GET /state",
+                                "GET /peer",
+                                "POST /network/pause",
+                                "POST /network/resume",
                                 "GET /ui",
                                 "GET /screenshot",
                                 "GET /ui/query?role=button&text=Sync%20now",
@@ -115,6 +127,21 @@ public final class SwingDriveServer implements AutoCloseable {
             if (path.equals("/state")) {
                 requireMethod(method, "GET");
                 sendJson(exchange, 200, state());
+                return;
+            }
+            if (path.equals("/peer")) {
+                requireMethod(method, "GET");
+                sendJson(exchange, 200, networkState());
+                return;
+            }
+            if (path.equals("/network/pause")) {
+                requireMethod(method, "POST");
+                sendJson(exchange, 200, pauseNetwork());
+                return;
+            }
+            if (path.equals("/network/resume")) {
+                requireMethod(method, "POST");
+                sendJson(exchange, 200, resumeNetwork());
                 return;
             }
             if (path.equals("/ui")) {
@@ -313,8 +340,52 @@ public final class SwingDriveServer implements AutoCloseable {
                     .ifPresent(component -> result.put("workspaceSections", listState(component)));
             findNamed(root, "sync-now")
                     .ifPresent(component -> result.put("syncEnabled", component.isEnabled()));
+            if (node != null) {
+                result.put("peerId", node.peerId.toBase58());
+                result.put("networkPaused", node.isRemotePaused());
+            }
             return result;
         });
+    }
+
+    private Map<String, Object> networkState() {
+        Node node = requireNode();
+        var result = new LinkedHashMap<String, Object>();
+        result.put("peerId", node.peerId.toBase58());
+        result.put("started", node.isRemoteStarted());
+        result.put("paused", node.isRemotePaused());
+        result.put("listenAddresses", node.remoteListenAddresses().stream().map(Multiaddr::toString).toList());
+        return result;
+    }
+
+    private Map<String, Object> pauseNetwork() {
+        Node node = requireNode();
+        try {
+            node.pauseRemote();
+        } catch (IllegalStateException error) {
+            throw new ApiException(409, error.getMessage());
+        }
+        var result = networkState();
+        result.put("ok", true);
+        return result;
+    }
+
+    private Map<String, Object> resumeNetwork() {
+        Node node = requireNode();
+        try {
+            node.resumeRemote();
+        } catch (IllegalStateException error) {
+            throw new ApiException(409, error.getMessage());
+        }
+        var result = networkState();
+        result.put("ok", true);
+        return result;
+    }
+
+    private Node requireNode() {
+        if (node == null)
+            throw new ApiException(501, "Network control is not available; start SwingDrive with a node");
+        return node;
     }
 
     private static Map<String, Object> listState(Component component) {

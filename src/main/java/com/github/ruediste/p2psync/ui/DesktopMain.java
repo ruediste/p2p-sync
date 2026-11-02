@@ -118,7 +118,7 @@ public final class DesktopMain {
 
         if (options.drivePort() != null) {
             try {
-                SwingDriveServer server = SwingDriveServer.start(options.drivePort(), app::frame, filesystem);
+                SwingDriveServer server = SwingDriveServer.start(options.drivePort(), app::frame, filesystem, node);
                 drive.set(server);
                 System.out.println("SwingDrive: http://127.0.0.1:" + server.port() + "/");
             } catch (IOException error) {

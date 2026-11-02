@@ -95,6 +95,45 @@ class SwingDriveServerTest {
         }
     }
 
+    /**
+     * Verifies that SwingDrive exposes the node peer ID and can pause and resume
+     * remote networking: pausing stops listening, and resuming restores it.
+     */
+    @Test
+    void exposesPeerIdAndPausesAndResumesNetworking() throws Exception {
+        try (var node = new Node(new Node.Network())) {
+            node.startRemote("/ip4/127.0.0.1/tcp/0", false);
+            var filesystem = new NodeFuseFS(node);
+            var panel = new JPanel();
+            SwingUtilities.invokeAndWait(() -> {
+                panel.setSize(200, 100);
+                panel.doLayout();
+            });
+
+            try (var server = SwingDriveServer.start(0, () -> panel, filesystem, node)) {
+                String base = "http://127.0.0.1:" + server.port();
+                String peerId = node.peerId.toBase58();
+
+                Map<String, Object> network = object(get(base + "/peer"));
+                assertEquals(peerId, network.get("peerId"));
+                assertEquals(false, network.get("paused"));
+                assertTrue(((java.util.List<?>) network.get("listenAddresses")).size() > 0);
+
+                Map<String, Object> paused = object(post(base + "/network/pause", ""));
+                assertEquals(true, paused.get("paused"));
+                assertTrue(((java.util.List<?>) paused.get("listenAddresses")).isEmpty());
+
+                Map<String, Object> resumed = object(post(base + "/network/resume", ""));
+                assertEquals(false, resumed.get("paused"));
+                assertTrue(((java.util.List<?>) resumed.get("listenAddresses")).size() > 0);
+
+                Map<String, Object> state = object(get(base + "/state"));
+                assertEquals(peerId, state.get("peerId"));
+                assertEquals(false, state.get("networkPaused"));
+            }
+        }
+    }
+
     private HttpResponse<String> get(String url) throws Exception {
         return client.send(HttpRequest.newBuilder(URI.create(url)).GET().build(),
                 HttpResponse.BodyHandlers.ofString());

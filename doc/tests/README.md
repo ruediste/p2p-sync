@@ -40,6 +40,118 @@ interpreting a result.
 - Node storage is not encrypted at rest. Use disposable test users, test data,
   and properly protected database files.
 
+## Scripted Two-Node Setup With SwingDrive
+
+Most synchronization tests need two nodes that already share a user. The
+following setup is the shortest reliable path; run each node in its own terminal
+and keep the two databases separate.
+
+1. Compile once and use a disposable directory for the databases:
+
+   ```bash
+   mvn -q compile
+   mkdir -p /tmp/p2p-sync-test
+   rm -f /tmp/p2p-sync-test/node-a.db /tmp/p2p-sync-test/node-b.db
+   ```
+
+2. Start Node A on SwingDrive port 9222 and Node B on port 9223:
+
+   ```bash
+   mvn -q org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
+     -Dexec.mainClass=com.github.ruediste.p2psync.ui.DesktopMain \
+     -Dexec.args="--no-mount --drive 9222 /tmp/p2p-sync-test/node-a.db"
+   ```
+
+   ```bash
+   mvn -q org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
+     -Dexec.mainClass=com.github.ruediste.p2psync.ui.DesktopMain \
+     -Dexec.args="--no-mount --drive 9223 /tmp/p2p-sync-test/node-b.db"
+   ```
+
+3. Read Node A's peer ID and listen port from `/peer`:
+
+   ```bash
+   curl -s http://127.0.0.1:9222/peer
+   curl -s http://127.0.0.1:9223/peer
+   ```
+
+   The desktop listens on `/ip4/0.0.0.0/tcp/0`, so the reported address is a
+   wildcard address. When both nodes run on the same machine, use
+   `/ip4/127.0.0.1/tcp/<port>` with the reported port for the explicit join in
+   step 6.
+
+4. Create the test user on Node A:
+
+   ```bash
+   curl -s -X POST http://127.0.0.1:9222/ui/click \
+     -H 'Content-Type: application/json' \
+     -d '{"selector":{"role":"button","text":"Add user"}}'
+   curl -s -X POST http://127.0.0.1:9222/ui/type \
+     -H 'Content-Type: application/json' \
+     -d '{"selector":{"role":"textbox"},"value":"alice","clear":true}'
+   curl -s -X POST http://127.0.0.1:9222/ui/click \
+     -H 'Content-Type: application/json' \
+     -d '{"selector":{"role":"button","text":"Create user"}}'
+   ```
+
+   Confirm that `/state` reports the user and that
+   `GET /fs/list?path=/alice/home` succeeds.
+
+5. Export Node A's credential. Select the **Account** workspace section, then
+   either accept the prefilled `$HOME/alice.userkey` path or set the **Save to**
+   field to a test path. Leave the passphrase empty and click **Export file**:
+
+   ```bash
+   curl -s -X POST http://127.0.0.1:9222/ui/select \
+     -H 'Content-Type: application/json' \
+     -d '{"selector":{"name":"workspace-sections"},"value":"Account"}'
+   curl -s -X POST http://127.0.0.1:9222/ui/click \
+     -H 'Content-Type: application/json' \
+     -d '{"selector":{"role":"button","text":"Export file"}}'
+   ```
+
+   The status bar must report `Protected credential exported`.
+
+6. Join the same user on Node B. Open **Join user**, then set the credential
+   file path, Node A's peer ID, Node A's loopback listen multiaddress, and the
+   local name:
+
+   ```bash
+   curl -s -X POST http://127.0.0.1:9223/ui/click \
+     -H 'Content-Type: application/json' \
+     -d '{"selector":{"role":"button","text":"Join user"}}'
+   ```
+
+   Several join fields have no component name. Inspect
+   `/ui/query?role=textbox` and use the `id` of each `"showing":true` entry with
+   `/ui/type` (the account export path can be handled the same way when a
+   non-default path is needed):
+
+   ```bash
+   curl -s 'http://127.0.0.1:9223/ui/query?role=textbox'
+   ```
+
+   Then submit and wait for the status bar to report `User joined`:
+
+   ```bash
+   curl -s -X POST http://127.0.0.1:9223/ui/click \
+     -H 'Content-Type: application/json' \
+     -d '{"selector":{"role":"button","text":"Import and join"}}'
+   curl -s http://127.0.0.1:9223/state
+   ```
+
+   A successful join shows the user with two active nodes once Node B has
+   synchronized with Node A.
+
+7. Before asserting a synchronization result, wait for background work to
+   settle. The dashboard synchronizes every four seconds; `Sync now` triggers an
+   immediate round, and `/state` reports `syncEnabled:false` only while a round
+   is in progress. Poll `/state` until it returns to `true` and the `pending`
+   text reports `0 pending`.
+
+Use fresh database files for each new scenario. Never run two nodes against the
+same database file, and stop both processes before removing the test directory.
+
 ## Index
 
 | Test ID | Area | File |
