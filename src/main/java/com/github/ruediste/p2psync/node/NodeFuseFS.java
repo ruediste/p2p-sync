@@ -178,7 +178,7 @@ public class NodeFuseFS extends FuseStubFS {
 
     private boolean isDirectory(NodeUserHandle user, Node.RootEntry root, String path) {
         if (root.home())
-            return user.isDirectory(path);
+            return user.exists(path) && user.isDirectory(path);
         if (sharedKey(path).isEmpty())
             return true;
         if (sharedFileExists(user, root, path))
@@ -291,6 +291,8 @@ public class NodeFuseFS extends FuseStubFS {
             } else if (target.root() == null) {
                 node.listRootEntries(target.user().data.userId()).forEach(entry -> emit.accept(entry.label()));
             } else if (target.root().home()) {
+                if (!target.user().exists(target.path()))
+                    throw new FsError(ErrorCodes.ENOENT());
                 if (!target.user().isDirectory(target.path()))
                     throw new FsError(ErrorCodes.ENOTDIR());
                 target.user().forEachDirectory(target.path(), entry -> emit.accept(entry.name()));
@@ -415,14 +417,21 @@ public class NodeFuseFS extends FuseStubFS {
             if (target.user() == null || target.root() == null
                     || isDirectory(target.user(), target.root(), target.path()))
                 throw new FsError(ErrorCodes.EISDIR());
-            byte[] content = target.root().home()
-                    ? target.user().readFile(target.path())
-                    : node.readSharedFile(target.root().unitId(), target.user().data.userId(),
-                            sharedKey(target.path()));
+            byte[] content = readContent(target);
             if (content == null)
                 throw new FsError(ErrorCodes.ENOENT());
             return content;
         });
+    }
+
+    private byte[] readContent(UserPath target) {
+        if (target.root().home()) {
+            if (!target.user().exists(target.path()))
+                return null;
+            return target.user().readFile(target.path());
+        }
+        return node.readSharedFile(target.root().unitId(), target.user().data.userId(),
+                sharedKey(target.path()));
     }
 
     /**
@@ -577,10 +586,7 @@ public class NodeFuseFS extends FuseStubFS {
             if (target.user() == null || target.root() == null
                     || isDirectory(target.user(), target.root(), target.path()))
                 throw new FsError(ErrorCodes.EISDIR());
-            byte[] content = target.root().home()
-                    ? target.user().readFile(target.path())
-                    : node.readSharedFile(target.root().unitId(), target.user().data.userId(),
-                            sharedKey(target.path()));
+            byte[] content = readContent(target);
             if (content == null)
                 throw new FsError(ErrorCodes.ENOENT());
             if (offset >= content.length)

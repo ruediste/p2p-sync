@@ -3,6 +3,7 @@ package com.github.ruediste.p2psync.node;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
@@ -121,6 +122,32 @@ class NodeFuseFSTest {
 
             assertEquals(0, fs.unlink("/alice/team/notes/todo.txt"));
             assertNull(node.readSharedFile(folder, handle.data.userId(), "notes/todo.txt"));
+        } finally {
+            node.close();
+        }
+    }
+
+    /**
+     * Verifies a not-yet-synchronized home file is reported as ENOENT. The path
+     * resolves through an existing but empty home directory, which previously
+     * surfaced as EINVAL from the lower user-tree lookup.
+     */
+    @Test
+    void missingHomeFileReturnsEnoent() {
+        var network = new Node.Network();
+        var node = new Node(network);
+        try {
+            node.createNewUser("alice");
+            var fs = new NodeFuseFS(node);
+
+            var direct = assertThrows(NodeFuseFS.FsException.class,
+                    () -> fs.readFile("/alice/home/hello.txt"));
+            assertEquals(ErrorCodes.ENOENT(), direct.errno());
+
+            assertEquals(-ErrorCodes.ENOENT(),
+                    fs.read("/alice/home/hello.txt", buffer(new byte[5]), 5, 0, null));
+            assertEquals(-ErrorCodes.ENOENT(), fs.readdir("/alice/home/missing",
+                    buffer(new byte[0]), (buffer, name, stat, offset) -> 0, 0, null));
         } finally {
             node.close();
         }

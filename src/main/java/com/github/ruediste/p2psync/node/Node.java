@@ -1462,6 +1462,17 @@ public class Node implements AutoCloseable {
                 lastFailure = error;
             }
         }
+        // A single node has no peer to probe, so accept an invitation it hosts
+        // itself. This also covers a locally replicated invitation when all
+        // remote candidates are unreachable.
+        if (hostsSyncUnit(id)) {
+            try {
+                joinLocalSyncUnit(this, id, inviteeId);
+                return;
+            } catch (RuntimeException error) {
+                lastFailure = error;
+            }
+        }
         var error = new IllegalArgumentException("No known peer hosts this SyncUnit invitation");
         if (lastFailure != null)
             error.addSuppressed(lastFailure);
@@ -2181,7 +2192,8 @@ public class Node implements AutoCloseable {
         }
         record UnitPeerSync(SyncUnitId unitId, PeerId peerId) {
         }
-        var peers = new HashSet<>(network.nodes.keySet());
+        var peers = new TreeSet<PeerId>(PeerId::compareTo);
+        peers.addAll(network.nodes.keySet());
         peers.addAll(configuredRemotePeers());
         if (remoteHost != null)
             peers.addAll(remoteHost.addressBook().getPeerIds());
@@ -2202,9 +2214,8 @@ public class Node implements AutoCloseable {
                     var unit = syncUnits.get(unitId);
                     if (unit == null || unit.type == SyncUnitAuthorization.Type.USER || unit.home)
                         continue;
-                    boolean restrictToActiveNodes = unit.activeNodeSet.nodes.size() > 1;
                     for (PeerId remotePeerId : peers) {
-                        if (restrictToActiveNodes && !unit.activeNodeSet.nodes.contains(nodeKeyFor(remotePeerId)))
+                        if (!shouldSyncUnitWithPeer(unit, nodeKeyFor(remotePeerId)))
                             continue;
                         unitWork.add(new UnitPeerSync(unitId, remotePeerId));
                     }
@@ -2228,6 +2239,17 @@ public class Node implements AutoCloseable {
             }
         }
         deliverPendingMessages();
+    }
+
+    /**
+     * Decides whether a non-user SyncUnit should synchronize with a peer. While a
+     * unit knows only its own node it is bootstrapping and probes every reachable
+     * peer to discover the remaining members. Once the active node set contains
+     * another node, only those nodes are synchronized.
+     */
+    private static boolean shouldSyncUnitWithPeer(SyncUnitData unit, String remoteNodeKey) {
+        return unit.activeNodeSet.nodes.size() <= 1
+                || unit.activeNodeSet.nodes.contains(remoteNodeKey);
     }
 
     private void ensureNameAvailable(String localName, PubKey exceptUser) {

@@ -594,6 +594,30 @@ public class SyncFlowTest {
     }
 
     /**
+     * Verifies a locally hosted invitation can be accepted with a blank peer ID
+     * when the node is the only node in the network.
+     */
+    @Test
+    public void joinSyncUnitAcceptsLocallyHostedInvitation() {
+        try (var node = new Node(new Network())) {
+            var alice = node.createNewUser("alice");
+            var bob = node.createNewUser("bob");
+            node.createNewUser("charlie");
+            var folderId = node.createSyncUnit(alice.data.userId(),
+                    SyncUnitAuthorization.Type.SHARED_FOLDER);
+            node.putSharedFile(folderId, alice.data.userId(), "notes.txt", "hello".getBytes());
+            node.inviteToSyncUnit(folderId, alice.data.userId(), bob.data.userId(),
+                    SyncUnitAuthorization.Role.VIEWER);
+
+            node.joinSyncUnit(folderId, bob.data.userId());
+
+            assertTrue(node.getSyncUnitAuthorization(folderId).members().containsKey(bob.data.userId()));
+            assertArrayEquals("hello".getBytes(),
+                    node.readSharedFile(folderId, bob.data.userId(), "notes.txt"));
+        }
+    }
+
+    /**
      * Verifies accepted-unit participation is replicated through the user's signed
      * history to another node.
      */

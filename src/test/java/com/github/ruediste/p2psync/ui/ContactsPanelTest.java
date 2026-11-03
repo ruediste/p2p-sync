@@ -2,6 +2,7 @@ package com.github.ruediste.p2psync.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -35,6 +36,32 @@ class ContactsPanelTest {
                 firstName.setText("Bobby");
                 panel.refresh();
                 assertEquals("Bobby", firstName.getText());
+            });
+        }
+    }
+
+    /**
+     * Verifies a replicated contact replaces the pristine "New contact" form on
+     * refresh. An untouched empty form must not hide the newly listed contact.
+     */
+    @Test
+    void refreshSelectsFirstContactWhileNewContactFormIsEmpty() throws Exception {
+        try (var node = new Node(new Node.Network())) {
+            var alice = node.createNewUser("alice");
+            var user = node.listUsers().get(0);
+
+            SwingUtilities.invokeAndWait(() -> {
+                var panel = new ContactsPanel(node, user, message -> {
+                });
+                panel.refresh();
+                assertNull(find(panel, JTextField.class, field -> "Bob".equals(field.getText())),
+                        "the new-contact form must start empty");
+
+                node.getUser(alice.data.userId()).createContact(null, "Bob", "", "bob@example.com", "", "");
+                panel.refresh();
+
+                assertNotNull(find(panel, JTextField.class, field -> "Bob".equals(field.getText())),
+                        "an untouched new-contact form must be replaced by the first contact");
             });
         }
     }

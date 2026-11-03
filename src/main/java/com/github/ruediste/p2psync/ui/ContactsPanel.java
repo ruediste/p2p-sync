@@ -162,7 +162,7 @@ final class ContactsPanel extends JPanel {
         } finally {
             refreshing = false;
         }
-        if (editingNew)
+        if (editingNew && dirty)
             return;
         if (selectedContactId != null) {
             for (int index = 0; index < contactModel.size(); index++) {
