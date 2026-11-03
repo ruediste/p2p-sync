@@ -108,6 +108,13 @@ public final class SyncUnitAuthorization {
         }
     }
 
+    /** Raised when a user lacks the role required for an action. */
+    public static final class NotAuthorizedException extends IllegalArgumentException {
+        public NotAuthorizedException(String message) {
+            super(message);
+        }
+    }
+
     public record State(Map<PubKey, Role> members, Map<PubKey, Role> pendingInvitations,
             List<Operation> acceptedOperations, List<Operation> rejectedOperations) {
         public State {
@@ -259,6 +266,6 @@ public final class SyncUnitAuthorization {
     public static void requireAuthorized(Type type, PubKey creator, Map<PubKey, Role> members,
             PubKey author, Action action) {
         if (!isAuthorized(type, creator, members, author, action))
-            throw new IllegalArgumentException("User is not authorized to " + action + " this " + type);
+            throw new NotAuthorizedException("User is not authorized to " + action + " this " + type);
     }
 }

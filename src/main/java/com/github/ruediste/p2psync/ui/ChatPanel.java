@@ -385,7 +385,7 @@ final class ChatPanel extends JPanel {
     private void startDirectChat() {
         PubKey contact = contactPicker.selectedUserId();
         if (contact == null) {
-            status.accept("Select a contact with a linked user ID, or link a user ID first");
+            status.accept("Select a contact with a linked user ID");
             return;
         }
         if (contact.equals(user.userId())) {

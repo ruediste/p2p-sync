@@ -1,9 +1,9 @@
 package com.github.ruediste.p2psync.node;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -81,6 +81,8 @@ public class NodeFuseFS extends FuseStubFS {
                 return action.getAsInt();
             } catch (FsError error) {
                 return -error.errno;
+            } catch (SyncUnitAuthorization.NotAuthorizedException error) {
+                return -ErrorCodes.EACCES();
             } catch (IllegalArgumentException error) {
                 return -ErrorCodes.EINVAL();
             } catch (RuntimeException error) {
@@ -103,6 +105,8 @@ public class NodeFuseFS extends FuseStubFS {
                 throw new FsException(error.errno);
             } catch (FsException error) {
                 throw error;
+            } catch (SyncUnitAuthorization.NotAuthorizedException error) {
+                throw new FsException(ErrorCodes.EACCES());
             } catch (IllegalArgumentException error) {
                 throw new FsException(ErrorCodes.EINVAL());
             } catch (RuntimeException error) {
@@ -187,45 +191,37 @@ public class NodeFuseFS extends FuseStubFS {
     }
 
     private boolean sharedFileExists(NodeUserHandle user, Node.RootEntry root, String path) {
-        String key = sharedKey(path);
-        return !key.isEmpty() && node.sharedFileSize(root.unitId(), user.data.userId(), key) >= 0;
+        var entry = sharedEntry(user, root, path);
+        return entry != null && !entry.directory();
     }
 
     private boolean sharedDirectoryExists(NodeUserHandle user, Node.RootEntry root, String path) {
+        var entry = sharedEntry(user, root, path);
+        return entry != null && entry.directory();
+    }
+
+    private long sharedFileSize(NodeUserHandle user, Node.RootEntry root, String path) {
+        var entry = sharedEntry(user, root, path);
+        return entry != null && !entry.directory() ? entry.size() : -1;
+    }
+
+    private Node.SharedEntry sharedEntry(NodeUserHandle user, Node.RootEntry root, String path) {
         String key = sharedKey(path);
         if (key.isEmpty())
-            return true;
-        if (node.readSharedFile(root.unitId(), user.data.userId(), key) != null)
-            return false;
-        boolean[] found = { false };
-        String prefix = key + "/";
-        node.forEachSharedFile(root.unitId(), user.data.userId(),
-                (filePath, size) -> {
-                    if (filePath.startsWith(prefix))
-                        found[0] = true;
-                });
-        return found[0];
+            return new Node.SharedEntry(true, 0);
+        return node.sharedEntry(root.unitId(), user.data.userId(), key);
     }
 
-    private void forEachSharedDirectory(NodeUserHandle user, Node.RootEntry root, String path,
-            Consumer<DirectoryEntry> consumer) {
-        String prefix = sharedKey(path);
-        String normalized = prefix.isEmpty() ? "" : prefix + "/";
-        var names = new TreeMap<String, Boolean>();
-        node.forEachSharedFile(root.unitId(), user.data.userId(), (filePath, size) -> {
-            if (!filePath.startsWith(normalized))
-                return;
-            String rest = filePath.substring(normalized.length());
-            int separator = rest.indexOf('/');
-            if (separator < 0)
-                names.merge(rest, false, (left, right) -> left || right);
-            else
-                names.merge(rest.substring(0, separator), true, (left, right) -> left || right);
-        });
-        names.forEach((name, directory) -> consumer.accept(new DirectoryEntry(name, directory)));
+    private List<Node.SharedEntryInfo> sharedDirectoryEntries(NodeUserHandle user, Node.RootEntry root, String path) {
+        var entries = node.listSharedDirectory(root.unitId(), user.data.userId(), sharedKey(path));
+        if (entries == null)
+            throw new FsError(ErrorCodes.ENOTDIR());
+        return entries;
     }
 
-    private record DirectoryEntry(String name, boolean directory) {
+    private static String entryName(String path) {
+        int separator = path.lastIndexOf('/');
+        return separator < 0 ? path : path.substring(separator + 1);
     }
 
     @Override
@@ -246,17 +242,11 @@ public class NodeFuseFS extends FuseStubFS {
                 directory = true;
                 size = 0;
             } else {
-                long fileSize = node.sharedFileSize(target.root().unitId(), target.user().data.userId(),
-                        sharedKey(target.path()));
-                if (fileSize >= 0) {
-                    directory = false;
-                    size = fileSize;
-                } else if (sharedDirectoryExists(target.user(), target.root(), target.path())) {
-                    directory = true;
-                    size = 0;
-                } else {
+                var entry = sharedEntry(target.user(), target.root(), target.path());
+                if (entry == null)
                     throw new FsError(ErrorCodes.ENOENT());
-                }
+                directory = entry.directory();
+                size = entry.size();
             }
             stat.st_mode.set(directory ? FileStat.S_IFDIR | 0755 : FileStat.S_IFREG | 0644);
             stat.st_nlink.set(directory ? 2 : 1);
@@ -297,11 +287,8 @@ public class NodeFuseFS extends FuseStubFS {
                     throw new FsError(ErrorCodes.ENOTDIR());
                 target.user().forEachDirectory(target.path(), entry -> emit.accept(entry.name()));
             } else {
-                if (!sharedKey(target.path()).isEmpty()
-                        && !sharedDirectoryExists(target.user(), target.root(), target.path()))
-                    throw new FsError(ErrorCodes.ENOTDIR());
-                forEachSharedDirectory(target.user(), target.root(), target.path(),
-                        entry -> emit.accept(entry.name()));
+                for (var entry : sharedDirectoryEntries(target.user(), target.root(), target.path()))
+                    emit.accept(entryName(entry.path()));
             }
             return 0;
         });
@@ -322,15 +309,16 @@ public class NodeFuseFS extends FuseStubFS {
                 throw new FsError(ErrorCodes.ENOENT());
             }
         } else {
-            boolean file = sharedFileExists(target.user(), target.root(), fullPath);
-            boolean existingDirectory = sharedDirectoryExists(target.user(), target.root(), fullPath);
+            var existing = sharedEntry(target.user(), target.root(), fullPath);
             if (directory) {
-                if (file || existingDirectory)
+                if (existing != null)
                     throw new FsError(ErrorCodes.EEXIST());
+                node.createSharedDirectory(target.root().unitId(), target.user().data.userId(),
+                        sharedKey(fullPath));
             } else {
-                if (existingDirectory && !file)
+                if (existing != null && existing.directory())
                     throw new FsError(ErrorCodes.EISDIR());
-                if (!file)
+                if (existing == null)
                     node.putSharedFile(target.root().unitId(), target.user().data.userId(),
                             sharedKey(fullPath), new byte[0]);
             }
@@ -372,16 +360,9 @@ public class NodeFuseFS extends FuseStubFS {
             });
             return result;
         }
-        if (!sharedKey(target.path()).isEmpty()
-                && !sharedDirectoryExists(target.user(), target.root(), target.path()))
-            throw new FsError(ErrorCodes.ENOTDIR());
-        forEachSharedDirectory(target.user(), target.root(), target.path(), entry -> {
-            String child = childPath(target.path(), entry.name());
-            long size = entry.directory() ? 0
-                    : Math.max(0, node.sharedFileSize(target.root().unitId(), target.user().data.userId(),
-                            sharedKey(child)));
-            result.add(new FsEntry(entry.name(), entry.directory(), size));
-        });
+        for (var entry : sharedDirectoryEntries(target.user(), target.root(), target.path())) {
+            result.add(new FsEntry(entryName(entry.path()), entry.directory(), entry.size()));
+        }
         return result;
     }
 
@@ -401,12 +382,10 @@ public class NodeFuseFS extends FuseStubFS {
             String key = sharedKey(target.path());
             if (key.isEmpty())
                 return new FsEntry("", true, 0);
-            long size = node.sharedFileSize(target.root().unitId(), target.user().data.userId(), key);
-            if (size >= 0)
-                return new FsEntry(leafName(target.path()), false, size);
-            if (sharedDirectoryExists(target.user(), target.root(), target.path()))
-                return new FsEntry(leafName(target.path()), true, 0);
-            throw new FsError(ErrorCodes.ENOENT());
+            var entry = sharedEntry(target.user(), target.root(), target.path());
+            if (entry == null)
+                throw new FsError(ErrorCodes.ENOENT());
+            return new FsEntry(leafName(target.path()), entry.directory(), entry.size());
         });
     }
 
@@ -511,21 +490,16 @@ public class NodeFuseFS extends FuseStubFS {
         String key = sharedKey(target.path());
         if (key.isEmpty())
             throw new FsError(ErrorCodes.EBUSY());
-        if (sharedFileExists(target.user(), target.root(), target.path())) {
+        var entry = sharedEntry(target.user(), target.root(), target.path());
+        if (entry == null)
+            throw new FsError(ErrorCodes.ENOENT());
+        if (!entry.directory()) {
             node.deleteSharedFile(target.root().unitId(), target.user().data.userId(), key);
             return;
         }
-        if (!sharedDirectoryExists(target.user(), target.root(), target.path()))
-            throw new FsError(ErrorCodes.ENOENT());
-        var files = new ArrayList<String>();
-        String prefix = key + "/";
-        node.forEachSharedFile(target.root().unitId(), target.user().data.userId(), (filePath, size) -> {
-            if (filePath.startsWith(prefix))
-                files.add(filePath);
-        });
-        if (!files.isEmpty() && !recursive)
+        if (!recursive && !sharedDirectoryEntries(target.user(), target.root(), target.path()).isEmpty())
             throw new FsError(ErrorCodes.ENOTEMPTY());
-        files.forEach(file -> node.deleteSharedFile(target.root().unitId(), target.user().data.userId(), file));
+        node.deleteSharedDirectory(target.root().unitId(), target.user().data.userId(), key);
     }
 
     /** Moves or renames an entry through the combined root view. */
@@ -690,27 +664,18 @@ public class NodeFuseFS extends FuseStubFS {
                     throw new FsError(ErrorCodes.ENOTEMPTY());
                 target.user().delete(target.path());
             } else {
-                if (!sharedDirectoryExists(target.user(), target.root(), target.path()))
-                    throw new FsError(sharedFileExists(target.user(), target.root(), target.path())
-                            ? ErrorCodes.ENOTDIR()
-                            : ErrorCodes.ENOENT());
-                if (sharedDirectoryHasFiles(target.user(), target.root(), target.path()))
+                var entry = sharedEntry(target.user(), target.root(), target.path());
+                if (entry == null)
+                    throw new FsError(ErrorCodes.ENOENT());
+                if (!entry.directory())
+                    throw new FsError(ErrorCodes.ENOTDIR());
+                if (!sharedDirectoryEntries(target.user(), target.root(), target.path()).isEmpty())
                     throw new FsError(ErrorCodes.ENOTEMPTY());
+                node.deleteSharedDirectory(target.root().unitId(), target.user().data.userId(),
+                        sharedKey(target.path()));
             }
             return 0;
         });
-    }
-
-    private boolean sharedDirectoryHasFiles(NodeUserHandle user, Node.RootEntry root, String path) {
-        String prefix = sharedKey(path);
-        String normalized = prefix.isEmpty() ? "" : prefix + "/";
-        boolean[] found = { false };
-        node.forEachSharedFile(root.unitId(), user.data.userId(),
-                (filePath, size) -> {
-                    if (filePath.startsWith(normalized))
-                        found[0] = true;
-                });
-        return found[0];
     }
 
     @Override
@@ -755,7 +720,8 @@ public class NodeFuseFS extends FuseStubFS {
                         throw new FsError(ErrorCodes.ENOTDIR());
                     if (!sourceDirectory && targetDirectory)
                         throw new FsError(ErrorCodes.EISDIR());
-                    if (targetDirectory && sharedDirectoryHasFiles(target.user(), target.root(), targetPath))
+                    if (targetDirectory
+                            && !sharedDirectoryEntries(target.user(), target.root(), targetPath).isEmpty())
                         throw new FsError(ErrorCodes.ENOTEMPTY());
                     deleteSharedTree(target.user(), target.root(), targetPath);
                 }
@@ -770,41 +736,54 @@ public class NodeFuseFS extends FuseStubFS {
     }
 
     private void deleteSharedTree(NodeUserHandle user, Node.RootEntry root, String path) {
-        if (sharedFileExists(user, root, path)) {
+        var entry = sharedEntry(user, root, path);
+        if (entry == null)
+            return;
+        if (entry.directory())
+            node.deleteSharedDirectory(root.unitId(), user.data.userId(), sharedKey(path));
+        else
             node.deleteSharedFile(root.unitId(), user.data.userId(), sharedKey(path));
-            return;
-        }
-        if (!sharedDirectoryExists(user, root, path))
-            return;
-        var files = new ArrayList<String>();
-        String prefix = sharedKey(path).isEmpty() ? "" : sharedKey(path) + "/";
-        node.forEachSharedFile(root.unitId(), user.data.userId(), (filePath, size) -> {
-            if (filePath.startsWith(prefix))
-                files.add(filePath);
-        });
-        files.forEach(file -> node.deleteSharedFile(root.unitId(), user.data.userId(), file));
     }
 
     private void moveSharedTree(NodeUserHandle user, Node.RootEntry root, String source, String target) {
-        if (sharedFileExists(user, root, source)) {
-            byte[] content = node.readSharedFile(root.unitId(), user.data.userId(), sharedKey(source));
+        var entry = sharedEntry(user, root, source);
+        if (entry == null)
+            return;
+        String sourceKey = sharedKey(source);
+        String targetKey = sharedKey(target);
+        if (!entry.directory()) {
+            byte[] content = node.readSharedFile(root.unitId(), user.data.userId(), sourceKey);
             node.putSharedFile(root.unitId(), user.data.userId(), sharedKey(target), content);
             node.deleteSharedFile(root.unitId(), user.data.userId(), sharedKey(source));
             return;
         }
-        var files = new ArrayList<String>();
-        String prefix = sharedKey(source) + "/";
-        String targetPrefix = sharedKey(target);
-        node.forEachSharedFile(root.unitId(), user.data.userId(), (filePath, size) -> {
-            if (filePath.startsWith(prefix))
-                files.add(filePath);
-        });
-        for (String file : files) {
-            byte[] content = node.readSharedFile(root.unitId(), user.data.userId(), file);
-            String destination = targetPrefix + "/" + file.substring(prefix.length());
-            node.putSharedFile(root.unitId(), user.data.userId(), destination, content);
+        String sourcePrefix = sourceKey + "/";
+        var entries = node.listSharedEntries(root.unitId(), user.data.userId());
+        var directories = entries.stream()
+                .filter(entryInfo -> entryInfo.directory() && entryInfo.path().startsWith(sourcePrefix))
+                .sorted(Comparator.comparingInt((Node.SharedEntryInfo entryInfo) -> depth(entryInfo.path()))
+                        .thenComparing(Node.SharedEntryInfo::path))
+                .toList();
+        var files = entries.stream()
+                .filter(entryInfo -> !entryInfo.directory() && entryInfo.path().startsWith(sourcePrefix))
+                .toList();
+        for (var directory : directories) {
+            node.createSharedDirectory(root.unitId(), user.data.userId(),
+                    targetKey + "/" + directory.path().substring(sourcePrefix.length()));
         }
-        for (String file : files)
-            node.deleteSharedFile(root.unitId(), user.data.userId(), file);
+        for (var file : files) {
+            byte[] content = node.readSharedFile(root.unitId(), user.data.userId(), file.path());
+            node.putSharedFile(root.unitId(), user.data.userId(),
+                    targetKey + "/" + file.path().substring(sourcePrefix.length()), content);
+        }
+        node.deleteSharedDirectory(root.unitId(), user.data.userId(), sourceKey);
+    }
+
+    private static int depth(String path) {
+        int depth = 0;
+        for (int index = 0; index < path.length(); index++)
+            if (path.charAt(index) == '/')
+                depth++;
+        return depth;
     }
 }

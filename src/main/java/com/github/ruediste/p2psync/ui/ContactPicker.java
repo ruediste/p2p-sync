@@ -2,43 +2,47 @@ package com.github.ruediste.p2psync.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.function.Consumer;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.basic.BasicComboBoxEditor;
 
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 import com.github.ruediste.p2psync.node.Contact;
 import com.github.ruediste.p2psync.node.Node;
-import com.github.ruediste.p2psync.node.NodeUserHandle;
 
 final class ContactPicker extends JPanel {
-    private record Option(String label, Contact contact, PubKey userId, boolean usable) {
+    private record Option(String label, PubKey userId) {
+        @Override
+        public String toString() {
+            return label;
+        }
     }
 
     private final Node node;
     private final Consumer<String> status;
     private Node.UserStatus user;
-    private final JTextField search = Theme.textField(14);
+    private final JTextField search = Theme.textField(20);
     private final JComboBox<Option> matches = new JComboBox<>();
-    private final JTextField linkKey = Theme.textField(12);
-    private boolean refreshing;
+    private PubKey selectedUserId;
+    private boolean updating;
 
     ContactPicker(Node node, Node.UserStatus user, Consumer<String> status) {
         this.node = node;
@@ -48,41 +52,49 @@ final class ContactPicker extends JPanel {
         setOpaque(false);
         setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JPanel row = Theme.row(6);
-        row.setOpaque(false);
-        row.setAlignmentX(Component.LEFT_ALIGNMENT);
-        row.add(search);
+        search.setBorder(BorderFactory.createEmptyBorder(7, 9, 7, 9));
+        matches.setEditable(true);
+        matches.setEditor(new BasicComboBoxEditor() {
+            @Override
+            protected JTextField createEditorComponent() {
+                return search;
+            }
+        });
         matches.setRenderer(new OptionRenderer());
-        matches.setPrototypeDisplayValue(new Option("A reasonably long contact name", null, null, false));
-        row.add(matches);
-        add(row);
-
+        matches.setPrototypeDisplayValue(new Option("A reasonably long contact name", null));
+        matches.setToolTipText("Search linked contacts");
+        matches.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(matches);
         add(Box.createVerticalStrut(4));
-        JPanel link = Theme.row(6);
-        link.setOpaque(false);
-        link.setAlignmentX(Component.LEFT_ALIGNMENT);
-        link.add(Theme.muted("User ID"));
-        link.add(linkKey);
-        JButton linkButton = Theme.secondaryButton("Link");
-        linkButton.addActionListener(event -> linkKey());
-        link.add(linkButton);
-        add(link);
 
         search.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent event) {
-                rebuild();
+                searchChanged();
             }
 
             @Override
             public void removeUpdate(DocumentEvent event) {
-                rebuild();
+                searchChanged();
             }
 
             @Override
             public void changedUpdate(DocumentEvent event) {
-                rebuild();
+                searchChanged();
             }
+        });
+        search.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent event) {
+                search.selectAll();
+            }
+        });
+        matches.addActionListener(event -> {
+            if (updating)
+                return;
+            Option option = (Option) matches.getSelectedItem();
+            if (option != null)
+                select(option);
         });
         rebuild();
     }
@@ -91,16 +103,20 @@ final class ContactPicker extends JPanel {
         boolean changed = this.user == null || !this.user.userId().equals(user.userId());
         this.user = user;
         if (changed) {
-            search.setText("");
-            linkKey.setText("");
-            matches.setSelectedItem(null);
+            selectedUserId = null;
+            updating = true;
+            try {
+                search.setText("");
+                matches.setSelectedItem(null);
+            } finally {
+                updating = false;
+            }
         }
         rebuild();
     }
 
     PubKey selectedUserId() {
-        Option option = (Option) matches.getSelectedItem();
-        return option == null ? null : option.userId();
+        return selectedUserId;
     }
 
     void setSelectedUserId(PubKey userId) {
@@ -108,106 +124,96 @@ final class ContactPicker extends JPanel {
             clearSelection();
             return;
         }
-        for (int index = 0; index < matches.getItemCount(); index++) {
-            Option option = matches.getItemAt(index);
-            if (userId.equals(option.userId())) {
-                matches.setSelectedIndex(index);
-                return;
-            }
+        Option option = findOption(options(""), userId);
+        if (option == null) {
+            clearSelection();
+            status.accept("No linked contact for this user");
+            return;
         }
-        matches.setSelectedItem(null);
-        linkKey.setText(HexFormat.of().formatHex(userId.bytes()));
-        status.accept("No contact for this user yet. Link it with the user ID field.");
+        selectedUserId = userId;
+        updating = true;
+        try {
+            search.setText(option.label());
+            matches.setModel(new DefaultComboBoxModel<>(options("").toArray(Option[]::new)));
+            matches.setSelectedItem(option);
+        } finally {
+            updating = false;
+        }
     }
 
     void clearSelection() {
-        search.setText("");
-        linkKey.setText("");
-        matches.setSelectedItem(null);
+        selectedUserId = null;
+        updating = true;
+        try {
+            search.setText("");
+            matches.setSelectedItem(null);
+        } finally {
+            updating = false;
+        }
         rebuild();
     }
 
-    private void linkKey() {
-        if (user == null)
-            return;
-        PubKey key;
+    private void select(Option option) {
+        selectedUserId = option.userId();
+        updating = true;
         try {
-            key = PubKey.from(HexFormat.of().parseHex(linkKey.getText().trim()));
-        } catch (RuntimeException error) {
-            status.accept("Could not link contact: " + error.getMessage());
-            return;
+            search.setText(option.label());
+            matches.setSelectedItem(option);
+        } finally {
+            updating = false;
         }
-        if (key.equals(user.userId())) {
-            status.accept("A contact cannot reference the owner");
+        matches.hidePopup();
+    }
+
+    private void searchChanged() {
+        if (updating)
             return;
-        }
-        Option option = (Option) matches.getSelectedItem();
-        Contact selectedContact = option == null ? null : option.contact();
-        boolean linkSelected = selectedContact != null && selectedContact.userId() == null;
-        PubKey userId = user.userId();
-        Background.run("link contact", () -> {
-            NodeUserHandle handle = node.getUser(userId);
-            if (linkSelected)
-                return handle.updateContact(selectedContact.contactId(), key, selectedContact.firstName(),
-                        selectedContact.lastName(), selectedContact.email(), selectedContact.phone(),
-                        selectedContact.notes());
-            return handle.createContactFromUser(key);
-        }, contact -> {
-            linkKey.setText("");
-            rebuild();
-            setSelectedUserId(key);
-            status.accept("Contact linked");
-        }, error -> status.accept("Could not link contact: " + error.getMessage()));
+        selectedUserId = null;
+        SwingUtilities.invokeLater(this::refreshMatches);
+    }
+
+    private void refreshMatches() {
+        rebuild();
+        if (!search.getText().isBlank() && matches.isShowing() && !matches.isPopupVisible())
+            matches.showPopup();
     }
 
     private void rebuild() {
-        if (refreshing)
-            return;
-        PubKey selected = selectedUserId();
-        refreshing = true;
+        String text = search.getText();
+        updating = true;
         try {
-            List<Option> options = options();
+            List<Option> options = options(text);
             matches.setModel(new DefaultComboBoxModel<>(options.toArray(Option[]::new)));
-            boolean restored = false;
-            if (selected != null) {
-                for (int index = 0; index < matches.getItemCount(); index++) {
-                    if (selected.equals(matches.getItemAt(index).userId())) {
-                        matches.setSelectedIndex(index);
-                        restored = true;
-                        break;
-                    }
-                }
-            }
-            if (!restored)
-                matches.setSelectedItem(null);
+            matches.setSelectedItem(null);
+            if (!text.equals(search.getText()))
+                search.setText(text);
+            search.setCaretPosition(Math.min(text.length(), search.getText().length()));
         } finally {
-            refreshing = false;
+            updating = false;
         }
     }
 
-    private List<Option> options() {
+    private List<Option> options(String query) {
         if (user == null)
             return List.of();
-        String query = search.getText() == null ? "" : search.getText().trim().toLowerCase(Locale.ROOT);
-        NodeUserHandle handle = node.getUser(user.userId());
+        String normalized = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
         List<Option> result = new ArrayList<>();
-        Set<PubKey> contactUsers = new HashSet<>();
-        for (Contact contact : handle.listContacts()) {
-            if (!query.isEmpty() && !contact.searchText().contains(query))
+        for (Contact contact : node.getUser(user.userId()).listContacts()) {
+            if (contact.userId() == null)
                 continue;
-            if (contact.userId() != null)
-                contactUsers.add(contact.userId());
-            String label = contact.displayName() + (contact.userId() == null ? "  (no user ID)" : "");
-            result.add(new Option(label, contact, contact.userId(), contact.userId() != null));
-        }
-        for (Node.UserStatus local : node.listUsers()) {
-            if (local.userId().equals(user.userId()) || contactUsers.contains(local.userId()))
+            if (!normalized.isEmpty() && !contact.searchText().contains(normalized))
                 continue;
-            if (!query.isEmpty() && !local.localName().toLowerCase(Locale.ROOT).contains(query))
-                continue;
-            result.add(new Option(local.localName() + "  (local user)", null, local.userId(), true));
+            result.add(new Option(contact.displayName(), contact.userId()));
         }
         return result;
+    }
+
+    private static Option findOption(List<Option> options, PubKey userId) {
+        for (Option option : options) {
+            if (userId.equals(option.userId()))
+                return option;
+        }
+        return null;
     }
 
     private final class OptionRenderer extends JPanel implements ListCellRenderer<Option> {
@@ -223,7 +229,7 @@ final class ContactPicker extends JPanel {
                 boolean isSelected, boolean cellHasFocus) {
             label.setText(value == null ? "" : value.label());
             label.setFont(Theme.BODY);
-            label.setForeground(value != null && !value.usable() ? Theme.MUTED : Theme.INK);
+            label.setForeground(Theme.INK);
             setBackground(isSelected ? Theme.GREEN_SOFT : Theme.CARD);
             return this;
         }

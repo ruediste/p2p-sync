@@ -352,7 +352,7 @@ final class MailPanel extends JPanel {
         attachments.clear();
         renderAttachmentChips();
         detailTitle.setText("New mail");
-        detailMeta.setText("Select a linked contact or link a user ID");
+        detailMeta.setText("Select a linked contact");
         recipientPicker.requestFocusInWindow();
         renderCompose();
     }

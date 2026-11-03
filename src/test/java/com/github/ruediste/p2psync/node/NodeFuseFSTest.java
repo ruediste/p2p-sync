@@ -154,6 +154,43 @@ class NodeFuseFSTest {
     }
 
     /**
+     * Verifies a viewer cannot modify a shared folder through the mount. The
+     * authorization failure has to surface as EACCES so callers see a permission
+     * error instead of EINVAL (invalid argument).
+     */
+    @Test
+    void viewerWritesAreDeniedWithAccessError() {
+        var network = new Node.Network();
+        var node = new Node(network);
+        try {
+            var bob = node.createNewUser("bob");
+            var alice = node.createNewUser("alice");
+            var folder = node.createSyncUnit(bob.data.userId(), SyncUnitAuthorization.Type.SHARED_FOLDER);
+            node.putSharedFile(folder, bob.data.userId(), "notes.txt",
+                    "hello".getBytes(StandardCharsets.UTF_8));
+            node.inviteToSyncUnit(folder, bob.data.userId(), alice.data.userId(),
+                    SyncUnitAuthorization.Role.VIEWER);
+            node.joinSyncUnit(folder, alice.data.userId());
+            node.setSharedFolderLabel(alice.data.userId(), folder, "team");
+            var fs = new NodeFuseFS(node);
+
+            byte[] content = "changed".getBytes(StandardCharsets.UTF_8);
+            assertEquals(-ErrorCodes.EACCES(),
+                    fs.write("/alice/team/notes.txt", buffer(content), content.length, 0, null));
+            assertEquals(-ErrorCodes.EACCES(), fs.create("/alice/team/new.txt", 0644, null));
+            assertEquals(-ErrorCodes.EACCES(), fs.mkdir("/alice/team/newdir", 0755));
+            assertEquals(-ErrorCodes.EACCES(), fs.unlink("/alice/team/notes.txt"));
+            assertEquals("hello", new String(fs.readFile("/alice/team/notes.txt"), StandardCharsets.UTF_8));
+
+            var direct = assertThrows(NodeFuseFS.FsException.class,
+                    () -> fs.writeFile("/alice/team/notes.txt", content));
+            assertEquals(ErrorCodes.EACCES(), direct.errno());
+        } finally {
+            node.close();
+        }
+    }
+
+    /**
      * Verifies the direct helpers used by the development server expose the same
      * combined home/shared-folder tree as the FUSE callbacks.
      */
@@ -190,6 +227,48 @@ class NodeFuseFSTest {
             assertEquals("hi", new String(fs.readFile("/alice/home/docs/moved.txt"), StandardCharsets.UTF_8));
             fs.delete("/alice/home/docs", true);
             assertTrue(fs.list("/alice/home").isEmpty());
+        } finally {
+            node.close();
+        }
+    }
+
+    /**
+     * Verifies shared folders expose real directories: mkdir creates an empty
+     * directory, rmdir removes it, recursive delete removes a tree, and moving a
+     * directory preserves its empty subdirectories.
+     */
+    @Test
+    void sharedFoldersSupportRealDirectories() {
+        var network = new Node.Network();
+        var node = new Node(network);
+        try {
+            var handle = node.createNewUser("alice");
+            var folder = node.createSyncUnit(handle.data.userId(), SyncUnitAuthorization.Type.SHARED_FOLDER);
+            node.setSharedFolderLabel(handle.data.userId(), folder, "team");
+            var fs = new NodeFuseFS(node);
+
+            assertEquals(0, fs.mkdir("/alice/team/docs", 0755));
+            assertEquals(0, fs.mkdir("/alice/team/docs/empty", 0755));
+            assertTrue(fs.stat("/alice/team/docs").directory());
+            assertTrue(fs.stat("/alice/team/docs/empty").directory());
+            assertTrue(list(fs, "/alice/team").contains("docs"));
+            assertTrue(list(fs, "/alice/team/docs").contains("empty"));
+
+            assertEquals(-ErrorCodes.ENOTEMPTY(), fs.rmdir("/alice/team/docs"));
+            assertEquals(0, fs.rmdir("/alice/team/docs/empty"));
+            assertEquals(0, fs.rmdir("/alice/team/docs"));
+            assertTrue(fs.list("/alice/team").isEmpty());
+
+            assertEquals(0, fs.mkdir("/alice/team/tree", 0755));
+            assertEquals(0, fs.mkdir("/alice/team/tree/sub", 0755));
+            assertEquals(0, fs.create("/alice/team/tree/keep.txt", 0644, null));
+            assertEquals(0, fs.mkdir("/alice/team/tree/sub/empty", 0755));
+            fs.move("/alice/team/tree", "/alice/team/moved");
+            assertTrue(fs.stat("/alice/team/moved").directory());
+            assertTrue(fs.stat("/alice/team/moved/sub/empty").directory());
+            assertTrue(fs.stat("/alice/team/moved/keep.txt").size() == 0);
+            fs.delete("/alice/team/moved", true);
+            assertTrue(fs.list("/alice/team").isEmpty());
         } finally {
             node.close();
         }

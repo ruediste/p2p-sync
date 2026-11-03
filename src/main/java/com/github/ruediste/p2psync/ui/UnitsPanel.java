@@ -275,11 +275,17 @@ final class UnitsPanel extends JPanel {
     }
 
     private JPanel buildSharedFolder(Node.SyncUnitStatus unit) {
+        boolean canModify = unit.role() == SyncUnitAuthorization.Role.EDITOR
+                || unit.role() == SyncUnitAuthorization.Role.MANAGER;
         JPanel panel = Theme.card();
         panel.setAlignmentX(LEFT_ALIGNMENT);
         panel.add(Theme.subheading("Files"));
         panel.add(Box.createVerticalStrut(4));
         panel.add(Theme.muted("This folder appears in the mounted root view under its label."));
+        if (!canModify) {
+            panel.add(Box.createVerticalStrut(4));
+            panel.add(Theme.muted("You have view-only access to this folder."));
+        }
         panel.add(Box.createVerticalStrut(6));
 
         JPanel labelRow = Theme.row(6);
@@ -315,59 +321,61 @@ final class UnitsPanel extends JPanel {
         panel.add(scroll);
         panel.add(Box.createVerticalStrut(8));
 
-        JPanel upload = Theme.column();
-        upload.setAlignmentX(LEFT_ALIGNMENT);
-        JLabel uploadLabel = Theme.muted("Upload file");
-        uploadLabel.setAlignmentX(LEFT_ALIGNMENT);
-        upload.add(uploadLabel);
-        JPanel uploadPathRow = Theme.row(6);
-        uploadPathRow.setAlignmentX(LEFT_ALIGNMENT);
-        JTextField localPath = Theme.textField(18);
-        uploadPathRow.add(localPath);
-        JButton browseUpload = Theme.secondaryButton("Browse...");
-        browseUpload.addActionListener(event -> {
-            Path selected = Theme.chooseOpenFile(localPath, "Select file to upload");
-            if (selected != null)
-                localPath.setText(selected.toString());
-        });
-        uploadPathRow.add(browseUpload);
-        upload.add(uploadPathRow);
-        JPanel uploadTargetRow = Theme.row(6);
-        uploadTargetRow.setAlignmentX(LEFT_ALIGNMENT);
-        uploadTargetRow.add(Theme.muted("Shared path"));
-        JTextField sharedPath = Theme.textField(14);
-        uploadTargetRow.add(sharedPath);
-        JButton uploadButton = Theme.secondaryButton("Upload");
-        uploadButton.addActionListener(event -> {
-            String localText = localPath.getText().trim();
-            if (localText.isEmpty()) {
-                status.accept("Select a file to upload");
-                return;
-            }
-            Path file;
-            try {
-                file = Path.of(localText);
-            } catch (RuntimeException error) {
-                status.accept("Could not upload file: " + error.getMessage());
-                return;
-            }
-            String path = sharedPath.getText().isBlank() ? file.getFileName().toString()
-                    : sharedPath.getText().trim();
-            PubKey userId = user.userId();
-            Background.run("upload file", () -> {
-                node.putSharedFile(unit.id(), userId, path, Theme.readFileLimited(file));
-                return node.listSharedFileInfos(unit.id(), userId);
-            }, infos -> {
-                localPath.setText("");
-                sharedPath.setText("");
-                model.setInfos(infos);
-                status.accept("Uploaded " + path);
-            }, error -> status.accept("Could not upload file: " + error.getMessage()));
-        });
-        uploadTargetRow.add(uploadButton);
-        upload.add(uploadTargetRow);
-        panel.add(upload);
-        panel.add(Box.createVerticalStrut(8));
+        if (canModify) {
+            JPanel upload = Theme.column();
+            upload.setAlignmentX(LEFT_ALIGNMENT);
+            JLabel uploadLabel = Theme.muted("Upload file");
+            uploadLabel.setAlignmentX(LEFT_ALIGNMENT);
+            upload.add(uploadLabel);
+            JPanel uploadPathRow = Theme.row(6);
+            uploadPathRow.setAlignmentX(LEFT_ALIGNMENT);
+            JTextField localPath = Theme.textField(18);
+            uploadPathRow.add(localPath);
+            JButton browseUpload = Theme.secondaryButton("Browse...");
+            browseUpload.addActionListener(event -> {
+                Path selected = Theme.chooseOpenFile(localPath, "Select file to upload");
+                if (selected != null)
+                    localPath.setText(selected.toString());
+            });
+            uploadPathRow.add(browseUpload);
+            upload.add(uploadPathRow);
+            JPanel uploadTargetRow = Theme.row(6);
+            uploadTargetRow.setAlignmentX(LEFT_ALIGNMENT);
+            uploadTargetRow.add(Theme.muted("Shared path"));
+            JTextField sharedPath = Theme.textField(14);
+            uploadTargetRow.add(sharedPath);
+            JButton uploadButton = Theme.secondaryButton("Upload");
+            uploadButton.addActionListener(event -> {
+                String localText = localPath.getText().trim();
+                if (localText.isEmpty()) {
+                    status.accept("Select a file to upload");
+                    return;
+                }
+                Path file;
+                try {
+                    file = Path.of(localText);
+                } catch (RuntimeException error) {
+                    status.accept("Could not upload file: " + error.getMessage());
+                    return;
+                }
+                String path = sharedPath.getText().isBlank() ? file.getFileName().toString()
+                        : sharedPath.getText().trim();
+                PubKey userId = user.userId();
+                Background.run("upload file", () -> {
+                    node.putSharedFile(unit.id(), userId, path, Theme.readFileLimited(file));
+                    return node.listSharedFileInfos(unit.id(), userId);
+                }, infos -> {
+                    localPath.setText("");
+                    sharedPath.setText("");
+                    model.setInfos(infos);
+                    status.accept("Uploaded " + path);
+                }, error -> status.accept("Could not upload file: " + error.getMessage()));
+            });
+            uploadTargetRow.add(uploadButton);
+            upload.add(uploadTargetRow);
+            panel.add(upload);
+            panel.add(Box.createVerticalStrut(8));
+        }
 
         JPanel download = Theme.column();
         download.setAlignmentX(LEFT_ALIGNMENT);
@@ -426,21 +434,23 @@ final class UnitsPanel extends JPanel {
                     error -> status.accept("Could not download file: " + error.getMessage()));
         });
         downloadRow.add(downloadButton);
-        JButton delete = Theme.dangerButton("Delete");
-        delete.addActionListener(event -> {
-            int row = table.getSelectedRow();
-            if (row < 0) {
-                status.accept("Select a file first");
-                return;
-            }
-            String path = model.paths.get(table.convertRowIndexToModel(row));
-            PubKey userId = user.userId();
-            Background.run("delete file", () -> {
-                node.deleteSharedFile(unit.id(), userId, path);
-                return node.listSharedFileInfos(unit.id(), userId);
-            }, model::setInfos, error -> status.accept("Could not delete file: " + error.getMessage()));
-        });
-        downloadRow.add(delete);
+        if (canModify) {
+            JButton delete = Theme.dangerButton("Delete");
+            delete.addActionListener(event -> {
+                int row = table.getSelectedRow();
+                if (row < 0) {
+                    status.accept("Select a file first");
+                    return;
+                }
+                String path = model.paths.get(table.convertRowIndexToModel(row));
+                PubKey userId = user.userId();
+                Background.run("delete file", () -> {
+                    node.deleteSharedFile(unit.id(), userId, path);
+                    return node.listSharedFileInfos(unit.id(), userId);
+                }, model::setInfos, error -> status.accept("Could not delete file: " + error.getMessage()));
+            });
+            downloadRow.add(delete);
+        }
         download.add(downloadRow);
         panel.add(download);
         return panel;
@@ -554,7 +564,7 @@ final class UnitsPanel extends JPanel {
         inviteButton.addActionListener(event -> {
             PubKey key = invitee.selectedUserId();
             if (key == null) {
-                status.accept("Select a contact with a linked user ID, or link a user ID first");
+                status.accept("Select a contact with a linked user ID");
                 return;
             }
             SyncUnitAuthorization.Role role = (SyncUnitAuthorization.Role) roleBox.getSelectedItem();

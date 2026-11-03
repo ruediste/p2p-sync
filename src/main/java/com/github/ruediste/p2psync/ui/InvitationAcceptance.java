@@ -1,5 +1,6 @@
 package com.github.ruediste.p2psync.ui;
 
+import java.awt.BorderLayout;
 import java.util.function.Consumer;
 
 import javax.swing.Box;
@@ -23,10 +24,10 @@ final class InvitationAcceptance {
         panel.add(Box.createVerticalStrut(4));
         panel.add(Theme.muted("Leave the peer ID blank to probe known peers, or enter a node hosting the invitation."));
         panel.add(Box.createVerticalStrut(6));
-        JPanel row = Theme.row(6);
-        row.setBackground(Theme.GREEN_SOFT);
+        JPanel row = new JPanel(new BorderLayout(6, 0));
+        row.setOpaque(false);
         JTextField peer = Theme.textField(24);
-        row.add(peer);
+        row.add(peer, BorderLayout.CENTER);
         JButton join = Theme.primaryButton("Accept invitation");
         join.addActionListener(event -> {
             String peerText = peer.getText().trim();
@@ -41,7 +42,7 @@ final class InvitationAcceptance {
                 onAccepted.run();
             }, error -> status.accept("Could not accept invitation: " + error.getMessage()));
         });
-        row.add(join);
+        row.add(join, BorderLayout.EAST);
         panel.add(row);
         return panel;
     }

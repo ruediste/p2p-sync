@@ -39,8 +39,6 @@ public class Node implements AutoCloseable {
     public BlobStorage storage;
     private UnitRootStore unitRoots;
     private DataStorage.RootLongHandle syncUnitCounter;
-    private GuidMapper sharedFolderMapper;
-    private long sharedFolderNextNodeId;
     public Map<PubKey, NodeUserData> users = new HashMap<>();
     final Map<SyncUnitId, SyncUnitData> syncUnits = new HashMap<>();
     public Network network;
@@ -706,7 +704,8 @@ public class Node implements AutoCloseable {
                 if (!operation.unitId().equals(id) || !operation.hasValidSignature())
                     throw new IllegalArgumentException("Invalid SyncUnit content operation signature");
                 var action = switch (operation.kind()) {
-                    case SHARED_FILE_SET, SHARED_FILE_DELETE, TODO_SET, TODO_DELETE ->
+                    case SHARED_FILE_SET, SHARED_FILE_DELETE, SHARED_DIRECTORY_CREATE,
+                            SHARED_DIRECTORY_DELETE, TODO_SET, TODO_DELETE ->
                         SyncUnitAuthorization.Action.MODIFY;
                     case CHANNEL_MESSAGE -> SyncUnitAuthorization.Action.SEND_MESSAGE;
                 };
@@ -720,7 +719,8 @@ public class Node implements AutoCloseable {
                         operation.author(), action))
                     throw new IllegalArgumentException("User is not authorized for SyncUnit content operation");
                 switch (operation.kind()) {
-                    case SHARED_FILE_SET, SHARED_FILE_DELETE -> {
+                    case SHARED_FILE_SET, SHARED_FILE_DELETE, SHARED_DIRECTORY_CREATE,
+                            SHARED_DIRECTORY_DELETE -> {
                     }
                     case TODO_SET -> todoItems.put(operation.key(), operation.payload());
                     case TODO_DELETE -> todoItems.remove(operation.key());
@@ -830,7 +830,8 @@ public class Node implements AutoCloseable {
         private static boolean contentKindMatchesType(SyncUnitAuthorization.Type type,
                 SyncUnitContentOperation.Kind kind) {
             return switch (kind) {
-                case SHARED_FILE_SET, SHARED_FILE_DELETE -> type == SyncUnitAuthorization.Type.SHARED_FOLDER;
+                case SHARED_FILE_SET, SHARED_FILE_DELETE, SHARED_DIRECTORY_CREATE,
+                        SHARED_DIRECTORY_DELETE -> type == SyncUnitAuthorization.Type.SHARED_FOLDER;
                 case TODO_SET, TODO_DELETE -> type == SyncUnitAuthorization.Type.TODO_LIST;
                 case CHANNEL_MESSAGE -> type == SyncUnitAuthorization.Type.MESSAGE_CHANNEL;
             };
@@ -1785,9 +1786,8 @@ public class Node implements AutoCloseable {
     public synchronized byte[] readSharedFile(SyncUnitId id, PubKey readerId, String path) {
         var unit = requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
         requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
-        ensureSharedFolderMapper();
-        long root = unitRoots.get(SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, UnitRootStore.FILE_TREE);
-        return SharedFolderPersistence.readFile(dataStorage, sharedFolderMapper, root, id.toString(),
+        ensureUnitMapper(unit);
+        return SharedFolderPersistence.readFile(dataStorage, unitRoots, unit.guidMapper, unit.id,
                 validateSyncUnitKey(path));
     }
 
@@ -1795,9 +1795,8 @@ public class Node implements AutoCloseable {
             java.util.function.BiConsumer<String, Long> consumer) {
         var unit = requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
         requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
-        ensureSharedFolderMapper();
-        long root = unitRoots.get(SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, UnitRootStore.FILE_TREE);
-        SharedFolderPersistence.forEachFile(dataStorage, sharedFolderMapper, root, id.toString(), consumer);
+        ensureUnitMapper(unit);
+        SharedFolderPersistence.forEachFile(dataStorage, unitRoots, unit.guidMapper, unit.id, consumer);
     }
 
     public List<SharedFileInfo> listSharedFileInfos(SyncUnitId id, PubKey readerId) {
@@ -1810,38 +1809,103 @@ public class Node implements AutoCloseable {
     synchronized long sharedFileSize(SyncUnitId id, PubKey readerId, String path) {
         var unit = requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
         requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
-        ensureSharedFolderMapper();
-        long root = unitRoots.get(SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, UnitRootStore.FILE_TREE);
-        return SharedFolderPersistence.fileSize(dataStorage, sharedFolderMapper, root, id.toString(),
+        ensureUnitMapper(unit);
+        return SharedFolderPersistence.fileSize(dataStorage, unitRoots, unit.guidMapper, unit.id,
                 validateSyncUnitKey(path));
+    }
+
+    public synchronized SharedEntry sharedEntry(SyncUnitId id, PubKey readerId, String path) {
+        var unit = requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
+        requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
+        ensureUnitMapper(unit);
+        var stat = SharedFolderPersistence.stat(dataStorage, unitRoots, unit.guidMapper, unit.id,
+                validateSyncUnitKey(path));
+        return stat == null ? null : new SharedEntry(stat.directory(), stat.size());
+    }
+
+    public synchronized List<SharedEntryInfo> listSharedDirectory(SyncUnitId id, PubKey readerId, String path) {
+        var unit = requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
+        requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
+        ensureUnitMapper(unit);
+        var entries = SharedFolderPersistence.listDirectory(dataStorage, unitRoots, unit.guidMapper, unit.id,
+                path);
+        if (entries == null)
+            return null;
+        return entries.stream()
+                .map(entry -> new SharedEntryInfo(entry.path(), entry.directory(), entry.size()))
+                .toList();
+    }
+
+    public synchronized List<SharedEntryInfo> listSharedEntries(SyncUnitId id, PubKey readerId) {
+        var result = new java.util.ArrayList<SharedEntryInfo>();
+        forEachSharedEntry(id, readerId, result::add);
+        result.sort(Comparator.comparing(SharedEntryInfo::path));
+        return List.copyOf(result);
+    }
+
+    public synchronized void forEachSharedEntry(SyncUnitId id, PubKey readerId,
+            java.util.function.Consumer<SharedEntryInfo> consumer) {
+        var unit = requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
+        requireSyncUnitAccess(unit, readerId, SyncUnitAuthorization.Action.VIEW);
+        ensureUnitMapper(unit);
+        SharedFolderPersistence.forEachEntry(dataStorage, unitRoots, unit.guidMapper, unit.id,
+                entry -> consumer.accept(new SharedEntryInfo(entry.path(), entry.directory(), entry.size())));
     }
 
     public record SharedFileInfo(String path, long size) {
     }
 
-    private void ensureSharedFolderMapper() {
-        if (sharedFolderMapper == null)
-            sharedFolderMapper = new GuidMapper(dataStorage, unitRoots,
-                    SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, sharedFolderNextNodeId);
+    public record SharedEntry(boolean directory, long size) {
+    }
+
+    public record SharedEntryInfo(String path, boolean directory, long size) {
     }
 
     private void applySharedFolderContent(SyncUnitContentOperation operation) {
         if (operation.kind() != SyncUnitContentOperation.Kind.SHARED_FILE_SET
-                && operation.kind() != SyncUnitContentOperation.Kind.SHARED_FILE_DELETE)
+                && operation.kind() != SyncUnitContentOperation.Kind.SHARED_FILE_DELETE
+                && operation.kind() != SyncUnitContentOperation.Kind.SHARED_DIRECTORY_CREATE
+                && operation.kind() != SyncUnitContentOperation.Kind.SHARED_DIRECTORY_DELETE)
             return;
-        ensureSharedFolderMapper();
+        var unit = requireSyncUnit(operation.unitId());
+        ensureUnitMapper(unit);
         switch (operation.kind()) {
-            case SHARED_FILE_SET -> SharedFolderPersistence.putFile(dataStorage, unitRoots, sharedFolderMapper,
-                    operation.unitId().toString(), operation.key(), operation.payload());
+            case SHARED_FILE_SET -> SharedFolderPersistence.putFile(dataStorage, unitRoots, unit.guidMapper,
+                    unit.id, operation.key(), operation.payload());
             case SHARED_FILE_DELETE -> SharedFolderPersistence.deleteFile(dataStorage, unitRoots,
-                    sharedFolderMapper, operation.unitId().toString(), operation.key());
+                    unit.guidMapper, unit.id, operation.key());
+            case SHARED_DIRECTORY_CREATE -> SharedFolderPersistence.createDirectory(dataStorage, unitRoots,
+                    unit.guidMapper, unit.id, operation.key());
+            case SHARED_DIRECTORY_DELETE -> SharedFolderPersistence.deleteDirectory(dataStorage, unitRoots,
+                    unit.guidMapper, unit.id, operation.key());
             default -> throw new IllegalStateException("Not a shared-folder content operation");
         }
     }
 
     private void deleteSharedFolderUnit(SyncUnitId id) {
-        ensureSharedFolderMapper();
-        SharedFolderPersistence.deleteUnit(dataStorage, unitRoots, sharedFolderMapper, id.toString());
+        var unit = syncUnits.get(id);
+        GuidMapper mapper;
+        if (unit != null) {
+            ensureUnitMapper(unit);
+            mapper = unit.guidMapper;
+        } else {
+            // The unit may already have been removed from the registry. Its persisted
+            // GUID mapping is still available, which is all deleting the tree needs.
+            mapper = new GuidMapper(dataStorage, unitRoots, id, 0);
+        }
+        SharedFolderPersistence.deleteUnit(dataStorage, unitRoots, mapper, id);
+    }
+
+    public synchronized void createSharedDirectory(SyncUnitId id, PubKey authorId, String path) {
+        requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
+        recordSyncUnitContent(id, authorId, SyncUnitContentOperation.Kind.SHARED_DIRECTORY_CREATE,
+                validateSyncUnitKey(path), new byte[0]);
+    }
+
+    public synchronized void deleteSharedDirectory(SyncUnitId id, PubKey authorId, String path) {
+        requireSyncUnitType(id, SyncUnitAuthorization.Type.SHARED_FOLDER);
+        recordSyncUnitContent(id, authorId, SyncUnitContentOperation.Kind.SHARED_DIRECTORY_DELETE,
+                validateSyncUnitKey(path), new byte[0]);
     }
 
     public synchronized void deleteSharedFile(SyncUnitId id, PubKey authorId, String path) {
@@ -1909,7 +1973,8 @@ public class Node implements AutoCloseable {
         var unit = requireSyncUnit(id);
         var author = requireConfiguredUser(authorId);
         var action = switch (kind) {
-            case SHARED_FILE_SET, SHARED_FILE_DELETE, TODO_SET, TODO_DELETE ->
+            case SHARED_FILE_SET, SHARED_FILE_DELETE, SHARED_DIRECTORY_CREATE,
+                    SHARED_DIRECTORY_DELETE, TODO_SET, TODO_DELETE ->
                 SyncUnitAuthorization.Action.MODIFY;
             case CHANNEL_MESSAGE -> SyncUnitAuthorization.Action.SEND_MESSAGE;
         };
@@ -2411,9 +2476,6 @@ public class Node implements AutoCloseable {
             unit.nextNodeId = unit.guidMapper.nextNodeId();
             unit.guidMapper.flush();
         }
-        ensureSharedFolderMapper();
-        sharedFolderNextNodeId = sharedFolderMapper.nextNodeId();
-        sharedFolderMapper.flush();
     }
 
     private static Sync.UserOperation parseUserOperation(Operation operation) {
@@ -2522,8 +2584,7 @@ public class Node implements AutoCloseable {
         var state = Sync.NodeState.newBuilder()
                 .setPeerId(com.google.protobuf.ByteString.copyFrom(peerId.getBytes()))
                 .setPeerPrivateKey(com.google.protobuf.ByteString.copyFrom(peerPrivateKey.bytes()))
-                .setClock(clock)
-                .setSharedFolderNextNodeId(sharedFolderNextNodeId);
+                .setClock(clock);
         for (var user : users.values()) {
             var storedUser = Sync.NodeUserState.newBuilder()
                     .setUserPrivateKey(com.google.protobuf.ByteString.copyFrom(user.userKey.bytes()))
@@ -2800,7 +2861,6 @@ public class Node implements AutoCloseable {
         nodeHash = CryptoUtils.sha256(peerId.getBytes());
         nodeKey = HexFormat.of().formatHex(nodeHash);
         clock = state.getClock();
-        sharedFolderNextNodeId = state.getSharedFolderNextNodeId();
         network.nodes.put(peerId, this);
         restoringState = true;
         boolean rebuiltFileTree = false;
@@ -2860,8 +2920,6 @@ public class Node implements AutoCloseable {
                     user.contacts = replayed;
                 }
             }
-            sharedFolderMapper = new GuidMapper(dataStorage, unitRoots,
-                    SharedFolderPersistence.SHARED_FOLDER_UNIT_ID, sharedFolderNextNodeId);
         } finally {
             restoringState = false;
         }

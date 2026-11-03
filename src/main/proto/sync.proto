@@ -118,7 +118,7 @@ message NodeState {
 	repeated NodeUserState users = 4;
 	bytes peerPrivateKey = 5;
 	repeated PersistedSyncUnit syncUnits = 6;
-	uint64 sharedFolderNextNodeId = 7;
+	reserved 7;
 }
 
 message UserCredential {

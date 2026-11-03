@@ -3,16 +3,11 @@ package com.github.ruediste.p2psync.ui;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.Component;
 import java.awt.Container;
-import java.util.HexFormat;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
@@ -34,6 +29,9 @@ class ContactPickerTest {
             var alice = node.createNewUser("alice");
             var bob = node.createNewUser("bob");
             var carol = node.createNewUser("carol");
+            var handle = node.getUser(alice.data.userId());
+            handle.createContact(bob.data.userId(), "Bob", "", "", "", "");
+            handle.createContact(carol.data.userId(), "Carol", "", "", "", "");
             var user = node.listUsers().stream()
                     .filter(status -> status.userId().equals(alice.data.userId()))
                     .findFirst()
@@ -59,44 +57,50 @@ class ContactPickerTest {
     }
 
     /**
-     * Verifies that linking a user ID fills in the selected unlinked contact
-     * instead of creating a duplicate contact.
+     * Verifies that only contacts with a linked user ID are offered, and that
+     * typing in the picker filters them.
      */
     @Test
-    void linkKeyUpdatesSelectedUnlinkedContact() throws Exception {
+    void onlyLinkedContactsAreOfferedAndSearchable() throws Exception {
         try (var node = new Node(new Node.Network())) {
             var alice = node.createNewUser("alice");
             var bob = node.createNewUser("bob");
+            node.createNewUser("carol");
             var handle = node.getUser(alice.data.userId());
-            handle.createContact(null, "Bob", "", "bob@example.com", "", "");
+            handle.createContact(bob.data.userId(), "Bob", "", "", "", "");
+            handle.createContact(null, "Unlinked", "", "", "", "");
             var user = node.listUsers().stream()
                     .filter(status -> status.userId().equals(alice.data.userId()))
                     .findFirst()
                     .orElseThrow();
-            CountDownLatch linked = new CountDownLatch(1);
 
+            ContactPicker[] picker = new ContactPicker[1];
+            SwingUtilities.invokeAndWait(() -> picker[0] = new ContactPicker(node, user, message -> {
+            }));
             SwingUtilities.invokeAndWait(() -> {
-                var picker = new ContactPicker(node, user, message -> {
-                    if ("Contact linked".equals(message))
-                        linked.countDown();
-                });
-                JComboBox<?> matches = find(picker, JComboBox.class, ignored -> true);
+                JComboBox<?> matches = find(picker[0], JComboBox.class, ignored -> true);
                 assertNotNull(matches);
-                matches.setSelectedIndex(0);
-                JTextField linkKey = find(picker, JTextField.class, field -> field.getColumns() == 12);
-                assertNotNull(linkKey);
-                linkKey.setText(HexFormat.of().formatHex(bob.data.userId().bytes()));
-                JButton link = find(picker, JButton.class, button -> "Link".equals(button.getText()));
-                assertNotNull(link);
-                link.doClick();
-            });
+                assertEquals(1, matches.getModel().getSize(), "only linked contacts must be offered");
+                assertEquals("Bob", matches.getItemAt(0).toString());
 
-            assertTrue(linked.await(5, TimeUnit.SECONDS));
-            var contacts = node.getUser(alice.data.userId()).listContacts();
-            assertEquals(1, contacts.size());
-            assertEquals(bob.data.userId(), contacts.get(0).userId());
-            assertEquals("Bob", contacts.get(0).firstName());
-            assertEquals("bob@example.com", contacts.get(0).email());
+                JTextField search = find(picker[0], JTextField.class, ignored -> true);
+                assertNotNull(search);
+                search.setText("unlinked");
+            });
+            SwingUtilities.invokeAndWait(() -> {
+                JComboBox<?> matches = find(picker[0], JComboBox.class, ignored -> true);
+                assertEquals(0, matches.getModel().getSize(), "search must filter out non-matching contacts");
+                JTextField search = find(picker[0], JTextField.class, ignored -> true);
+                assertNotNull(search);
+                search.setText("bob");
+            });
+            SwingUtilities.invokeAndWait(() -> {
+                JComboBox<?> matches = find(picker[0], JComboBox.class, ignored -> true);
+                assertEquals(1, matches.getModel().getSize());
+
+                picker[0].setSelectedUserId(bob.data.userId());
+                assertEquals(bob.data.userId(), picker[0].selectedUserId());
+            });
         }
     }
 

@@ -54,7 +54,7 @@ breaker. The complete identifier is `lamportClock[8] | nodeHash[32]`.
 
 | Artifact | Produced by | Content |
 | --- | --- | --- |
-| `node.db` (any path given to `DesktopMain`) | `Node` | Complete node state: peer key pair, users, signed operation logs in per-SyncUnit B-trees, SyncUnit registry and histories, active node sets, inbox, home/shared-folder file trees and the shared-folder content tree. A single `DataStorage` file. |
+| `node.db` (any path given to `DesktopMain`) | `Node` | Complete node state: peer key pair, users, signed operation logs in per-SyncUnit B-trees, SyncUnit registry and histories, active node sets, inbox, and the home and shared-folder file trees. A single `DataStorage` file. |
 | `files.db` (any path given to `SimpleFuseMain`) | `SimpleFuseFS` | One `FileTree` in a `DataStorage` file. Standalone prototype, unrelated to `Node`. |
 | exported user credential file | `Node.exportUserKey` | protobuf `UserCredential` (`ciphertext`, `salt`, `iv`), written with POSIX permissions `600`. Passphrase-derived AES-GCM; the passphrase may be empty. |
 | attachment export (UI) | `UnitsPanel` / mail view | plain user-chosen files, not node state |
@@ -391,9 +391,10 @@ Operation histories are split into separate B-trees per SyncUnit:
 - Other SyncUnits: authorization and content operation trees.
 
 Each B-tree key is `lamportClock (8 bytes, big-endian) | nodeHash (32 bytes)`.
-Values store the signature inline and reference DATA blocks containing the
-payload, so oversized operations are supported. A stored operation is reconstructed
-from those blocks when loaded.
+Values store the signature inline plus a single reference to a linked chain of
+DATA blocks containing the payload, so the B-tree value stays small no matter how
+large the operation is. A stored operation is reconstructed by walking the chain
+when loaded.
 
 `UnitRootStore` is a node-level B-tree, rooted by handle 2, keyed by
 `SyncUnitId (32 bytes) | rootKind (1 byte)`. It stores the root offsets for:
@@ -448,9 +449,12 @@ the existing API still sees one history.
 Shared-folder labels are USER-unit operations, and
 `Node.listRootEntries`/`NodeUserHandle.listRoot` combine the home entry with
 accepted shared folders, resolving label collisions by the lowest `SyncUnitId`.
-Shared-folder content is backed exclusively by a single node-level `FileTree`
-keyed by `unitIdHex/path`, rooted through a reserved unit id and GUID mapping.
-Listings stream `(path, size)` directly from that tree and file content is read on
+Shared-folder content is backed by one `FileTree` per shared-folder SyncUnit,
+rooted through that unit's `FILE_TREE` root entry and its own `GuidMapper`.
+Directories are real `FileTree` entries, so empty directories persist and
+synchronize. Entity GUIDs are derived from the unit ID and the path, making the
+same path map to the same full GUID on every peer. Listings stream
+`(path, directory, size)` directly from the tree and file content is read on
 demand. Accepted content operations update the tree in place; no path/content map
 is materialized.
 
@@ -569,9 +573,9 @@ in the USER log until a materialized message snapshot replaces them.
 | explicit close (`Node.close`) | one final `persistState()` before the storage file is closed |
 
 The node writes new tree roots and rewrites the `NodeState` metadata blob on
-every persist. The shared-folder tree is updated in place by accepted content
-operations and its root handle is committed with the rest of the node state;
-user file trees are updated copy-on-write. The state is already written when an
+every persist. Each shared-folder tree is updated in place by accepted content
+operations and its root is stored in the unit-root table; all unit roots are
+flushed with the rest of the state. User file trees are updated copy-on-write. The state is already written when an
 operation is recorded; derived state is rebuilt in memory without an extra
 commit, and a sync batch commits once at its end.
 
