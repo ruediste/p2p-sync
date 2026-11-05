@@ -3,9 +3,9 @@ package com.github.ruediste.p2psync.node;
 import java.util.Locale;
 import java.util.Objects;
 
-import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
+import com.github.ruediste.p2psync.identity.UserId;
 
-public record Contact(String contactId, PubKey userId, String firstName, String lastName, String email,
+public record Contact(String contactId, UserId userId, String firstName, String lastName, String email,
         String phone, String notes) {
 
     public enum Field {
@@ -44,7 +44,7 @@ public record Contact(String contactId, PubKey userId, String firstName, String 
         return "Contact " + contactId.substring(0, Math.min(8, contactId.length()));
     }
 
-    public Contact withField(Field field, String textValue, PubKey userValue) {
+    public Contact withField(Field field, String textValue, UserId userValue) {
         return switch (field) {
             case USER_ID -> new Contact(contactId, userValue, firstName, lastName, email, phone, notes);
             case FIRST_NAME -> new Contact(contactId, userId, textValue, lastName, email, phone, notes);

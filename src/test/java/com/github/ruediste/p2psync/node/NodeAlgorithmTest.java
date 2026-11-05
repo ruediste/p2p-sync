@@ -19,6 +19,8 @@ import java.util.TreeSet;
 
 import org.junit.jupiter.api.Test;
 
+import com.github.ruediste.p2psync.identity.NodeId;
+
 /**
  * In-memory mock of the node algorithm described in the wiki: active node set
  * (joining, leaving, versioning), operation synchronization (including
@@ -26,6 +28,21 @@ import org.junit.jupiter.api.Test;
  * timestamp.
  */
 public class NodeAlgorithmTest {
+
+    private static NodeId nodeIdValue(String label) {
+        byte[] labelBytes = label.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        if (labelBytes.length >= NodeId.LENGTH)
+            throw new IllegalArgumentException("Test node label is too long");
+        byte[] bytes = new byte[NodeId.LENGTH];
+        bytes[0] = (byte) labelBytes.length;
+        System.arraycopy(labelBytes, 0, bytes, 1, labelBytes.length);
+        return NodeId.fromBytes(bytes);
+    }
+
+    private static String nodeIdLabel(NodeId nodeId) {
+        byte[] bytes = nodeId.bytes();
+        return new String(bytes, 1, Byte.toUnsignedInt(bytes[0]), java.nio.charset.StandardCharsets.UTF_8);
+    }
 
     // ------------------------------------------------------------------
     // Operations
@@ -153,7 +170,7 @@ public class NodeAlgorithmTest {
 
         MockNode(String nodeId) {
             this.nodeId = nodeId;
-            activeNodeSet.nodes.add(nodeId);
+            activeNodeSet.nodes.add(nodeIdValue(nodeId));
             bumpActiveNodeSetVersion();
         }
 
@@ -181,7 +198,7 @@ public class NodeAlgorithmTest {
         // ---------- versioning ----------
 
         void bumpActiveNodeSetVersion() {
-            activeNodeSet.setVersion(nodeId, clock++);
+            activeNodeSet.setVersion(nodeIdValue(nodeId), clock++);
         }
 
         // ---------- operation synchronization ----------
@@ -238,8 +255,9 @@ public class NodeAlgorithmTest {
         void syncFrom(MockNode peer, int maxOperations, int byteBudget) {
             var fromClock = new TreeMap<String, Long>();
             var offsets = new HashMap<String, Integer>();
-            var sources = new TreeSet<>(activeNodeSet.nodes);
-            sources.addAll(peer.activeNodeSet.nodes);
+            var sources = new TreeSet<String>();
+            activeNodeSet.nodes.stream().map(NodeAlgorithmTest::nodeIdLabel).forEach(sources::add);
+            peer.activeNodeSet.nodes.stream().map(NodeAlgorithmTest::nodeIdLabel).forEach(sources::add);
             sources.remove(nodeId);
             for (String source : sources) {
                 fromClock.put(source, info.maxOperationClock.getOrDefault(source, 0L));
@@ -253,26 +271,34 @@ public class NodeAlgorithmTest {
         // ---------- active node set merge ----------
 
         boolean mergeActiveNodeSet(ActiveNodeSet other) {
-            String senderNodeId = other.nodes.isEmpty() ? nodeId : other.nodes.iterator().next();
-            return activeNodeSet.mergeFrom(other, nodeId, senderNodeId, () -> clock++);
+            NodeId senderNodeId = other.nodes.isEmpty() ? nodeIdValue(nodeId) : other.nodes.iterator().next();
+            return activeNodeSet.mergeFrom(other, nodeIdValue(nodeId), senderNodeId, () -> clock++);
         }
 
         // ---------- leaving ----------
 
         void startLeaving(String leavingNodeId, String processId) {
-            activeNodeSet.startLeaving(leavingNodeId, processId, info.maxOperationClock, nodeId, () -> clock++);
+            activeNodeSet.startLeaving(nodeIdValue(leavingNodeId), processId, activeNodeClocks(),
+                    nodeIdValue(nodeId), () -> clock++);
         }
 
         boolean updateLeaving() {
-            return activeNodeSet.updateLeaving(nodeId, info.maxOperationClock, () -> clock++);
+            return activeNodeSet.updateLeaving(nodeIdValue(nodeId), activeNodeClocks(), () -> clock++);
+        }
+
+        private Map<String, Long> activeNodeClocks() {
+            var result = new HashMap<String, Long>();
+            info.maxOperationClock.forEach((source, value) -> result.put(nodeIdValue(source).hex(), value));
+            return result;
         }
 
         // ---------- log truncation ----------
 
         OpId causallyStable() {
             OpId min = null;
-            for (String node : activeNodeSet.nodes) {
-                var candidate = new OpId(info.maxOperationClock.getOrDefault(node, 0L), node);
+            for (NodeId activeNode : activeNodeSet.nodes) {
+                String source = nodeIdLabel(activeNode);
+                var candidate = new OpId(info.maxOperationClock.getOrDefault(source, 0L), source);
                 if (min == null || candidate.compareTo(min) < 0)
                     min = candidate;
             }
@@ -298,7 +324,7 @@ public class NodeAlgorithmTest {
         var ids = new TreeSet<String>();
         nodes.forEach(n -> ids.add(n.nodeId));
         for (MockNode node : nodes) {
-            node.activeNodeSet.nodes.addAll(ids);
+            ids.stream().map(NodeAlgorithmTest::nodeIdValue).forEach(node.activeNodeSet.nodes::add);
             node.bumpActiveNodeSetVersion();
         }
     }
@@ -411,15 +437,15 @@ public class NodeAlgorithmTest {
     @Test
     public void joinDownloadsSnapshotAndOperations() {
         var a = new MockNode("A");
-        a.activeNodeSet.nodes.add("A");
+        a.activeNodeSet.nodes.add(nodeIdValue("A"));
         a.createOperation("a1");
         a.createOperation("a2");
 
         var b = new MockNode("B");
         join(b, a);
 
-        assertTrue(a.activeNodeSet.nodes.contains("B"));
-        assertTrue(b.activeNodeSet.nodes.contains("A"));
+        assertTrue(a.activeNodeSet.nodes.contains(nodeIdValue("B")));
+        assertTrue(b.activeNodeSet.nodes.contains(nodeIdValue("A")));
         assertEquals(Set.of("A@2", "A@3"),
                 b.operationTree.keySet().stream().map(Object::toString).collect(java.util.stream.Collectors.toSet()));
         assertEquals(b.clock, a.clock);
@@ -437,8 +463,8 @@ public class NodeAlgorithmTest {
         joiner.activeNodeSet.nodes.addAll(existing.activeNodeSet.nodes);
         joiner.activeNodeSet.leavingProcess = existing.activeNodeSet.leavingProcess == null ? null
                 : existing.activeNodeSet.leavingProcess.copy();
-        existing.activeNodeSet.nodes.add(joiner.nodeId);
-        joiner.activeNodeSet.nodes.add(joiner.nodeId);
+        existing.activeNodeSet.nodes.add(nodeIdValue(joiner.nodeId));
+        joiner.activeNodeSet.nodes.add(nodeIdValue(joiner.nodeId));
         existing.bumpActiveNodeSetVersion();
         joiner.bumpActiveNodeSetVersion();
         existing.frozen = false;
@@ -462,10 +488,10 @@ public class NodeAlgorithmTest {
         settleLeaving(List.of(a, b)); // all active nodes except the leaving one
 
         assertNull(a.activeNodeSet.leavingProcess);
-        assertFalse(a.activeNodeSet.nodes.contains("C"));
-        assertFalse(b.activeNodeSet.nodes.contains("C"));
-        assertTrue(a.activeNodeSet.nodes.contains("A"));
-        assertTrue(a.activeNodeSet.nodes.contains("B"));
+        assertFalse(a.activeNodeSet.nodes.contains(nodeIdValue("C")));
+        assertFalse(b.activeNodeSet.nodes.contains(nodeIdValue("C")));
+        assertTrue(a.activeNodeSet.nodes.contains(nodeIdValue("A")));
+        assertTrue(a.activeNodeSet.nodes.contains(nodeIdValue("B")));
     }
 
     @Test
@@ -488,13 +514,13 @@ public class NodeAlgorithmTest {
         // B cannot confirm, so the leaving process is still in phase A
         assertNotNull(a.activeNodeSet.leavingProcess);
         assertEquals(ActiveNodeSet.Phase.A, a.activeNodeSet.leavingProcess.phase);
-        assertTrue(a.activeNodeSet.nodes.contains("C"));
+        assertTrue(a.activeNodeSet.nodes.contains(nodeIdValue("C")));
 
         // B catches up and the process completes
         b.syncFrom(c, 100, 100_000);
         settleLeaving(List.of(a, b));
         assertNull(a.activeNodeSet.leavingProcess);
-        assertFalse(a.activeNodeSet.nodes.contains("C"));
+        assertFalse(a.activeNodeSet.nodes.contains(nodeIdValue("C")));
     }
 
     @Test
@@ -669,7 +695,7 @@ public class NodeAlgorithmTest {
     private boolean isLeavingTarget(MockNode node, List<MockNode> all) {
         return all.stream().anyMatch(other -> {
             var process = other.activeNodeSet.leavingProcess;
-            return process != null && process.leavingNodeId.equals(node.nodeId);
+            return process != null && process.leavingNodeId.equals(nodeIdValue(node.nodeId));
         });
     }
 
@@ -682,13 +708,15 @@ public class NodeAlgorithmTest {
         }
         for (MockNode node : all) {
             boolean activeElsewhere = all.stream()
-                    .anyMatch(other -> other != node && other.activeNodeSet.nodes.contains(node.nodeId));
+                    .anyMatch(other -> other != node
+                            && other.activeNodeSet.nodes.contains(nodeIdValue(node.nodeId)));
             if (activeElsewhere)
                 result.add(node);
         }
         if (result.isEmpty()) {
             var active = new HashSet<String>();
-            all.forEach(node -> active.addAll(node.activeNodeSet.nodes));
+            all.forEach(node -> node.activeNodeSet.nodes.stream()
+                    .map(NodeAlgorithmTest::nodeIdLabel).forEach(active::add));
             for (MockNode node : all)
                 if (active.contains(node.nodeId))
                     result.add(node);

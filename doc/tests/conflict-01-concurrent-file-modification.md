@@ -10,7 +10,7 @@
 
 Verify that two nodes modifying the same file while disconnected converge to one
 deterministic result after reconnecting, using the operation order defined by the
-Lamport clock and node hash.
+Lamport clock and `NodeId`.
 
 ## Prerequisites
 
@@ -55,6 +55,6 @@ Lamport clock and node hash.
 - The final content is exactly one of `Version A` or `Version B`, not a
   concatenation or partially merged byte sequence.
 - The winner is the value of the operation that sorts later by the per-SyncUnit
-  operation order (`lamportClock | nodeHash`). If the operation logs are
+  operation order (`lamportClock | NodeId`). If the operation logs are
   available, verify the winner matches that order.
 - Repeating the sync rounds does not change the result.

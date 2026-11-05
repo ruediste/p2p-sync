@@ -45,10 +45,10 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 
+import com.github.ruediste.p2psync.identity.UserId;
 import com.github.ruediste.p2psync.libp2p.core.PeerId;
 import com.github.ruediste.p2psync.libp2p.core.multiaddr.Multiaddr;
 import com.github.ruediste.p2psync.libp2p.crypto.PrivKey;
-import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 import com.github.ruediste.p2psync.node.Node;
 
 /**
@@ -72,7 +72,7 @@ public final class DesktopApp implements AutoCloseable {
         thread.setDaemon(true);
         return thread;
     });
-    private final Map<PubKey, UserWorkspacePanel> workspaces = new ConcurrentHashMap<>();
+    private final Map<UserId, UserWorkspacePanel> workspaces = new ConcurrentHashMap<>();
 
     private final DefaultListModel<Node.UserStatus> userModel = new DefaultListModel<>();
     private final JList<Node.UserStatus> userList = new JList<>(userModel);
@@ -90,7 +90,7 @@ public final class DesktopApp implements AutoCloseable {
     private MenuItem trayOpen;
     private MenuItem trayQuit;
     private Timer refreshTimer;
-    private PubKey selectedUserId;
+    private UserId selectedUserId;
     private boolean refreshing;
 
     private final JTextField addName = Theme.textField(22);
@@ -545,7 +545,7 @@ public final class DesktopApp implements AutoCloseable {
         throw new IllegalArgumentException("Provide a credential file path or paste the credential text");
     }
 
-    private void openWorkspace(PubKey userId) {
+    private void openWorkspace(UserId userId) {
         Node.UserStatus user = null;
         for (int index = 0; index < userModel.size(); index++)
             if (userModel.get(index).userId().equals(userId))
@@ -604,7 +604,7 @@ public final class DesktopApp implements AutoCloseable {
     private void refresh() {
         if (closed.get())
             return;
-        PubKey keepSelection = selectedUserId;
+        UserId keepSelection = selectedUserId;
         List<Node.UserStatus> users = node.listUsers();
         refreshing = true;
         try {

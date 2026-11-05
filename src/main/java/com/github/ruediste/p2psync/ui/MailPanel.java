@@ -26,12 +26,15 @@ import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 
-import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
+import com.github.ruediste.p2psync.identity.UserId;
 import com.github.ruediste.p2psync.node.Node;
 import com.github.ruediste.p2psync.node.SyncUnitId;
 import com.github.ruediste.p2psync.proto.Sync;
 
-/** Email-client style mail view: folders, message list, reading and compose pane. */
+/**
+ * Email-client style mail view: folders, message list, reading and compose
+ * pane.
+ */
 final class MailPanel extends JPanel {
     private enum Folder {
         INBOX("Inbox"),
@@ -60,7 +63,7 @@ final class MailPanel extends JPanel {
     private final JTextField composeSubject = Theme.textField(26);
     private final JTextArea composeBody = Theme.textArea(12, 48);
     private final JPanel composeAttachments = Theme.column();
-    private final List<Sync.SyncUnitAttachment> attachments = new ArrayList<>();
+    private final List<Sync.SyncUnitAttachmentProto> attachments = new ArrayList<>();
 
     private Folder folder = Folder.INBOX;
     private boolean composing;
@@ -210,7 +213,7 @@ final class MailPanel extends JPanel {
         pendingSelectionId = null;
 
         var entries = node.getUserMessageLog(user.userId()).stream()
-                .filter(entry -> entry.message().getType() != Sync.UserMessage.Type.CHAT)
+                .filter(entry -> entry.message().getType() != Sync.UserMessageProto.Type.CHAT)
                 .filter(entry -> folder == Folder.INBOX ? !entry.outgoing() : entry.outgoing())
                 .sorted((left, right) -> {
                     int clockOrder = Long.compare(right.lamportClock(), left.lamportClock());
@@ -251,7 +254,7 @@ final class MailPanel extends JPanel {
         int inbox = 0;
         int sent = 0;
         for (var entry : node.getUserMessageLog(user.userId())) {
-            if (entry.message().getType() == Sync.UserMessage.Type.CHAT)
+            if (entry.message().getType() == Sync.UserMessageProto.Type.CHAT)
                 continue;
             if (entry.outgoing())
                 sent++;
@@ -291,8 +294,8 @@ final class MailPanel extends JPanel {
         subject.setAlignmentX(Component.LEFT_ALIGNMENT);
         header.add(subject);
         header.add(Box.createVerticalStrut(4));
-        JLabel meta = Theme.muted("From " + contactLabel(PubKey.from(message.getSenderUserId().toByteArray()))
-                + "  ·  To " + contactLabel(PubKey.from(message.getRecipientUserId().toByteArray()))
+        JLabel meta = Theme.muted("From " + contactLabel(UserId.fromBytes(message.getSenderUserId().toByteArray()))
+                + "  ·  To " + contactLabel(UserId.fromBytes(message.getRecipientUserId().toByteArray()))
                 + "  ·  " + typeLabel(message.getType())
                 + (row.entry().outgoing() ? "  ·  Sent" : ""));
         meta.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -315,7 +318,7 @@ final class MailPanel extends JPanel {
             body.add(Box.createVerticalStrut(8));
             body.add(Theme.attachmentList(message.getAttachmentsList(), status));
         }
-        if (message.getInvitedSyncUnitId().size() == 32) {
+        if (message.getInvitedSyncUnitId().size() == SyncUnitId.LENGTH) {
             body.add(Box.createVerticalStrut(10));
             body.add(InvitationAcceptance.build(node, user,
                     SyncUnitId.fromBytes(message.getInvitedSyncUnitId().toByteArray()), status, this::refresh));
@@ -327,7 +330,7 @@ final class MailPanel extends JPanel {
         JButton reply = Theme.secondaryButton("Reply");
         reply.setEnabled(!row.entry().outgoing());
         reply.addActionListener(event -> {
-            PubKey sender = PubKey.from(message.getSenderUserId().toByteArray());
+            UserId sender = UserId.fromBytes(message.getSenderUserId().toByteArray());
             String replySubject = message.getSubject().isBlank() ? "" : "Re: " + message.getSubject();
             showCompose(sender, replySubject, "");
         });
@@ -343,7 +346,7 @@ final class MailPanel extends JPanel {
         detail.repaint();
     }
 
-    private void showCompose(PubKey recipient, String subject, String body) {
+    private void showCompose(UserId recipient, String subject, String body) {
         composing = true;
         mailList.clearSelection();
         recipientPicker.setSelectedUserId(recipient);
@@ -416,7 +419,7 @@ final class MailPanel extends JPanel {
         if (paths.isEmpty())
             return;
         Background.run("attach files", () -> {
-            List<Sync.SyncUnitAttachment> loaded = new ArrayList<>();
+            List<Sync.SyncUnitAttachmentProto> loaded = new ArrayList<>();
             for (Path path : paths)
                 loaded.add(Theme.readAttachment(path));
             return loaded;
@@ -446,15 +449,15 @@ final class MailPanel extends JPanel {
     }
 
     private void send() {
-        PubKey recipient = recipientPicker.selectedUserId();
+        UserId recipient = recipientPicker.selectedUserId();
         if (recipient == null) {
             status.accept("Select a contact with a linked user ID, or link a user ID first");
             return;
         }
-        PubKey userId = user.userId();
+        UserId userId = user.userId();
         String subject = composeSubject.getText();
         String body = composeBody.getText();
-        List<Sync.SyncUnitAttachment> toSend = List.copyOf(attachments);
+        List<Sync.SyncUnitAttachmentProto> toSend = List.copyOf(attachments);
         Background.run("send mail", () -> node.getUser(userId).sendMailMessage(recipient, subject, body, toSend),
                 messageId -> {
                     composing = false;
@@ -470,11 +473,11 @@ final class MailPanel extends JPanel {
                 }, error -> status.accept("Could not send mail: " + error.getMessage()));
     }
 
-    private String contactLabel(PubKey key) {
+    private String contactLabel(UserId key) {
         return node.getUser(user.userId()).contactLabel(key);
     }
 
-    private static String typeLabel(Sync.UserMessage.Type type) {
+    private static String typeLabel(Sync.UserMessageProto.Type type) {
         return switch (type) {
             case MAIL -> "Mail";
             case SHARED_FOLDER_INVITATION -> "Folder invitation";
@@ -525,9 +528,9 @@ final class MailPanel extends JPanel {
         public Component getListCellRendererComponent(JList<? extends MailRow> list, MailRow value, int index,
                 boolean isSelected, boolean cellHasFocus) {
             var message = value.entry().message();
-            PubKey counterpart = value.entry().outgoing()
-                    ? PubKey.from(message.getRecipientUserId().toByteArray())
-                    : PubKey.from(message.getSenderUserId().toByteArray());
+            UserId counterpart = value.entry().outgoing()
+                    ? UserId.fromBytes(message.getRecipientUserId().toByteArray())
+                    : UserId.fromBytes(message.getSenderUserId().toByteArray());
             top.setText(contactLabel(counterpart) + "  ·  " + typeLabel(message.getType()));
             subject.setText(value.subject());
             preview.setText(value.preview());

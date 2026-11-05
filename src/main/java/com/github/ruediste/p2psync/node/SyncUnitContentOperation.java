@@ -6,10 +6,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
+import com.github.ruediste.p2psync.identity.NodeId;
 import com.github.ruediste.p2psync.libp2p.crypto.PrivKey;
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 
-public record SyncUnitContentOperation(SyncUnitId unitId, long lamportClock, byte[] nodeHash,
+public record SyncUnitContentOperation(SyncUnitId unitId, long lamportClock, NodeId nodeId,
         PubKey author, Kind kind, String key, byte[] payload, byte[] signature) {
     public enum Kind {
         SHARED_FILE_SET,
@@ -25,9 +26,7 @@ public record SyncUnitContentOperation(SyncUnitId unitId, long lamportClock, byt
         Objects.requireNonNull(unitId);
         if (lamportClock < 0)
             throw new IllegalArgumentException("Lamport clock must not be negative");
-        if (nodeHash == null || nodeHash.length != 32)
-            throw new IllegalArgumentException("Node hash must contain 32 bytes");
-        nodeHash = nodeHash.clone();
+        Objects.requireNonNull(nodeId);
         Objects.requireNonNull(author);
         Objects.requireNonNull(kind);
         if (key == null || key.isBlank())
@@ -36,11 +35,6 @@ public record SyncUnitContentOperation(SyncUnitId unitId, long lamportClock, byt
         payload = payload.clone();
         Objects.requireNonNull(signature);
         signature = signature.clone();
-    }
-
-    @Override
-    public byte[] nodeHash() {
-        return nodeHash.clone();
     }
 
     @Override
@@ -53,11 +47,11 @@ public record SyncUnitContentOperation(SyncUnitId unitId, long lamportClock, byt
         return signature.clone();
     }
 
-    public static SyncUnitContentOperation sign(SyncUnitId unitId, long lamportClock, byte[] nodeHash,
+    public static SyncUnitContentOperation sign(SyncUnitId unitId, long lamportClock, NodeId nodeId,
             PrivKey author, Kind kind, String key, byte[] payload) {
-        var unsigned = new SyncUnitContentOperation(unitId, lamportClock, nodeHash, author.publicKey(), kind,
+        var unsigned = new SyncUnitContentOperation(unitId, lamportClock, nodeId, author.publicKey(), kind,
                 key, payload, new byte[0]);
-        return new SyncUnitContentOperation(unitId, lamportClock, nodeHash, author.publicKey(), kind,
+        return new SyncUnitContentOperation(unitId, lamportClock, nodeId, author.publicKey(), kind,
                 key, payload, author.sign(unsigned.signingBytes()));
     }
 
@@ -75,7 +69,7 @@ public record SyncUnitContentOperation(SyncUnitId unitId, long lamportClock, byt
             var output = new DataOutputStream(bytes);
             output.write(unitId.bytes());
             output.writeLong(lamportClock);
-            output.write(nodeHash);
+            output.write(nodeId.bytes());
             writeBytes(output, author.bytes());
             output.writeInt(kind.ordinal());
             writeBytes(output, key.getBytes(StandardCharsets.UTF_8));

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import com.github.ruediste.p2psync.identity.UserId;
 import com.github.ruediste.p2psync.libp2p.crypto.keys.Ed25519PrivateKey;
 import com.github.ruediste.p2psync.proto.Sync;
 
@@ -55,7 +56,7 @@ class ContactsTest {
         assertEquals("updated", updated.notes());
 
         long updateOperations = handleA.data.localOperationTree.values().stream()
-                .filter(operation -> kind(operation) == Sync.UserOperation.Kind.CONTACT_UPDATE)
+                .filter(operation -> kind(operation) == Sync.UserOperationProto.Kind.CONTACT_UPDATE)
                 .count();
         assertTrue(updateOperations >= 3, "expected one operation per changed field");
 
@@ -69,16 +70,16 @@ class ContactsTest {
      */
     @Test
     void userIdsAreUniqueAndMustNotReferenceTheOwner() {
-        var key = Ed25519PrivateKey.generateKeyPair().publicKey();
-        handleA.createContact(key, "First", "", "", "", "");
+        var userId = UserId.fromPublicKey(Ed25519PrivateKey.generateKeyPair().publicKey());
+        handleA.createContact(userId, "First", "", "", "", "");
         assertThrows(IllegalArgumentException.class,
-                () -> handleA.createContact(key, "Second", "", "", "", ""));
+                () -> handleA.createContact(userId, "Second", "", "", "", ""));
         assertThrows(IllegalArgumentException.class,
                 () -> handleA.createContact(handleA.data.userId(), "Self", "", "", "", ""));
 
         var unlinked = handleA.createContact(null, "Unlinked", "", "", "", "");
         assertThrows(IllegalArgumentException.class,
-                () -> handleA.updateContact(unlinked.contactId(), key, "Unlinked", "", "", "", ""));
+                () -> handleA.updateContact(unlinked.contactId(), userId, "Unlinked", "", "", "", ""));
     }
 
     /**
@@ -98,10 +99,9 @@ class ContactsTest {
 
         assertTrue(handleA.truncateStableLog());
         assertTrue(handleA.data.operationTree.values().stream()
-                .noneMatch(operation -> kind(operation) == Sync.UserOperation.Kind.CONTACT_CREATE));
+                .noneMatch(operation -> kind(operation) == Sync.UserOperationProto.Kind.CONTACT_CREATE));
         assertEquals("Grace Hopper", handleA.listContacts().get(0).displayName());
     }
-
 
     /**
      * Verifies that the mutable root view used by {@code modify} also applies
@@ -126,9 +126,9 @@ class ContactsTest {
         assertTrue(handleA.listContacts().isEmpty());
     }
 
-
     /**
-     * Verifies replaying the same contact operations does not duplicate or otherwise
+     * Verifies replaying the same contact operations does not duplicate or
+     * otherwise
      * change the materialized list.
      */
     @Test
@@ -143,7 +143,8 @@ class ContactsTest {
     }
 
     /**
-     * Verifies concurrent assignments of the same user ID converge deterministically
+     * Verifies concurrent assignments of the same user ID converge
+     * deterministically
      * and leave exactly one linked contact.
      */
     @Test
@@ -153,9 +154,9 @@ class ContactsTest {
         var second = handleA.createContact(null, "Second", "", "", "", "");
         handleB.syncFrom(nodeA.peerId);
 
-        var key = Ed25519PrivateKey.generateKeyPair().publicKey();
-        handleA.updateContact(first.contactId(), key, "First", "", "", "", "");
-        handleB.updateContact(second.contactId(), key, "Second", "", "", "", "");
+        var userId = UserId.fromPublicKey(Ed25519PrivateKey.generateKeyPair().publicKey());
+        handleA.updateContact(first.contactId(), userId, "First", "", "", "", "");
+        handleB.updateContact(second.contactId(), userId, "Second", "", "", "", "");
 
         for (int round = 0; round < 3; round++) {
             handleA.syncFrom(nodeB.peerId);
@@ -192,9 +193,9 @@ class ContactsTest {
                 .map(Contact::contactId).toList();
     }
 
-    private static Sync.UserOperation.Kind kind(Node.Operation operation) {
+    private static Sync.UserOperationProto.Kind kind(Node.Operation operation) {
         try {
-            return Sync.UserOperation.parseFrom(operation.payload).getKind();
+            return Sync.UserOperationProto.parseFrom(operation.payload).getKind();
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
             throw new IllegalArgumentException(e);
         }

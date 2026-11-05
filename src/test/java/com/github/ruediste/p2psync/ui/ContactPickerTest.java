@@ -14,6 +14,7 @@ import javax.swing.SwingUtilities;
 
 import org.junit.jupiter.api.Test;
 
+import com.github.ruediste.p2psync.identity.UserId;
 import com.github.ruediste.p2psync.libp2p.crypto.keys.Ed25519PrivateKey;
 import com.github.ruediste.p2psync.node.Node;
 
@@ -44,7 +45,7 @@ class ContactPickerTest {
                 picker.setSelectedUserId(bob.data.userId());
                 assertEquals(bob.data.userId(), picker.selectedUserId());
 
-                picker.setSelectedUserId(Ed25519PrivateKey.generateKeyPair().publicKey());
+                picker.setSelectedUserId(UserId.fromPublicKey(Ed25519PrivateKey.generateKeyPair().publicKey()));
                 assertNull(picker.selectedUserId(), "unknown user must clear the stale selection");
 
                 picker.setSelectedUserId(carol.data.userId());

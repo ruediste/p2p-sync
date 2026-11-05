@@ -6,16 +6,18 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.LongSupplier;
 
+import com.github.ruediste.p2psync.identity.NodeId;
+
 final class ActiveNodeSet {
     enum Phase {
         A, B, I
     }
 
     static final class Version {
-        final String nodeId;
+        final NodeId nodeId;
         final long clock;
 
-        Version(String nodeId, long clock) {
+        Version(NodeId nodeId, long clock) {
             this.nodeId = nodeId;
             this.clock = clock;
         }
@@ -28,10 +30,10 @@ final class ActiveNodeSet {
     static final class LeavingProcess {
         Phase phase;
         String processId;
-        String leavingNodeId;
+        NodeId leavingNodeId;
         long lastOperationClock;
-        String lastOperationClockSourceNode;
-        final Set<String> confirmedBy = new TreeSet<>();
+        NodeId lastOperationClockSourceNode;
+        final Set<NodeId> confirmedBy = new TreeSet<>();
 
         LeavingProcess copy() {
             var result = new LeavingProcess();
@@ -47,8 +49,8 @@ final class ActiveNodeSet {
 
     Version version;
     LeavingProcess leavingProcess;
-    final Set<String> nodes = new TreeSet<>();
-    final Set<String> removedNodes = new TreeSet<>();
+    final Set<NodeId> nodes = new TreeSet<>();
+    final Set<NodeId> removedNodes = new TreeSet<>();
 
     ActiveNodeSet copy() {
         var result = new ActiveNodeSet();
@@ -59,12 +61,12 @@ final class ActiveNodeSet {
         return result;
     }
 
-    void setVersion(String nodeId, long clock) {
+    void setVersion(NodeId nodeId, long clock) {
         version = new Version(nodeId, clock);
     }
 
-    boolean mergeFrom(ActiveNodeSet other, String localNodeId, String senderNodeId, LongSupplier nextClock) {
-        if (senderNodeId == null || senderNodeId.isBlank())
+    boolean mergeFrom(ActiveNodeSet other, NodeId localNodeId, NodeId senderNodeId, LongSupplier nextClock) {
+        if (senderNodeId == null)
             return false;
         if (!nodes.contains(senderNodeId) && !other.nodes.contains(senderNodeId))
             return false;
@@ -117,7 +119,7 @@ final class ActiveNodeSet {
         LeavingProcess process = leavingProcess;
         boolean phaseB = process != null && process.phase == Phase.B;
         if (!phaseB) {
-            for (String node : other.nodes) {
+            for (NodeId node : other.nodes) {
                 if (!removedNodes.contains(node) && nodes.add(node))
                     changed = true;
             }
@@ -138,11 +140,9 @@ final class ActiveNodeSet {
         return changed;
     }
 
-    private static boolean isConsistentProcess(LeavingProcess process, Set<String> otherNodes) {
+    private static boolean isConsistentProcess(LeavingProcess process, Set<NodeId> otherNodes) {
         if (process.processId == null || process.processId.isBlank()
-                || process.leavingNodeId == null || process.leavingNodeId.isBlank()
-                || process.lastOperationClockSourceNode == null
-                || process.lastOperationClockSourceNode.isBlank())
+                || process.leavingNodeId == null || process.lastOperationClockSourceNode == null)
             return false;
         if (process.confirmedBy.contains(process.leavingNodeId))
             return false;
@@ -173,8 +173,8 @@ final class ActiveNodeSet {
                 && left.confirmedBy.equals(right.confirmedBy);
     }
 
-    boolean startLeaving(String leavingNodeId, String processId, Map<String, Long> maxOperationClock,
-            String localNodeId, LongSupplier nextClock) {
+    boolean startLeaving(NodeId leavingNodeId, String processId, Map<String, Long> maxOperationClock,
+            NodeId localNodeId, LongSupplier nextClock) {
         if (removedNodes.contains(leavingNodeId))
             return false;
         var existing = leavingProcess;
@@ -184,14 +184,14 @@ final class ActiveNodeSet {
         process.phase = Phase.A;
         process.processId = processId;
         process.leavingNodeId = leavingNodeId;
-        process.lastOperationClock = maxOperationClock.getOrDefault(leavingNodeId, 0L);
+        process.lastOperationClock = maxOperationClock.getOrDefault(leavingNodeId.hex(), 0L);
         process.lastOperationClockSourceNode = leavingNodeId;
         leavingProcess = process;
         setVersion(localNodeId, nextClock.getAsLong());
         return true;
     }
 
-    boolean updateLeaving(String localNodeId, Map<String, Long> maxOperationClock, LongSupplier nextClock) {
+    boolean updateLeaving(NodeId localNodeId, Map<String, Long> maxOperationClock, LongSupplier nextClock) {
         var process = leavingProcess;
         if (process == null)
             return false;
@@ -207,13 +207,13 @@ final class ActiveNodeSet {
 
         boolean changed = false;
         if (!nodes.contains(process.lastOperationClockSourceNode)) {
-            process.lastOperationClock = maxOperationClock.getOrDefault(process.leavingNodeId, 0L);
+            process.lastOperationClock = maxOperationClock.getOrDefault(process.leavingNodeId.hex(), 0L);
             process.lastOperationClockSourceNode = localNodeId;
             process.confirmedBy.clear();
             changed = true;
         }
 
-        long localClock = maxOperationClock.getOrDefault(process.leavingNodeId, 0L);
+        long localClock = maxOperationClock.getOrDefault(process.leavingNodeId.hex(), 0L);
         if (localClock < process.lastOperationClock) {
             if (changed)
                 setVersion(localNodeId, nextClock.getAsLong());

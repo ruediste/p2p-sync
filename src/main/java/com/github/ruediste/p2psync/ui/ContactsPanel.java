@@ -3,13 +3,11 @@ package com.github.ruediste.p2psync.ui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.util.HexFormat;
 import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -25,7 +23,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
+import com.github.ruediste.p2psync.identity.UserId;
 import com.github.ruediste.p2psync.node.Contact;
 import com.github.ruediste.p2psync.node.Node;
 import com.github.ruediste.p2psync.node.NodeUserHandle;
@@ -295,22 +293,22 @@ final class ContactsPanel extends JPanel {
         detail.repaint();
     }
 
-    private PubKey parseUserId() {
+    private UserId parseUserId() {
         String text = userId.getText().trim();
         if (text.isEmpty())
             return null;
-        return PubKey.from(HexFormat.of().parseHex(text));
+        return UserId.fromBytes(HexFormat.of().parseHex(text));
     }
 
     private void save(boolean existing) {
-        PubKey linked;
+        UserId linked;
         try {
             linked = parseUserId();
         } catch (RuntimeException error) {
             status.accept("Could not save contact: " + error.getMessage());
             return;
         }
-        PubKey userId = user.userId();
+        UserId userId = user.userId();
         String contactId = selectedContactId;
         String first = firstName.getText();
         String last = lastName.getText();
@@ -335,7 +333,7 @@ final class ContactsPanel extends JPanel {
     private void delete() {
         if (selectedContactId == null)
             return;
-        PubKey userId = user.userId();
+        UserId userId = user.userId();
         String contactId = selectedContactId;
         Background.run("delete contact", () -> node.getUser(userId).deleteContact(contactId), () -> {
             selectedContactId = null;

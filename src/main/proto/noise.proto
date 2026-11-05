@@ -4,7 +4,7 @@ syntax = "proto2";
 
 package com.github.ruediste.p2psync.proto;
 
-message Propose {
+message ProposeProto {
 	optional bytes rand = 1;
 	optional bytes pubkey = 2;
 	optional string exchanges = 3;
@@ -12,12 +12,12 @@ message Propose {
 	optional string hashes = 5;
 }
 
-message Exchange {
+message ExchangeProto {
 	optional bytes epubkey = 1;
 	optional bytes signature = 2;
 }
 
-message NoiseHandshakePayload {
+message NoiseHandshakePayloadProto {
 	optional bytes libp2p_key = 1;
 	optional bytes noise_static_key_signature = 2;
     optional bytes libp2p_data = 3;

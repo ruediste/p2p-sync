@@ -4,6 +4,9 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.ruediste.p2psync.libp2p.core.P2PInputStream;
 import com.github.ruediste.p2psync.libp2p.core.P2POutputStream;
 import com.github.ruediste.p2psync.libp2p.core.P2PStream;
@@ -15,6 +18,7 @@ import com.github.ruediste.p2psync.libp2p.multistream.ProtocolDescriptor;
  * Length-prefixed protobuf request/response transport for user synchronization.
  */
 final class UserSyncProtocol implements ProtocolBinding<UserSyncProtocol.Controller, Void> {
+    private static final Logger LOG = LoggerFactory.getLogger(UserSyncProtocol.class);
     static final String PROTOCOL = "/p2p-sync/user-sync/1.0.0";
     private static final int MAX_MESSAGE_SIZE = 128 * 1024 * 1024;
 
@@ -41,7 +45,8 @@ final class UserSyncProtocol implements ProtocolBinding<UserSyncProtocol.Control
                 byte[] request = readFrame(stream.getIn());
                 PeerId remotePeerId = stream.getRemotePeerId();
                 writeFrame(stream.getOut(), requestHandler.apply(remotePeerId, request));
-            } catch (RuntimeException ignored) {
+            } catch (RuntimeException e) {
+                LOG.warn("Remote user-sync request failed", e);
                 stream.close();
             }
         });

@@ -2,17 +2,17 @@ package com.github.ruediste.p2psync.node;
 
 import java.nio.ByteBuffer;
 
+import com.github.ruediste.p2psync.identity.NodeId;
 import com.github.ruediste.p2psync.storage.DataStorage;
 import com.github.ruediste.p2psync.util.FullGuid;
 import com.github.ruediste.p2psync.util.ShortGuid;
 
 /**
  * Per-SyncUnit, node-local translation between full entity ids
- * ({@code nodeHash[32] + counter[8]}) and the short GUIDs used by
+ * ({@code NodeId[32] + counter[8]}) and the short GUIDs used by
  * {@link com.github.ruediste.p2psync.storage.FileTree}.
  */
 final class GuidMapper {
-    private final DataStorage dataStorage;
     private final UnitRootStore unitRoots;
     private final SyncUnitId unitId;
     private final GuidTree forward;
@@ -22,7 +22,6 @@ final class GuidMapper {
     private boolean dirty;
 
     GuidMapper(DataStorage dataStorage, UnitRootStore unitRoots, SyncUnitId unitId, long nextNodeId) {
-        this.dataStorage = dataStorage;
         this.unitRoots = unitRoots;
         this.unitId = unitId;
         this.nextNodeId = nextNodeId;
@@ -33,9 +32,8 @@ final class GuidMapper {
     long nextNodeId() {
         if (!nextNodeIdComputed) {
             long max = -1;
-            for (byte[] hash : reverse.nodeHashes()) {
-                // The reverse tree uses the short node id as its key.
-                long id = ByteBuffer.wrap(hash).getLong(0);
+            for (byte[] key : reverse.shortNodeIds()) {
+                long id = ByteBuffer.wrap(key).getLong(0);
                 max = Math.max(max, id);
             }
             nextNodeId = Math.max(nextNodeId, max + 1);
@@ -45,21 +43,21 @@ final class GuidMapper {
     }
 
     ShortGuid toShort(FullGuid fullId) {
-        byte[] nodeHash = fullId.nodeHash();
+        NodeId nodeId = fullId.nodeId();
         long counter = fullId.counter();
-        long nodeId = forward.getNodeId(nodeHash);
-        if (nodeId < 0) {
+        long shortNodeId = forward.getNodeId(nodeId);
+        if (shortNodeId < 0) {
             long next = nextNodeId();
             if (next >= 0xFFFF_FFFFL)
                 throw new IllegalStateException("Short node-id space exhausted");
-            nodeId = next;
+            shortNodeId = next;
             nextNodeId = next + 1;
-            forward.put(nodeHash, nodeId);
-            reverse.putReverse(nodeId, nodeHash);
+            forward.put(nodeId, shortNodeId);
+            reverse.putReverse(shortNodeId, nodeId);
             dirty = true;
         }
         ShortGuid result = new ShortGuid();
-        result.nodeId = (int) nodeId;
+        result.shortNodeId = (int) shortNodeId;
         result.counter = counter;
         return result;
     }
@@ -69,10 +67,10 @@ final class GuidMapper {
     }
 
     FullGuid toFull(ShortGuid guid) {
-        byte[] nodeHash = reverse.getNodeHash(Integer.toUnsignedLong(guid.nodeId));
-        if (nodeHash == null)
+        NodeId nodeId = reverse.getNodeIdForShortId(Integer.toUnsignedLong(guid.shortNodeId));
+        if (nodeId == null)
             throw new IllegalStateException("Missing reverse GUID mapping");
-        return new FullGuid(nodeHash, guid.counter);
+        return new FullGuid(nodeId, guid.counter);
     }
 
     void flush() {
@@ -83,8 +81,8 @@ final class GuidMapper {
         dirty = false;
     }
 
-    static FullGuid fullId(byte[] nodeHash, long counter) {
-        return new FullGuid(nodeHash, counter);
+    static FullGuid fullId(NodeId nodeId, long counter) {
+        return new FullGuid(nodeId, counter);
     }
 
     static String hex(FullGuid fullId) {

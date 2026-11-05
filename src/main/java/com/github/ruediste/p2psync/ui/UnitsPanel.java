@@ -28,7 +28,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.AbstractTableModel;
 
-import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
+import com.github.ruediste.p2psync.identity.UserId;
 import com.github.ruediste.p2psync.node.Node;
 import com.github.ruediste.p2psync.node.SyncUnitAuthorization;
 import com.github.ruediste.p2psync.node.SyncUnitId;
@@ -90,7 +90,7 @@ final class UnitsPanel extends JPanel {
     private JButton createButton(String label, SyncUnitAuthorization.Type type) {
         JButton button = Theme.secondaryButton(label);
         button.addActionListener(event -> {
-            PubKey userId = user.userId();
+            UserId userId = user.userId();
             Background.run("create unit", () -> node.createSyncUnit(userId, type), id -> {
                 status.accept(Theme.unitType(type) + " created");
                 refresh();
@@ -299,7 +299,7 @@ final class UnitsPanel extends JPanel {
         labelRow.add(labelField);
         JButton saveLabel = Theme.secondaryButton("Save label");
         saveLabel.addActionListener(event -> {
-            PubKey userId = user.userId();
+            UserId userId = user.userId();
             String label = labelField.getText().trim();
             Background.run("save label", () -> node.setSharedFolderLabel(userId, unit.id(), label), () -> {
                 status.accept("Shared folder label saved");
@@ -360,7 +360,7 @@ final class UnitsPanel extends JPanel {
                 }
                 String path = sharedPath.getText().isBlank() ? file.getFileName().toString()
                         : sharedPath.getText().trim();
-                PubKey userId = user.userId();
+                UserId userId = user.userId();
                 Background.run("upload file", () -> {
                     node.putSharedFile(unit.id(), userId, path, Theme.readFileLimited(file));
                     return node.listSharedFileInfos(unit.id(), userId);
@@ -425,7 +425,7 @@ final class UnitsPanel extends JPanel {
             }
             if (target == null)
                 return;
-            PubKey userId = user.userId();
+            UserId userId = user.userId();
             Path destination = target;
             Background.run("download file", () -> {
                 Files.write(destination, node.readSharedFile(unit.id(), userId, path));
@@ -443,7 +443,7 @@ final class UnitsPanel extends JPanel {
                     return;
                 }
                 String path = model.paths.get(table.convertRowIndexToModel(row));
-                PubKey userId = user.userId();
+                UserId userId = user.userId();
                 Background.run("delete file", () -> {
                     node.deleteSharedFile(unit.id(), userId, path);
                     return node.listSharedFileInfos(unit.id(), userId);
@@ -496,7 +496,7 @@ final class UnitsPanel extends JPanel {
                 status.accept("Enter an item ID first");
                 return;
             }
-            PubKey userId = user.userId();
+            UserId userId = user.userId();
             String id = itemId.getText().trim();
             byte[] bytes = content.getText().getBytes(StandardCharsets.UTF_8);
             Background.run("save todo item", () -> {
@@ -512,7 +512,7 @@ final class UnitsPanel extends JPanel {
         delete.addActionListener(event -> {
             if (itemId.getText().isBlank())
                 return;
-            PubKey userId = user.userId();
+            UserId userId = user.userId();
             String id = itemId.getText().trim();
             Background.run("delete todo item", () -> {
                 node.deleteTodoItem(unit.id(), userId, id);
@@ -562,19 +562,19 @@ final class UnitsPanel extends JPanel {
         JButton inviteButton = Theme.secondaryButton("Invite");
         inviteButton.setEnabled(canManage);
         inviteButton.addActionListener(event -> {
-            PubKey key = invitee.selectedUserId();
+            UserId key = invitee.selectedUserId();
             if (key == null) {
                 status.accept("Select a contact with a linked user ID");
                 return;
             }
             SyncUnitAuthorization.Role role = (SyncUnitAuthorization.Role) roleBox.getSelectedItem();
-            PubKey userId = user.userId();
+            UserId userId = user.userId();
             Background.run("invite user", () -> {
                 node.inviteToSyncUnit(unit.id(), userId, key, role);
                 var messageType = switch (unit.type()) {
-                    case SHARED_FOLDER -> Sync.UserMessage.Type.SHARED_FOLDER_INVITATION;
-                    case TODO_LIST -> Sync.UserMessage.Type.TODO_LIST_INVITATION;
-                    case MESSAGE_CHANNEL -> Sync.UserMessage.Type.MESSAGE_CHANNEL_INVITATION;
+                    case SHARED_FOLDER -> Sync.UserMessageProto.Type.SHARED_FOLDER_INVITATION;
+                    case TODO_LIST -> Sync.UserMessageProto.Type.TODO_LIST_INVITATION;
+                    case MESSAGE_CHANNEL -> Sync.UserMessageProto.Type.MESSAGE_CHANNEL_INVITATION;
                     case USER -> null;
                 };
                 if (messageType != null)
@@ -616,7 +616,7 @@ final class UnitsPanel extends JPanel {
                 status.accept("Accept the invitation before changing its role");
                 return;
             }
-            PubKey userId = user.userId();
+            UserId userId = user.userId();
             SyncUnitAuthorization.Role role = (SyncUnitAuthorization.Role) changeBox.getSelectedItem();
             Background.run("change role", () -> {
                 node.changeSyncUnitRole(unit.id(), userId, member.userId(), role);
@@ -635,8 +635,8 @@ final class UnitsPanel extends JPanel {
                 status.accept("Select a member first");
                 return;
             }
-            PubKey userId = user.userId();
-            PubKey memberId = model.members.get(table.convertRowIndexToModel(row)).userId();
+            UserId userId = user.userId();
+            UserId memberId = model.members.get(table.convertRowIndexToModel(row)).userId();
             Background.run("remove member", () -> {
                 node.removeFromSyncUnit(unit.id(), userId, memberId);
                 return node.listSyncUnitMembers(unit.id());

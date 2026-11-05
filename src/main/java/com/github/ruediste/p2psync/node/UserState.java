@@ -1,6 +1,6 @@
 package com.github.ruediste.p2psync.node;
 
-import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
+import com.github.ruediste.p2psync.identity.UserId;
 import com.github.ruediste.p2psync.proto.Sync;
 import com.github.ruediste.p2psync.storage.DataStorage;
 import com.google.protobuf.ByteString;
@@ -15,23 +15,23 @@ final class UserState {
         this.contacts = contacts;
     }
 
-    static UserState empty(DataStorage storage, GuidMapper mapper, byte[] rootId, PubKey owner) {
+    static UserState empty(DataStorage storage, GuidMapper mapper, byte[] rootId, UserId owner) {
         return new UserState(UserFileTree.empty(storage, mapper, rootId), ContactList.empty(owner));
     }
 
     static byte[] rootIdFromState(byte[] state) {
         try {
-            var snapshot = Sync.UserSnapshot.parseFrom(state);
-            return Sync.UserTreeState.parseFrom(snapshot.getFileTreeState()).getRootId().toByteArray();
+            var snapshot = Sync.UserSnapshotProto.parseFrom(state);
+            return Sync.UserTreeStateProto.parseFrom(snapshot.getFileTreeState()).getRootId().toByteArray();
         } catch (InvalidProtocolBufferException e) {
             throw new IllegalArgumentException("Invalid user snapshot", e);
         }
     }
 
-    static UserState replayFromState(DataStorage storage, GuidMapper mapper, byte[] state, PubKey owner,
+    static UserState replayFromState(DataStorage storage, GuidMapper mapper, byte[] state, UserId owner,
             Iterable<Node.Operation> operations) {
         try {
-            var stored = Sync.UserSnapshot.parseFrom(state);
+            var stored = Sync.UserSnapshotProto.parseFrom(state);
             var operationsList = new java.util.ArrayList<Node.Operation>();
             for (var operation : operations)
                 operationsList.add(operation);
@@ -44,7 +44,7 @@ final class UserState {
             var contacts = ContactList.from(owner, stored.getContactsList());
             for (var operation : operationsList) {
                 try {
-                    contacts.apply(Sync.UserOperation.parseFrom(operation.payload));
+                    contacts.apply(Sync.UserOperationProto.parseFrom(operation.payload));
                 } catch (InvalidProtocolBufferException invalidOperation) {
                     throw new IllegalArgumentException("Invalid user operation payload", invalidOperation);
                 }
@@ -57,15 +57,15 @@ final class UserState {
 
     private static void applyOperation(UserFileTree fileSystem, Node.Operation operation) {
         try {
-            fileSystem.apply(Sync.UserOperation.parseFrom(operation.payload));
+            fileSystem.apply(Sync.UserOperationProto.parseFrom(operation.payload));
         } catch (InvalidProtocolBufferException e) {
             throw new IllegalArgumentException("Invalid user operation payload", e);
         }
     }
 
-    static byte[] transferableSnapshot(DataStorage storage, GuidMapper mapper, PubKey owner, byte[] state) {
+    static byte[] transferableSnapshot(DataStorage storage, GuidMapper mapper, UserId owner, byte[] state) {
         try {
-            var stored = Sync.UserSnapshot.parseFrom(state);
+            var stored = Sync.UserSnapshotProto.parseFrom(state);
             if (stored.getFileTreeRootOffset() == 0)
                 return state.clone();
             var base = UserFileTree.fromRoot(storage, mapper, stored.getFileTreeState().toByteArray(),
@@ -77,15 +77,15 @@ final class UserState {
     }
 
     static byte[] transferableSnapshot(ContactList contacts, UserFileTree tree) {
-        return Sync.UserSnapshot.newBuilder()
+        return Sync.UserSnapshotProto.newBuilder()
                 .setFileTreeState(ByteString.copyFrom(tree.serializeState()))
                 .addAllContacts(contacts.toProto())
                 .build().toByteArray();
     }
 
-    static byte[] materializeSnapshot(DataStorage storage, GuidMapper mapper, PubKey owner, byte[] state) {
+    static byte[] materializeSnapshot(DataStorage storage, GuidMapper mapper, UserId owner, byte[] state) {
         try {
-            var stored = Sync.UserSnapshot.parseFrom(state);
+            var stored = Sync.UserSnapshotProto.parseFrom(state);
             if (stored.getFileTreeRootOffset() != 0)
                 return state;
             var tree = UserFileTree.fromState(storage, mapper, stored.getFileTreeState().toByteArray());
@@ -100,35 +100,35 @@ final class UserState {
         if (state == null)
             return 0;
         try {
-            return Sync.UserSnapshot.parseFrom(state).getFileTreeRootOffset();
+            return Sync.UserSnapshotProto.parseFrom(state).getFileTreeRootOffset();
         } catch (InvalidProtocolBufferException e) {
             throw new IllegalArgumentException("Invalid user snapshot", e);
         }
     }
 
-    static ContactList contactsFromState(byte[] state, PubKey owner) {
+    static ContactList contactsFromState(byte[] state, UserId owner) {
         try {
-            var stored = Sync.UserSnapshot.parseFrom(state);
+            var stored = Sync.UserSnapshotProto.parseFrom(state);
             return ContactList.from(owner, stored.getContactsList());
         } catch (InvalidProtocolBufferException e) {
             throw new IllegalArgumentException("Invalid user snapshot", e);
         }
     }
 
-    static byte[] snapshotWithFileTree(Iterable<Sync.Contact> contacts, byte[] rootId, String status,
-            Iterable<Sync.UserTreeEntry> entries) {
-        var tree = Sync.UserTreeState.newBuilder()
+    static byte[] snapshotWithFileTree(Iterable<Sync.ContactProto> contacts, byte[] rootId, String status,
+            Iterable<Sync.UserTreeEntryProto> entries) {
+        var tree = Sync.UserTreeStateProto.newBuilder()
                 .setRootId(ByteString.copyFrom(rootId))
                 .setStatusMessage(status)
                 .addAllEntries(entries);
-        return Sync.UserSnapshot.newBuilder()
+        return Sync.UserSnapshotProto.newBuilder()
                 .setFileTreeState(ByteString.copyFrom(tree.build().toByteArray()))
                 .addAllContacts(contacts)
                 .build().toByteArray();
     }
 
     byte[] serializeState() {
-        return Sync.UserSnapshot.newBuilder()
+        return Sync.UserSnapshotProto.newBuilder()
                 .setFileTreeState(ByteString.copyFrom(fileSystem.serializeShallowState()))
                 .setFileTreeRootOffset(fileSystem.rootOffset())
                 .addAllContacts(contacts.toProto())

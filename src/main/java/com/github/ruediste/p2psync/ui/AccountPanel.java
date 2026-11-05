@@ -17,10 +17,13 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
-import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
+import com.github.ruediste.p2psync.identity.UserId;
 import com.github.ruediste.p2psync.node.Node;
 
-/** Account and node settings, rendered inline; file selection uses the platform chooser. */
+/**
+ * Account and node settings, rendered inline; file selection uses the platform
+ * chooser.
+ */
 final class AccountPanel extends JPanel {
     private final Node node;
     private final Path mountPoint;
@@ -190,7 +193,7 @@ final class AccountPanel extends JPanel {
     }
 
     private void rename() {
-        PubKey userId = user.userId();
+        UserId userId = user.userId();
         String newName = nameField.getText().trim();
         Background.run("rename user", () -> node.renameUser(userId, newName), () -> {
             status.accept("User renamed");
@@ -224,7 +227,7 @@ final class AccountPanel extends JPanel {
             status.accept("Could not export credential: " + error.getMessage());
             return;
         }
-        PubKey userId = user.userId();
+        UserId userId = user.userId();
         Runnable clearPassword = () -> {
             Arrays.fill(password, '\0');
             exportPassword.setText("");
@@ -243,7 +246,7 @@ final class AccountPanel extends JPanel {
 
     private void copyCredential() {
         char[] password = exportPassword.getPassword();
-        PubKey userId = user.userId();
+        UserId userId = user.userId();
         Runnable clearPassword = () -> {
             Arrays.fill(password, '\0');
             exportPassword.setText("");

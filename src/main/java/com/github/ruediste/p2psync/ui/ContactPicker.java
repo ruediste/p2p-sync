@@ -24,12 +24,12 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.plaf.basic.BasicComboBoxEditor;
 
-import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
+import com.github.ruediste.p2psync.identity.UserId;
 import com.github.ruediste.p2psync.node.Contact;
 import com.github.ruediste.p2psync.node.Node;
 
 final class ContactPicker extends JPanel {
-    private record Option(String label, PubKey userId) {
+    private record Option(String label, UserId userId) {
         @Override
         public String toString() {
             return label;
@@ -41,7 +41,7 @@ final class ContactPicker extends JPanel {
     private Node.UserStatus user;
     private final JTextField search = Theme.textField(20);
     private final JComboBox<Option> matches = new JComboBox<>();
-    private PubKey selectedUserId;
+    private UserId selectedUserId;
     private boolean updating;
 
     ContactPicker(Node node, Node.UserStatus user, Consumer<String> status) {
@@ -115,11 +115,11 @@ final class ContactPicker extends JPanel {
         rebuild();
     }
 
-    PubKey selectedUserId() {
+    UserId selectedUserId() {
         return selectedUserId;
     }
 
-    void setSelectedUserId(PubKey userId) {
+    void setSelectedUserId(UserId userId) {
         if (userId == null) {
             clearSelection();
             return;
@@ -208,7 +208,7 @@ final class ContactPicker extends JPanel {
         return result;
     }
 
-    private static Option findOption(List<Option> options, PubKey userId) {
+    private static Option findOption(List<Option> options, UserId userId) {
         for (Option option : options) {
             if (userId.equals(option.userId()))
                 return option;

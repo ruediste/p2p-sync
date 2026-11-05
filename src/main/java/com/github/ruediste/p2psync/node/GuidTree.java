@@ -4,14 +4,15 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.ruediste.p2psync.identity.NodeId;
 import com.github.ruediste.p2psync.storage.BTree;
 import com.github.ruediste.p2psync.storage.DataStorage;
 import com.github.ruediste.p2psync.storage.DataStorage.Area;
 
 /**
  * Per-SyncUnit, node-local short-GUID mapping. Both the forward tree
- * (full node hash -> short node id) and the reverse tree (short node id ->
- * full node hash) use this type; keys and values are fixed 32-byte binary
+ * (NodeId -> short node id) and the reverse tree (short node id -> NodeId)
+ * use this type; keys and values are fixed 32-byte binary
  * values.
  */
 final class GuidTree {
@@ -35,51 +36,37 @@ final class GuidTree {
         return tree.rootOffset;
     }
 
-    long getNodeId(byte[] nodeHash) {
-        byte[] value = tree.get(padHash(nodeHash));
+    long getNodeId(NodeId nodeId) {
+        byte[] value = tree.get(nodeId.bytes());
         if (value == null)
             return -1;
         return ByteBuffer.wrap(value).getLong(0);
     }
 
-    byte[] getNodeHash(long nodeId) {
+    NodeId getNodeIdForShortId(long nodeId) {
         byte[] key = nodeIdKey(nodeId);
-        return tree.get(key);
+        byte[] value = tree.get(key);
+        return value == null ? null : NodeId.fromBytes(value);
     }
 
-    void put(byte[] nodeHash, long nodeId) {
-        tree.put(padHash(nodeHash), nodeIdValue(nodeId));
+    void put(NodeId nodeId, long shortNodeId) {
+        tree.put(nodeId.bytes(), nodeIdValue(shortNodeId));
     }
 
-    void putReverse(long nodeId, byte[] nodeHash) {
-        if (nodeHash.length != 32)
-            throw new IllegalArgumentException("Node hash must contain 32 bytes");
-        tree.put(nodeIdKey(nodeId), nodeHash.clone());
+    void putReverse(long shortNodeId, NodeId nodeId) {
+        tree.put(nodeIdKey(shortNodeId), nodeId.bytes());
     }
 
-    void remove(byte[] nodeHash, long nodeId) {
-        tree.remove(padHash(nodeHash));
-        tree.remove(nodeIdKey(nodeId));
+    void remove(NodeId nodeId, long shortNodeId) {
+        tree.remove(nodeId.bytes());
+        tree.remove(nodeIdKey(shortNodeId));
     }
 
-    List<byte[]> nodeHashes() {
+    List<byte[]> shortNodeIds() {
         var result = new ArrayList<byte[]>();
         for (var entry : tree)
             result.add(entry.key);
         return result;
-    }
-
-    List<byte[]> reverseHashes() {
-        var result = new ArrayList<byte[]>();
-        for (var entry : tree)
-            result.add(entry.value);
-        return result;
-    }
-
-    private static byte[] padHash(byte[] nodeHash) {
-        if (nodeHash.length != 32)
-            throw new IllegalArgumentException("Node hash must contain 32 bytes");
-        return nodeHash.clone();
     }
 
     private static byte[] nodeIdKey(long nodeId) {

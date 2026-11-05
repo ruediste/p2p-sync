@@ -173,6 +173,7 @@
     "eval": false,
     "Invoke-Expression": false,
     "iex": false,
-    "javap": true
+    "javap": true,
+    "set": true
   }
 }

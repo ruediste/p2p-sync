@@ -30,7 +30,7 @@ import com.github.ruediste.p2psync.libp2p.security.CantDecryptInboundException;
 import com.github.ruediste.p2psync.libp2p.security.CryptoUtils;
 import com.github.ruediste.p2psync.libp2p.security.InvalidRemotePubKeyException;
 import com.github.ruediste.p2psync.libp2p.security.MalformedNoiseHandshakeException;
-import com.github.ruediste.p2psync.proto.Noise.NoiseHandshakePayload;
+import com.github.ruediste.p2psync.proto.Noise.NoiseHandshakePayloadProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -61,7 +61,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
  * <li>chaChaPoly nonce = 12 bytes: four zero bytes followed by the 8-byte
  * little-endian counter;</li>
  * <li>handshake payload =
- * {@code com.github.ruediste.p2psync.proto.libp2p.noise.NoiseHandshakePayload}
+ * {@code com.github.ruediste.p2psync.proto.libp2p.noise.NoiseHandshakePayloadProto}
  * with the
  * libp2p identity public key and a signature of
  * {@code "noise-libp2p-static-key:" || noiseStaticPubKey} made by the identity
@@ -187,7 +187,7 @@ public final class NoiseXXHandshake {
         byte[] identityPublicKey = localIdentityKey.publicKey().toProto().toByteArray();
         byte[] phrase = noiseSignaturePhrase(processStaticPublic);
         byte[] signature = localIdentityKey.sign(phrase);
-        return NoiseHandshakePayload.newBuilder()
+        return NoiseHandshakePayloadProto.newBuilder()
                 .setLibp2PKey(ByteString.copyFrom(identityPublicKey))
                 .setNoiseStaticKeySignature(ByteString.copyFrom(signature))
                 .build()
@@ -198,9 +198,9 @@ public final class NoiseXXHandshake {
         if (remoteStaticPublicKey == null) {
             throw new InvalidRemotePubKeyException("Remote did not send a Noise static key during the handshake");
         }
-        NoiseHandshakePayload proto;
+        NoiseHandshakePayloadProto proto;
         try {
-            proto = NoiseHandshakePayload.parseFrom(payload);
+            proto = NoiseHandshakePayloadProto.parseFrom(payload);
         } catch (InvalidProtocolBufferException e) {
             throw new InvalidRemotePubKeyException("Malformed Noise handshake payload", e);
         }

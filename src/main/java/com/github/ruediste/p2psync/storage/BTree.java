@@ -626,7 +626,9 @@ public class BTree<K, V> implements Iterable<BTree.Entry<K, V>> {
             block = readBlock(offset);
         }
 
-        return new BTreeIterator(new Position(path, parseLeaf(block, keySize), 0));
+        List<SerializedEntry> entries = parseLeaf(block, keySize);
+        return entries.isEmpty() ? Collections.emptyIterator()
+                : new BTreeIterator(new Position(path, entries, 0));
     }
 
     /**

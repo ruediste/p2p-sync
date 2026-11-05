@@ -3,6 +3,7 @@ package com.github.ruediste.p2psync.node;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import com.github.ruediste.p2psync.storage.BTree;
@@ -90,6 +91,7 @@ final class OperationTree {
             return new OperationValue(payloadLength, signature, firstPayloadBlock, null);
         }
 
+        // todo: remove legacy support
         static OperationValue legacy(int payloadLength, byte[] signature, long[] payloadBlocks) {
             return new OperationValue(payloadLength, signature, 0, payloadBlocks);
         }
@@ -201,7 +203,9 @@ final class OperationTree {
                 writeChain(operation.payload)));
     }
 
-    /** Writes the payload into a linked list of DATA blocks and returns its head. */
+    /**
+     * Writes the payload into a linked list of DATA blocks and returns its head.
+     */
     private long writeChain(byte[] payload) {
         int chunkSize = dataStorage.blockSize(Area.DATA) - Long.BYTES - Integer.BYTES;
         if (chunkSize <= 0)
@@ -224,17 +228,42 @@ final class OperationTree {
         return value == null ? null : toOperation(id, value);
     }
 
+    Node.OperationId nextIdAfter(Node.OperationId id) {
+        var entries = id == null ? tree.iterator() : tree.floorOrLowestIterator(key(id));
+        while (entries.hasNext()) {
+            var candidate = id(entries.next().key);
+            if (id == null || candidate.compareTo(id) > 0)
+                return candidate;
+        }
+        return null;
+    }
+
+    Node.OperationId lastId() {
+        Node.OperationId result = null;
+        for (var entry : tree)
+            result = id(entry.key);
+        return result;
+    }
+
     boolean remove(Node.OperationId id) {
         return tree.remove(key(id));
     }
 
-    List<Node.Operation> values() {
-        var result = new ArrayList<Node.Operation>();
-        for (var entry : tree) {
-            Node.OperationId id = id(entry.key);
-            result.add(toOperation(id, entry.value));
-        }
-        return result;
+    Iterable<Node.Operation> operations() {
+        return () -> new Iterator<>() {
+            private final Iterator<BTree.Entry<byte[], OperationValue>> entries = tree.iterator();
+
+            @Override
+            public boolean hasNext() {
+                return entries.hasNext();
+            }
+
+            @Override
+            public Node.Operation next() {
+                var entry = entries.next();
+                return toOperation(id(entry.key), entry.value);
+            }
+        };
     }
 
     private Node.Operation toOperation(Node.OperationId id, OperationValue value) {
@@ -286,7 +315,7 @@ final class OperationTree {
     private static byte[] key(Node.OperationId id) {
         return ByteBuffer.allocate(KEY_SIZE)
                 .putLong(id.clock)
-                .put(id.nodeHash)
+                .put(id.nodeId.bytes())
                 .array();
     }
 
@@ -295,8 +324,8 @@ final class OperationTree {
             throw new IllegalArgumentException("Invalid operation key length");
         var buffer = ByteBuffer.wrap(key);
         long clock = buffer.getLong();
-        byte[] nodeHash = new byte[32];
-        buffer.get(nodeHash);
-        return new Node.OperationId(clock, nodeHash);
+        byte[] nodeId = new byte[32];
+        buffer.get(nodeId);
+        return new Node.OperationId(clock, com.github.ruediste.p2psync.identity.NodeId.fromBytes(nodeId));
     }
 }

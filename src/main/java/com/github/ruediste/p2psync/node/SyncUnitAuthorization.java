@@ -3,14 +3,13 @@ package com.github.ruediste.p2psync.node;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.github.ruediste.p2psync.identity.NodeId;
+import com.github.ruediste.p2psync.identity.UserId;
 import com.github.ruediste.p2psync.libp2p.crypto.PrivKey;
 import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
 
@@ -41,15 +40,13 @@ public final class SyncUnitAuthorization {
         REMOVE_MEMBER
     }
 
-    public record Operation(SyncUnitId unitId, long lamportClock, byte[] nodeHash, PubKey author, Action action,
-            PubKey subject, Role role, byte[] signature) {
+    public record Operation(SyncUnitId unitId, long lamportClock, NodeId nodeId, PubKey author, Action action,
+            UserId subject, Role role, byte[] signature) {
         public Operation {
             Objects.requireNonNull(unitId);
             if (lamportClock < 0)
                 throw new IllegalArgumentException("Lamport clock must not be negative");
-            if (nodeHash == null || nodeHash.length != 32)
-                throw new IllegalArgumentException("Node hash must contain 32 bytes");
-            nodeHash = nodeHash.clone();
+            Objects.requireNonNull(nodeId);
             Objects.requireNonNull(author);
             Objects.requireNonNull(action);
             Objects.requireNonNull(signature);
@@ -57,20 +54,15 @@ public final class SyncUnitAuthorization {
         }
 
         @Override
-        public byte[] nodeHash() {
-            return nodeHash.clone();
-        }
-
-        @Override
         public byte[] signature() {
             return signature.clone();
         }
 
-        public static Operation sign(SyncUnitId unitId, long lamportClock, byte[] nodeHash, PrivKey author,
-                Action action, PubKey subject, Role role) {
-            var unsigned = new Operation(unitId, lamportClock, nodeHash, author.publicKey(), action,
+        public static Operation sign(SyncUnitId unitId, long lamportClock, NodeId nodeId, PrivKey author,
+                Action action, UserId subject, Role role) {
+            var unsigned = new Operation(unitId, lamportClock, nodeId, author.publicKey(), action,
                     subject, role, new byte[0]);
-            return new Operation(unitId, lamportClock, nodeHash, author.publicKey(), action, subject, role,
+            return new Operation(unitId, lamportClock, nodeId, author.publicKey(), action, subject, role,
                     author.sign(unsigned.signingBytes()));
         }
 
@@ -88,7 +80,7 @@ public final class SyncUnitAuthorization {
                 var output = new DataOutputStream(bytes);
                 output.write(unitId.bytes());
                 output.writeLong(lamportClock);
-                output.write(nodeHash);
+                output.write(nodeId.bytes());
                 writeBytes(output, author.bytes());
                 output.writeInt(action.ordinal());
                 output.writeBoolean(subject != null);
@@ -115,20 +107,18 @@ public final class SyncUnitAuthorization {
         }
     }
 
-    public record State(Map<PubKey, Role> members, Map<PubKey, Role> pendingInvitations,
-            List<Operation> acceptedOperations, List<Operation> rejectedOperations) {
+    public record State(Map<UserId, Role> members, Map<UserId, Role> pendingInvitations,
+            int acceptedOperationCount, int rejectedOperationCount, boolean lastOperationAccepted) {
         public State {
             members = Map.copyOf(members);
             pendingInvitations = Map.copyOf(pendingInvitations);
-            acceptedOperations = List.copyOf(acceptedOperations);
-            rejectedOperations = List.copyOf(rejectedOperations);
         }
     }
 
     private SyncUnitAuthorization() {
     }
 
-    public static boolean isAuthorized(Type type, PubKey creator, Map<PubKey, Role> members,
+    public static boolean isAuthorized(Type type, UserId creator, Map<UserId, Role> members,
             PubKey author, Action action) {
         Objects.requireNonNull(type);
         Objects.requireNonNull(creator);
@@ -136,10 +126,11 @@ public final class SyncUnitAuthorization {
         Objects.requireNonNull(author);
         Objects.requireNonNull(action);
 
+        UserId authorId = UserId.fromPublicKey(author);
         if (type == Type.USER)
-            return creator.equals(author) && (action == Action.VIEW || action == Action.MODIFY);
+            return creator.equals(authorId) && (action == Action.VIEW || action == Action.MODIFY);
 
-        Role role = members.get(author);
+        Role role = members.get(authorId);
         if (role == null)
             return false;
 
@@ -160,62 +151,108 @@ public final class SyncUnitAuthorization {
     }
 
     /** Replays authenticated operations in deterministic unit order. */
-    public static State replay(SyncUnitId unitId, Type type, PubKey creator, Iterable<Operation> operations) {
+    public static State replay(SyncUnitId unitId, Type type, UserId creator, Iterable<Operation> operations) {
+        return replay(unitId, type, creator, operations, false);
+    }
+
+    /** Replays an already ordered storage cursor in one pass. */
+    static State replayOrdered(SyncUnitId unitId, Type type, UserId creator, Iterable<Operation> operations) {
+        return replay(unitId, type, creator, operations, true);
+    }
+
+    private static State replay(SyncUnitId unitId, Type type, UserId creator, Iterable<Operation> operations,
+            boolean ordered) {
         Objects.requireNonNull(unitId);
         Objects.requireNonNull(type);
-        Objects.requireNonNull(creator);
-        var uniqueOperations = new LinkedHashMap<String, Operation>();
-        for (var operation : operations) {
-            if (!operation.unitId().equals(unitId))
-                continue;
-            String id = operation.lamportClock() + ":" + HexFormat.of().formatHex(operation.nodeHash());
-            var previous = uniqueOperations.putIfAbsent(id, operation);
-            if (previous != null && !sameOperation(previous, operation))
-                throw new IllegalArgumentException("Conflicting authorization operations share an ID");
+        var replay = new Replay(unitId, type, creator);
+        Operation previous = null;
+        var orderedIterator = ordered ? operations.iterator() : null;
+        while (true) {
+            Operation operation = null;
+            if (ordered) {
+                while (orderedIterator.hasNext()) {
+                    var candidate = orderedIterator.next();
+                    if (candidate.unitId().equals(unitId)) {
+                        operation = candidate;
+                        break;
+                    }
+                }
+            } else {
+                for (var candidate : operations) {
+                    if (!candidate.unitId().equals(unitId)
+                            || previous != null && compare(candidate, previous) <= 0)
+                        continue;
+                    if (operation == null || compare(candidate, operation) < 0) {
+                        operation = candidate;
+                    } else if (compare(candidate, operation) == 0 && !sameOperation(operation, candidate)) {
+                        throw new IllegalArgumentException("Conflicting authorization operations share an ID");
+                    }
+                }
+            }
+            if (operation == null)
+                break;
+            if (!ordered)
+                previous = operation;
+            replay.apply(operation);
+        }
+        return replay.state();
+    }
+
+    static Replay newReplay(SyncUnitId unitId, Type type, UserId creator) {
+        return new Replay(unitId, type, creator);
+    }
+
+    static final class Replay {
+        private final SyncUnitId unitId;
+        private final Type type;
+        private final UserId creator;
+        private final LinkedHashMap<UserId, Role> members = new LinkedHashMap<>();
+        private final LinkedHashMap<UserId, Role> pending = new LinkedHashMap<>();
+        private int acceptedCount;
+        private int rejectedCount;
+        private boolean lastAccepted = true;
+
+        Replay(SyncUnitId unitId, Type type, UserId creator) {
+            this.unitId = Objects.requireNonNull(unitId);
+            this.type = Objects.requireNonNull(type);
+            this.creator = Objects.requireNonNull(creator);
+            members.put(creator, initialRole(type));
         }
 
-        var ordered = new ArrayList<>(uniqueOperations.values());
-        ordered.sort((left, right) -> {
-            int clockOrder = Long.compare(left.lamportClock(), right.lamportClock());
-            return clockOrder != 0 ? clockOrder : Arrays.compareUnsigned(left.nodeHash(), right.nodeHash());
-        });
-
-        var members = new LinkedHashMap<PubKey, Role>();
-        members.put(creator, initialRole(type));
-        var pending = new LinkedHashMap<PubKey, Role>();
-        var accepted = new ArrayList<Operation>();
-        var rejected = new ArrayList<Operation>();
-
-        for (var operation : ordered) {
-            PubKey subject = operation.subject();
+        boolean apply(Operation operation) {
+            if (!operation.unitId().equals(unitId))
+                return true;
+            UserId subject = operation.subject();
             if (!operation.hasValidSignature()) {
-                rejected.add(operation);
-                continue;
+                reject();
+                return false;
             }
             boolean authorized = switch (operation.action()) {
-                case INVITE -> isAuthorized(type, creator, members, operation.author(), Action.INVITE)
-                        && subject != null && operation.role() != null
-                        && isAssignableRole(type, operation.role())
-                        && !members.containsKey(subject) && !pending.containsKey(subject);
-                case ACCEPT_INVITATION -> subject != null && subject.equals(operation.author())
+                case INVITE ->
+                    SyncUnitAuthorization.isAuthorized(type, creator, members, operation.author(), Action.INVITE)
+                            && subject != null && operation.role() != null
+                            && isAssignableRole(type, operation.role())
+                            && !members.containsKey(subject) && !pending.containsKey(subject);
+                case ACCEPT_INVITATION -> subject != null && subject.equals(UserId.fromPublicKey(operation.author()))
                         && pending.containsKey(subject);
-                case CHANGE_ROLE -> isAuthorized(type, creator, members, operation.author(), Action.CHANGE_ROLE)
-                        && subject != null && operation.role() != null && members.containsKey(subject)
-                        && (type == Type.MESSAGE_CHANNEL || !subject.equals(creator))
-                        && isAssignableRole(type, operation.role())
-                        && !wouldRemoveLastManager(type, members, subject, operation.role());
-                case REMOVE_MEMBER -> isAuthorized(type, creator, members, operation.author(), Action.REMOVE_MEMBER)
-                        && subject != null && members.containsKey(subject)
-                        && (type == Type.MESSAGE_CHANNEL || !subject.equals(creator))
-                        && !wouldRemoveLastManager(type, members, subject, null);
-                default -> isAuthorized(type, creator, members, operation.author(), operation.action());
+                case CHANGE_ROLE ->
+                    SyncUnitAuthorization.isAuthorized(type, creator, members, operation.author(), Action.CHANGE_ROLE)
+                            && subject != null && operation.role() != null && members.containsKey(subject)
+                            && (type == Type.MESSAGE_CHANNEL || !subject.equals(creator))
+                            && isAssignableRole(type, operation.role())
+                            && !wouldRemoveLastManager(type, members, subject, operation.role());
+                case REMOVE_MEMBER ->
+                    SyncUnitAuthorization.isAuthorized(type, creator, members, operation.author(), Action.REMOVE_MEMBER)
+                            && subject != null && members.containsKey(subject)
+                            && (type == Type.MESSAGE_CHANNEL || !subject.equals(creator))
+                            && !wouldRemoveLastManager(type, members, subject, null);
+                default -> SyncUnitAuthorization.isAuthorized(type, creator, members, operation.author(),
+                        operation.action());
             };
-
             if (!authorized) {
-                rejected.add(operation);
-                continue;
+                reject();
+                return false;
             }
-
             switch (operation.action()) {
                 case INVITE -> pending.put(subject, operation.role());
                 case ACCEPT_INVITATION -> members.put(subject, pending.remove(subject));
@@ -227,10 +264,28 @@ public final class SyncUnitAuthorization {
                 default -> {
                 }
             }
-            accepted.add(operation);
+            acceptedCount++;
+            lastAccepted = true;
+            return true;
         }
 
-        return new State(members, pending, accepted, rejected);
+        private void reject() {
+            rejectedCount++;
+            lastAccepted = false;
+        }
+
+        boolean isAuthorized(PubKey author, Action action) {
+            return SyncUnitAuthorization.isAuthorized(type, creator, members, author, action);
+        }
+
+        State state() {
+            return new State(members, pending, acceptedCount, rejectedCount, lastAccepted);
+        }
+    }
+
+    private static int compare(Operation left, Operation right) {
+        int clockOrder = Long.compare(left.lamportClock(), right.lamportClock());
+        return clockOrder != 0 ? clockOrder : left.nodeId().compareTo(right.nodeId());
     }
 
     private static Role initialRole(Type type) {
@@ -249,7 +304,7 @@ public final class SyncUnitAuthorization {
         };
     }
 
-    private static boolean wouldRemoveLastManager(Type type, Map<PubKey, Role> members, PubKey subject,
+    private static boolean wouldRemoveLastManager(Type type, Map<UserId, Role> members, UserId subject,
             Role replacementRole) {
         if (type != Type.MESSAGE_CHANNEL || members.get(subject) != Role.MANAGER
                 || replacementRole == Role.MANAGER)
@@ -263,7 +318,7 @@ public final class SyncUnitAuthorization {
                 && left.role() == right.role() && Arrays.equals(left.signature(), right.signature());
     }
 
-    public static void requireAuthorized(Type type, PubKey creator, Map<PubKey, Role> members,
+    public static void requireAuthorized(Type type, UserId creator, Map<UserId, Role> members,
             PubKey author, Action action) {
         if (!isAuthorized(type, creator, members, author, action))
             throw new NotAuthorizedException("User is not authorized to " + action + " this " + type);

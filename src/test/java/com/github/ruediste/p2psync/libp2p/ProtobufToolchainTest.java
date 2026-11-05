@@ -20,14 +20,14 @@ public class ProtobufToolchainTest {
     @Test
     public void cryptoPublicKeyRoundTrips() throws Exception {
         byte[] rawKey = { 1, 2, 3, 4, 5 };
-        Libp2P.PublicKey proto = Libp2P.PublicKey.newBuilder()
+        Libp2P.PublicKeyProto proto = Libp2P.PublicKeyProto.newBuilder()
                 .setType(Libp2P.KeyType.Ed25519)
                 .setData(ByteString.copyFrom(rawKey))
                 .build();
 
         byte[] marshaled = proto.toByteArray();
 
-        Libp2P.PublicKey parsed = Libp2P.PublicKey.parseFrom(marshaled);
+        Libp2P.PublicKeyProto parsed = Libp2P.PublicKeyProto.parseFrom(marshaled);
         assertEquals(Libp2P.KeyType.Ed25519, parsed.getType());
         assertArrayEquals(rawKey, parsed.getData().toByteArray());
     }
@@ -36,12 +36,12 @@ public class ProtobufToolchainTest {
     public void spipeNoiseHandshakePayloadRoundTrips() throws Exception {
         byte[] libp2pKey = { 9, 9, 9 };
         byte[] signature = { 7, 7 };
-        Noise.NoiseHandshakePayload proto = Noise.NoiseHandshakePayload.newBuilder()
+        Noise.NoiseHandshakePayloadProto proto = Noise.NoiseHandshakePayloadProto.newBuilder()
                 .setLibp2PKey(ByteString.copyFrom(libp2pKey))
                 .setNoiseStaticKeySignature(ByteString.copyFrom(signature))
                 .build();
 
-        Noise.NoiseHandshakePayload parsed = Noise.NoiseHandshakePayload.parseFrom(proto.toByteArray());
+        Noise.NoiseHandshakePayloadProto parsed = Noise.NoiseHandshakePayloadProto.parseFrom(proto.toByteArray());
         assertArrayEquals(libp2pKey, parsed.getLibp2PKey().toByteArray());
         assertArrayEquals(signature, parsed.getNoiseStaticKeySignature().toByteArray());
     }

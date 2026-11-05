@@ -18,6 +18,11 @@ The relays introduce significant latency between one node writing data and anoth
 
 A note on terminology: the relay never establishes a connection. Both patterns are store-and-forward, and nodes do not have to be online at the same time. Anything that looks like a "connection" is a protocol layered on top of polled blobs, and its round-trip cost is a multiple of the polling interval.
 
+In names below, `nodeId` is the 32-byte application `NodeId` and `userId` is
+the 32-byte `UserId`; neither is a public key or a libp2p `PeerId`. The transport
+may use `PeerId` internally, but relay identity and authorization use the
+explicit application IDs.
+
 ### Pattern: Publication (one-to-many, store-and-forward)
 
 _(also called: broadcast, bulletin board, shared log, publish/poll)_
@@ -119,7 +124,7 @@ use the same request/reply shape.
    signature by `A`'s node key. `A` updates `request/<A>/index`.
 2. **Discovery.** Target `B` polls the request indexes of the nodes it knows:
    the active-node set of each unit it hosts, the user-node pointers of each user
-   it hosts, and `user/<userId>/join/` while it is bootstrapping. If the relay
+  it hosts, and `user/<userId>/join/` while it is bootstrapping. If the relay
    supports global listing, `B` may instead list `request/` and filter on target.
 3. **Reply.** `B` verifies the request signature, processes it with the existing
    sync handler and writes a manifest plus ordered chunks under
@@ -238,8 +243,8 @@ separate home unit (below).
 
 - **Publication.** Every node hosting the user appends signed `UserOperation`s
   to `unit/<userUnitId>/log/<nodeId>/<clock>`. The author is always the user,
-  the node records its node hash in the operation ID, and the existing
-  Lamport-clock/node-hash ordering applies. A node must never accept an
+  the node records its `NodeId` in the operation ID, and the existing
+  Lamport-clock/`NodeId` ordering applies. A node must never accept an
   operation whose author is not the user key. Since the relay may be publicly
   readable, operation payloads are encrypted with a key derived from the user
   key; only nodes holding the user credential can read status, contacts and

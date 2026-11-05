@@ -73,7 +73,9 @@ button is enabled, and (when SwingDrive was started with a node) the full
 
 ## Peer identity and network control
 
-`GET /peer` returns the node identity and the current networking state:
+`GET /peer` returns the libp2p transport `PeerId` (base58 multihash) and the
+current networking state. The application `NodeId` is a separate 32-byte
+domain-separated hash used in operation identities:
 
 ```json
 {"peerId":"12D3KooW...","started":true,"paused":false,"listenAddresses":["/ip4/127.0.0.1/tcp/40001"]}

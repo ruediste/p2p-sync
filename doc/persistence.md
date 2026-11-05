@@ -9,14 +9,16 @@ Remaining work is tracked in `TODO.md` at the repository root.
 
 ### Users, nodes and SyncUnits
 
-A **user** is an identity with an Ed25519 key pair. The public key identifies the
-user and the private key signs operations authored by that user. For replication,
-a user is also a SyncUnit: an independently replicated unit of data with its own
-operation history, materialized state, clock and membership rules.
+A **user** is an identity with an Ed25519 key pair. Its public key derives a
+`UserId`; the public key remains the material used to verify signatures. For
+replication, a user also has a `USER` SyncUnit: an independently replicated unit
+of data with its own operation history, materialized state, clock and membership
+rules.
 
-A **node** is one process with its own peer key pair and one `node.db` file. A node
-can synchronize several users. Each user has a participation list of SyncUnits,
-and the node synchronizes the units in those lists.
+A **node** is one process with its own node key pair and one `node.db` file. Its
+public key derives a `NodeId`; the private key authenticates the node. A node can
+synchronize several users. Each user has a participation list of SyncUnits, and
+the node synchronizes the units in those lists.
 
 SyncUnit types are `USER`, `SHARED_FOLDER`, `TODO_LIST` and `MESSAGE_CHANNEL`.
 Each user also has a special home `SHARED_FOLDER` unit that owns the user's file
@@ -43,18 +45,36 @@ requests hold the same lock for a complete request. See
 
 ### Identity and ordering
 
-Full entity identifiers are `nodeHash[32] | counter[8]`, where `nodeHash` is
-`SHA-256(PeerId bytes)` and `counter` is a per-SyncUnit counter. File-tree and
-GUID trees use the node-local short form with a mapped 32-bit node id.
+| Concept | Recommended term | Meaning and identifier |
+| --- | --- | --- |
+| Running replica and its local database | **node** | One running `Node` instance and its `node.db`. A node has one node key pair and can host multiple users. |
+| Node identity | **NodeId** | A 32-byte identifier derived as `SHA-256(ASCII("p2p-sync:node-id:v1:") || PubKey.bytes())`. `PubKey.bytes()` is the canonical serialized libp2p `PublicKey` protobuf (key type and raw key data). A remote node's identifier may be named `peerNodeId`. |
+| Node key material | **node key pair** | The Ed25519 key pair associated with a node. The public key derives its `NodeId`; the private key authenticates the node. |
+| Communication partner | **peer** | A node with which this node communicates, typically a remote node. Identify it by the peer's `NodeId` (`peerNodeId`). `PeerId` is a distinct libp2p transport encoding, not an alias for `NodeId`. |
+| User identity | **user** | An identity independent of any one node. The same user can be hosted on multiple nodes. A user's `USER` SyncUnit is its replicated data, not the identity itself. |
+| User key material | **user key pair** | The Ed25519 key pair whose public key derives the `UserId`; the private key signs user-authored operations. |
+| User identifier | **UserId** | A 32-byte identifier derived as `SHA-256(ASCII("p2p-sync:user-id:v1:") || PubKey.bytes())`. Public keys are retained separately wherever signature verification is required. |
+|Entity identifier| **guid**| A globally unique identifier, build from a `NodeId` and a counter. The counter is scoped to a node/sync unit, the id is only unique within its scope. Represented by a `FullGuid` or `ShortGuid`|
+| Full entity identifier | **`FullGuid`** | `NodeId[32], counter[8]`, a 40-byte identifier used in signed operations and between nodes; the counter is per-SyncUnit or per node (for example to create entity identifiers for sync units). |
+| Local entity identifier | **`ShortGuid`** | `shortNodeId[4], counter[8]`, a 12-byte identifier used only in local file/GUID trees; it retains the `FullGuid` counter. |
+| Local GUID node component | **short node ID** | A mapped 32-bit, node-local number used only in `ShortGuid`. It is not globally meaningful and must not be confused with `NodeId`. |
 
-Operations are ordered by a per-SyncUnit Lamport clock and the node hash as tie
-breaker. The complete identifier is `lamportClock[8] | nodeHash[32]`.
+Use **short node ID** only for the mapped 32-bit local tree value. `NodeId` and
+`UserId` use their separate domain prefixes and the canonical serialized public
+key bytes above. The transport `PeerId` is derived according to libp2p's
+multihash rules and is used only by the transport/address-book layer.
+
+Mapping a `FullGuid` to a `ShortGuid` replaces only the `NodeId` with the
+mapped `shortNodeId`; both identifiers contain the same entity counter.
+
+Operations are ordered by a per-SyncUnit Lamport clock and `NodeId` as tie
+breaker. The complete operation ID is `lamportClock[8] | NodeId[32]`.
 
 ## 2. Persisted artifacts
 
 | Artifact | Produced by | Content |
 | --- | --- | --- |
-| `node.db` (any path given to `DesktopMain`) | `Node` | Complete node state: peer key pair, users, signed operation logs in per-SyncUnit B-trees, SyncUnit registry and histories, active node sets, inbox, and the home and shared-folder file trees. A single `DataStorage` file. |
+| `node.db` (any path given to `DesktopMain`) | `Node` | Complete node state: node key pair, users, signed operation logs in per-SyncUnit B-trees, SyncUnit registry and histories, active node sets, inbox, and the home and shared-folder file trees. A single `DataStorage` file. |
 | `files.db` (any path given to `SimpleFuseMain`) | `SimpleFuseFS` | One `FileTree` in a `DataStorage` file. Standalone prototype, unrelated to `Node`. |
 | exported user credential file | `Node.exportUserKey` | protobuf `UserCredential` (`ciphertext`, `salt`, `iv`), written with POSIX permissions `600`. Passphrase-derived AES-GCM; the passphrase may be empty. |
 | attachment export (UI) | `UnitsPanel` / mail view | plain user-chosen files, not node state |
@@ -62,6 +82,11 @@ breaker. The complete identifier is `lamportClock[8] | nodeHash[32]`.
 Everything else is in memory only: the libp2p address book (`MemoryAddressBook`),
 mounted directories, FUSE path caches, and UI state. There is no configuration
 file, no `Preferences`, and no per-user directory in the data path.
+
+The identity and SyncUnit ID representation change intentionally invalidates
+existing `node.db` files. Recreate those files; there is no migration. The
+`DataStorage` format version is unchanged because the block-store format itself
+has not changed.
 
 ## 3. Layer stack
 
@@ -165,7 +190,7 @@ in use today:
 | Database file | Handle id | Owner | Area | Type |
 | --- | --- | --- | --- | --- |
 | node database | 1 | `BlobStorage` index B+tree | META | `BTree.NodeBlock` (32-byte key) |
-| node database | 2 | `UnitRootStore` per-SyncUnit root registry | META | `BTree.NodeBlock` (33-byte key) |
+| node database | 2 | `UnitRootStore` per-SyncUnit root registry | META | `BTree.NodeBlock` (41-byte key: 40-byte `SyncUnitId` plus kind) |
 | `files.db` | 1 | `SimpleFuseFS` file tree | META | `FileTree.BLOCK_TYPE` |
 
 Handle IDs are reserved per `DataStorage` file, not globally: `Node` and
@@ -324,21 +349,21 @@ can lose the last commits and can leave a file that needs the inspection tool.
 A full GUID is a 40-byte entity identifier:
 
 ```C
-struct FullGUID {
-    byte nodeHash[32]; // SHA-256 of the PeerId bytes
-    uint64_t counter;  // per-SyncUnit entity counter
+struct FullGuid {
+  byte nodeId[32];      // NodeId: SHA-256 of the node public key
+  uint64_t counter;     // per-SyncUnit entity counter
 };
 
-struct ShortGUID {
-    uint32_t nodeId;   // node-local 32-bit identifier
+struct ShortGuid {
+  uint32_t shortNodeId; // node-local 32-bit identifier
     uint64_t counter;
 };
 ```
 
 Each SyncUnit has a private, node-local GUID mapping:
 
-- forward B+tree: full node hash -> 32-bit `nodeId`
-- reverse B+tree: 32-bit `nodeId` -> full node hash
+- forward B+tree: `NodeId` -> 32-bit `shortNodeId`
+- reverse B+tree: 32-bit `shortNodeId` -> `NodeId`
 - next node id stored in the unit record; 32-bit exhaustion is a hard error
 
 Full GUIDs are used in signed operations and between peers. Short GUIDs are used
@@ -376,7 +401,7 @@ and other small blobs, not for user file content. File content belongs in
 `Node.persistState()` writes three groups of data into one `DataStorage`
 transaction:
 
-1. `NodeState` metadata through `BlobStorage`: peer identity/key material, local
+1. `NodeState` metadata through `BlobStorage`: `NodeId` and node key material, local
    users and their private keys, SyncUnit metadata, per-user snapshots, active
    node sets, inbox state and counters.
 2. Per-SyncUnit operation trees through `UnitRootStore` and `OperationTree`.
@@ -390,7 +415,7 @@ Operation histories are split into separate B-trees per SyncUnit:
   file-system operations.
 - Other SyncUnits: authorization and content operation trees.
 
-Each B-tree key is `lamportClock (8 bytes, big-endian) | nodeHash (32 bytes)`.
+Each B-tree key is `lamportClock (8 bytes, big-endian) | NodeId (32 bytes)`.
 Values store the signature inline plus a single reference to a linked chain of
 DATA blocks containing the payload, so the B-tree value stays small no matter how
 large the operation is. A stored operation is reconstructed by walking the chain
@@ -412,15 +437,15 @@ ownership and `StorageCheck` continue to work.
 
 `GuidMapper` implements the per-SyncUnit, node-local short-GUID mapping:
 
-- forward key: full node hash (`SHA-256(PeerId bytes)`) → unsigned 32-bit node id
-- reverse key: node id → full node hash
+- forward key: `NodeId` → unsigned 32-bit `shortNodeId`
+- reverse key: `shortNodeId` → `NodeId`
 - next node id is persisted in `NodeUserState.nextNodeId` (and in
   `PersistedSyncUnit.nextNodeId` for shared-folder units) in the same commit that
   flushes the mapping trees; the mapper also takes the maximum mapped id into
   account before allocating a new one
 
-Full entity IDs remain `nodeHash[32] | counter[8]`; `FileTree` and `GuidTree` use
-`ShortGuid(nodeId[4] | counter[8])`. Short GUIDs never leave the node. A full ID
+Full entity IDs remain `NodeId[32] | counter[8]`; `FileTree` and `GuidTree` use
+`ShortGuid(shortNodeId[4] | counter[8])`. Short GUIDs never leave the node. A full ID
 is mapped lazily when it is first written to a `FileTree`.
 
 The user-visible `UserFileTree` is now backed directly by `FileTree`: path
@@ -479,7 +504,7 @@ receiver persists partial payloads so a large operation resumes across requests.
 ### 6.4 `FileTree` — binary inode tree
 
 `FileTree` is a B+tree with a 21-byte key `guid(12) | type(1) | offset(8)`
-(`ShortGuid` = int32 nodeId + int64 counter), plus a separate 36-byte-key spill
+(`ShortGuid` = int32 shortNodeId + int64 counter), plus a separate 36-byte-key spill
 tree (`sha256(name) | uint32 counter`) for oversized directory items.
 
 | Entry type | Code | Value |

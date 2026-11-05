@@ -5,23 +5,22 @@ import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.Objects;
 
+import com.github.ruediste.p2psync.identity.NodeId;
+
 /**
- * A full entity id consisting of a 32-byte node hash followed by an 8-byte
+ * A full entity id consisting of a 32-byte NodeId followed by an 8-byte
  * counter. The byte representation is the 40-byte big-endian encoding stored in
  * user operations and file-tree state.
  */
 public final class FullGuid {
     public static final int LENGTH = 40;
-    private static final int NODE_HASH_LENGTH = 32;
+    private static final int NODE_ID_LENGTH = NodeId.LENGTH;
 
-    private final byte[] nodeHash;
+    private final NodeId nodeId;
     private final long counter;
 
-    public FullGuid(byte[] nodeHash, long counter) {
-        Objects.requireNonNull(nodeHash, "nodeHash");
-        if (nodeHash.length != NODE_HASH_LENGTH)
-            throw new IllegalArgumentException("Node hash must contain 32 bytes");
-        this.nodeHash = nodeHash.clone();
+    public FullGuid(NodeId nodeId, long counter) {
+        this.nodeId = Objects.requireNonNull(nodeId, "nodeId");
         this.counter = counter;
     }
 
@@ -29,8 +28,8 @@ public final class FullGuid {
         Objects.requireNonNull(bytes, "bytes");
         if (bytes.length != LENGTH)
             throw new IllegalArgumentException("Full entity id must contain 40 bytes");
-        return new FullGuid(Arrays.copyOfRange(bytes, 0, NODE_HASH_LENGTH),
-                ByteBuffer.wrap(bytes, NODE_HASH_LENGTH, Long.BYTES).getLong());
+        return new FullGuid(NodeId.fromBytes(Arrays.copyOfRange(bytes, 0, NODE_ID_LENGTH)),
+                ByteBuffer.wrap(bytes, NODE_ID_LENGTH, Long.BYTES).getLong());
     }
 
     public static FullGuid fromHex(String hex) {
@@ -38,8 +37,8 @@ public final class FullGuid {
         return fromBytes(HexFormat.of().parseHex(hex));
     }
 
-    public byte[] nodeHash() {
-        return nodeHash.clone();
+    public NodeId nodeId() {
+        return nodeId;
     }
 
     public long counter() {
@@ -47,7 +46,7 @@ public final class FullGuid {
     }
 
     public byte[] bytes() {
-        return ByteBuffer.allocate(LENGTH).put(nodeHash).putLong(counter).array();
+        return ByteBuffer.allocate(LENGTH).put(nodeId.bytes()).putLong(counter).array();
     }
 
     public String hex() {
@@ -56,13 +55,12 @@ public final class FullGuid {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof FullGuid other && counter == other.counter
-                && Arrays.equals(nodeHash, other.nodeHash);
+        return obj instanceof FullGuid other && counter == other.counter && nodeId.equals(other.nodeId);
     }
 
     @Override
     public int hashCode() {
-        return 31 * Long.hashCode(counter) + Arrays.hashCode(nodeHash);
+        return 31 * Long.hashCode(counter) + nodeId.hashCode();
     }
 
     @Override

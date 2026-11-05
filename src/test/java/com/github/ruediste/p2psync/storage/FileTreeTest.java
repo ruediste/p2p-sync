@@ -172,7 +172,7 @@ class FileTreeTest {
 
     private static ShortGuid guid(long counter) {
         ShortGuid result = new ShortGuid();
-        result.nodeId = 7;
+        result.shortNodeId = 7;
         result.counter = counter;
         return result;
     }

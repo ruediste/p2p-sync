@@ -12,7 +12,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
+import com.github.ruediste.p2psync.identity.UserId;
 
 class SharedFolderContentTest {
     @TempDir
@@ -28,7 +28,8 @@ class SharedFolderContentTest {
             var handle = node.createNewUser("alice");
             var folder = node.createSyncUnit(handle.data.userId(), SyncUnitAuthorization.Type.SHARED_FOLDER);
             node.putSharedFile(folder, handle.data.userId(), "notes/todo.txt", "shared todo".getBytes());
-            assertArrayEquals("shared todo".getBytes(), node.readSharedFile(folder, handle.data.userId(), "notes/todo.txt"));
+            assertArrayEquals("shared todo".getBytes(),
+                    node.readSharedFile(folder, handle.data.userId(), "notes/todo.txt"));
             assertEquals(1, node.listSharedFileInfos(folder, handle.data.userId()).size());
             node.deleteSharedFile(folder, handle.data.userId(), "notes/todo.txt");
             assertEquals(0, node.listSharedFileInfos(folder, handle.data.userId()).size());
@@ -45,7 +46,7 @@ class SharedFolderContentTest {
     void emptyDirectoriesArePersistentFileTreeEntries() {
         Path dataFile = tempDir.resolve("node.db");
         SyncUnitId folder;
-        PubKey userId;
+        UserId userId;
         try (var node = new Node(new Node.Network(), dataFile)) {
             var handle = node.createNewUser("alice");
             userId = handle.data.userId();
@@ -107,7 +108,7 @@ class SharedFolderContentTest {
         for (int index = 0; index < content.length; index++)
             content[index] = (byte) (index * 31);
         SyncUnitId folder;
-        PubKey userId;
+        UserId userId;
         try (var node = new Node(new Node.Network(), dataFile)) {
             var handle = node.createNewUser("alice");
             userId = handle.data.userId();

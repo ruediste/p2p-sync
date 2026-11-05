@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
-import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
+import com.github.ruediste.p2psync.identity.UserId;
 import com.github.ruediste.p2psync.proto.Sync;
 import com.google.protobuf.ByteString;
 
@@ -18,18 +18,18 @@ final class ContactList {
             .comparing(Contact::displayName, String.CASE_INSENSITIVE_ORDER)
             .thenComparing(Contact::contactId);
 
-    private final PubKey owner;
+    private final UserId owner;
     private final Map<String, Contact> contacts = new TreeMap<>();
 
-    private ContactList(PubKey owner) {
+    private ContactList(UserId owner) {
         this.owner = owner;
     }
 
-    static ContactList empty(PubKey owner) {
+    static ContactList empty(UserId owner) {
         return new ContactList(owner);
     }
 
-    static ContactList from(PubKey owner, Iterable<Sync.Contact> stored) {
+    static ContactList from(UserId owner, Iterable<Sync.ContactProto> stored) {
         var result = new ContactList(owner);
         for (var contact : stored) {
             var parsed = fromProto(contact);
@@ -39,7 +39,7 @@ final class ContactList {
         return result;
     }
 
-    static ContactList copy(PubKey owner, ContactList source) {
+    static ContactList copy(UserId owner, ContactList source) {
         var result = new ContactList(owner);
         result.contacts.putAll(source.contacts);
         return result;
@@ -55,7 +55,7 @@ final class ContactList {
         return Optional.ofNullable(contacts.get(contactId));
     }
 
-    Optional<Contact> findByUserId(PubKey userId) {
+    Optional<Contact> findByUserId(UserId userId) {
         return contacts.values().stream().filter(contact -> userId.equals(contact.userId())).findFirst();
     }
 
@@ -71,7 +71,7 @@ final class ContactList {
         return List.copyOf(sorted);
     }
 
-    void apply(Sync.UserOperation operation) {
+    void apply(Sync.UserOperationProto operation) {
         try {
             switch (operation.getKind()) {
                 case CONTACT_CREATE -> applyCreate(operation);
@@ -86,7 +86,7 @@ final class ContactList {
         }
     }
 
-    private void applyCreate(Sync.UserOperation operation) {
+    private void applyCreate(Sync.UserOperationProto operation) {
         if (!operation.hasContact())
             return;
         Contact contact = fromProto(operation.getContact());
@@ -97,7 +97,7 @@ final class ContactList {
         put(contact);
     }
 
-    private void applyUpdate(Sync.UserOperation operation) {
+    private void applyUpdate(Sync.UserOperationProto operation) {
         String contactId = hex(operation.getContactId().toByteArray());
         Contact contact = contacts.get(contactId);
         if (contact == null)
@@ -108,7 +108,7 @@ final class ContactList {
         Contact updated;
         if (field == Contact.Field.USER_ID) {
             byte[] userIdBytes = operation.getContactUserId().toByteArray();
-            PubKey userId = userIdBytes.length == 0 ? null : PubKey.from(userIdBytes);
+            UserId userId = userIdBytes.length == 0 ? null : UserId.fromBytes(userIdBytes);
             if (owner.equals(userId))
                 return;
             updated = contact.withField(Contact.Field.USER_ID, null, userId);
@@ -137,15 +137,15 @@ final class ContactList {
         contacts.put(contact.contactId(), contact);
     }
 
-    List<Sync.Contact> toProto() {
-        var result = new ArrayList<Sync.Contact>();
+    List<Sync.ContactProto> toProto() {
+        var result = new ArrayList<Sync.ContactProto>();
         contacts.values().stream().sorted(Comparator.comparing(Contact::contactId))
                 .forEach(contact -> result.add(toProto(contact)));
         return result;
     }
 
-    static Sync.Contact toProto(Contact contact) {
-        var builder = Sync.Contact.newBuilder()
+    static Sync.ContactProto toProto(Contact contact) {
+        var builder = Sync.ContactProto.newBuilder()
                 .setContactId(ByteString.copyFrom(HexFormat.of().parseHex(contact.contactId())))
                 .setFirstName(contact.firstName())
                 .setLastName(contact.lastName())
@@ -157,11 +157,11 @@ final class ContactList {
         return builder.build();
     }
 
-    static Contact fromProto(Sync.Contact stored) {
+    static Contact fromProto(Sync.ContactProto stored) {
         byte[] id = stored.getContactId().toByteArray();
         if (id.length != 40)
             throw new IllegalArgumentException("Invalid contact ID");
-        PubKey userId = stored.getUserId().isEmpty() ? null : PubKey.from(stored.getUserId().toByteArray());
+        UserId userId = stored.getUserId().isEmpty() ? null : UserId.fromBytes(stored.getUserId().toByteArray());
         return new Contact(hex(id), userId, stored.getFirstName(), stored.getLastName(), stored.getEmail(),
                 stored.getPhone(), stored.getNotes());
     }
@@ -193,12 +193,12 @@ final class ContactList {
         return HexFormat.of().formatHex(bytes);
     }
 
-    static String hex(PubKey key) {
-        return hex(key.bytes());
+    static String hex(UserId id) {
+        return hex(id.bytes());
     }
 
-    static String shortKey(PubKey key) {
-        byte[] bytes = key.bytes();
+    static String shortKey(UserId id) {
+        byte[] bytes = id.bytes();
         return HexFormat.of().formatHex(bytes, 0, Math.min(4, bytes.length));
     }
 }

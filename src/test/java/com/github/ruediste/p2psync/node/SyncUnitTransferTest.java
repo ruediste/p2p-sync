@@ -26,7 +26,8 @@ class SyncUnitTransferTest {
             node.putSharedFile(folder, handle.data.userId(), "large.bin", content);
 
             var source = node.syncUnits.get(folder);
-            var receiver = new Node.SyncUnitData(folder, source.type, source.creator);
+            var receiver = new Node.SyncUnitData(folder, source.type, source.creator,
+                    new OperationTree(node.dataStorage), new OperationTree(node.dataStorage));
             receiver.authorizationOperations.addAll(source.authorizationOperations);
             receiver.replayAuthorization();
             receiver.replayContent();
@@ -36,14 +37,15 @@ class SyncUnitTransferTest {
             while (receiver.contentOperations.size() < source.contentOperations.size()) {
                 var fromClock = new TreeMap<String, Long>();
                 receiver.contentOperations.values().forEach(operation -> fromClock.merge(
-                        "c:" + java.util.HexFormat.of().formatHex(operation.nodeHash()),
+                        "c:" + operation.nodeId().hex(),
                         operation.lamportClock(), Math::max));
                 var offsets = new TreeMap<String, Integer>();
                 receiver.partialContentOperations.values().forEach(partial -> offsets.put(
-                        java.util.HexFormat.of().formatHex(partial.id.nodeHash) + ":" + partial.id.clock,
+                        partial.id.nodeKey + ":" + partial.id.clock,
                         partial.receivedLength));
-                var transfers = source.serveContent(fromClock, offsets, 64);
-                receiver.receiveContent(transfers);
+                var transfer = source.serveContent(fromClock, offsets, 64);
+                assertTrue(transfer != null);
+                receiver.receiveContent(transfer);
                 int received = receiver.contentOperations.isEmpty()
                         ? receiver.partialContentOperations.values().stream()
                                 .mapToInt(partial -> partial.receivedLength).max().orElse(0)
@@ -75,11 +77,14 @@ class SyncUnitTransferTest {
             node.putSharedFile(folder, handle.data.userId(), "a.txt", "one".getBytes());
             node.putSharedFile(folder, handle.data.userId(), "b.txt", "two".getBytes());
             var source = node.syncUnits.get(folder);
+            assertTrue(source.contentOperations.rootOffset() != 0);
             var first = source.contentOperations.firstEntry().getValue();
-            var clocks = Map.of("c:" + java.util.HexFormat.of().formatHex(first.nodeHash()),
+            var clocks = Map.of("c:" + first.nodeId().hex(),
                     first.lamportClock());
-            var transfers = source.serveContent(clocks, Map.of(), Integer.MAX_VALUE);
-            assertEquals(source.contentOperations.size() - 1, transfers.size());
+            var transfer = source.serveContent(clocks, Map.of(), Integer.MAX_VALUE);
+            assertTrue(transfer != null);
+            assertTrue(transfer.complete);
+            assertTrue(!transfer.id.equals(new Node.OperationId(first.lamportClock(), first.nodeId())));
         }
     }
 }

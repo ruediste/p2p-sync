@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import com.github.ruediste.p2psync.libp2p.crypto.keys.Ed25519PublicKey;
 import com.github.ruediste.p2psync.proto.Libp2P;
-import com.github.ruediste.p2psync.proto.Libp2P.PublicKey;
+import com.github.ruediste.p2psync.proto.Libp2P.PublicKeyProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -44,24 +44,24 @@ public abstract class PubKey {
 
     /**
      * A serialized, storable representation of this key (the marshaled
-     * {@code com.github.ruediste.p2psync.proto.libp2p.Crypto.PublicKey}
+     * {@code com.github.ruediste.p2psync.proto.libp2p.Crypto.PublicKeyProto}
      * protobuf message).
      */
     public final byte[] bytes() {
         return this.toProto().toByteArray();
     }
 
-    public PublicKey toProto() {
-        return Libp2P.PublicKey.newBuilder()
+    public PublicKeyProto toProto() {
+        return Libp2P.PublicKeyProto.newBuilder()
                 .setType(getKeyType())
                 .setData(ByteString.copyFrom(raw()))
                 .build();
     }
 
     public static PubKey from(byte[] data) {
-        Libp2P.PublicKey proto;
+        Libp2P.PublicKeyProto proto;
         try {
-            proto = Libp2P.PublicKey.parseFrom(data);
+            proto = Libp2P.PublicKeyProto.parseFrom(data);
         } catch (InvalidProtocolBufferException e) {
             throw new IllegalArgumentException("Invalid marshaled public key", e);
         }

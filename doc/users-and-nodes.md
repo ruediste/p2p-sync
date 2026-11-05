@@ -5,16 +5,20 @@ along with the current implementation boundary.
 
 ## Identities and Names
 
-A **user** has a cryptographic identity represented by a key pair. The public
-key identifies the user across nodes, and the private key signs operations
-authored by that user. For replication, a User is also a **SyncUnit**: the
-replicated unit containing that user's own data. Identity and replicated data
-are distinct concepts even though they are represented together in this model.
+A **user** has a cryptographic identity represented by a key pair. Its
+`UserId` is `SHA-256(ASCII("p2p-sync:user-id:v1:") || PubKey.bytes())`, using
+the canonical serialized libp2p `PublicKey` protobuf. The public key remains
+separate key material used to verify signatures. For replication, a User is
+also a **SyncUnit**: the replicated unit containing that user's own data.
+Identity and replicated data are distinct concepts.
 
 A **SyncUnit** is an independently replicated unit of data, such as a User,
 SharedFolder, TodoList, or MessageChannel. A **node** is a running network
-participant with its own peer identity and local storage. A node may store
-multiple users' SyncUnits, and a SyncUnit may be stored on multiple nodes.
+participant with its own `NodeId`, derived with the separate
+`p2p-sync:node-id:v1:` domain, and local storage. A node may store multiple
+users' SyncUnits, and a SyncUnit may be stored on multiple nodes. libp2p's
+multihash-based `PeerId` is a transport identifier derived from the node key; it
+is not the application's `NodeId`.
 
 A node-local user name is a display and filesystem label, not a network
 identity. The same user can have different names on different nodes. Names
@@ -89,7 +93,8 @@ per-user participation, inboxes, and delivery acknowledgements are persisted
 in the node's DataStorage state. Existing mechanisms include:
 
 - [`Node`](../src/main/java/com/github/ruediste/p2psync/node/Node.java) identifies
-  users by public key in a node-local map. `createNewUser()` generates an
+  users by `UserId` in a node-local map, retaining their public keys for signing
+  and verification. `createNewUser()` generates an
   Ed25519 key pair. `join()` looks only for a user hosted by the in-process
   `Node.Network`; the desktop application joins remote users through
   `joinRemote()`, which probes known mDNS/manual peers.
@@ -108,7 +113,7 @@ in the node's DataStorage state. Existing mechanisms include:
   registry and signed logs. Remote unit synchronization uses the existing
   framed TCP, Noise, and Yamux protocol.
 - [`SyncUnitAuthorization`](../src/main/java/com/github/ruediste/p2psync/node/SyncUnitAuthorization.java)
-  replays signed membership operations in deterministic Lamport/node-hash
+  replays signed membership operations in deterministic Lamport/`NodeId`
   order. Channel Members can view and send; Managers can also manage other
   members and Managers, with a last-Manager safeguard.
 - [`SyncUnitContentOperation`](../src/main/java/com/github/ruediste/p2psync/node/SyncUnitContentOperation.java)

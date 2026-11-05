@@ -20,17 +20,22 @@ Each contact has a stable internal contact ID and the following fields:
 | Field | Required | Description |
 | --- | --- | --- |
 | contact ID | yes | Internal immutable GUID, 40 bytes, stored as a hex string |
-| user ID | no | Public key of the represented network user |
+| user ID | no | 32-byte `UserId` derived from the represented user's public key |
 | first name | no | Free-form text |
 | last name | no | Free-form text |
 | email | no | Free-form text; not used as a transport address |
 | phone number | no | Free-form text |
 | notes | no | Free-form text |
 
-The contact ID is generated like file and directory entity IDs: the node public
-key hash followed by a per-node counter. Local edits trim leading and trailing
-whitespace from text fields. Empty values are stored as empty strings; an unset
-user ID is stored as `null`.
+The contact ID is generated like file and directory entity IDs: the 32-byte
+`NodeId` followed by a per-SyncUnit counter. Local edits trim leading and
+trailing whitespace from text fields. Empty values are stored as empty strings;
+an unset user ID is stored as `null`.
+
+`UserId` is `SHA-256(ASCII("p2p-sync:user-id:v1:") || PubKey.bytes())`, where
+`PubKey.bytes()` is the canonical serialized libp2p `PublicKey` protobuf. The
+public key is still carried wherever a signature must be verified; contact
+identity fields carry only the 32-byte `UserId`.
 
 A contact must have at least one non-empty field. Empty local creates and
 updates that would clear the last field are rejected. An update replayed from a
@@ -115,7 +120,7 @@ survive truncation and node restarts.
 ## Conflict Resolution
 
 Operations are applied in the existing total order: Lamport clock first, then
-node hash. Within one contact and one field, the later operation wins.
+`NodeId`. Within one contact and one field, the later operation wins.
 
 - Concurrent updates to the same field: the later value wins.
 - Concurrent updates to different fields: both changes survive.
@@ -140,12 +145,12 @@ Contact operations are exposed through `NodeUserHandle`:
 - `listContacts()`
 - `searchContacts(String query)`
 - `getContact(String contactId)`
-- `findContactByUserId(PubKey userId)`
-- `createContact(PubKey userId, String firstName, String lastName, String email, String phone, String notes)`
-- `createContactFromUser(PubKey userId)`
-- `updateContact(String contactId, PubKey userId, ...)`
+- `findContactByUserId(UserId userId)`
+- `createContact(UserId userId, String firstName, String lastName, String email, String phone, String notes)`
+- `createContactFromUser(UserId userId)`
+- `updateContact(String contactId, UserId userId, ...)`
 - `deleteContact(String contactId)`
-- `contactLabel(PubKey userId)`
+- `contactLabel(UserId userId)`
 
 `createContact` rejects empty contacts, self-references, and user IDs already
 linked to another contact. `createContactFromUser` returns the existing contact
@@ -153,7 +158,7 @@ when the user is already linked. `updateContact` emits one signed operation per
 changed field and returns the rebuilt contact. `contactLabel` resolves "you",
 the linked contact's display name, a local user name, or a short user ID.
 
-`Node.getUser(PubKey)` returns a handle for a configured user. `NodeUserHandle`
+`Node.getUser(UserId)` returns a handle for a configured user. `NodeUserHandle`
 does not expose another user's contact list.
 
 ## Desktop UI

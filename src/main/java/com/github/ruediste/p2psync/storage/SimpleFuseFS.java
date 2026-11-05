@@ -226,7 +226,7 @@ public class SimpleFuseFS extends FuseStubFS implements AutoCloseable {
             require(tree.lookup(target.parent().guid(), target.name()) == null, ErrorCodes.EEXIST());
             UUID uuid = UUID.randomUUID();
             ShortGuid guid = new ShortGuid();
-            guid.nodeId = (int) uuid.getMostSignificantBits();
+            guid.shortNodeId = (int) uuid.getMostSignificantBits();
             guid.counter = uuid.getLeastSignificantBits();
             if (directory)
                 tree.createDirectory(target.parent().guid(), guid, target.name(), new FileTree.FileMeta());

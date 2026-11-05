@@ -3,14 +3,14 @@ syntax = "proto3";
 package com.github.ruediste.p2psync.proto;
 import "libp2p.proto";
 
-message NodeUserConfiguration {
+message NodeUserConfigurationProto {
 	bytes storageKey = 1;
 
 	optional bytes dataKey = 5;
-	optional PrivateKey DataSigningKeyPrivate = 6;
+	optional PrivateKeyProto DataSigningKeyPrivate = 6;
 
-	// this is also the user id
-	PublicKey DataSigningKeyPublic = 7;
+	// Key material; UserId is derived from these canonical public-key bytes.
+	PublicKeyProto DataSigningKeyPublic = 7;
 }
 
 // <<xxx, yyy>> means: encrypted with xxx-key (symmetric), signed with yyy-key
@@ -23,7 +23,7 @@ message NodeUserConfiguration {
 
 // Data Structures
 
-message Contact {
+message ContactProto {
 	bytes contactId = 1;
 	bytes userId = 2;
 	string firstName = 3;
@@ -43,19 +43,19 @@ enum ContactField {
 	CONTACT_FIELD_NOTES = 6;
 }
 
-message UserSnapshot {
+message UserSnapshotProto {
 	bytes fileTreeState = 1;
-	repeated Contact contacts = 2;
+	repeated ContactProto contacts = 2;
 	uint64 fileTreeRootOffset = 3;
 }
 
-message UserTreeState {
+message UserTreeStateProto {
 	bytes rootId = 1;
 	string statusMessage = 2;
-	repeated UserTreeEntry entries = 3;
+	repeated UserTreeEntryProto entries = 3;
 }
 
-message UserTreeEntry {
+message UserTreeEntryProto {
 	bytes entityId = 1;
 	bytes parentId = 2;
 	string name = 3;
@@ -63,11 +63,11 @@ message UserTreeEntry {
 	bytes content = 5;
 }
 
-message VectorClock{
+message VectorClockProto{
 	map<int32,int64> values=1;
 }
 
-message UserOperation {
+message UserOperationProto {
 	enum Kind {
 		SET_STATUS = 0;
 		CREATE_DIRECTORY = 1;
@@ -103,55 +103,56 @@ message UserOperation {
 	bytes originalOperationPayload = 15;
 	bytes originalOperationSignature = 16;
 	uint64 originalOperationLamportClock = 17;
-	bytes originalOperationNodeHash = 18;
-	Contact contact = 19;
+	bytes originalOperationNodeId = 18;
+	ContactProto contact = 19;
 	ContactField contactField = 20;
 	string contactValue = 21;
 	bytes contactUserId = 22;
 	bytes contactId = 23;
+	bytes originalOperationAuthorPublicKey = 24;
 }
 
-message NodeState {
-	bytes peerId = 1;
+message NodeStateProto {
+	bytes nodeId = 1;
 	uint64 clock = 2;
 	reserved 3;
-	repeated NodeUserState users = 4;
+	repeated NodeUserStateProto users = 4;
 	bytes peerPrivateKey = 5;
-	repeated PersistedSyncUnit syncUnits = 6;
+	repeated PersistedSyncUnitProto syncUnits = 6;
 	reserved 7;
 }
 
-message UserCredential {
+message UserCredentialProto {
 	bytes ciphertext = 1;
 	bytes salt = 2;
 	bytes iv = 3;
 }
 
-message SharedFolderLabel {
+message SharedFolderLabelProto {
 	bytes syncUnitId = 1;
 	string label = 2;
 }
 
-message NodeUserState {
+message NodeUserStateProto {
 	bytes userPrivateKey = 1;
 	reserved 2, 3;
 	string localName = 4;
 	bytes rootDirectoryGuid = 6;
-	repeated OperationClock maxOperationClock = 10;
-	ActiveNodeSetState activeNodeSet = 11;
-	repeated PartialOperationState retrievalTree = 12;
+	repeated OperationClockProto maxOperationClock = 10;
+	ActiveNodeSetStateProto activeNodeSet = 11;
+	repeated PartialOperationStateProto retrievalTree = 12;
 	bytes snapshotState = 13;
 	repeated bytes participatingSyncUnitIds = 14;
 	repeated string deliveredMessageIds = 15;
-	repeated StoredUserMessage inboxMessages = 16;
+	repeated StoredUserMessageProto inboxMessages = 16;
 	uint64 nextNodeId = 17;
 	uint64 clock = 18;
 	uint64 entityCounter = 19;
 	bytes homeSyncUnitId = 20;
-	repeated SharedFolderLabel sharedFolderLabels = 21;
+	repeated SharedFolderLabelProto sharedFolderLabels = 21;
 }
 
-message UserMessage {
+message UserMessageProto {
 	enum Type {
 		CHAT = 0;
 		MAIL = 1;
@@ -165,38 +166,39 @@ message UserMessage {
 	Type type = 4;
 	string subject = 5;
 	string body = 6;
-	repeated SyncUnitAttachment attachments = 7;
+	repeated SyncUnitAttachmentProto attachments = 7;
 	bytes invitedSyncUnitId = 8;
 	reserved 9;
 }
 
-message StoredUserMessage {
+message StoredUserMessageProto {
 	bytes messageId = 1;
 	bytes senderUserId = 2;
 	uint64 lamportClock = 3;
-	bytes nodeHash = 4;
+	bytes nodeId = 4;
 	bytes operationPayload = 5;
 	bytes signature = 6;
+	bytes senderUserPublicKey = 7;
 }
 
-message PersistedSyncUnit {
+message PersistedSyncUnitProto {
 	bytes id = 1;
 	int32 type = 2;
-	bytes creatorPublicKey = 3;
-	repeated PersistedSyncUnitAuthorizationOperation authorizationOperations = 4;
-	repeated PersistedSyncUnitContentOperation contentOperations = 5;
+	bytes creatorUserId = 3;
+	reserved 4, 5;
 	uint64 clock = 6;
 	uint64 entityCounter = 7;
-	ActiveNodeSetState activeNodeSet = 8;
+	ActiveNodeSetStateProto activeNodeSet = 8;
 	bool home = 9;
 	uint64 nextNodeId = 10;
-	repeated PartialSyncUnitContentOperationState partialContentOperations = 11;
+	repeated PartialSyncUnitContentOperationStateProto partialContentOperations = 11;
+	PersistedSyncUnitAuthorizationOperationProto authorizationOperation = 12;
 }
 
-message PartialSyncUnitContentOperationState {
+message PartialSyncUnitContentOperationStateProto {
 	bytes unitId = 1;
 	uint64 lamportClock = 2;
-	bytes nodeHash = 3;
+	bytes nodeId = 3;
 	bytes authorPublicKey = 4;
 	int32 kind = 5;
 	string key = 6;
@@ -205,21 +207,21 @@ message PartialSyncUnitContentOperationState {
 	bytes signature = 9;
 }
 
-message PersistedSyncUnitAuthorizationOperation {
+message PersistedSyncUnitAuthorizationOperationProto {
 	bytes unitId = 1;
 	uint64 lamportClock = 2;
-	bytes nodeHash = 3;
+	bytes nodeId = 3;
 	bytes authorPublicKey = 4;
 	int32 action = 5;
-	bytes subjectPublicKey = 6;
+	bytes subjectUserId = 6;
 	int32 role = 7;
 	bytes signature = 8;
 }
 
-message PersistedSyncUnitContentOperation {
+message PersistedSyncUnitContentOperationProto {
 	bytes unitId = 1;
 	uint64 lamportClock = 2;
-	bytes nodeHash = 3;
+	bytes nodeId = 3;
 	bytes authorPublicKey = 4;
 	int32 kind = 5;
 	string key = 6;
@@ -227,92 +229,92 @@ message PersistedSyncUnitContentOperation {
 	bytes signature = 8;
 }
 
-message SyncUnitMessage {
+message SyncUnitMessageProto {
 	string text = 1;
-	repeated SyncUnitAttachment attachments = 2;
+	repeated SyncUnitAttachmentProto attachments = 2;
 }
 
-message SyncUnitAttachment {
+message SyncUnitAttachmentProto {
 	string name = 1;
 	string mediaType = 2;
 	bytes content = 3;
 }
 
-message PersistedOperation {
+message PersistedOperationProto {
 	uint64 lamportClock = 1;
-	bytes nodeHash = 2;
+	bytes nodeId = 2;
 	bytes payload = 3;
 	bytes signature = 4;
 }
 
-message OperationClock {
+message OperationClockProto {
 	string nodeId = 1;
 	uint64 clock = 2;
 }
 
-message PartialOperationState {
+message PartialOperationStateProto {
 	string sourceNodeId = 1;
 	uint64 lamportClock = 2;
-	bytes nodeHash = 3;
+	bytes nodeId = 3;
 	uint32 totalLength = 4;
 	bytes receivedBytes = 5;
 	bytes signature = 6;
 }
 
-message ActiveNodeSetState {
-	string versionNodeId = 1;
+message ActiveNodeSetStateProto {
+	bytes versionNodeId = 1;
 	uint64 versionClock = 2;
-	repeated string nodeIds = 3;
+	repeated bytes nodeIds = 3;
 	reserved 4;
-	LeavingProcessState leavingProcess = 5;
-	repeated string removedNodeIds = 6;
+	LeavingProcessStateProto leavingProcess = 5;
+	repeated bytes removedNodeIds = 6;
 }
 
-message LeavingProcessState {
+message LeavingProcessStateProto {
 	int32 phase = 1;
 	string processId = 2;
-	string leavingNodeId = 3;
+	bytes leavingNodeId = 3;
 	uint64 lastOperationClock = 4;
-	string lastOperationClockSourceNode = 5;
-	repeated string confirmedBy = 6;
+	bytes lastOperationClockSourceNode = 5;
+	repeated bytes confirmedBy = 6;
 }
 
-message RemoteSyncRequest {
+message RemoteSyncRequestProto {
 	bytes userId = 1;
-	repeated OperationClock fromClock = 2;
-	repeated OperationOffset offsets = 3;
+	repeated OperationClockProto fromClock = 2;
+	repeated OperationOffsetProto offsets = 3;
 	uint32 maxOperations = 4;
 	uint32 byteBudget = 5;
 	bool includeHistory = 6;
 	string joiningNodeId = 7;
-	RemoteDirectMessageDelivery directMessage = 8;
+	RemoteDirectMessageDeliveryProto directMessage = 8;
 	bytes syncUnitId = 9;
 	bytes requesterUserPublicKey = 10;
-	PersistedSyncUnit syncUnitUpdate = 11;
-	repeated SyncUnitContentOffset contentOffsets = 12;
+	PersistedSyncUnitProto syncUnitUpdate = 11;
+	repeated SyncUnitContentOffsetProto contentOffsets = 12;
 	bytes requesterSignature = 13;
 	bool userLookup = 14;
 }
 
-message SyncUnitContentOffset {
+message SyncUnitContentOffsetProto {
 	string nodeId = 1;
 	uint64 lamportClock = 2;
 	uint32 offset = 3;
 }
 
-message RemoteDirectMessageDelivery {
+message RemoteDirectMessageDeliveryProto {
 	bytes senderUserId = 1;
-	PersistedOperation operation = 2;
+	PersistedOperationProto operation = 2;
 }
 
-message OperationOffset {
+message OperationOffsetProto {
 	string nodeId = 1;
 	uint32 offset = 2;
 }
 
-message RemoteOperationTransfer {
+message RemoteOperationTransferProto {
 	uint64 lamportClock = 1;
-	bytes nodeHash = 2;
+	bytes nodeId = 2;
 	uint32 totalLength = 3;
 	uint32 offset = 4;
 	bytes bytes = 5;
@@ -320,30 +322,30 @@ message RemoteOperationTransfer {
 	bool complete = 7;
 }
 
-message RemoteSyncResponse {
+message RemoteSyncResponseProto {
 	bool userFound = 1;
-	reserved 2;
-	repeated PersistedOperation history = 3;
-	repeated OperationClock maxOperationClock = 4;
-	ActiveNodeSetState activeNodeSet = 5;
-	repeated RemoteOperationTransfer transfers = 6;
+	reserved 2, 6, 16;
+	reserved 3;
+	repeated OperationClockProto maxOperationClock = 4;
+	ActiveNodeSetStateProto activeNodeSet = 5;
 	uint64 nodeClock = 7;
 	bool directMessageStored = 8;
 	bool syncUnitFound = 9;
-	PersistedSyncUnit syncUnit = 10;
+	PersistedSyncUnitProto syncUnit = 10;
 	bool syncUnitRevoked = 11;
 	bytes homeSyncUnitId = 12;
-	repeated UserTreeEntry fileTreeEntries = 13;
+	repeated UserTreeEntryProto fileTreeEntries = 13;
 	bytes fileTreeRootId = 14;
 	string fileTreeStatus = 15;
-	repeated RemoteSyncUnitContentTransfer contentTransfers = 16;
-	repeated Contact contacts = 17;
+	repeated ContactProto contacts = 17;
+	RemoteOperationTransferProto transfer = 18;
+	RemoteSyncUnitContentTransferProto contentTransfer = 19;
 }
 
-message RemoteSyncUnitContentTransfer {
+message RemoteSyncUnitContentTransferProto {
 	bytes unitId = 1;
 	uint64 lamportClock = 2;
-	bytes nodeHash = 3;
+	bytes nodeId = 3;
 	bytes authorPublicKey = 4;
 	int32 kind = 5;
 	string key = 6;

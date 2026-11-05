@@ -359,16 +359,16 @@ public final class Theme {
     }
 
     /** Reads a file into an attachment, rejecting files above {@link #MAX_FILE_BYTES}. */
-    public static Sync.SyncUnitAttachment readAttachment(Path path) throws java.io.IOException {
+    public static Sync.SyncUnitAttachmentProto readAttachment(Path path) throws java.io.IOException {
         String mediaType = Files.probeContentType(path);
-        return Sync.SyncUnitAttachment.newBuilder()
+        return Sync.SyncUnitAttachmentProto.newBuilder()
                 .setName(path.getFileName().toString())
                 .setMediaType(mediaType == null ? "application/octet-stream" : mediaType)
                 .setContent(com.google.protobuf.ByteString.copyFrom(readFileLimited(path)))
                 .build();
     }
 
-    public static JPanel attachmentList(List<Sync.SyncUnitAttachment> attachments, Consumer<String> status) {
+    public static JPanel attachmentList(List<Sync.SyncUnitAttachmentProto> attachments, Consumer<String> status) {
         JPanel panel = column();
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
         for (var attachment : attachments)
@@ -376,7 +376,7 @@ public final class Theme {
         return panel;
     }
 
-    public static JPanel attachmentChip(Sync.SyncUnitAttachment attachment, Consumer<String> status) {
+    public static JPanel attachmentChip(Sync.SyncUnitAttachmentProto attachment, Consumer<String> status) {
         JPanel chip = row(6);
         chip.setBackground(new Color(240, 245, 241));
         chip.setBorder(BorderFactory.createCompoundBorder(

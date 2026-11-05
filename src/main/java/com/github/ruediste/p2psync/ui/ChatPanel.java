@@ -26,20 +26,22 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
-import com.github.ruediste.p2psync.libp2p.crypto.PubKey;
+import com.github.ruediste.p2psync.identity.UserId;
 import com.github.ruediste.p2psync.node.Node;
 import com.github.ruediste.p2psync.node.NodeUserHandle;
 import com.github.ruediste.p2psync.node.SyncUnitAuthorization;
 import com.github.ruediste.p2psync.node.SyncUnitId;
 import com.github.ruediste.p2psync.proto.Sync;
 
-/** Traditional chat view with a conversation list on the left and bubbles on the right. */
+/**
+ * Traditional chat view with a conversation list on the left and bubbles on the
+ * right.
+ */
 final class ChatPanel extends JPanel {
     private final Node node;
     private final Consumer<String> status;
@@ -56,9 +58,9 @@ final class ChatPanel extends JPanel {
     private final JButton sendButton = Theme.primaryButton("Send");
     private final ContactPicker contactPicker;
 
-    private final List<Sync.SyncUnitAttachment> attachments = new ArrayList<>();
+    private final List<Sync.SyncUnitAttachmentProto> attachments = new ArrayList<>();
     private Conversation selected;
-    private PubKey pendingContact;
+    private UserId pendingContact;
     private boolean refreshing;
 
     ChatPanel(Node node, Node.UserStatus user, Consumer<String> status) {
@@ -255,26 +257,26 @@ final class ChatPanel extends JPanel {
                         "Channel " + Theme.shortId(unit.id()),
                         unit.memberCount() + " members", unit.id(), null));
         }
-        Map<String, PubKey> contacts = new java.util.LinkedHashMap<>();
+        Map<String, UserId> contacts = new java.util.LinkedHashMap<>();
         for (var entry : node.getUserMessageLog(user.userId())) {
-            if (entry.message().getType() != Sync.UserMessage.Type.CHAT)
+            if (entry.message().getType() != Sync.UserMessageProto.Type.CHAT)
                 continue;
-            PubKey contact = entry.outgoing()
-                    ? PubKey.from(entry.message().getRecipientUserId().toByteArray())
-                    : PubKey.from(entry.message().getSenderUserId().toByteArray());
+            UserId contact = entry.outgoing()
+                    ? UserId.fromBytes(entry.message().getRecipientUserId().toByteArray())
+                    : UserId.fromBytes(entry.message().getSenderUserId().toByteArray());
             if (!contact.equals(user.userId()))
                 contacts.putIfAbsent(HexFormat.of().formatHex(contact.bytes()), contact);
         }
         if (pendingContact != null)
             contacts.putIfAbsent(HexFormat.of().formatHex(pendingContact.bytes()), pendingContact);
-        for (PubKey contact : contacts.values()) {
+        for (UserId contact : contacts.values()) {
             String label = handle.contactLabel(contact);
             result.add(new Conversation(directKey(contact), label, "Direct chat", null, contact));
         }
         return result;
     }
 
-    private static String directKey(PubKey contact) {
+    private static String directKey(UserId contact) {
         return "direct:" + HexFormat.of().formatHex(contact.bytes());
     }
 
@@ -307,11 +309,11 @@ final class ChatPanel extends JPanel {
             }
         } else {
             for (var entry : node.getUserMessageLog(user.userId())) {
-                if (entry.message().getType() != Sync.UserMessage.Type.CHAT)
+                if (entry.message().getType() != Sync.UserMessageProto.Type.CHAT)
                     continue;
-                PubKey contact = entry.outgoing()
-                        ? PubKey.from(entry.message().getRecipientUserId().toByteArray())
-                        : PubKey.from(entry.message().getSenderUserId().toByteArray());
+                UserId contact = entry.outgoing()
+                        ? UserId.fromBytes(entry.message().getRecipientUserId().toByteArray())
+                        : UserId.fromBytes(entry.message().getSenderUserId().toByteArray());
                 if (!contact.equals(conversation.contact()))
                     continue;
                 addBubble(entry.outgoing(), entry.outgoing() ? "You" : conversation.title(),
@@ -327,7 +329,7 @@ final class ChatPanel extends JPanel {
             SwingUtilities.invokeLater(this::scrollToBottom);
     }
 
-    private void addBubble(boolean outgoing, String sender, String text, List<Sync.SyncUnitAttachment> attachments) {
+    private void addBubble(boolean outgoing, String sender, String text, List<Sync.SyncUnitAttachmentProto> attachments) {
         JPanel row = new JPanel(new FlowLayout(outgoing ? FlowLayout.RIGHT : FlowLayout.LEFT, 0, 3));
         row.setOpaque(false);
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -361,7 +363,7 @@ final class ChatPanel extends JPanel {
         messagesPanel.add(row);
     }
 
-    private String senderLabel(PubKey key) {
+    private String senderLabel(UserId key) {
         return node.getUser(user.userId()).contactLabel(key);
     }
 
@@ -383,7 +385,7 @@ final class ChatPanel extends JPanel {
     }
 
     private void startDirectChat() {
-        PubKey contact = contactPicker.selectedUserId();
+        UserId contact = contactPicker.selectedUserId();
         if (contact == null) {
             status.accept("Select a contact with a linked user ID");
             return;
@@ -411,7 +413,7 @@ final class ChatPanel extends JPanel {
             return;
         Conversation conversation = selected;
         Background.run("attach files", () -> {
-            List<Sync.SyncUnitAttachment> loaded = new ArrayList<>();
+            List<Sync.SyncUnitAttachmentProto> loaded = new ArrayList<>();
             for (Path path : paths)
                 loaded.add(Theme.readAttachment(path));
             return loaded;
@@ -457,11 +459,11 @@ final class ChatPanel extends JPanel {
         if (text.isBlank() && attachments.isEmpty())
             return;
         Conversation conversation = selected;
-        List<Sync.SyncUnitAttachment> toSend = List.copyOf(attachments);
-        PubKey userId = user.userId();
+        List<Sync.SyncUnitAttachmentProto> toSend = List.copyOf(attachments);
+        UserId userId = user.userId();
         Background.run("send message", () -> {
             if (conversation.channelId() != null) {
-                var message = Sync.SyncUnitMessage.newBuilder().setText(text);
+                var message = Sync.SyncUnitMessageProto.newBuilder().setText(text);
                 toSend.forEach(message::addAttachments);
                 node.sendChannelMessage(conversation.channelId(), userId, message.build());
             } else {
@@ -482,7 +484,7 @@ final class ChatPanel extends JPanel {
         }, error -> status.accept("Could not send message: " + error.getMessage()));
     }
 
-    private record Conversation(String key, String title, String subtitle, SyncUnitId channelId, PubKey contact) {
+    private record Conversation(String key, String title, String subtitle, SyncUnitId channelId, UserId contact) {
     }
 
     private final class ConversationRenderer extends JPanel implements ListCellRenderer<Conversation> {

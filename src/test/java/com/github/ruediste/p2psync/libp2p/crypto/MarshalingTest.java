@@ -64,7 +64,7 @@ public class MarshalingTest {
 
     @Test
     public void unmarshalPublicKeyRejectsUnsupportedType() {
-        byte[] data = Libp2P.PublicKey.newBuilder()
+        byte[] data = Libp2P.PublicKeyProto.newBuilder()
                 .setType(Libp2P.KeyType.RSA)
                 .setData(com.google.protobuf.ByteString.copyFrom(new byte[4]))
                 .build()
@@ -79,7 +79,7 @@ public class MarshalingTest {
 
     @Test
     public void unmarshalPrivateKeyRejectsUnsupportedType() {
-        byte[] data = Libp2P.PrivateKey.newBuilder()
+        byte[] data = Libp2P.PrivateKeyProto.newBuilder()
                 .setType(Libp2P.KeyType.RSA)
                 .setData(com.google.protobuf.ByteString.copyFrom(new byte[4]))
                 .build()

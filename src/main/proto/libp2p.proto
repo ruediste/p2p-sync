@@ -12,17 +12,17 @@ enum KeyType {
 	Curve25519 = 4;
 }
 
-message PublicKey {
+message PublicKeyProto {
 	KeyType type = 1;
 	bytes data = 2;
 }
 
-message PrivateKey {
+message PrivateKeyProto {
 	KeyType type = 1;
 	bytes data = 2;
 }
 
-message KeyPair {
+message KeyPairProto {
 	KeyType type = 1;
 	bytes privateKey = 2;
 	bytes publicKey = 3;

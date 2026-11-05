@@ -678,7 +678,7 @@ public class FileTree {
         while (true) {
             if (sameGuid(current, ancestor))
                 return true;
-            if (!visited.add(new GuidKey(current.nodeId, current.counter)))
+            if (!visited.add(new GuidKey(current.shortNodeId, current.counter)))
                 throw new IllegalStateException("Directory parent cycle detected at " + formatGuid(current));
             byte[] header = getHeader(current, EntryType.DIR_HEADER);
             if (header == null)
@@ -867,7 +867,7 @@ public class FileTree {
     }
 
     private static byte[] guidBytes(ShortGuid guid) {
-        return ByteBuffer.allocate(GUID_SIZE).order(ByteOrder.BIG_ENDIAN).putInt(guid.nodeId).putLong(guid.counter)
+        return ByteBuffer.allocate(GUID_SIZE).order(ByteOrder.BIG_ENDIAN).putInt(guid.shortNodeId).putLong(guid.counter)
                 .array();
     }
 
@@ -881,7 +881,7 @@ public class FileTree {
 
     private static ShortGuid readGuid(ByteBuffer buffer) {
         ShortGuid result = new ShortGuid();
-        result.nodeId = buffer.getInt();
+        result.shortNodeId = buffer.getInt();
         result.counter = buffer.getLong();
         return result;
     }
@@ -951,18 +951,18 @@ public class FileTree {
     }
 
     private static boolean sameGuid(ShortGuid left, ShortGuid right) {
-        return left != null && right != null && left.nodeId == right.nodeId && left.counter == right.counter;
+        return left != null && right != null && left.shortNodeId == right.shortNodeId && left.counter == right.counter;
     }
 
     private static ShortGuid copyGuid(ShortGuid guid) {
         ShortGuid result = new ShortGuid();
-        result.nodeId = guid.nodeId;
+        result.shortNodeId = guid.shortNodeId;
         result.counter = guid.counter;
         return result;
     }
 
     private static String formatGuid(ShortGuid guid) {
-        return guid.nodeId + ":" + Long.toUnsignedString(guid.counter);
+        return guid.shortNodeId + ":" + Long.toUnsignedString(guid.counter);
     }
 
     private static void requireOffset(long offset) {

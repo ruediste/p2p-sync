@@ -26,7 +26,7 @@ public final class Marshaling {
      * Converts a private key object into a protobuf-serialized private key.
      */
     public static byte[] marshalPrivateKey(PrivKey privKey) {
-        return Libp2P.PrivateKey.newBuilder()
+        return Libp2P.PrivateKeyProto.newBuilder()
                 .setType(privKey.getKeyType())
                 .setData(ByteString.copyFrom(privKey.raw()))
                 .build()
@@ -37,9 +37,9 @@ public final class Marshaling {
      * Converts the protobuf-serialized private key into its representative object.
      */
     public static PrivKey unmarshalPrivateKey(byte[] data) {
-        Libp2P.PrivateKey proto;
+        Libp2P.PrivateKeyProto proto;
         try {
-            proto = Libp2P.PrivateKey.parseFrom(data);
+            proto = Libp2P.PrivateKeyProto.parseFrom(data);
         } catch (InvalidProtocolBufferException e) {
             throw new IllegalArgumentException("Invalid marshaled private key", e);
         }

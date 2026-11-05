@@ -57,7 +57,7 @@ final class UserFileTree {
 
     static UserFileTree fromState(DataStorage storage, GuidMapper mapper, byte[] state) {
         try {
-            var stored = Sync.UserTreeState.parseFrom(state);
+            var stored = Sync.UserTreeStateProto.parseFrom(state);
             var result = new UserFileTree(storage, mapper, stored.getRootId().toByteArray(), 0);
             result.statusMessage = stored.getStatusMessage();
             var pending = new ArrayList<>(stored.getEntriesList());
@@ -88,7 +88,7 @@ final class UserFileTree {
 
     static UserFileTree fromRoot(DataStorage storage, GuidMapper mapper, byte[] state, long rootOffset) {
         try {
-            var stored = Sync.UserTreeState.parseFrom(state);
+            var stored = Sync.UserTreeStateProto.parseFrom(state);
             var result = new UserFileTree(storage, mapper, stored.getRootId().toByteArray(), rootOffset,
                     com.github.ruediste.p2psync.storage.RefMode.SHARE);
             result.statusMessage = stored.getStatusMessage();
@@ -105,7 +105,7 @@ final class UserFileTree {
         var result = new UserFileTree(storage, mapper, rootId, 0);
         for (var operation : operations) {
             try {
-                result.apply(Sync.UserOperation.parseFrom(operation.payload));
+                result.apply(Sync.UserOperationProto.parseFrom(operation.payload));
             } catch (InvalidProtocolBufferException e) {
                 throw new IllegalArgumentException("Invalid user operation payload", e);
             }
@@ -113,7 +113,7 @@ final class UserFileTree {
         return result;
     }
 
-    void apply(Sync.UserOperation operation) {
+    void apply(Sync.UserOperationProto operation) {
         switch (operation.getKind()) {
             case SET_STATUS -> statusMessage = operation.getStatusMessage();
             case CREATE_DIRECTORY -> createDirectory(full(operation.getEntityId()),
@@ -132,6 +132,7 @@ final class UserFileTree {
             case RENAME -> rename(full(operation.getEntityId()), operation.getNewName());
             case DELETE -> delete(full(operation.getEntityId()));
             case DIRECT_MESSAGE, PARTICIPATE_SYNC_UNIT, LEAVE_SYNC_UNIT, RECEIVE_MESSAGE,
+                    SET_SHARED_FOLDER_LABEL,
                     CONTACT_CREATE, CONTACT_UPDATE, CONTACT_DELETE ->
                 {
                 }
@@ -308,7 +309,7 @@ final class UserFileTree {
     }
 
     byte[] serializeState() {
-        var state = Sync.UserTreeState.newBuilder()
+        var state = Sync.UserTreeStateProto.newBuilder()
                 .setRootId(ByteString.copyFrom(rootId))
                 .setStatusMessage(statusMessage);
         addEntries(state, root);
@@ -316,25 +317,25 @@ final class UserFileTree {
     }
 
     byte[] serializeShallowState() {
-        return Sync.UserTreeState.newBuilder()
+        return Sync.UserTreeStateProto.newBuilder()
                 .setRootId(ByteString.copyFrom(rootId))
                 .setStatusMessage(statusMessage)
                 .build().toByteArray();
     }
 
-    private void addEntries(Sync.UserTreeState.Builder state, ShortGuid directory) {
+    private void addEntries(Sync.UserTreeStateProto.Builder state, ShortGuid directory) {
         for (var entry : tree.listDirectory(directory)) {
             FullGuid entityId = mapper.toFull(entry.guid());
             FullGuid parentId = mapper.toFull(directory);
             if (entry.directory()) {
-                state.addEntries(Sync.UserTreeEntry.newBuilder()
+                state.addEntries(Sync.UserTreeEntryProto.newBuilder()
                         .setEntityId(ByteString.copyFrom(entityId.bytes()))
                         .setParentId(ByteString.copyFrom(parentId.bytes()))
                         .setName(entry.name())
                         .setDirectory(true));
                 addEntries(state, entry.guid());
             } else {
-                state.addEntries(Sync.UserTreeEntry.newBuilder()
+                state.addEntries(Sync.UserTreeEntryProto.newBuilder()
                         .setEntityId(ByteString.copyFrom(entityId.bytes()))
                         .setParentId(ByteString.copyFrom(parentId.bytes()))
                         .setName(entry.name())
@@ -370,7 +371,7 @@ final class UserFileTree {
     }
 
     private static boolean sameGuid(ShortGuid left, ShortGuid right) {
-        return left.nodeId == right.nodeId && left.counter == right.counter;
+        return left.shortNodeId == right.shortNodeId && left.counter == right.counter;
     }
 
     private static List<String> components(String path) {
