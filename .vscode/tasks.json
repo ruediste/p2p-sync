@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build p2p-sync for launch",
+      "type": "process",
+      "command": "mvn",
+      "args": [
+        "-B",
+        "-pl",
+        "p2p-sync",
+        "compile",
+        "org.apache.maven.plugins:maven-dependency-plugin:3.8.1:copy-dependencies",
+        "-DincludeScope=runtime",
+        "-DoutputDirectory=${workspaceFolder}/p2p-sync/target/dependency"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

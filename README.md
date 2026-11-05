@@ -1,6 +1,6 @@
 # p2p-sync app
 
-Java implementation of the p2p-sync peer-to-peer file storage and synchronization protocol. It ports parts of jvm-libp2p from Kotlin to Java and extends it with functionality from nabu (reference sources in `../upstream/`). Project documentation lives in `doc`.
+Java implementation of the p2p-sync peer-to-peer file storage and synchronization protocol. It ports parts of jvm-libp2p from Kotlin to Java and extends it with functionality from nabu (reference sources in `../upstream/`). Project documentation lives in [p2p-sync/doc](p2p-sync/doc).
 
 ## Requirements
 
@@ -8,6 +8,11 @@ Java implementation of the p2p-sync peer-to-peer file storage and synchronizatio
 - Maven
 
 ## Building
+
+The root Maven project, `p2p-sync-parent`, builds two modules: `p2p-sync`
+(the existing application and its documentation) and `jreact` (a new JAR module).
+Run the following commands from the repository root. To build only the
+application, use `mvn -pl p2p-sync compile`.
 
 ```bash
 mvn compile
@@ -30,7 +35,7 @@ the FUSE 2 compatibility library
 your user.
 
 ```bash
-mvn compile org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
+mvn -pl p2p-sync compile org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
 	-Dexec.mainClass=com.github.ruediste.p2psync.ui.DesktopMain \
 	-Dexec.args="/absolute/path/node.db /absolute/path/user-mount"
 ```
@@ -43,14 +48,14 @@ Node storage is not password-locked; protect the database file with filesystem
 permissions. Run one process per node database file.
 
 Use `--no-mount` to run without mounting the FUSE filesystem, and `--drive PORT`
-(or `--drive=PORT`) to start the local [SwingDrive](doc/swingdrive.md)
+(or `--drive=PORT`) to start the local [SwingDrive](p2p-sync/doc/swingdrive.md)
 development server, which inspects, drives, and screenshots the Swing UI over
 HTTP and exposes the same combined file view through `/fs/...` endpoints.
 `--drive` alone uses port 9222, and port 0 selects a random free port. For
 example:
 
 ```bash
-mvn compile org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
+mvn -pl p2p-sync compile org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
 	-Dexec.mainClass=com.github.ruediste.p2psync.ui.DesktopMain \
 	-Dexec.args="--no-mount --drive 9222 /absolute/path/node.db"
 ```
@@ -86,7 +91,7 @@ using jnr-fuse. On Linux, install the FUSE 2 compatibility library (`libfuse2` o
 Create an empty mount directory, then run with Java 21:
 
 ```bash
-mvn compile org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
+mvn -pl p2p-sync compile org.codehaus.mojo:exec-maven-plugin:3.5.0:java \
 	-Dexec.mainClass=com.github.ruediste.p2psync.storage.SimpleFuseMain \
 	-Dexec.args="/absolute/path/files.db /absolute/path/mount"
 ```

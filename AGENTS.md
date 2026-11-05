@@ -1,5 +1,6 @@
 This is a p2p file storage and synchronization project. It is based on IPFS, but does not use an existing library.
-The project documentation lives in `doc`.
+The Maven parent project is at the repository root, with `p2p-sync` and `jreact` child modules.
+The application sources and documentation live in `p2p-sync/src` and `p2p-sync/doc`.
 
 If there is an issue with generating the protobuf java files, a `mvn clean` sometimes helps.
 
@@ -24,4 +25,4 @@ This is not an automated test. It is fine to ask the user questions.
 This project is in early development. Do not update the file version number, and do not care about backward compatibility of the DataStore files.
 
 ## Interacting with the Running Application
-By default, the development instance is started with drive port `9222` enabled. This allows UI inspection, interaction and taking screenshots, similar to the capabilities of playwright. See [Swing Drive](doc/swingdrive.md) for details. This can also be used to start a client and interact with it.
+By default, the development instance is started with drive port `9222` enabled. This allows UI inspection, interaction and taking screenshots, similar to the capabilities of playwright. See [Swing Drive](p2p-sync/doc/swingdrive.md) for details. This can also be used to start a client and interact with it.

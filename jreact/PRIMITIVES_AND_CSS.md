@@ -1,0 +1,78 @@
+# JReact Primitives and CSS Subset
+
+This document defines the proposed initial set of built-in JReact primitives and layout properties. The `jreact` module does not implement these APIs yet; treat this as the contract to implement, not a description of current runtime behavior.
+
+## Primitive Components
+
+Primitives are the built-in building blocks used inside user-defined Java components. Names below show the intended Java API style; exact signatures can be settled with the implementation.
+
+| Primitive | Purpose | Children |
+| --- | --- | --- |
+| `Div` | A general-purpose rectangular container and the default Flexbox layout node. | Any primitives or user components. |
+| `Span` | An inline semantic grouping for text and other inline content. It does not create a separate Flexbox container. | Text and inline content. |
+| `Text` | Displays a string, including a string produced from a Java value. | None. |
+
+For example:
+
+```java
+Div(style -> style.flexDirection(Column).padding(16), () -> {
+    Span(() -> Text("Current count: " + count));
+});
+```
+
+User-defined components remain ordinary Java methods and can compose these primitives. HTML elements such as `form`, `input`, `select`, `img`, and `a` are not part of this initial primitive set; add them only with a defined Java/Swing behavior and interaction model.
+
+## Supported CSS Subset
+
+JReact styles are declared inline in Java components using a typed, CSS-inspired DSL. The DSL uses the properties listed below, but does not parse CSS text or external stylesheets.
+
+| Property | Supported initial values / behavior |
+| --- | --- |
+| `display` | `flex` only; layout nodes use Flexbox. `Text` is leaf content. |
+| `flex-direction` | `row` or `column`. |
+| `flex-wrap` | `nowrap`, `wrap`, or `wrap-reverse`; defaults to `nowrap`. |
+| `order` | Any integer; defaults to `0`. |
+| `flex-grow`, `flex-shrink` | Non-negative numeric factors; default to `0` and `1`, respectively. |
+| `justify-content` | `flex-start`, `center`, `flex-end`, `space-between`, `space-around`, or `space-evenly`. |
+| `align-items` | `flex-start`, `center`, `flex-end`, or `stretch`. |
+| `width`, `height` | A non-negative numeric size in logical pixels, or `auto` for content/layout-driven sizing. |
+| `margin`, `padding` | A non-negative numeric size in logical pixels, applied uniformly or per side. |
+| `background-color`, `color` | Solid colors, supplied as typed Java color values. `color` sets text color. |
+| `border` | A solid border with a non-negative logical-pixel width and a color; uniform on all sides or set per side. |
+| `border-radius` | A uniform non-negative logical-pixel corner radius. |
+| `font-family` | A font family available to Java on the host system. |
+| `font-size` | A positive logical-pixel size. |
+| `font-weight`, `font-style` | `normal` or `bold`; `normal` or `italic`, respectively. |
+| `text-align` | `left`, `center`, or `right` for text content. |
+| `line-height` | `normal` or a positive logical-pixel line height. |
+| `box-shadow`, `text-shadow` | A single shadow with horizontal and vertical offsets, a non-negative blur radius, and a color; no spread, inset, or multiple shadows. |
+| `opacity` | A value from `0` (transparent) to `1` (opaque); defaults to `1`. |
+
+The corresponding Java API should use typed values and numeric dimensions rather than parsing CSS strings (for example, `flexDirection(Column)`, `padding(16)`, and `backgroundColor(color)`). These appearance properties apply to `Div`, `Span`, and `Text` where meaningful. Text measurement and wrapping are performed by the renderer using Java font metrics and the selected font styles.
+
+### Inline Style Rules and Selectors
+
+A component may declare selector-based style rules alongside its child primitives. Selectors are built with the DSL rather than written as CSS strings. The initial selector forms are primitive type selectors, named style classes, IDs, direct-child and descendant combinators, and pseudo-classes.
+
+```java
+void Panel() {
+    Styles(Scope.DIRECT_CHILDREN,
+        Rule(Selector.type(Div.class), backgroundColor(panelColor)),
+        Rule(Selector.className("item").hover(), color(highlightColor)));
+
+    Div(style -> style.className("item").padding(8).color(textColor),
+        () -> Text("Hover me"));
+}
+```
+
+A primitive can set its `className` for selector matching and direct inline properties on the same style fluent builder. The class adds selector-based styles without replacing the inline properties; when both set the same property, the direct inline property takes precedence.
+
+`Scope.DIRECT_CHILDREN` is the default: rules declared by a component can style only its immediate child nodes. `Scope.TRANSITIVE` allows them to style all descendants in the rendered subtree, including nodes produced by nested user components. Scope limits the nodes a rule can match; it does not change the selector. A component's rules do not style the component itself. Nested components' own rules use their own scope.
+
+The initial pseudo-classes are `hover`, `active`, `focus`, and `disabled`. A pseudo-class matches when the corresponding interaction state is reported for the target node; unsupported states do not match. Additional pseudo-classes and pseudo-elements are out of scope.
+
+When multiple rules set the same property, a primitive's directly supplied style takes precedence over DSL rules. Among DSL rules, selector specificity is ordered by ID, then class and pseudo-class, then primitive type; ties are resolved by the nearest declaring component, then by later rule declaration. Scope determines whether a rule is eligible to match and does not add specificity.
+
+### Not in the Initial Subset
+
+The following are not supported by this initial contract: CSS files or raw inline CSS strings; automatic property inheritance; attribute, sibling, or universal selectors; pseudo-elements and pseudo-classes beyond those listed above; grid, absolute, or fixed positioning; percentage, viewport, or font-relative dimensions; background images or gradients; dashed or dotted borders and per-corner radii; text decoration; transforms, transitions, and animations. These can be specified separately when their Java API and rendering behavior are defined.

@@ -8,6 +8,7 @@ interpreting a result.
 
 ## Common Prerequisites
 
+- Run Maven commands in these test cases from the `p2p-sync` module directory.
 - The project builds with `mvn compile` and runs with Java 21.
 - Two application instances are available, referred to below as **Node A** and
   **Node B**. Each instance must own its own `node.db` file; never open the same

@@ -6,6 +6,12 @@
       "name": "Simple FUSE Filesystem",
       "request": "launch",
       "mainClass": "com.github.ruediste.p2psync.storage.SimpleFuseMain",
+      "preLaunchTask": "Build p2p-sync for launch",
+      "classPaths": [
+        "${workspaceFolder}/p2p-sync/target/classes",
+        "${workspaceFolder}/p2p-sync/target/dependency/*"
+      ],
+      "modulePaths": [],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       // "args": ["${input:fuseBackingFile}", "${input:fuseMountDirectory}"]
@@ -16,6 +22,12 @@
       "name": "FSCK",
       "request": "launch",
       "mainClass": "com.github.ruediste.p2psync.storage.StorageCheckMain",
+      "preLaunchTask": "Build p2p-sync for launch",
+      "classPaths": [
+        "${workspaceFolder}/p2p-sync/target/classes",
+        "${workspaceFolder}/p2p-sync/target/dependency/*"
+      ],
+      "modulePaths": [],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       // "args": ["${input:fuseBackingFile}", "${input:fuseMountDirectory}"]
@@ -26,6 +38,12 @@
       "name": "p2p-sync Node Desktop",
       "request": "launch",
       "mainClass": "com.github.ruediste.p2psync.ui.DesktopMain",
+      "preLaunchTask": "Build p2p-sync for launch",
+      "classPaths": [
+        "${workspaceFolder}/p2p-sync/target/classes",
+        "${workspaceFolder}/p2p-sync/target/dependency/*"
+      ],
+      "modulePaths": [],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       // "args": ["${input:nodeDataDirectory}", "${input:nodeMountDirectory}"]
@@ -36,6 +54,12 @@
       "name": "p2p-sync Node Desktop2",
       "request": "launch",
       "mainClass": "com.github.ruediste.p2psync.ui.DesktopMain",
+      "preLaunchTask": "Build p2p-sync for launch",
+      "classPaths": [
+        "${workspaceFolder}/p2p-sync/target/classes",
+        "${workspaceFolder}/p2p-sync/target/dependency/*"
+      ],
+      "modulePaths": [],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       // "args": ["${input:nodeDataDirectory}", "${input:nodeMountDirectory}"]

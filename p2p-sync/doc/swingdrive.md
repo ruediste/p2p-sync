@@ -12,6 +12,8 @@ development and end-to-end checks. It is not an authentication boundary.
 
 ## Starting
 
+Run Maven commands below from the `p2p-sync` module directory.
+
 Options may appear before or after the positional arguments:
 
 ```bash
