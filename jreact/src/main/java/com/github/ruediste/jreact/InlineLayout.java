@@ -8,6 +8,11 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.github.ruediste.jreact.nodes.IconNode;
+import com.github.ruediste.jreact.nodes.SpanNode;
+import com.github.ruediste.jreact.nodes.TextNode;
+import com.github.ruediste.jreact.nodes.TextualNode;
+
 /**
  * Lays out text and icons in a span's shared inline flow.
  *
@@ -23,7 +28,7 @@ import java.util.Map;
  * rectangular bounds rather than separate CSS fragment boxes. This helper
  * neither paints content nor lays out block containers or native editors.
  */
-final class InlineLayout {
+public final class InlineLayout {
     /** A measured text or icon fragment positioned within an inline line. */
     private record Fragment(Node node, String text, double x, double width, double height, FontMetrics metrics) {
     }
@@ -46,7 +51,7 @@ final class InlineLayout {
             x = 0;
         }
 
-        void text(Node node) {
+        void text(TextualNode node) {
             FontMetrics metrics = graphics.getFontMetrics(node.style.font());
             double height = node.style.number(StyleProperties.LINE_HEIGHT, Double.NaN);
             if (Double.isNaN(height))
@@ -87,14 +92,14 @@ final class InlineLayout {
         }
 
         void visit(Node node) {
-            if (node.kind == Node.Kind.TEXT)
-                text(node);
-            else if (node.kind == Node.Kind.ICON) {
-                if (x > 0 && x + node.icon.getIconWidth() > width)
+            if (node instanceof TextNode textNode)
+                text(textNode);
+            else if (node instanceof IconNode iconNode) {
+                if (x > 0 && x + iconNode.icon.getIconWidth() > width)
                     newline();
-                lines.getLast()
-                        .add(new Fragment(node, null, x, node.icon.getIconWidth(), node.icon.getIconHeight(), null));
-                x += node.icon.getIconWidth();
+                lines.getLast().add(new Fragment(iconNode, null, x, iconNode.icon.getIconWidth(),
+                        iconNode.icon.getIconHeight(), null));
+                x += iconNode.icon.getIconWidth();
             } else
                 node.children.forEach(this::visit);
         }
@@ -103,7 +108,7 @@ final class InlineLayout {
     private InlineLayout() {
     }
 
-    static double flow(Node span, double width, Graphics2D graphics, boolean commit) {
+    static double flow(SpanNode span, double width, Graphics2D graphics, boolean commit) {
         Style.Insets inset = span.style.inset();
         Flow flow = new Flow(graphics, width - inset.horizontal());
         span.children.forEach(flow::visit);
@@ -131,13 +136,15 @@ final class InlineLayout {
         }
         if (commit) {
             span.descendants().stream().filter(node -> node != span).forEach(node -> {
-                node.lines.clear();
+                if (node instanceof TextualNode textual)
+                    textual.lines.clear();
                 node.bounds.setRect(span.bounds.x, span.bounds.y, 0, 0);
             });
             bounds.forEach((node, rectangle) -> {
                 node.bounds.setRect(rectangle);
-                positioned.getOrDefault(node, List.of()).forEach(line -> node.lines.add(new Node.Line(line.text(),
-                        line.x() - rectangle.x, line.baseline() - rectangle.y)));
+                if (node instanceof TextualNode textual)
+                    positioned.getOrDefault(node, List.of()).forEach(line -> textual.lines.add(new Node.Line(
+                            line.text(), line.x() - rectangle.x, line.baseline() - rectangle.y)));
             });
             updateSpans(span);
         }
@@ -146,13 +153,13 @@ final class InlineLayout {
 
     private static void updateSpans(Node root) {
         for (Node child : root.children) {
-            if (child.kind != Node.Kind.SPAN)
+            if (!(child instanceof SpanNode span))
                 continue;
-            updateSpans(child);
-            if (!child.children.isEmpty()) {
-                child.bounds.setRect(child.children.getFirst().bounds);
-                for (Node nested : child.children)
-                    Rectangle2D.union(child.bounds, nested.bounds, child.bounds);
+            updateSpans(span);
+            if (!span.children.isEmpty()) {
+                span.bounds.setRect(span.children.getFirst().bounds);
+                for (Node nested : span.children)
+                    Rectangle2D.union(span.bounds, nested.bounds, span.bounds);
             }
         }
     }

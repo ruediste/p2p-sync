@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -110,7 +109,7 @@ class GridAreasPortTest {
     }
 
     @ParameterizedTest(name = "preserves explicit dimensions through {0} node style round-trips")
-    @ValueSource(strings = { "leaf", "context", "children" })
+    @ValueSource(strings = { "leaf", "children" })
     void preservesExplicitDimensionsThroughNodeStyleRoundTrips(String creation) {
         GridTemplateArea area = new GridTemplateArea("main", 1, 3, 1, 4);
         Style original = new Style();
@@ -120,8 +119,6 @@ class GridAreasPortTest {
         Node node;
         if (creation.equals("leaf")) {
             node = new Node(original);
-        } else if (creation.equals("context")) {
-            node = Node.withContext(original, Map.of("text", "hello"));
         } else {
             node = new Node(original, List.of());
         }
@@ -188,20 +185,17 @@ class GridAreasPortTest {
 
     @Test
     void preservesExplicitDimensionsInStylesPassedToMeasureCallbacks() {
-        Object context = Map.of("text", "hello");
         Style original = new Style();
         original.setGridTemplateAreaRowCount(2);
         original.setGridTemplateAreaColumnCount(3);
         original.setGridTemplateAreas(
                 List.of(new GridTemplateArea("main", 1, 5, 1, 6)));
-        Node node = Node.withContext(original, context);
+        Node node = new Node(original);
         List<Style> measuredStyles = new ArrayList<>();
-        List<Object> contexts = new ArrayList<>();
 
         node.measure = (known, available, measuredNode) -> {
             Style style = measuredNode.style.copy();
             measuredStyles.add(style);
-            contexts.add(measuredNode.context);
             return Size.of(20f, 10f);
         };
         LayoutEngine.computeLayout(node, Size.of(AvailableSpace.definite(200), AvailableSpace.definite(100)));
@@ -211,6 +205,5 @@ class GridAreasPortTest {
             assertEquals(2, style.getGridTemplateAreaRowCount());
             assertEquals(3, style.getGridTemplateAreaColumnCount());
         }
-        assertTrue(contexts.stream().allMatch(value -> value == context));
     }
 }

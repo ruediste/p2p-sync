@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.github.ruediste.jreact.nodes.DivNode;
+
 /**
  * Owns a component tree's synchronous rendering and lifecycle.
  *
@@ -13,8 +15,8 @@ import java.util.Objects;
  * State and viewport changes mark the root dirty and notify the host through
  * the
  * invalidation callback; the host decides when to call {@link #render()}.
- * Layout and painting are separate responsibilities of {@link FlexLayout} and
- * {@link Renderer}.
+ * Layout is the responsibility of {@link FlexLayout}; painting lives in the
+ * {@link Node} hierarchy.
  *
  * <p>
  * Rendering, viewport changes, state updates, and disposal belong to the
@@ -90,7 +92,7 @@ public final class RenderRoot implements AutoCloseable {
         rendering = true;
         effects.clear();
         dirty = false;
-        Node nextTreeRoot = new Node(Node.Kind.DIV, new Node.Key(rootFiber, -1), null, new Style(), List.of());
+        Node nextTreeRoot = new DivNode(new Node.Key(rootFiber, -1), new Style(), List.of());
 
         // initialize the parent node to the synthetic root node
         parent = nextTreeRoot;

@@ -1,7 +1,14 @@
 package com.github.ruediste.jreact;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static com.github.ruediste.jreact.Ui.*;
+import static com.github.ruediste.jreact.Ui.component;
+import static com.github.ruediste.jreact.Ui.div;
+import static com.github.ruediste.jreact.Ui.span;
+import static com.github.ruediste.jreact.Ui.text;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -12,6 +19,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import com.github.ruediste.jreact.nodes.DivNode;
+import com.github.ruediste.jreact.nodes.TextualNode;
 
 /**
  * Checks CSS cascade and flex geometry using headless font metrics and exact
@@ -173,7 +183,7 @@ class StyleLayoutTest {
                 () -> text("hello world\n\n\uD83D\uDE80end",
                         style -> style.width(40).fontSize(14).lineHeight(20).textAlign(Style.TextAlign.RIGHT)),
                 40, 200);
-        Node text = tree.children.getFirst();
+        TextualNode text = (TextualNode) tree.children.getFirst();
         assertTrue(text.lines.size() >= 4);
         assertTrue(text.lines.stream().anyMatch(line -> line.text().isEmpty()));
         assertEquals(20, text.lines.get(1).baseline() - text.lines.get(0).baseline());
@@ -184,7 +194,7 @@ class StyleLayoutTest {
     @Test
     void scopeInlinePrecedenceSpecificityAndLaterRules() {
         Node tree = render(() -> {
-            Styles.rules(Styles.rule(Selector.type(Node.Kind.DIV), style -> style.backgroundColor(Color.RED)));
+            Styles.rules(Styles.rule(Selector.type(DivNode.class), style -> style.backgroundColor(Color.RED)));
             Styles.rules(Styles.Scope.TRANSITIVE,
                     Styles.rule(Selector.className("item"), style -> style.color(Color.BLUE)),
                     Styles.rule(Selector.id("special"), style -> style.color(Color.GREEN)),
@@ -257,7 +267,7 @@ class StyleLayoutTest {
     void noAutomaticInheritanceAndRulesMayFollowChildren() {
         Node tree = render(() -> {
             div(style -> style.color(Color.RED), () -> text("x"));
-            Styles.rules(Styles.rule(Selector.type(Node.Kind.DIV), style -> style.opacity(0.5)));
+            Styles.rules(Styles.rule(Selector.type(DivNode.class), style -> style.opacity(0.5)));
         }, 100, 50);
         assertNotEquals(Color.RED, tree.children.getFirst().children.getFirst().style.color());
         assertEquals(0.5, tree.children.getFirst().style.number(StyleProperties.OPACITY, 1));
@@ -284,8 +294,8 @@ class StyleLayoutTest {
             component("inline", () -> span(() -> text("world again", style -> style.color(Color.RED))));
         }), 100, 100);
         Node span = tree.children.getFirst();
-        Node first = span.children.getFirst();
-        Node second = span.children.get(1).children.getFirst();
+        TextualNode first = (TextualNode) span.children.getFirst();
+        TextualNode second = (TextualNode) span.children.get(1).children.getFirst();
         assertEquals(first.lines.getFirst().baseline() + first.bounds.y,
                 second.lines.getFirst().baseline() + second.bounds.y);
         assertTrue(second.lines.size() > 1);
@@ -305,7 +315,7 @@ class StyleLayoutTest {
             div(style -> style.width(50), () -> {
             });
         }), 100, 200);
-        Node text = tree.children.getFirst().children.getFirst();
+        TextualNode text = (TextualNode) tree.children.getFirst().children.getFirst();
         assertEquals(75, text.bounds.width, 0.01);
         assertEquals(text.lines.size() * 20, text.bounds.height, 0.01);
     }
@@ -313,7 +323,7 @@ class StyleLayoutTest {
     @Test
     void inlineLongWordsUnicodeAndNewlinesRemainIntact() {
         Node tree = render(() -> span(() -> text("ab\uD83D\uDE80c\n\nlongword")), 12, 300);
-        Node text = tree.children.getFirst().children.getFirst();
+        TextualNode text = (TextualNode) tree.children.getFirst().children.getFirst();
         assertEquals("ab\uD83D\uDE80clongword", text.lines.stream().map(Node.Line::text).reduce("", String::concat));
         assertTrue(text.bounds.height > 60);
         for (Node.Line line : text.lines)

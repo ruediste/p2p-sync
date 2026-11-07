@@ -1,5 +1,6 @@
 package com.github.ruediste.jreact;
 
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -13,22 +14,19 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.swing.BorderFactory;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
+
+import com.github.ruediste.jreact.nodes.EditableNode;
 
 /**
  * Swing host for a JReact component tree and its user interactions.
@@ -36,17 +34,16 @@ import javax.swing.event.DocumentListener;
  * <p>
  * Owns a {@link RenderRoot}, coalesces invalidations into scheduled refreshes,
  * supplies viewport dimensions and interaction flags, resolves styles, and
- * invokes layout and Java2D painting. Node snapshots identify changed paint
- * regions, including old geometry and shadows, for localized repaint requests.
- * Mouse hit testing, keyboard traversal, activation, and tooltips connect the
- * painted tree to its declarative callbacks.
+ * invokes layout and Java2D painting. Nodes are reconciled with the previous
+ * tree by key, transferring interaction state, retained editors, and the last
+ * committed paint state. Each node reports its own dirty region, so the panel
+ * only unions those regions into localized repaint requests.
  *
  * <p>
- * Input and select nodes are backed by controlled {@link JTextField} and
- * {@link JComboBox} children. Their identities follow node keys;
- * synchronization
- * updates native values without feeding those updates back into change
- * callbacks. Native editors are overlaid on the canvas, not painted primitives.
+ * Input and select nodes own their controlled {@link javax.swing.JTextField}
+ * and {@link javax.swing.JComboBox} components. The panel adds and removes
+ * those components from its Swing hierarchy and dispatches focus and keyboard
+ * events; value synchronization and change callbacks stay in the node.
  *
  * <p>
  * Construct, refresh, and close this panel on the Swing event dispatch thread.
@@ -55,10 +52,9 @@ import javax.swing.event.DocumentListener;
  */
 public class JReactPanel extends JPanel implements AutoCloseable {
     private final RenderRoot root;
-    private final Map<Node.Key, JComponent> editors = new LinkedHashMap<>();
     private Map<Node.Key, Node> nodes = new LinkedHashMap<>();
     private Node.Key hovered, pressed, focused;
-    private boolean scheduled, syncing, closed;
+    private boolean scheduled, closed;
     private int layoutWidth = -1, layoutHeight = -1;
 
     public JReactPanel(Runnable component) {
@@ -129,7 +125,7 @@ public class JReactPanel extends JPanel implements AutoCloseable {
         addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent event) {
-                if (!editors.containsValue(event.getOppositeComponent())) {
+                if (!isEditor(event.getOppositeComponent())) {
                     focused = null;
                     pressed = null;
                     refresh();
@@ -168,12 +164,14 @@ public class JReactPanel extends JPanel implements AutoCloseable {
         requireEdt();
         if (closed)
             return;
-        Map<Node.Key, Snapshot> previous = snapshots();
+        Node previousTree = root.tree();
         root.viewport(Math.max(0, getWidth()), Math.max(0, getHeight()));
         if (root.isDirty() || root.tree() == null)
             root.render();
+        Node currentTree = root.tree();
+        var reconciliation = Reconciler.reconcile(currentTree, previousTree);
         nodes = new LinkedHashMap<>();
-        root.tree().descendants().forEach(node -> nodes.put(node.key, node));
+        currentTree.descendants().forEach(node -> nodes.put(node.key, node));
         if (!nodes.containsKey(focused) || nodes.get(focused).disabled)
             focused = null;
         for (Node node : nodes.values()) {
@@ -181,66 +179,23 @@ public class JReactPanel extends JPanel implements AutoCloseable {
             node.active = Objects.equals(pressed, node.key) && !node.disabled;
             node.focus = Objects.equals(focused, node.key) && !node.disabled;
         }
-        Styles.resolve(root.tree());
+        Styles.resolve(currentTree);
         var metrics = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics();
         try {
-            FlexLayout.layout(root.tree(), Math.max(0, getWidth()), Math.max(0, getHeight()), metrics);
+            FlexLayout.layout(currentTree, Math.max(0, getWidth()), Math.max(0, getHeight()), metrics);
         } finally {
             metrics.dispose();
         }
-        syncEditors();
+        Rectangle dirty = Reconciler.dirtyRegion(currentTree, reconciliation);
+        syncEditors(currentTree);
         if (layoutWidth != getWidth() || layoutHeight != getHeight()) {
             layoutWidth = getWidth();
             layoutHeight = getHeight();
             repaint();
-        } else {
-            Map<Node.Key, Snapshot> current = snapshots();
-            Rectangle dirty = null;
-            for (var entry : previous.entrySet())
-                if (!entry.getValue().equals(current.get(entry.getKey())))
-                    dirty = union(dirty, entry.getValue().paintBounds);
-            for (var entry : current.entrySet())
-                if (!entry.getValue().equals(previous.get(entry.getKey())))
-                    dirty = union(dirty, entry.getValue().paintBounds);
-            if (dirty != null)
-                repaint(dirty.x, dirty.y, dirty.width, dirty.height);
+        } else if (dirty != null) {
+            repaint(dirty.x, dirty.y, dirty.width, dirty.height);
         }
-    }
-
-    /** Captures paint-relevant node state for comparing consecutive refreshes. */
-    private record Snapshot(String text, Map<StyleProperties.Property<?>, Object> style, Rectangle2D bounds,
-            boolean focus, Node.Kind kind, Object icon, List<String> options, Double slider, float opacity,
-            Rectangle paintBounds) {
-    }
-
-    private Map<Node.Key, Snapshot> snapshots() {
-        var result = new LinkedHashMap<Node.Key, Snapshot>();
-        nodes.forEach((key, node) -> {
-            Rectangle rectangle = node.bounds.getBounds();
-            for (var property : List.of(StyleProperties.BOX_SHADOW, StyleProperties.TEXT_SHADOW)) {
-                Style.Shadow shadow = node.style.get(property, null);
-                if (shadow != null) {
-                    Rectangle shadowBounds = node.bounds.getBounds();
-                    shadowBounds.grow((int) Math.ceil(shadow.blur() * 2 + 2), (int) Math.ceil(shadow.blur() * 2 + 2));
-                    shadowBounds.translate((int) Math.floor(shadow.offsetX()), (int) Math.floor(shadow.offsetY()));
-                    rectangle = rectangle.union(shadowBounds);
-                }
-            }
-            result.put(key, new Snapshot(node.text, Map.copyOf(node.style.values), (Rectangle2D) node.bounds.clone(),
-                    node.focus, node.kind, node.icon, node.options, node.sliderFraction, opacity(node), rectangle));
-        });
-        return result;
-    }
-
-    private static Rectangle union(Rectangle left, Rectangle right) {
-        return left == null ? right : left.union(right);
-    }
-
-    private static float opacity(Node node) {
-        float opacity = 1;
-        for (Node ancestor = node; ancestor != null; ancestor = ancestor.parent)
-            opacity *= (float) ancestor.style.number(StyleProperties.OPACITY, 1);
-        return opacity;
+        currentTree.commitPaintState();
     }
 
     private static boolean isAncestorOf(Node ancestor, Node node) {
@@ -302,9 +257,9 @@ public class JReactPanel extends JPanel implements AutoCloseable {
                 int next = current < 0 && event.isShiftDown() ? targets.size() - 1
                         : Math.floorMod(current + (event.isShiftDown() ? -1 : 1), targets.size());
                 focused = targets.get(next).key;
-                JComponent editor = editors.get(focused);
-                if (editor != null)
-                    editor.requestFocusInWindow();
+                Node node = nodes.get(focused);
+                if (node instanceof EditableNode editable && editable.editor() != null)
+                    editable.editor().requestFocusInWindow();
             }
             event.consume();
         } else {
@@ -323,89 +278,39 @@ public class JReactPanel extends JPanel implements AutoCloseable {
         refresh();
     }
 
-    private void syncEditors() {
-        syncing = true;
-        try {
-            editors.entrySet().removeIf(entry -> {
-                Node node = nodes.get(entry.getKey());
-                if (node != null && (node.kind == Node.Kind.INPUT || node.kind == Node.Kind.SELECT)
-                        && (node.kind == Node.Kind.INPUT) == (entry.getValue() instanceof JTextField))
-                    return false;
-                remove(entry.getValue());
-                return true;
-            });
-            for (Node node : nodes.values()) {
-                if (node.kind != Node.Kind.INPUT && node.kind != Node.Kind.SELECT)
-                    continue;
-                JComponent field = editors.computeIfAbsent(node.key, this::createEditor);
-                if (field instanceof JTextField textField) {
-                    if (!textField.getText().equals(node.text))
-                        textField.setText(node.text);
-                } else if (field instanceof JComboBox<?> combo) {
-                    var options = new ArrayList<String>();
-                    for (int index = 0; index < combo.getItemCount(); index++)
-                        options.add((String) combo.getItemAt(index));
-                    if (!options.equals(node.options)) {
-                        @SuppressWarnings("unchecked")
-                        var stringCombo = (JComboBox<String>) combo;
-                        stringCombo
-                                .setModel(new javax.swing.DefaultComboBoxModel<>(node.options.toArray(String[]::new)));
-                    }
-                    combo.setSelectedItem(node.text);
-                }
-                field.setEnabled(!node.disabled);
-                field.setFont(node.style.font());
-                field.setForeground(node.style.color());
-                field.setBackground(node.style.get(StyleProperties.BACKGROUND, java.awt.Color.WHITE));
-                Style.Insets inset = node.style.inset();
-                field.setBorder(BorderFactory.createEmptyBorder((int) inset.top(), (int) inset.left(),
-                        (int) inset.bottom(), (int) inset.right()));
-                field.setBounds(node.bounds.getBounds());
-                field.doLayout();
-                field.getAccessibleContext().setAccessibleName(node.accessibleName);
+    private void syncEditors(Node tree) {
+        var currentEditors = new LinkedHashSet<JComponent>();
+        for (Node node : tree.descendants()) {
+            if (!(node instanceof EditableNode editable))
+                continue;
+            editable.ensureEditor();
+            JComponent editor = editable.editor();
+            if (editor == null)
+                continue;
+            currentEditors.add(editor);
+            if (editor.getParent() != this) {
+                add(editor);
+                attachEditorListeners(editor, editable.key);
             }
-        } finally {
-            syncing = false;
+            editable.syncEditor();
         }
+        for (Component child : getComponents())
+            if (child instanceof JComponent component && !currentEditors.contains(component))
+                remove(component);
     }
 
-    private JComponent createEditor(Node.Key key) {
-        JComponent field;
-        if (nodes.get(key).kind == Node.Kind.SELECT) {
-            var combo = new JComboBox<String>() {
-                @Override
-                public void paint(Graphics graphics) {
-                    paintEditor(this, graphics, () -> super.paint(graphics));
-                }
-            };
-            combo.addActionListener(event -> {
-                Node node = nodes.get(key);
-                if (!syncing && node != null && !node.disabled && combo.getSelectedItem() != null) {
-                    node.onChange.accept((String) combo.getSelectedItem());
-                    schedule();
-                }
-            });
-            field = combo;
-        } else
-            field = new JTextField() {
-                @Override
-                public void paint(Graphics graphics) {
-                    paintEditor(this, graphics, () -> super.paint(graphics));
-                }
-            };
-        field.setOpaque(false);
-        field.setFocusTraversalKeysEnabled(false);
-        field.addKeyListener(new KeyAdapter() {
+    private void attachEditorListeners(JComponent editor, Node.Key key) {
+        editor.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent event) {
                 if (event.getKeyCode() == KeyEvent.VK_TAB) {
                     keyboard(event);
-                    if (!editors.containsKey(focused))
+                    if (!(nodes.get(focused) instanceof EditableNode))
                         requestFocusInWindow();
                 }
             }
         });
-        field.addFocusListener(new FocusAdapter() {
+        editor.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent event) {
                 focused = key;
@@ -419,50 +324,13 @@ public class JReactPanel extends JPanel implements AutoCloseable {
                 schedule();
             }
         });
-        if (field instanceof JTextField textField)
-            textField.getDocument().addDocumentListener(new DocumentListener() {
-                private void change() {
-                    Node node = nodes.get(key);
-                    if (!syncing && node != null && !node.disabled) {
-                        node.onChange.accept(textField.getText());
-                        schedule();
-                    }
-                }
-
-                @Override
-                public void insertUpdate(DocumentEvent event) {
-                    change();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent event) {
-                    change();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent event) {
-                    change();
-                }
-            });
-        add(field);
-        return field;
     }
 
-    private void paintEditor(JComponent editor, Graphics graphics, Runnable paint) {
-        Graphics2D graphics2d = (Graphics2D) graphics;
-        var previous = graphics2d.getComposite();
-        for (var entry : editors.entrySet())
-            if (entry.getValue() == editor) {
-                Node node = nodes.get(entry.getKey());
-                if (node != null)
-                    graphics2d.setComposite(java.awt.AlphaComposite.SrcOver.derive(opacity(node)));
-                break;
-            }
-        try {
-            paint.run();
-        } finally {
-            graphics2d.setComposite(previous);
-        }
+    private boolean isEditor(Component component) {
+        for (Node node : nodes.values())
+            if (node instanceof EditableNode editable && editable.editor() == component)
+                return true;
+        return false;
     }
 
     @Override
@@ -471,7 +339,7 @@ public class JReactPanel extends JPanel implements AutoCloseable {
         if (root.tree() == null || root.isDirty() || layoutWidth != getWidth() || layoutHeight != getHeight())
             refresh();
         if (root.tree() != null)
-            Renderer.paint(root.tree(), (Graphics2D) graphics);
+            root.tree().paint((Graphics2D) graphics, 1);
     }
 
     @Override
@@ -482,7 +350,11 @@ public class JReactPanel extends JPanel implements AutoCloseable {
             try {
                 root.close();
             } finally {
-                editors.clear();
+                Node tree = root.tree();
+                if (tree != null)
+                    for (Node node : tree.descendants())
+                        if (node instanceof EditableNode editable)
+                            editable.disposeEditor();
                 nodes.clear();
                 removeAll();
             }

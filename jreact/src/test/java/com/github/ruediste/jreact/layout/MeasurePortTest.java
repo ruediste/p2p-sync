@@ -2,7 +2,7 @@ package com.github.ruediste.jreact.layout;
 
 import com.github.ruediste.jreact.Style;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -20,21 +20,21 @@ class MeasurePortTest {
     private static final float EPS = 0.01f;
 
     @Test
-    void measuresALeafWithoutAttachedContext() {
+    void measuresALeaf() {
         Node node = new Node(new Style());
         int[] calls = { 0 };
-        Object[] measuredContext = { "not measured" };
+        Node[] measuredNode = { null };
 
-        node.measure = (known, available, measuredNode) -> {
+        node.measure = (known, available, nodeBeingMeasured) -> {
             calls[0]++;
-            measuredContext[0] = measuredNode.context;
+            measuredNode[0] = nodeBeingMeasured;
             return Size.of(150f, 50f);
         };
         LayoutEngine.computeLayout(node, Size.of(AvailableSpace.definite(300), AvailableSpace.definite(100)));
 
         Layout layout = node.layout;
         assertTrue(calls[0] > 0);
-        assertNull(measuredContext[0]);
+        assertSame(node, measuredNode[0]);
         assertEquals(150f, layout.size().width, EPS);
         assertEquals(50f, layout.size().height, EPS);
     }
@@ -46,13 +46,11 @@ class MeasurePortTest {
         style.boxSizing(boxSizing);
         style.layoutPadding(Rect.all(LengthPercentage.length(10)));
         style.layoutBorder(Rect.all(LengthPercentage.length(2)));
-        Object context = new Object();
-        Node node = Node.withContext(style, context);
+        Node node = new Node(style);
         List<AvailableSpace> measuredWidths = new ArrayList<>();
 
         node.measure = (known, available, measuredNode) -> {
-            assertEquals(node, measuredNode);
-            assertEquals(context, measuredNode.context);
+            assertSame(node, measuredNode);
             assertEquals(Dimension.length(100), measuredNode.style.getWidth());
             assertEquals(boxSizing, measuredNode.style.boxSizing());
             measuredWidths.add(available.width);

@@ -369,11 +369,11 @@ public final class Style {
             throw new IllegalArgumentException("Value must be positive");
     }
 
-    <T> T get(Property<T> property, T fallback) {
+    public <T> T get(Property<T> property, T fallback) {
         return property.get(this, fallback);
     }
 
-    double number(DoubleProperty property, double fallback) {
+    public double number(DoubleProperty property, double fallback) {
         return property.get(this, fallback);
     }
 

@@ -5,6 +5,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import com.github.ruediste.jreact.nodes.ContainerNode;
+import com.github.ruediste.jreact.nodes.DivNode;
+import com.github.ruediste.jreact.nodes.IconNode;
+import com.github.ruediste.jreact.nodes.InputNode;
+import com.github.ruediste.jreact.nodes.SelectNode;
+import com.github.ruediste.jreact.nodes.SliderNode;
+import com.github.ruediste.jreact.nodes.SpanNode;
+import com.github.ruediste.jreact.nodes.TextNode;
+
 /**
  * Declarative entry points for creating primitives and invoking components.
  *
@@ -20,8 +29,8 @@ import java.util.function.Consumer;
  * {@link RenderRoot} and fiber. Nested component rendering restores the
  * caller's
  * context on exit, including exceptional exit. Primitives, component calls, and
- * viewport queries require an active render; input and select nodes describe
- * native editors that {@link JReactPanel} creates and manages.
+ * viewport queries require an active render; input and select nodes own native
+ * editors that {@link JReactPanel} hosts.
  */
 public final class Ui {
     static final ThreadLocal<Context> CURRENT = new ThreadLocal<>();
@@ -103,53 +112,60 @@ public final class Ui {
         component(type, null, body);
     }
 
-    public static Node div(Consumer<Style> style, Runnable children) {
-        return container(Node.Kind.DIV, style, children);
+    public static DivNode div(Consumer<Style> style, Runnable children) {
+        return container(DivNode::new, style, children);
     }
 
-    public static Node div(Runnable children) {
+    public static DivNode div(Runnable children) {
         return div(style -> {
         }, children);
     }
 
-    public static Node span(Runnable children) {
+    public static SpanNode span(Runnable children) {
         return span(style -> {
         }, children);
     }
 
-    public static Node span(Consumer<Style> style, Runnable children) {
-        return container(Node.Kind.SPAN, style, children);
+    public static SpanNode span(Consumer<Style> style, Runnable children) {
+        return container(SpanNode::new, style, children);
     }
 
-    public static Node text(Object text) {
+    public static TextNode text(Object text) {
         return text(text, style -> {
         });
     }
 
-    public static Node text(Object text, Consumer<Style> style) {
-        return node(Node.Kind.TEXT, String.valueOf(text), style);
+    public static TextNode text(Object text, Consumer<Style> style) {
+        return node((key, inline, declarations) -> new TextNode(key, String.valueOf(text), inline, declarations),
+                style);
     }
 
-    public static Node input(String value, Consumer<String> onChange, Consumer<Style> style) {
-        Node node = node(Node.Kind.INPUT, Objects.requireNonNull(value), style);
+    public static InputNode input(String value, Consumer<String> onChange, Consumer<Style> style) {
+        InputNode node = node((key, inline, declarations) -> new InputNode(key, Objects.requireNonNull(value), inline,
+                declarations, context().runtime::invalidate), style);
         node.onChange = Objects.requireNonNull(onChange);
-        node.focusable = true;
         return node;
     }
 
-    public static Node select(String value, List<String> options, Consumer<String> onChange, Consumer<Style> style) {
+    public static SelectNode select(String value, List<String> options, Consumer<String> onChange,
+            Consumer<Style> style) {
         if (options.isEmpty() || !options.contains(value))
             throw new IllegalArgumentException("Select value must belong to its non-empty options");
-        Node node = node(Node.Kind.SELECT, value, style);
-        node.options = List.copyOf(options);
+        SelectNode node = node((key, inline, declarations) -> new SelectNode(key, value, options, inline, declarations,
+                context().runtime::invalidate), style);
         node.onChange = Objects.requireNonNull(onChange);
-        node.focusable = true;
         return node;
     }
 
-    public static Node icon(javax.swing.Icon icon, Consumer<Style> style) {
-        Node node = node(Node.Kind.ICON, null, style);
-        node.icon = Objects.requireNonNull(icon);
+    public static IconNode icon(javax.swing.Icon icon, Consumer<Style> style) {
+        return node((key, inline, declarations) -> new IconNode(key, Objects.requireNonNull(icon), inline,
+                declarations), style);
+    }
+
+    public static SliderNode slider(double fraction, java.awt.Color color, Consumer<Style> style, Runnable children) {
+        SliderNode node = container(SliderNode::new, style, children);
+        node.fraction = fraction;
+        node.color = color;
         return node;
     }
 
@@ -161,8 +177,14 @@ public final class Ui {
         return context().runtime.viewportHeight;
     }
 
-    private static Node container(Node.Kind kind, Consumer<Style> style, Runnable children) {
-        Node node = node(kind, null, style);
+    @FunctionalInterface
+    private interface NodeFactory<T extends Node> {
+        T create(Node.Key key, Style inline, List<Styles.NodeStyleRules> declarations);
+    }
+
+    private static <T extends ContainerNode> T container(NodeFactory<T> factory, Consumer<Style> style,
+            Runnable children) {
+        T node = node(factory, style);
         var runtime = context().runtime;
         Node previous = runtime.parent;
         runtime.parent = node;
@@ -174,17 +196,17 @@ public final class Ui {
         return node;
     }
 
-    private static Node node(Node.Kind kind, String text, Consumer<Style> configure) {
+    private static <T extends Node> T node(NodeFactory<T> factory, Consumer<Style> configure) {
         var context = context();
         Style style = new Style();
         configure.accept(style);
-        Node node = new Node(kind, new Node.Key(context.fiber, context.fiber.nodeCursor++), text,
-                style, List.copyOf(context.styleRuleChain));
-        node.parent = context.runtime.parent;
-        if (node.parent.kind == Node.Kind.SPAN && kind != Node.Kind.SPAN && kind != Node.Kind.TEXT
-                && kind != Node.Kind.ICON)
+        T node = factory.create(new Node.Key(context.fiber, context.fiber.nodeCursor++), style,
+                List.copyOf(context.styleRuleChain));
+        Node parent = context.runtime.parent;
+        if (parent instanceof SpanNode && !(node instanceof SpanNode) && !(node instanceof TextNode)
+                && !(node instanceof IconNode))
             throw new IllegalArgumentException("Span accepts only inline text, spans, and icons");
-        node.parent.children.add(node);
+        parent.addChild(node);
         return node;
     }
 

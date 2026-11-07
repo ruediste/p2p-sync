@@ -10,8 +10,10 @@ import java.util.function.Consumer;
  *
  * <p>
  * Declarations belong to the active {@link Ui} component context. Direct-child
- * scope applies a rule to every node rendered by the declaring component itself,
- * including nested layout nodes, but not to nodes rendered by nested components.
+ * scope applies a rule to every node rendered by the declaring component
+ * itself,
+ * including nested layout nodes, but not to nodes rendered by nested
+ * components.
  * Transitive scope extends matching to the component's entire rendered subtree,
  * including nested components. Scope eligibility is separate from selector
  * matching and does not increase specificity.
@@ -45,7 +47,7 @@ public final class Styles {
     }
 
     /** Holds one component's rule list. */
-    static final class NodeStyleRules {
+    public static final class NodeStyleRules {
         final List<ScopedRule> rules = new ArrayList<>();
     }
 

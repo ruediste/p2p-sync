@@ -33,9 +33,9 @@ public final class Selector {
         this.types = types;
     }
 
-    public static Selector type(Node.Kind kind) {
-        Objects.requireNonNull(kind);
-        return new Selector(node -> node.kind == kind, 0, 0, 1);
+    public static Selector type(Class<? extends Node> type) {
+        Objects.requireNonNull(type);
+        return new Selector(type::isInstance, 0, 0, 1);
     }
 
     public static Selector id(String id) {

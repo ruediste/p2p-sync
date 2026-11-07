@@ -9,20 +9,14 @@ import com.github.ruediste.jreact.Style;
  * One node of a layout tree.
  *
  * <p>
- * A node owns its style, context, children and measurement callback, i.e. the
- * inputs to layout. The computed results live in {@link #layout}; the engine
- * only computes and all persistent state lives in the nodes.
+ * A node owns its style, children and measurement callback, i.e. the inputs to
+ * layout. The computed results live in {@link #layout}; the engine only computes
+ * and all persistent state lives in the nodes.
  */
 public final class Node {
 
     /** Layout properties of this node. */
     public Style style;
-
-    /**
-     * Opaque payload owned by the caller, for example the text or widget a
-     * measurement callback needs. The layout engine never reads or modifies it.
-     */
-    public Object context;
 
     /**
      * Optional measurement callback for leaf nodes. It is only invoked for
@@ -59,12 +53,6 @@ public final class Node {
     public Node(Style style, List<Node> children) {
         this(style);
         addChildren(children);
-    }
-
-    public static Node withContext(Style style, Object context) {
-        Node node = new Node(style);
-        node.context = context;
-        return node;
     }
 
     public void addChild(Node child) {

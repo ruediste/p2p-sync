@@ -59,9 +59,9 @@ class StorybookTest {
                 for (Node node : panel.tree().descendants()) {
                     assertTrue(Double.isFinite(node.bounds.width) && Double.isFinite(node.bounds.height));
                     assertTrue(node.bounds.x >= -0.1 && node.bounds.getMaxX() <= width + 0.1,
-                            "Horizontal overflow: " + node.text + " " + node.bounds);
+                            "Horizontal overflow: " + node.text() + " " + node.bounds);
                     assertTrue(node.bounds.y >= -0.1 && node.bounds.getMaxY() <= 900.1,
-                            "Vertical overflow: " + node.text + " " + node.bounds);
+                            "Vertical overflow: " + node.text() + " " + node.bounds);
                 }
                 Path directory = Path.of("target", "storybook");
                 Files.createDirectories(directory);
@@ -89,13 +89,13 @@ class StorybookTest {
                 panel.refresh();
                 activate(panel, "+");
                 activate(panel, "+");
-                assertTrue(panel.tree().descendants().stream().anyMatch(node -> "2".equals(node.text)));
+                assertTrue(panel.tree().descendants().stream().anyMatch(node -> "2".equals(node.text())));
                 activate(panel, "Disable buttons, unchecked");
                 activate(panel, "+");
-                assertTrue(panel.tree().descendants().stream().anyMatch(node -> "2".equals(node.text)));
+                assertTrue(panel.tree().descendants().stream().anyMatch(node -> "2".equals(node.text())));
                 activate(panel, "Disable buttons, checked");
                 activate(panel, "Reset");
-                assertTrue(panel.tree().descendants().stream().anyMatch(node -> "0".equals(node.text)));
+                assertTrue(panel.tree().descendants().stream().anyMatch(node -> "0".equals(node.text())));
             }
         });
     }
@@ -114,9 +114,9 @@ class StorybookTest {
                 assertEquals("", field.getText());
                 activate(panel, "New work, unchecked");
                 activate(panel, "Done");
-                assertTrue(panel.tree().descendants().stream().anyMatch(node -> "New work".equals(node.text)));
+                assertTrue(panel.tree().descendants().stream().anyMatch(node -> "New work".equals(node.text())));
                 assertFalse(panel.tree().descendants().stream()
-                        .anyMatch(node -> "Ship component library".equals(node.text)));
+                        .anyMatch(node -> "Ship component library".equals(node.text())));
             }
         });
     }
@@ -131,7 +131,7 @@ class StorybookTest {
                     activate(panel, story);
                 activate(panel, "Overview");
                 activate(panel, "High contrast, unchecked");
-                assertTrue(panel.tree().descendants().stream().anyMatch(node -> "11 controls".equals(node.text)));
+                assertTrue(panel.tree().descendants().stream().anyMatch(node -> "11 controls".equals(node.text())));
             }
         });
     }

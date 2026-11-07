@@ -5,6 +5,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import com.github.ruediste.jreact.nodes.IconNode;
+import com.github.ruediste.jreact.nodes.InputNode;
+import com.github.ruediste.jreact.nodes.SelectNode;
+import com.github.ruediste.jreact.nodes.SpanNode;
+import com.github.ruediste.jreact.nodes.TextNode;
+import com.github.ruediste.jreact.nodes.TextualNode;
+
 /**
  * Computes node geometry for JReact's pure-Java Flexbox subset.
  *
@@ -65,30 +72,30 @@ public final class FlexLayout {
         Style.Insets inset = style.inset();
         double width = allocatedWidth ? maxWidth : style.width(), height = style.height();
         double contentWidth = Double.isNaN(width) ? maxWidth : width;
-        if (node.kind == Node.Kind.ICON) {
+        if (node instanceof IconNode iconNode) {
             if (Double.isNaN(width))
-                width = node.icon.getIconWidth() + inset.horizontal();
+                width = iconNode.icon.getIconWidth() + inset.horizontal();
             if (Double.isNaN(height))
-                height = node.icon.getIconHeight() + inset.vertical();
-        } else if (node.kind == Node.Kind.TEXT || node.kind == Node.Kind.INPUT || node.kind == Node.Kind.SELECT) {
+                height = iconNode.icon.getIconHeight() + inset.vertical();
+        } else if (node instanceof TextualNode textual) {
             if (Double.isNaN(width)) {
                 var metrics = graphics.getFontMetrics(style.font());
-                width = Math.min(maxWidth, java.util.Arrays.stream(node.text.split("\n", -1))
+                width = Math.min(maxWidth, java.util.Arrays.stream(textual.text.split("\n", -1))
                         .mapToInt(metrics::stringWidth).max().orElse(0) + inset.horizontal());
-                if (node.kind == Node.Kind.INPUT || node.kind == Node.Kind.SELECT)
+                if (node instanceof InputNode || node instanceof SelectNode)
                     width = Math.max(120, width);
             }
             if (Double.isNaN(height))
-                height = TextMetrics.measure(node, graphics, width, false);
-        } else if (node.kind == Node.Kind.SPAN) {
+                height = TextMetrics.measure(textual, graphics, width, false);
+        } else if (node instanceof SpanNode span) {
             if (Double.isNaN(width))
-                width = Math.min(maxWidth, node.descendants().stream()
-                        .mapToDouble(child -> child.kind == Node.Kind.TEXT
-                                ? graphics.getFontMetrics(child.style.font()).stringWidth(child.text)
-                                : child.kind == Node.Kind.ICON ? child.icon.getIconWidth() : 0)
+                width = Math.min(maxWidth, span.descendants().stream()
+                        .mapToDouble(child -> child instanceof TextNode textNode
+                                ? graphics.getFontMetrics(textNode.style.font()).stringWidth(textNode.text)
+                                : child instanceof IconNode iconNode ? iconNode.icon.getIconWidth() : 0)
                         .sum() + inset.horizontal());
             if (Double.isNaN(height))
-                height = InlineLayout.flow(node, width, graphics, false);
+                height = InlineLayout.flow(span, width, graphics, false);
         } else {
             boolean row = isRow(node);
             double main = 0, cross = 0;
@@ -112,16 +119,18 @@ public final class FlexLayout {
     }
 
     private static boolean isRow(Node node) {
-        return node.kind == Node.Kind.SPAN
+        return node instanceof SpanNode
                 || node.style.get(StyleProperties.DIRECTION, Style.Direction.ROW) == Style.Direction.ROW;
     }
 
     private static Style.Wrap wrap(Node node) {
-        return node.kind == Node.Kind.SPAN ? Style.Wrap.WRAP : node.style.get(StyleProperties.WRAP, Style.Wrap.NOWRAP);
+        return node instanceof SpanNode ? Style.Wrap.WRAP
+                : node.style.get(StyleProperties.WRAP, Style.Wrap.NOWRAP);
     }
 
     private static List<Node> ordered(Node node) {
-        return node.children.stream().sorted(Comparator.comparingInt(child -> child.style.get(StyleProperties.ORDER, 0)))
+        return node.children.stream()
+                .sorted(Comparator.comparingInt(child -> child.style.get(StyleProperties.ORDER, 0)))
                 .toList();
     }
 
@@ -187,14 +196,14 @@ public final class FlexLayout {
 
     private static void place(Node node, double x, double y, double width, double height, Graphics2D graphics) {
         node.bounds.setRect(x, y, width, height);
-        if (node.kind == Node.Kind.TEXT || node.kind == Node.Kind.INPUT || node.kind == Node.Kind.SELECT) {
-            TextMetrics.measure(node, graphics, width, true);
+        if (node instanceof TextualNode textual) {
+            TextMetrics.measure(textual, graphics, width, true);
             return;
         }
-        if (node.kind == Node.Kind.ICON)
+        if (node instanceof IconNode)
             return;
-        if (node.kind == Node.Kind.SPAN) {
-            InlineLayout.flow(node, width, graphics, true);
+        if (node instanceof SpanNode span) {
+            InlineLayout.flow(span, width, graphics, true);
             return;
         }
         Style.Insets inset = node.style.inset();

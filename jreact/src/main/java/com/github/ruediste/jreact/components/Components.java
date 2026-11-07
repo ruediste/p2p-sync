@@ -17,6 +17,8 @@ import com.github.ruediste.jreact.Node;
 import com.github.ruediste.jreact.Selector;
 import com.github.ruediste.jreact.Style;
 import com.github.ruediste.jreact.Styles;
+import com.github.ruediste.jreact.Ui;
+import com.github.ruediste.jreact.nodes.SliderNode;
 
 public final class Components {
     public enum Variant {
@@ -122,17 +124,21 @@ public final class Components {
             DoubleConsumer change) {
         range(value, minimum, maximum, step);
         double fraction = (value - minimum) / (maximum - minimum);
-        Node node = div(style -> style.width(240).height(32).alignItems(Style.Align.CENTER)
-                .opacity(disabled ? 0.4 : 1), () -> {
+        SliderNode node = Ui.slider(fraction, theme.primary(),
+                style -> style.width(240).height(32).alignItems(Style.Align.CENTER)
+                        .opacity(disabled ? 0.4 : 1),
+                () -> {
                     div(style -> style.width(240).height(8).borderRadius(4).backgroundColor(theme.border()), () -> {
                         div(style -> style.width(240 * fraction).height(8).borderRadius(4)
                                 .backgroundColor(theme.primary()), () -> {
                                 });
                     });
-                })
-                .onPointer(position -> change
-                        .accept(quantize(minimum + position * (maximum - minimum), minimum, maximum, step)))
-                .disabled(disabled).accessibleName(label + ": " + value);
+                });
+        node.onPointer = position -> change
+                .accept(quantize(minimum + position * (maximum - minimum), minimum, maximum, step));
+        node.focusable = true;
+        node.disabled = disabled;
+        node.accessibleName = label + ": " + value;
         node.onKey = key -> {
             double next = switch (key) {
                 case KeyEvent.VK_LEFT, KeyEvent.VK_DOWN -> value - step;
@@ -143,8 +149,6 @@ public final class Components {
             };
             change.accept(quantize(next, minimum, maximum, step));
         };
-        node.sliderFraction = fraction;
-        node.sliderColor = theme.primary();
         return node;
     }
 

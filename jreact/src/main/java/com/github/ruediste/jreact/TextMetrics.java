@@ -5,6 +5,9 @@ import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.ruediste.jreact.nodes.TextNode;
+import com.github.ruediste.jreact.nodes.TextualNode;
+
 /**
  * Measures and positions a standalone text node using Java font metrics.
  *
@@ -13,7 +16,7 @@ import java.util.List;
  * lines, and breaks oversized words at Unicode code-point boundaries. Resolves
  * font, content insets, line height, and horizontal alignment from the node's
  * style. Measurement can return a height without changing the node, or commit
- * node-local text fragments and baselines for {@link Renderer}.
+ * node-local text fragments and baselines for {@link TextNode}.
  *
  * <p>
  * This helper does not paint text or share a line across sibling nodes;
@@ -51,7 +54,7 @@ final class TextMetrics {
         return result;
     }
 
-    static double measure(Node node, Graphics2D graphics, double width, boolean commit) {
+    static double measure(TextualNode node, Graphics2D graphics, double width, boolean commit) {
         FontMetrics metrics = graphics.getFontMetrics(node.style.font());
         Style.Insets inset = node.style.inset();
         double available = Math.max(0, width - inset.horizontal());

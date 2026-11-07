@@ -4,6 +4,9 @@ The application sources and documentation live in `p2p-sync/src` and `p2p-sync/d
 
 If there is an issue with generating the protobuf java files, a `mvn clean` sometimes helps.
 
+## JReact Layout Engine
+A new layout engine is currently being built under `jreact/src/main/java/com/github/ruediste/jreact/layout`; Currently, only the existing FlexLayout etc. is used. The instruction to switch to the new engine will be given explicitly. After the switch, remove this section.
+
 ## Tests
 When writing a test, add a short description of the test's purpose and how it verifies the expected behavior.
 

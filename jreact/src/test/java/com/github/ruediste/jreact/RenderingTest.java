@@ -1,14 +1,19 @@
 package com.github.ruediste.jreact;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static com.github.ruediste.jreact.Ui.*;
+import static com.github.ruediste.jreact.Ui.div;
+import static com.github.ruediste.jreact.Ui.input;
+import static com.github.ruediste.jreact.Ui.text;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.Color;
-import java.awt.event.MouseEvent;
-import java.awt.event.KeyEvent;
 import java.awt.Rectangle;
-import java.util.ArrayList;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -29,7 +34,7 @@ class RenderingTest {
         })) {
             root.render();
             FlexLayout.layout(root.tree(), 120, 100, graphics);
-            Renderer.paint(root.tree(), graphics);
+            root.tree().paint(graphics, 1);
         } finally {
             graphics.dispose();
         }
