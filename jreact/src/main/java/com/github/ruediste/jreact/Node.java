@@ -72,11 +72,11 @@ public final class Node {
     public final Key key;
     public final Style inline;
     public Style style;
+    public Node parent;
     public final List<Node> children = new ArrayList<>();
     public final List<Line> lines = new ArrayList<>();
     public final Rectangle2D.Double bounds = new Rectangle2D.Double();
     public final String text;
-    public Node parent;
     public boolean hover, active, focus, disabled;
     public boolean focusable;
     public String accessibleName;
@@ -88,6 +88,18 @@ public final class Node {
     public javax.swing.Icon icon;
     public Double sliderFraction;
     public java.awt.Color sliderColor;
+    /**
+     * Snapshot of the style-rule scopes of the component that created this
+     * node and of all components enclosing it, outermost first.
+     *
+     * <p>
+     * The last entry belongs to the component that rendered this node and
+     * therefore owns it; earlier entries belong to enclosing components and can
+     * style it only through {@link Styles.Scope#TRANSITIVE} rules.
+     * {@link Styles#resolve} uses this chain to collect and order matching
+     * rules. The list is copied when the node is created, so declarations added
+     * during later renders do not change existing nodes.
+     */
     final List<Styles.NodeStyleRules> declarations;
 
     Node(Kind kind, Key key, String text, Style inline, List<Styles.NodeStyleRules> declarations) {

@@ -24,13 +24,27 @@ import java.util.Objects;
  * up their effects.
  */
 public final class RenderRoot implements AutoCloseable {
-    private final Fiber root = new Fiber();
+    private final Fiber rootFiber = new Fiber();
     private final Thread owner = Thread.currentThread();
     private final Runnable body;
     private final Runnable onInvalidated;
     final List<Runnable> effects = new ArrayList<>();
     private Node tree;
+
+    /**
+     * Node that receives primitives emitted by the component body currently
+     * being rendered.
+     *
+     * <p>
+     * {@link #render()} initializes it to the synthetic root node before
+     * running the body and resets it to {@code null} afterwards. While a
+     * container primitive renders its children, it temporarily replaces this
+     * with its own node, and each primitive creates its node under the current
+     * value. Nested component calls share the same node parent, so component
+     * boundaries do not introduce visual containers.
+     */
     Node parent;
+
     double viewportWidth, viewportHeight;
     private boolean dirty = true;
     private boolean rendering;
@@ -76,12 +90,26 @@ public final class RenderRoot implements AutoCloseable {
         rendering = true;
         effects.clear();
         dirty = false;
-        Node next = new Node(Node.Kind.DIV, new Node.Key(root, -1), null, new Style(), List.of());
-        parent = next;
+        Node nextTreeRoot = new Node(Node.Kind.DIV, new Node.Key(rootFiber, -1), null, new Style(), List.of());
+
+        // initialize the parent node to the synthetic root node
+        parent = nextTreeRoot;
+
         try {
-            Ui.render(this, root, body);
-            Styles.resolve(next);
-            tree = next;
+            Ui.Context previous = Ui.CURRENT.get();
+            rootFiber.begin();
+            Ui.CURRENT.set(new Ui.Context(this, rootFiber));
+            try {
+                body.run();
+                rootFiber.finish();
+            } finally {
+                if (previous == null)
+                    Ui.CURRENT.remove();
+                else
+                    Ui.CURRENT.set(previous);
+            }
+            Styles.resolve(nextTreeRoot);
+            tree = nextTreeRoot;
             List.copyOf(effects).forEach(Runnable::run);
         } catch (RuntimeException | Error exception) {
             dirty = true;
@@ -98,7 +126,7 @@ public final class RenderRoot implements AutoCloseable {
         checkThread();
         if (!closed) {
             closed = true;
-            root.dispose();
+            rootFiber.dispose();
         }
     }
 

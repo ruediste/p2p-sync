@@ -48,7 +48,7 @@ final class InlineLayout {
 
         void text(Node node) {
             FontMetrics metrics = graphics.getFontMetrics(node.style.font());
-            double height = node.style.number(Style.Property.LINE_HEIGHT, Double.NaN);
+            double height = node.style.number(StyleProperties.LINE_HEIGHT, Double.NaN);
             if (Double.isNaN(height))
                 height = metrics.getHeight();
             for (String token : node.text.split("(?<=\\s)|(?=\\s)")) {

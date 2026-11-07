@@ -29,8 +29,7 @@ class MeasurePortTest {
             measuredContext[0] = measuredNode.context;
             return Size.of(150f, 50f);
         };
-        node.computeLayout(
-                Size.of(AvailableSpace.definite(300), AvailableSpace.definite(100)));
+        LayoutEngine.computeLayout(node, Size.of(AvailableSpace.definite(300), AvailableSpace.definite(100)));
 
         Layout layout = node.layout;
         assertTrue(calls[0] > 0);
@@ -59,8 +58,7 @@ class MeasurePortTest {
             float width = known.width.isDefinite() ? known.width.value : 40f;
             return Size.of(width, 30f);
         };
-        node.computeLayout(
-                Size.of(AvailableSpace.definite(500), AvailableSpace.definite(500)));
+        LayoutEngine.computeLayout(node, Size.of(AvailableSpace.definite(500), AvailableSpace.definite(500)));
 
         Layout layout = node.layout;
         boolean containsWidth = measuredWidths.stream()
@@ -70,7 +68,7 @@ class MeasurePortTest {
                 "expected an available width of " + expectedAvailableWidth + " in " + measuredWidths);
         assertEquals(expectedWidth, layout.size().width, EPS);
         assertEquals(54f, layout.size().height, EPS);
-        assertTrue(node.printTree().contains("content_w:"));
+        assertTrue(LayoutEngine.printTree(node).contains("content_w:"));
     }
 
     @Test

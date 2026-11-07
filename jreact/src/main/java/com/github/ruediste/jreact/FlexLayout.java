@@ -113,15 +113,15 @@ public final class FlexLayout {
 
     private static boolean isRow(Node node) {
         return node.kind == Node.Kind.SPAN
-                || node.style.get(Style.Property.DIRECTION, Style.Direction.ROW) == Style.Direction.ROW;
+                || node.style.get(StyleProperties.DIRECTION, Style.Direction.ROW) == Style.Direction.ROW;
     }
 
     private static Style.Wrap wrap(Node node) {
-        return node.kind == Node.Kind.SPAN ? Style.Wrap.WRAP : node.style.get(Style.Property.WRAP, Style.Wrap.NOWRAP);
+        return node.kind == Node.Kind.SPAN ? Style.Wrap.WRAP : node.style.get(StyleProperties.WRAP, Style.Wrap.NOWRAP);
     }
 
     private static List<Node> ordered(Node node) {
-        return node.children.stream().sorted(Comparator.comparingInt(child -> child.style.get(Style.Property.ORDER, 0)))
+        return node.children.stream().sorted(Comparator.comparingInt(child -> child.style.get(StyleProperties.ORDER, 0)))
                 .toList();
     }
 
@@ -141,7 +141,7 @@ public final class FlexLayout {
         double maxWidth = row ? mainAvailable : Math.max(0, node.bounds.width - node.style.inset().horizontal());
         for (Node child : ordered(node)) {
             Size size = natural(child, Math.max(0, maxWidth - child.style.margin().horizontal()), graphics,
-                    !row && node.style.get(Style.Property.ALIGN, Style.Align.STRETCH) == Style.Align.STRETCH
+                    !row && node.style.get(StyleProperties.ALIGN, Style.Align.STRETCH) == Style.Align.STRETCH
                             && Double.isNaN(child.style.width()));
             Item item = new Item(child, row ? size.width : size.height, row ? size.height : size.width);
             double outer = item.main + mainMargin(item, row);
@@ -159,22 +159,22 @@ public final class FlexLayout {
     private static void distribute(Line line, double available, boolean row) {
         double free = available - line.used;
         if (free >= 0) {
-            double total = line.items.stream().mapToDouble(item -> item.node.style.number(Style.Property.GROW, 0))
+            double total = line.items.stream().mapToDouble(item -> item.node.style.number(StyleProperties.GROW, 0))
                     .sum();
             if (total > 0)
                 for (Item item : line.items)
-                    item.main += free * item.node.style.number(Style.Property.GROW, 0) / total;
+                    item.main += free * item.node.style.number(StyleProperties.GROW, 0) / total;
         } else {
             var remaining = new ArrayList<>(line.items);
             while (free < -0.001 && !remaining.isEmpty()) {
                 double total = remaining.stream()
-                        .mapToDouble(item -> item.main * item.node.style.number(Style.Property.SHRINK, 1)).sum();
+                        .mapToDouble(item -> item.main * item.node.style.number(StyleProperties.SHRINK, 1)).sum();
                 if (total == 0)
                     break;
                 double consumed = 0;
                 for (Item item : remaining) {
                     double reduction = Math.min(item.main,
-                            -free * item.main * item.node.style.number(Style.Property.SHRINK, 1) / total);
+                            -free * item.main * item.node.style.number(StyleProperties.SHRINK, 1) / total);
                     item.main -= reduction;
                     consumed += reduction;
                 }
@@ -221,7 +221,7 @@ public final class FlexLayout {
                 crossCursor -= line.cross;
             double free = Math.max(0, mainAvailable - line.used);
             int count = line.items.size();
-            Style.Justify justify = node.style.get(Style.Property.JUSTIFY, Style.Justify.START);
+            Style.Justify justify = node.style.get(StyleProperties.JUSTIFY, Style.Justify.START);
             double gap = switch (justify) {
                 case SPACE_BETWEEN -> count > 1 ? free / (count - 1) : 0;
                 case SPACE_AROUND -> count > 0 ? free / count : 0;
@@ -236,7 +236,7 @@ public final class FlexLayout {
                 default -> 0;
             };
             for (Item item : line.items) {
-                Style.Align align = node.style.get(Style.Property.ALIGN, Style.Align.STRETCH);
+                Style.Align align = node.style.get(StyleProperties.ALIGN, Style.Align.STRETCH);
                 double cross = item.cross;
                 boolean autoCross = Double.isNaN(row ? item.node.style.height() : item.node.style.width());
                 if (align == Style.Align.STRETCH && autoCross)

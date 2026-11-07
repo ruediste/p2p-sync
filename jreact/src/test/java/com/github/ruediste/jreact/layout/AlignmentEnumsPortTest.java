@@ -1,12 +1,9 @@
 package com.github.ruediste.jreact.layout;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -16,74 +13,34 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Port of alignment-enums.test.ts. The TypeScript suite runs every case under
- * three update modes ("constructor", "set", "assignment"); those become
- * parameterized cases here.
+ * several update modes; only direct field assignment remains here.
  */
 class AlignmentEnumsPortTest {
 
-    private static Map<String, Object> props(Object... keyValues) {
-        Map<String, Object> map = new LinkedHashMap<>();
-        for (int i = 0; i < keyValues.length; i += 2) {
-            map.put((String) keyValues[i], keyValues[i + 1]);
-        }
-        return map;
-    }
-
-    private static Style updated(String update, Map<String, Object> properties) {
-        Style style;
-        if (update.equals("constructor")) {
-            style = new Style(properties);
-        } else {
-            style = new Style();
-            if (update.equals("set")) {
-                style.set(properties);
-            } else {
-                for (Map.Entry<String, Object> entry : properties.entrySet()) {
-                    applyByAssignment(style, entry.getKey(), entry.getValue());
-                }
-            }
-        }
-        return style;
-    }
-
-    private static void applyByAssignment(Style style, String key, Object value) {
-        switch (key) {
-            case "alignSelf" -> style.alignSelf = (AlignSelf) value;
-            case "justifySelf" -> style.justifySelf = (AlignSelf) value;
-            case "alignContent" -> style.alignContent = (AlignContent) value;
-            case "justifyContent" -> style.justifyContent = (JustifyContent) value;
-            default -> throw new IllegalArgumentException("Unsupported assignment key: " + key);
-        }
-    }
-
     static Stream<Arguments> selfAlignmentCases() {
         List<Arguments> cases = new ArrayList<>();
-        for (String update : List.of("constructor", "set", "assignment")) {
-            for (AlignSelf value : List.of(
-                    AlignSelf.Start,
-                    AlignSelf.End,
-                    AlignSelf.FlexStart,
-                    AlignSelf.FlexEnd,
-                    AlignSelf.Center,
-                    AlignSelf.Baseline,
-                    AlignSelf.Stretch)) {
-                cases.add(Arguments.of(update, value));
-            }
+        for (AlignSelf value : List.of(
+                AlignSelf.Start,
+                AlignSelf.End,
+                AlignSelf.FlexStart,
+                AlignSelf.FlexEnd,
+                AlignSelf.Center,
+                AlignSelf.Baseline,
+                AlignSelf.Stretch)) {
+            cases.add(Arguments.of(value));
         }
         return cases.stream();
     }
 
-    @ParameterizedTest(name = "self alignment after {0}: {1}")
+    @ParameterizedTest(name = "self alignment: {0}")
     @MethodSource("selfAlignmentCases")
-    void returnsThePublicSelfAlignmentValue(String update, AlignSelf value) {
-        Style style = updated(update, props("alignSelf", value, "justifySelf", value));
+    void returnsThePublicSelfAlignmentValue(AlignSelf value) {
+        Style style = new Style();
+        style.alignSelf = value;
+        style.justifySelf = value;
 
         assertEquals(value, style.alignSelf);
         assertEquals(value, style.justifySelf);
-        assertEquals(value, style.get("alignSelf"));
-        assertEquals(value, style.get("justifySelf"));
-        assertArrayEquals(new Object[] { value, value },
-                (Object[]) style.get("alignSelf", "justifySelf"));
     }
 
     static Stream<Arguments> distributionCases() {
@@ -91,27 +48,22 @@ class AlignmentEnumsPortTest {
         List<Arguments> values = List.of(
                 Arguments.of("SpaceAround", AlignContent.SpaceAround, JustifyContent.SpaceAround),
                 Arguments.of("SpaceEvenly", AlignContent.SpaceEvenly, JustifyContent.SpaceEvenly));
-        for (String update : List.of("constructor", "set", "assignment")) {
-            for (Arguments value : values) {
-                cases.add(Arguments.of(update, value.get()[0], value.get()[1], value.get()[2]));
-            }
+        for (Arguments value : values) {
+            cases.add(Arguments.of(value.get()[0], value.get()[1], value.get()[2]));
         }
         return cases.stream();
     }
 
-    @ParameterizedTest(name = "{0} without swapping distribution modes after {1}")
+    @ParameterizedTest(name = "{0} without swapping distribution modes")
     @MethodSource("distributionCases")
-    void returnsPublicDistributionValuesWithoutSwappingDistributionModes(String name, String update,
+    void returnsPublicDistributionValuesWithoutSwappingDistributionModes(String name,
             AlignContent alignContent, JustifyContent justifyContent) {
-        Style style = updated(update,
-                props("alignContent", alignContent, "justifyContent", justifyContent));
+        Style style = new Style();
+        style.alignContent = alignContent;
+        style.justifyContent = justifyContent;
 
         assertEquals(alignContent, style.alignContent);
         assertEquals(justifyContent, style.justifyContent);
-        assertEquals(alignContent, style.get("alignContent"));
-        assertEquals(justifyContent, style.get("justifyContent"));
-        assertArrayEquals(new Object[] { alignContent, justifyContent },
-                (Object[]) style.get("alignContent", "justifyContent"));
     }
 
     @Test
@@ -123,30 +75,21 @@ class AlignmentEnumsPortTest {
                 Display.None.value,
                 Display.FlowRoot.value));
 
-        Style style = new Style(props(
-                "display", Display.FlowRoot,
-                "alignItems", AlignItems.SafeSelfStart,
-                "alignSelf", AlignSelf.SafeCenter,
-                "alignContent", AlignContent.SafeEnd,
-                "justifyContent", JustifyContent.SafeFlexEnd,
-                "justifyItems", AlignItems.SelfEnd,
-                "justifySelf", AlignSelf.SafeSelfEnd));
+        Style style = new Style();
+        style.display = Display.FlowRoot;
+        style.alignItems = AlignItems.SafeSelfStart;
+        style.alignSelf = AlignSelf.SafeCenter;
+        style.alignContent = AlignContent.SafeEnd;
+        style.justifyContent = JustifyContent.SafeFlexEnd;
+        style.justifyItems = AlignItems.SelfEnd;
+        style.justifySelf = AlignSelf.SafeSelfEnd;
 
-        assertArrayEquals(new Object[] {
-                Display.FlowRoot,
-                AlignItems.SafeSelfStart,
-                AlignSelf.SafeCenter,
-                AlignContent.SafeEnd,
-                JustifyContent.SafeFlexEnd,
-                AlignItems.SelfEnd,
-                AlignSelf.SafeSelfEnd
-        }, (Object[]) style.get(
-                "display",
-                "alignItems",
-                "alignSelf",
-                "alignContent",
-                "justifyContent",
-                "justifyItems",
-                "justifySelf"));
+        assertEquals(Display.FlowRoot, style.display);
+        assertEquals(AlignItems.SafeSelfStart, style.alignItems);
+        assertEquals(AlignSelf.SafeCenter, style.alignSelf);
+        assertEquals(AlignContent.SafeEnd, style.alignContent);
+        assertEquals(JustifyContent.SafeFlexEnd, style.justifyContent);
+        assertEquals(AlignItems.SelfEnd, style.justifyItems);
+        assertEquals(AlignSelf.SafeSelfEnd, style.justifySelf);
     }
 }

@@ -40,7 +40,7 @@ class ComponentsTest {
             Node card = root.tree().children.getFirst();
             Node row = card.children.get(1);
             List<Color> backgrounds = row.children.stream()
-                    .map(node -> node.style.get(Style.Property.BACKGROUND, (Color) null)).toList();
+                    .map(node -> node.style.get(StyleProperties.BACKGROUND, (Color) null)).toList();
             assertEquals(ui.theme.primary(), backgrounds.get(0));
             assertEquals(ui.theme.surface(), backgrounds.get(1));
             assertEquals(ui.theme.danger(), backgrounds.get(2));
@@ -59,7 +59,7 @@ class ComponentsTest {
                 RenderingTest.click(panel, 20, 15);
                 assertEquals(1, calls.get());
                 assertEquals(java.awt.Color.MAGENTA,
-                        panel.tree().children.getFirst().style.get(Style.Property.BACKGROUND, null));
+                        panel.tree().children.getFirst().style.get(StyleProperties.BACKGROUND, null));
             }
         });
     }

@@ -33,7 +33,10 @@ public final class Ui {
     static final class Context {
         final RenderRoot runtime;
         final Fiber fiber;
+
+        /** Style rules of the current component */
         final Styles.NodeStyleRules styleRules;
+
         /**
          * Style-rule scopes of all components enclosing this one, outermost
          * first, ending with this component's own {@link #styleRules}. Nodes
@@ -56,7 +59,7 @@ public final class Ui {
         private Context(RenderRoot runtime, Fiber fiber, List<Styles.NodeStyleRules> parentDeclarations) {
             this.runtime = runtime;
             this.fiber = fiber;
-            styleRules = new Styles.NodeStyleRules(runtime.parent);
+            styleRules = new Styles.NodeStyleRules();
             styleRuleChain = new ArrayList<>(parentDeclarations);
             styleRuleChain.add(styleRules);
         }
@@ -296,40 +299,6 @@ public final class Ui {
                 else
                     CURRENT.set(previous);
             }
-        }
-    }
-
-    /**
-     * Executes a component body with the supplied fiber as the active context.
-     *
-     * <p>
-     * Resets hook, child-component, and primitive cursors, then installs a
-     * context anchored at the root's current node parent. Successful completion
-     * validates hook usage and disposes unvisited child fibers. The previous
-     * thread-local context is restored in {@code finally}, including when body
-     * execution or reconciliation fails.
-     *
-     * <p>
-     * This is shared by root rendering and nested component calls. It neither
-     * publishes the node tree nor runs queued effect setup; {@link RenderRoot}
-     * performs those steps after the root body completes.
-     *
-     * @param runtime root owning the render tree and effect queue
-     * @param fiber   retained component state to activate for this invocation
-     * @param body    component render body to execute synchronously
-     */
-    static void render(RenderRoot runtime, Fiber fiber, Runnable body) {
-        Context previous = CURRENT.get();
-        fiber.begin();
-        CURRENT.set(new Context(runtime, fiber));
-        try {
-            body.run();
-            fiber.finish();
-        } finally {
-            if (previous == null)
-                CURRENT.remove();
-            else
-                CURRENT.set(previous);
         }
     }
 }

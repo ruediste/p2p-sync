@@ -7,22 +7,84 @@ package com.github.ruediste.jreact.layout;
  */
 public final class Layout {
 
-    public int order;
+    /**
+     * Horizontal position of the node's border box, in the parent's border-box
+     * coordinate system. For absolutely or fixed positioned nodes the position
+     * is relative to the containing block's border box instead.
+     */
     public float x;
+
+    /**
+     * Vertical position of the node's border box, in the parent's border-box
+     * coordinate system. For absolutely or fixed positioned nodes the position
+     * is relative to the containing block's border box instead.
+     */
     public float y;
+
+    /** Width of the node's border box, in pixels. */
     public float width;
+
+    /** Height of the node's border box, in pixels. */
     public float height;
 
     /** Reachable content extent from the scroll origin, in pixels. */
     public float contentWidth;
+
+    /** Reachable content extent from the scroll origin, in pixels. */
     public float contentHeight;
 
+    /** Width of the scrollbar reserved by the last layout pass, in pixels. */
     public float scrollbarWidth;
+
+    /** Height of the scrollbar reserved by the last layout pass, in pixels. */
     public float scrollbarHeight;
 
+    /** Resolved border widths, in pixels. */
     public Rect<java.lang.Float> border = Rect.all(0f);
+
+    /** Resolved padding widths, in pixels. */
     public Rect<java.lang.Float> padding = Rect.all(0f);
+
+    /** Resolved margins, in pixels. */
     public Rect<java.lang.Float> margin = Rect.all(0f);
+
+    /**
+     * Track and item details of the grid layout computed for this node, or
+     * {@code null} if the node is not a grid container or no layout has been
+     * computed yet.
+     */
+    public DetailedGridInfo detailedGridInfo;
+
+    /**
+     * Node used to resolve the insets and percentages of an absolutely or fixed
+     * positioned node. Fixed nodes keep this {@code null} because they are
+     * positioned relative to the viewport.
+     */
+    public Node containingBlock;
+
+    /**
+     * Absolute horizontal position of this node in root coordinates, valid
+     * after layout has been computed.
+     */
+    public float absX;
+
+    /**
+     * Absolute vertical position of this node in root coordinates, valid after
+     * layout has been computed.
+     */
+    public float absY;
+
+    /**
+     * Whether this node has already been placed by the out-of-flow pass during
+     * the current layout run. Used internally by {@link LayoutEngine}.
+     */
+    boolean placedOutOfFlow;
+
+    /** Content-box width used by the last layout pass, in pixels. */
+    public float usedContentWidth;
+
+    /** Content-box height used by the last layout pass, in pixels. */
+    public float usedContentHeight;
 
     public Point<java.lang.Float> position() {
         return Point.of(x, y);
@@ -38,51 +100,5 @@ public final class Layout {
 
     public Size<java.lang.Float> scrollbarSize() {
         return Size.of(scrollbarWidth, scrollbarHeight);
-    }
-
-    /** Batch property read. Returns a single value for one key, an array otherwise. */
-    public Object get(String... keys) {
-        if (keys.length == 0) {
-            return null;
-        }
-        Object[] values = new Object[keys.length];
-        for (int i = 0; i < keys.length; i++) {
-            values[i] = getProperty(keys[i]);
-        }
-        return values.length == 1 ? values[0] : values;
-    }
-
-    private Object getProperty(String key) {
-        return switch (key) {
-            case "order" -> order;
-            case "position" -> position();
-            case "x" -> x;
-            case "y" -> y;
-            case "size" -> size();
-            case "width" -> width;
-            case "height" -> height;
-            case "contentSize" -> contentSize();
-            case "contentWidth" -> contentWidth;
-            case "contentHeight" -> contentHeight;
-            case "scrollbarSize" -> scrollbarSize();
-            case "scrollbarWidth" -> scrollbarWidth;
-            case "scrollbarHeight" -> scrollbarHeight;
-            case "border" -> border;
-            case "borderLeft" -> border.left;
-            case "borderRight" -> border.right;
-            case "borderTop" -> border.top;
-            case "borderBottom" -> border.bottom;
-            case "padding" -> padding;
-            case "paddingLeft" -> padding.left;
-            case "paddingRight" -> padding.right;
-            case "paddingTop" -> padding.top;
-            case "paddingBottom" -> padding.bottom;
-            case "margin" -> margin;
-            case "marginLeft" -> margin.left;
-            case "marginRight" -> margin.right;
-            case "marginTop" -> margin.top;
-            case "marginBottom" -> margin.bottom;
-            default -> throw new IllegalArgumentException("Unknown property path: " + key);
-        };
     }
 }

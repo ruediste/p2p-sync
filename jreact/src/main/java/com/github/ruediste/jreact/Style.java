@@ -1,9 +1,14 @@
 package com.github.ruediste.jreact;
 
+import static com.github.ruediste.jreact.StyleProperties.*;
+
 import java.awt.Color;
 import java.awt.Font;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Objects;
+
+import com.github.ruediste.jreact.StyleProperties.DoubleProperty;
+import com.github.ruediste.jreact.StyleProperties.Property;
 
 /**
  * Mutable, typed declarations for JReact's supported layout and appearance
@@ -44,11 +49,7 @@ public final class Style {
         LEFT, CENTER, RIGHT
     }
 
-    enum Property {
-        DIRECTION, WRAP, ORDER, GROW, SHRINK, JUSTIFY, ALIGN, WIDTH, HEIGHT, MARGIN, PADDING,
-        BACKGROUND, COLOR, BORDER, RADIUS, FONT_FAMILY, FONT_SIZE, BOLD, ITALIC, TEXT_ALIGN,
-        LINE_HEIGHT, BOX_SHADOW, TEXT_SHADOW, OPACITY
-    }
+    final HashMap<Property<?>, Object> values = new HashMap<>();
 
     /** Non-negative per-side spacing in top, right, bottom, left order. */
     public record Insets(double top, double right, double bottom, double left) {
@@ -100,7 +101,6 @@ public final class Style {
         }
     }
 
-    final EnumMap<Property, Object> values = new EnumMap<>(Property.class);
     String id;
     String className = "";
 
@@ -115,47 +115,47 @@ public final class Style {
     }
 
     public Style flexDirection(Direction value) {
-        return put(Property.DIRECTION, value);
+        return put(DIRECTION, value);
     }
 
     public Style flexWrap(Wrap value) {
-        return put(Property.WRAP, value);
+        return put(WRAP, value);
     }
 
     public Style order(int value) {
-        return put(Property.ORDER, value);
+        return put(ORDER, value);
     }
 
     public Style flexGrow(double value) {
-        return dimension(Property.GROW, value);
+        return dimension(GROW, value);
     }
 
     public Style flexShrink(double value) {
-        return dimension(Property.SHRINK, value);
+        return dimension(SHRINK, value);
     }
 
     public Style justifyContent(Justify value) {
-        return put(Property.JUSTIFY, value);
+        return put(JUSTIFY, value);
     }
 
     public Style alignItems(Align value) {
-        return put(Property.ALIGN, value);
+        return put(ALIGN, value);
     }
 
     public Style width(double value) {
-        return dimension(Property.WIDTH, value);
+        return dimension(WIDTH, value);
     }
 
     public Style height(double value) {
-        return dimension(Property.HEIGHT, value);
+        return dimension(HEIGHT, value);
     }
 
     public Style widthAuto() {
-        return put(Property.WIDTH, Double.NaN);
+        return put(WIDTH, Double.NaN);
     }
 
     public Style heightAuto() {
-        return put(Property.HEIGHT, Double.NaN);
+        return put(HEIGHT, Double.NaN);
     }
 
     public Style margin(double value) {
@@ -163,7 +163,7 @@ public final class Style {
     }
 
     public Style margin(double top, double right, double bottom, double left) {
-        return put(Property.MARGIN, new Insets(top, right, bottom, left));
+        return put(MARGIN, new Insets(top, right, bottom, left));
     }
 
     public Style padding(double value) {
@@ -171,15 +171,15 @@ public final class Style {
     }
 
     public Style padding(double top, double right, double bottom, double left) {
-        return put(Property.PADDING, new Insets(top, right, bottom, left));
+        return put(PADDING, new Insets(top, right, bottom, left));
     }
 
     public Style backgroundColor(Color value) {
-        return put(Property.BACKGROUND, value);
+        return put(BACKGROUND, value);
     }
 
     public Style color(Color value) {
-        return put(Property.COLOR, value);
+        return put(COLOR, value);
     }
 
     public Style border(double width, Color color) {
@@ -188,64 +188,64 @@ public final class Style {
     }
 
     public Style border(Border value) {
-        return put(Property.BORDER, value);
+        return put(BORDER, value);
     }
 
     public Style borderRadius(double value) {
-        return dimension(Property.RADIUS, value);
+        return dimension(RADIUS, value);
     }
 
     public Style fontFamily(String value) {
-        return put(Property.FONT_FAMILY, value);
+        return put(FONT_FAMILY, value);
     }
 
     public Style fontSize(double value) {
         positive(value);
-        return put(Property.FONT_SIZE, value);
+        return put(FONT_SIZE, value);
     }
 
     public Style fontWeight(boolean bold) {
-        return put(Property.BOLD, bold);
+        return put(BOLD, bold);
     }
 
     public Style fontStyle(boolean italic) {
-        return put(Property.ITALIC, italic);
+        return put(ITALIC, italic);
     }
 
     public Style textAlign(TextAlign value) {
-        return put(Property.TEXT_ALIGN, value);
+        return put(TEXT_ALIGN, value);
     }
 
     public Style lineHeight(double value) {
         positive(value);
-        return put(Property.LINE_HEIGHT, value);
+        return put(LINE_HEIGHT, value);
     }
 
     public Style lineHeightNormal() {
-        return put(Property.LINE_HEIGHT, Double.NaN);
+        return put(LINE_HEIGHT, Double.NaN);
     }
 
     public Style boxShadow(Shadow value) {
-        return put(Property.BOX_SHADOW, value);
+        return put(BOX_SHADOW, value);
     }
 
     public Style textShadow(Shadow value) {
-        return put(Property.TEXT_SHADOW, value);
+        return put(TEXT_SHADOW, value);
     }
 
     public Style opacity(double value) {
         nonNegative(value);
         if (value > 1)
             throw new IllegalArgumentException("Opacity must be between 0 and 1");
-        return put(Property.OPACITY, value);
+        return put(OPACITY, value);
     }
 
-    private Style dimension(Property property, double value) {
+    private Style dimension(DoubleProperty property, double value) {
         nonNegative(value);
         return put(property, value);
     }
 
-    private Style put(Property property, Object value) {
+    private Style put(Property<?> property, Object value) {
         values.put(property, Objects.requireNonNull(value));
         return this;
     }
@@ -267,30 +267,29 @@ public final class Style {
             throw new IllegalArgumentException("Value must be positive");
     }
 
-    @SuppressWarnings("unchecked")
-    <T> T get(Property property, T fallback) {
-        return (T) values.getOrDefault(property, fallback);
+    <T> T get(Property<T> property, T fallback) {
+        return property.get(this, fallback);
     }
 
-    double number(Property property, double fallback) {
-        return get(property, fallback);
+    double number(DoubleProperty property, double fallback) {
+        return property.get(this, fallback);
     }
 
     public double width() {
-        return number(Property.WIDTH, Double.NaN);
+        return number(WIDTH, Double.NaN);
     }
 
     public double height() {
-        return number(Property.HEIGHT, Double.NaN);
+        return number(HEIGHT, Double.NaN);
     }
 
     public Insets margin() {
-        return get(Property.MARGIN, new Insets(0, 0, 0, 0));
+        return get(MARGIN, new Insets(0, 0, 0, 0));
     }
 
     public Insets inset() {
-        Insets padding = get(Property.PADDING, new Insets(0, 0, 0, 0));
-        Border border = get(Property.BORDER, null);
+        Insets padding = get(PADDING, new Insets(0, 0, 0, 0));
+        Border border = get(BORDER, null);
         if (border == null)
             return padding;
         Insets widths = border.widths();
@@ -299,12 +298,12 @@ public final class Style {
     }
 
     public Color color() {
-        return get(Property.COLOR, new Color(32, 36, 40));
+        return get(COLOR, new Color(32, 36, 40));
     }
 
     public Font font() {
-        int flags = (get(Property.BOLD, false) ? Font.BOLD : 0) | (get(Property.ITALIC, false) ? Font.ITALIC : 0);
-        return new Font(get(Property.FONT_FAMILY, Font.DIALOG), flags, 14)
-                .deriveFont((float) number(Property.FONT_SIZE, 14));
+        int flags = (get(BOLD, false) ? Font.BOLD : 0) | (get(ITALIC, false) ? Font.ITALIC : 0);
+        return new Font(get(FONT_FAMILY, Font.DIALOG), flags, 14)
+                .deriveFont((float) number(FONT_SIZE, 14));
     }
 }

@@ -6,9 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
@@ -18,26 +16,6 @@ import org.junit.jupiter.api.Test;
  * typed value objects used by the native engine.
  */
 class StylePortTest {
-
-    private static Map<String, Object> props(Object... keyValues) {
-        Map<String, Object> map = new LinkedHashMap<>();
-        for (int i = 0; i < keyValues.length; i += 2) {
-            map.put((String) keyValues[i], keyValues[i + 1]);
-        }
-        return map;
-    }
-
-    private static Style style(Object... keyValues) {
-        return new Style(props(keyValues));
-    }
-
-    private static Object[] values(Object value) {
-        return (Object[]) value;
-    }
-
-    private static float number(Object value) {
-        return ((Number) value).floatValue();
-    }
 
     // Constructor
 
@@ -50,28 +28,28 @@ class StylePortTest {
 
     @Test
     void createsStyleWithInitialProperties() {
-        Style style = new Style(props(
-                "display", Display.Grid,
-                "flexDirection", FlexDirection.Column,
-                "width", 200,
-                "marginLeft", 10));
+        Style style = new Style();
+        style.display = Display.Grid;
+        style.flexDirection = FlexDirection.Column;
+        style.size.width = Dimension.length(200);
+        style.margin.left = LengthPercentageAuto.length(10);
         assertEquals(Display.Grid, style.display);
         assertEquals(FlexDirection.Column, style.flexDirection);
-        assertEquals(Dimension.length(200), style.get("width"));
-        assertEquals(LengthPercentageAuto.length(10), style.get("marginLeft"));
+        assertEquals(Dimension.length(200), style.size.width);
+        assertEquals(LengthPercentageAuto.length(10), style.margin.left);
     }
 
     @Test
     void createsStyleWithDotNotationProperties() {
-        Style style = new Style(props(
-                "width", 300,
-                "height", "50%",
-                "marginLeft", 20,
-                "marginRight", "auto"));
-        assertEquals(Dimension.length(300), style.get("width"));
-        assertEquals(Dimension.percent(50), style.get("height"));
-        assertEquals(LengthPercentageAuto.length(20), style.get("marginLeft"));
-        assertEquals(LengthPercentageAuto.auto(), style.get("marginRight"));
+        Style style = new Style();
+        style.size.width = Dimension.length(300);
+        style.size.height = Dimension.percent(50);
+        style.margin.left = LengthPercentageAuto.length(20);
+        style.margin.right = LengthPercentageAuto.auto();
+        assertEquals(Dimension.length(300), style.size.width);
+        assertEquals(Dimension.percent(50), style.size.height);
+        assertEquals(LengthPercentageAuto.length(20), style.margin.left);
+        assertEquals(LengthPercentageAuto.auto(), style.margin.right);
     }
 
     // Layout modes
@@ -107,7 +85,6 @@ class StylePortTest {
                 Position.Static)) {
             style.position = position;
             assertEquals(position, style.position);
-            assertEquals(position, style.get("position"));
         }
     }
 
@@ -312,27 +289,30 @@ class StylePortTest {
     @Test
     void minSizeDefaultsToAutoSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(Dimension.auto(), style.minSize.width);
-        assertEquals(Dimension.auto(), style.minSize.height);
+        assertEquals(Dimension.auto(), style.getMinWidth());
+        assertEquals(Dimension.auto(), style.getMinHeight());
 
-        style.minSize = Size.of(Dimension.length(50), Dimension.length(50));
-        assertEquals(Dimension.length(50), style.minSize.width);
-        assertEquals(Dimension.length(50), style.minSize.height);
+        style.setMinWidth(50);
+        style.setMinHeight(50);
+        assertEquals(Dimension.length(50), style.getMinWidth());
+        assertEquals(Dimension.length(50), style.getMinHeight());
 
-        style.minSize = Size.of(Dimension.percent(10), Dimension.auto());
-        assertEquals(Dimension.percent(10), style.minSize.width);
-        assertEquals(Dimension.auto(), style.minSize.height);
+        style.setMinWidth("10%");
+        style.setMinHeight("auto");
+        assertEquals(Dimension.percent(10), style.getMinWidth());
+        assertEquals(Dimension.auto(), style.getMinHeight());
     }
 
     @Test
     void maxSizeDefaultsToAutoSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(Dimension.auto(), style.maxSize.width);
-        assertEquals(Dimension.auto(), style.maxSize.height);
+        assertEquals(Dimension.auto(), style.getMaxWidth());
+        assertEquals(Dimension.auto(), style.getMaxHeight());
 
-        style.maxSize = Size.of(Dimension.length(500), Dimension.percent(100));
-        assertEquals(Dimension.length(500), style.maxSize.width);
-        assertEquals(Dimension.percent(100), style.maxSize.height);
+        style.setMaxWidth(500);
+        style.setMaxHeight("100%");
+        assertEquals(Dimension.length(500), style.getMaxWidth());
+        assertEquals(Dimension.percent(100), style.getMaxHeight());
     }
 
     @Test
@@ -915,286 +895,6 @@ class StylePortTest {
         assertEquals(GridPlacement.line(1), style.gridRow.start);
     }
 
-    // Batch property reading (Style.get)
-
-    @Test
-    void readsSingleTopLevelProperty() {
-        Style style = new Style();
-        style.display = Display.Flex;
-        assertEquals(Display.Flex, style.get("display"));
-    }
-
-    @Test
-    void readsSingleNumericProperty() {
-        Style style = new Style();
-        style.flexGrow = 2.5f;
-        assertEquals(2.5f, number(style.get("flexGrow")), 0f);
-    }
-
-    @Test
-    void readsMultipleTopLevelProperties() {
-        Style style = new Style();
-        style.display = Display.Grid;
-        style.flexGrow = 3;
-        style.flexShrink = 0.5f;
-
-        Object[] values = values(style.get("display", "flexGrow", "flexShrink"));
-        assertEquals(Display.Grid, values[0]);
-        assertEquals(3f, number(values[1]), 0f);
-        assertEquals(0.5f, number(values[2]), 1e-5f);
-    }
-
-    @Test
-    void readsNestedSizePropertiesWithDotNotation() {
-        Style style = new Style();
-        style.size = Size.of(Dimension.length(100), Dimension.percent(50));
-
-        assertEquals(Dimension.length(100), style.get("width"));
-        assertEquals(Dimension.percent(50), style.get("height"));
-    }
-
-    @Test
-    void readsNestedMarginPropertiesWithDotNotation() {
-        Style style = new Style();
-        style.margin = new Rect<>(
-                LengthPercentageAuto.length(10),
-                LengthPercentageAuto.auto(),
-                LengthPercentageAuto.percent(5),
-                LengthPercentageAuto.length(0));
-
-        assertEquals(LengthPercentageAuto.length(10), style.get("marginLeft"));
-        assertEquals(LengthPercentageAuto.auto(), style.get("marginRight"));
-        assertEquals(LengthPercentageAuto.percent(5), style.get("marginTop"));
-        assertEquals(LengthPercentageAuto.length(0), style.get("marginBottom"));
-    }
-
-    @Test
-    void readsMixedTopLevelAndNestedProperties() {
-        Style style = new Style();
-        style.display = Display.Flex;
-        style.flexDirection = FlexDirection.Column;
-        style.size = Size.of(Dimension.length(200), Dimension.length(100));
-        style.padding = new Rect<>(
-                LengthPercentage.length(10),
-                LengthPercentage.length(10),
-                LengthPercentage.length(5),
-                LengthPercentage.length(5));
-
-        Object[] values = values(style.get("display", "width", "paddingLeft"));
-        assertEquals(Display.Flex, values[0]);
-        assertEquals(Dimension.length(200), values[1]);
-        assertEquals(LengthPercentage.length(10), values[2]);
-    }
-
-    @Test
-    void readsFullNestedObjectSize() {
-        Style style = new Style();
-        style.size = Size.of(Dimension.length(150), Dimension.percent(75));
-
-        @SuppressWarnings("unchecked")
-        Size<Dimension> size = (Size<Dimension>) style.get("size");
-        assertEquals(Dimension.length(150), size.width);
-        assertEquals(Dimension.percent(75), size.height);
-    }
-
-    @Test
-    void readsOverflowNestedProperties() {
-        Style style = new Style();
-        style.overflow = Point.of(Overflow.Hidden, Overflow.Scroll);
-
-        assertEquals(Overflow.Hidden, style.get("overflowX"));
-        assertEquals(Overflow.Scroll, style.get("overflowY"));
-    }
-
-    @Test
-    void readsGapNestedProperties() {
-        Style style = new Style();
-        style.gap = Size.of(LengthPercentage.length(10), LengthPercentage.percent(5));
-
-        assertEquals(LengthPercentage.length(10), style.get("columnGap"));
-        assertEquals(LengthPercentage.percent(5), style.get("rowGap"));
-    }
-
-    @Test
-    void readsBooleanProperties() {
-        Style style = new Style();
-        style.itemIsTable = true;
-        style.itemIsReplaced = true;
-
-        assertEquals(true, style.get("itemIsTable"));
-        assertEquals(true, style.get("itemIsReplaced"));
-    }
-
-    @Test
-    void returnsUndefinedForOptionalPropertiesThatAreNotSet() {
-        Style style = new Style();
-        assertNull(style.get("alignItems"));
-        assertNull(style.get("aspectRatio"));
-    }
-
-    @Test
-    void handlesGridRowColumnProperties() {
-        Style style = new Style();
-        style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(3));
-        style.gridColumn = Line.of(GridPlacement.line(2), GridPlacement.line(4));
-
-        assertEquals(GridPlacement.line(1), style.get("gridRowStart"));
-        assertEquals(GridPlacement.line(3), style.get("gridRowEnd"));
-        assertEquals(GridPlacement.line(2), style.get("gridColumnStart"));
-        assertEquals(GridPlacement.line(4), style.get("gridColumnEnd"));
-    }
-
-    @Test
-    void returnsUndefinedForEmptyKeysArray() {
-        Style style = new Style();
-        assertNull(style.get());
-    }
-
-    @Test
-    void throwsErrorForUnknownPropertyPath() {
-        Style style = new Style();
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> style.get("unknownProperty"));
-        assertEquals("Unknown property path: unknownProperty", error.getMessage());
-    }
-
-    // Batch property writing (Style.set)
-
-    @Test
-    void setsSingleTopLevelProperty() {
-        Style style = new Style();
-        style.set(props("display", Display.Grid));
-        assertEquals(Display.Grid, style.display);
-    }
-
-    @Test
-    void setsMultipleTopLevelProperties() {
-        Style style = new Style();
-        style.set(props(
-                "display", Display.Flex,
-                "flexDirection", FlexDirection.Column,
-                "flexGrow", 2,
-                "flexShrink", 0.5));
-
-        assertEquals(Display.Flex, style.display);
-        assertEquals(FlexDirection.Column, style.flexDirection);
-        assertEquals(2f, style.flexGrow, 0f);
-        assertEquals(0.5f, style.flexShrink, 1e-5f);
-    }
-
-    @Test
-    void setsNestedSizePropertiesWithDotNotation() {
-        Style style = new Style();
-        style.set(props(
-                "width", 100,
-                "height", "50%"));
-
-        assertEquals(Dimension.length(100), style.size.width);
-        assertEquals(Dimension.percent(50), style.size.height);
-    }
-
-    @Test
-    void setsNestedMarginPropertiesWithDotNotation() {
-        Style style = new Style();
-        style.set(props(
-                "marginLeft", 10,
-                "marginRight", "auto",
-                "marginTop", "5%",
-                "marginBottom", 0));
-
-        assertEquals(LengthPercentageAuto.length(10), style.margin.left);
-        assertEquals(LengthPercentageAuto.auto(), style.margin.right);
-        assertEquals(LengthPercentageAuto.percent(5), style.margin.top);
-        assertEquals(LengthPercentageAuto.length(0), style.margin.bottom);
-    }
-
-    @Test
-    void setsMixedTopLevelAndNestedProperties() {
-        Style style = new Style();
-        style.set(props(
-                "display", Display.Flex,
-                "flexDirection", FlexDirection.Row,
-                "width", 200,
-                "paddingLeft", 10,
-                "paddingRight", 10));
-
-        assertEquals(Display.Flex, style.display);
-        assertEquals(FlexDirection.Row, style.flexDirection);
-        assertEquals(Dimension.length(200), style.size.width);
-        assertEquals(LengthPercentage.length(10), style.padding.left);
-        assertEquals(LengthPercentage.length(10), style.padding.right);
-    }
-
-    @Test
-    void setsFullNestedObjectSize() {
-        Style style = new Style();
-        style.set(props("size", props("width", 150, "height", "75%")));
-
-        assertEquals(Dimension.length(150), style.size.width);
-        assertEquals(Dimension.percent(75), style.size.height);
-    }
-
-    @Test
-    void setsOverflowNestedProperties() {
-        Style style = new Style();
-        style.set(props(
-                "overflowX", Overflow.Hidden,
-                "overflowY", Overflow.Scroll));
-
-        assertEquals(Overflow.Hidden, style.overflow.x);
-        assertEquals(Overflow.Scroll, style.overflow.y);
-    }
-
-    @Test
-    void setsBooleanProperties() {
-        Style style = new Style();
-        style.set(props(
-                "itemIsTable", true,
-                "itemIsReplaced", true));
-
-        assertTrue(style.itemIsTable);
-        assertTrue(style.itemIsReplaced);
-    }
-
-    @Test
-    void setThenGetRoundtrip() {
-        Style style = new Style();
-        style.set(props(
-                "display", Display.Grid,
-                "width", 300,
-                "marginLeft", 20,
-                "flexGrow", 1.5));
-
-        Object[] values = values(style.get("display", "width", "marginLeft", "flexGrow"));
-        assertEquals(Display.Grid, values[0]);
-        assertEquals(Dimension.length(300), values[1]);
-        assertEquals(LengthPercentageAuto.length(20), values[2]);
-        assertEquals(1.5f, number(values[3]), 1e-5f);
-    }
-
-    @Test
-    void setHandlesGridRowColumnProperties() {
-        Style style = new Style();
-        style.set(props(
-                "gridRowStart", 1,
-                "gridRowEnd", 3,
-                "gridColumnStart", 2,
-                "gridColumnEnd", 4));
-
-        assertEquals(GridPlacement.line(1), style.gridRow.start);
-        assertEquals(GridPlacement.line(3), style.gridRow.end);
-        assertEquals(GridPlacement.line(2), style.gridColumn.start);
-        assertEquals(GridPlacement.line(4), style.gridColumn.end);
-    }
-
-    @Test
-    void setThrowsErrorForUnknownPropertyKey() {
-        Style style = new Style();
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> style.set(props("unknownProperty", 1)));
-        assertEquals("Unknown property path for set: unknownProperty", error.getMessage());
-    }
-
     // Individual overflow properties
 
     @Test
@@ -1723,36 +1423,35 @@ class StylePortTest {
         assertEquals(GridPlacement.line(4), style.gridColumn.end);
     }
 
-    // Individual properties with batch get/set
+    // Individual properties
 
     @Test
-    void getWorksWithNewIndividualPropertyNames() {
+    void individualPropertySettersUpdateFields() {
         Style style = new Style();
         style.setWidth(200);
         style.setMarginLeft(10);
         style.setPaddingTop(5);
         style.setOverflowX(Overflow.Hidden);
 
-        assertEquals(Dimension.length(200), style.get("width"));
-        assertEquals(LengthPercentageAuto.length(10), style.get("marginLeft"));
-        assertEquals(LengthPercentage.length(5), style.get("paddingTop"));
-        assertEquals(Overflow.Hidden, style.get("overflowX"));
+        assertEquals(Dimension.length(200), style.size.width);
+        assertEquals(LengthPercentageAuto.length(10), style.margin.left);
+        assertEquals(LengthPercentage.length(5), style.padding.top);
+        assertEquals(Overflow.Hidden, style.overflow.x);
     }
 
     @Test
-    void setWorksWithNewIndividualPropertyNames() {
+    void individualPropertySettersUpdateNestedValues() {
         Style style = new Style();
-        style.set(props(
-                "width", 300,
-                "height", "50%",
-                "marginLeft", 20,
-                "marginRight", "auto",
-                "paddingTop", 10,
-                "paddingBottom", 15,
-                "borderLeft", 1,
-                "borderRight", 2,
-                "overflowX", Overflow.Scroll,
-                "overflowY", Overflow.Hidden));
+        style.setWidth(300);
+        style.setHeight("50%");
+        style.setMarginLeft(20);
+        style.setMarginRight("auto");
+        style.setPaddingTop(10);
+        style.setPaddingBottom(15);
+        style.setBorderLeft(1);
+        style.setBorderRight(2);
+        style.setOverflowX(Overflow.Scroll);
+        style.setOverflowY(Overflow.Hidden);
 
         assertEquals(Dimension.length(300), style.getWidth());
         assertEquals(Dimension.percent(50), style.getHeight());
@@ -1766,107 +1465,77 @@ class StylePortTest {
         assertEquals(Overflow.Hidden, style.getOverflowY());
     }
 
-    @Test
-    void getMultipleIndividualPropertiesAtOnce() {
-        Style style = new Style();
-        style.setWidth(200);
-        style.setHeight(100);
-        style.setMarginLeft(10);
-        style.setPaddingTop(5);
-
-        Object[] values = values(style.get("width", "height", "marginLeft", "paddingTop"));
-        assertEquals(Dimension.length(200), values[0]);
-        assertEquals(Dimension.length(100), values[1]);
-        assertEquals(LengthPercentageAuto.length(10), values[2]);
-        assertEquals(LengthPercentage.length(5), values[3]);
-    }
-
-    // Invalid enum input
-
-    @Test
-    void ignoresInvalidRawEnumValuesWithoutCorruptingState() {
-        Style style = new Style(props(
-                "display", Display.Grid,
-                "direction", Direction.Rtl,
-                "float", Float.Right,
-                "clear", Clear.Both,
-                "alignItems", AlignItems.Center));
-
-        style.set(props(
-                "display", 255,
-                "direction", 1.5,
-                "float", java.lang.Float.NaN,
-                "clear", -1,
-                "alignItems", 99));
-
-        Object[] values = values(style.get("display", "direction", "float", "clear", "alignItems"));
-        assertEquals(Display.Grid, values[0]);
-        assertEquals(Direction.Rtl, values[1]);
-        assertEquals(Float.Right, values[2]);
-        assertEquals(Clear.Both, values[3]);
-        assertEquals(AlignItems.Center, values[4]);
-    }
-
     // Dimension constraints and tree style updates
 
     @Test
     void preservesMinMaxDimensionsThroughLayoutAndTreeStyleEdits() {
-        Node child = new Node(new Style(props(
-                "width", 10,
-                "height", 100,
-                "minSize", props("width", "50%", "height", "auto"),
-                "maxSize", props("width", "auto", "height", "50%"))));
-        Node root = new Node(
-                new Style(props("display", Display.Block, "width", 200, "height", 100)),
-                List.of(child));
+        Style childStyle = new Style();
+        childStyle.size.width = Dimension.length(10);
+        childStyle.size.height = Dimension.length(100);
+        childStyle.setMinWidth("50%");
+        childStyle.setMaxHeight("50%");
+        Node child = new Node(childStyle);
 
-        root.computeLayout(200f, 100f);
+        Style rootStyle = new Style();
+        rootStyle.display = Display.Block;
+        rootStyle.size.width = Dimension.length(200);
+        rootStyle.size.height = Dimension.length(100);
+        Node root = new Node(rootStyle, List.of(child));
+
+        LayoutEngine.computeLayout(root, 200f, 100f);
         assertEquals(100f, child.layout.width, 0.01f);
         assertEquals(50f, child.layout.height, 0.01f);
 
         Style constrained = child.style.copy();
-        Object[] minMax = values(constrained.get("minSize", "maxSize"));
-        assertEquals(Size.of(Dimension.percent(50), Dimension.auto()), minMax[0]);
-        assertEquals(Size.of(Dimension.auto(), Dimension.percent(50)), minMax[1]);
         assertEquals(Dimension.percent(50), constrained.getMinWidth());
+        assertEquals(Dimension.auto(), constrained.getMinHeight());
+        assertEquals(Dimension.auto(), constrained.getMaxWidth());
         assertEquals(Dimension.percent(50), constrained.getMaxHeight());
         constrained.setMinWidth(60);
         constrained.setMaxHeight(30);
         child.style = constrained.copy();
-        root.computeLayout(200f, 100f);
+        LayoutEngine.computeLayout(root, 200f, 100f);
         assertEquals(60f, child.layout.width, 0.01f);
         assertEquals(30f, child.layout.height, 0.01f);
 
         Style unconstrained = child.style.copy();
-        unconstrained.set(props(
-                "minSize", props("width", "auto", "height", "auto"),
-                "maxSize", props("width", "auto", "height", "auto")));
+        unconstrained.setMinWidth("auto");
+        unconstrained.setMinHeight("auto");
+        unconstrained.setMaxWidth("auto");
+        unconstrained.setMaxHeight("auto");
         child.style = unconstrained.copy();
-        root.computeLayout(200f, 100f);
+        LayoutEngine.computeLayout(root, 200f, 100f);
         assertEquals(10f, child.layout.width, 0.01f);
         assertEquals(100f, child.layout.height, 0.01f);
     }
 
     @Test
     void appliesPercentageMinHeightAndMaxWidthFromScalarProperties() {
-        Style style = new Style(props("width", 300, "height", 1));
-        style.set(props("minHeight", "20%", "maxWidth", "75%"));
+        Style style = new Style();
+        style.size.width = Dimension.length(300);
+        style.size.height = Dimension.length(1);
+        style.setMinHeight("20%");
+        style.setMaxWidth("75%");
         Node child = new Node(style);
-        Node root = new Node(
-                new Style(props("display", Display.Block, "width", 200, "height", 100)),
-                List.of(child));
 
-        root.computeLayout(200f, 100f);
+        Style rootStyle = new Style();
+        rootStyle.display = Display.Block;
+        rootStyle.size.width = Dimension.length(200);
+        rootStyle.size.height = Dimension.length(100);
+        Node root = new Node(rootStyle, List.of(child));
+
+        LayoutEngine.computeLayout(root, 200f, 100f);
         assertEquals(150f, child.layout.width, 0.01f);
         assertEquals(20f, child.layout.height, 0.01f);
-        Object[] minMax = values(child.style.copy().get("minHeight", "maxWidth"));
-        assertEquals(Dimension.percent(20), minMax[0]);
-        assertEquals(Dimension.percent(75), minMax[1]);
+        assertEquals(Dimension.percent(20), child.style.getMinHeight());
+        assertEquals(Dimension.percent(75), child.style.getMaxWidth());
 
-        style.minSize = Size.of(Dimension.auto(), Dimension.length(30));
-        style.maxSize = Size.of(Dimension.length(120), Dimension.auto());
+        style.setMinWidth("auto");
+        style.setMinHeight(30);
+        style.setMaxWidth(120);
+        style.setMaxHeight("auto");
         child.style = style.copy();
-        root.computeLayout(200f, 100f);
+        LayoutEngine.computeLayout(root, 200f, 100f);
         assertEquals(120f, child.layout.width, 0.01f);
         assertEquals(30f, child.layout.height, 0.01f);
     }

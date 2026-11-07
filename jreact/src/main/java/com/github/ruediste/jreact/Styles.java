@@ -10,8 +10,9 @@ import java.util.function.Consumer;
  *
  * <p>
  * Declarations belong to the active {@link Ui} component context. Direct-child
- * scope limits rules to nodes immediately below the declaration's anchor;
- * transitive scope allows matching throughout the component's rendered subtree,
+ * scope applies a rule to every node rendered by the declaring component itself,
+ * including nested layout nodes, but not to nodes rendered by nested components.
+ * Transitive scope extends matching to the component's entire rendered subtree,
  * including nested components. Scope eligibility is separate from selector
  * matching and does not increase specificity.
  *
@@ -23,7 +24,14 @@ import java.util.function.Consumer;
  * declarations.
  */
 public final class Styles {
-    /** Determines which rendered nodes a component's rules may style. */
+    /**
+     * Determines which rendered nodes a component's rules may style.
+     *
+     * <p>
+     * {@link #DIRECT_CHILDREN} rules apply to nodes rendered by the declaring
+     * component itself, including nested layout nodes. {@link #TRANSITIVE} rules
+     * additionally apply to nodes rendered by nested components.
+     */
     public enum Scope {
         DIRECT_CHILDREN, TRANSITIVE
     }
@@ -36,14 +44,9 @@ public final class Styles {
         }
     }
 
-    /** Holds one component's rule list and its render-entry parent anchor. */
+    /** Holds one component's rule list. */
     static final class NodeStyleRules {
-        final Node anchor;
         final List<ScopedRule> rules = new ArrayList<>();
-
-        NodeStyleRules(Node anchor) {
-            this.anchor = anchor;
-        }
     }
 
     /** Couples a rule with its scope inside a component declaration. */
@@ -70,15 +73,38 @@ public final class Styles {
             declaration.rules.add(new ScopedRule(scope, Objects.requireNonNull(rule)));
     }
 
+    /**
+     * Resolves and installs the cascaded style for {@code node} and all of its
+     * descendants.
+     *
+     * <p>
+     * For each node, candidate rules come from the recorded style-rule chain,
+     * outermost declaring component first. A rule is eligible when its scope is
+     * {@link Scope#TRANSITIVE} or when it belongs to the nearest declaring
+     * component, which owns the node. Eligible rules are then filtered by
+     * selector match and applied by specificity, then nearest declaring
+     * component, then declaration order. The node's inline properties override
+     * all matched rules.
+     *
+     * <p>
+     * The resulting style replaces any previously resolved style, so
+     * pseudo-class and other interaction-dependent rules can be re-evaluated
+     * without mutating the declared rules. Children are resolved recursively
+     * after their parent.
+     *
+     * @param node root of the subtree whose styles are resolved
+     */
     static void resolve(Node node) {
         record Match(Rule rule, int depth, int order) {
         }
         var matches = new ArrayList<Match>();
-        for (int depth = 0; depth < node.declarations.size(); depth++) {
-            var declaration = node.declarations.get(depth);
+        var declarations = node.declarations;
+        var ownerRules = declarations.isEmpty() ? null : declarations.getLast();
+        for (int depth = 0; depth < declarations.size(); depth++) {
+            var declaration = declarations.get(depth);
             for (int order = 0; order < declaration.rules.size(); order++) {
                 var scoped = declaration.rules.get(order);
-                if ((scoped.scope == Scope.TRANSITIVE || node.parent == declaration.anchor)
+                if ((scoped.scope == Scope.TRANSITIVE || declaration == ownerRules)
                         && scoped.rule.selector.matches(node))
                     matches.add(new Match(scoped.rule, depth, order));
             }

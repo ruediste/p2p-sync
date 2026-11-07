@@ -46,8 +46,8 @@ public final class LayoutEngine {
         float marginTop = solveAuto(root.style.margin.top, rootAvailableWidth, 0);
         root.layout.x = marginLeft;
         root.layout.y = marginTop;
-        root.absX = root.layout.x;
-        root.absY = root.layout.y;
+        root.layout.absX = root.layout.x;
+        root.layout.absY = root.layout.y;
 
         computeAbsolute(root, root, true);
         layoutOutOfFlow(root, rootAvailableWidth, rootAvailableHeight,
@@ -57,11 +57,11 @@ public final class LayoutEngine {
     }
 
     private static void reset(Node node) {
-        node.placedOutOfFlow = false;
-        node.containingBlock = null;
-        node.detailedGridInfo = null;
-        node.usedContentHeight = 0;
-        node.usedContentWidth = 0;
+        node.layout.placedOutOfFlow = false;
+        node.layout.containingBlock = null;
+        node.layout.detailedGridInfo = null;
+        node.layout.usedContentHeight = 0;
+        node.layout.usedContentWidth = 0;
         for (Node child : node.children) {
             reset(child);
         }
@@ -73,10 +73,10 @@ public final class LayoutEngine {
         while (changed) {
             changed = false;
             for (Node candidate : preorder(root)) {
-                if (isOutOfFlow(candidate) && !candidate.placedOutOfFlow) {
+                if (isOutOfFlow(candidate) && !candidate.layout.placedOutOfFlow) {
                     placeOutOfFlow(candidate, root, rootAvailableWidth, rootAvailableHeight,
                             rootWidthDefinite, rootHeightDefinite);
-                    candidate.placedOutOfFlow = true;
+                    candidate.layout.placedOutOfFlow = true;
                     changed = true;
                 }
             }
@@ -111,7 +111,7 @@ public final class LayoutEngine {
             }
             containingBlock = ancestor;
         }
-        node.containingBlock = containingBlock;
+        node.layout.containingBlock = containingBlock;
 
         float cbReferenceX;
         float cbReferenceY;
@@ -121,11 +121,11 @@ public final class LayoutEngine {
         float reportOffsetY;
 
         if (containingBlock != null) {
-            reportOffsetX = containingBlock.absX;
-            reportOffsetY = containingBlock.absY;
-            cbReferenceX = containingBlock.absX + containingBlock.layout.border.left
+            reportOffsetX = containingBlock.layout.absX;
+            reportOffsetY = containingBlock.layout.absY;
+            cbReferenceX = containingBlock.layout.absX + containingBlock.layout.border.left
                     + containingBlock.layout.padding.left;
-            cbReferenceY = containingBlock.absY + containingBlock.layout.border.top
+            cbReferenceY = containingBlock.layout.absY + containingBlock.layout.border.top
                     + containingBlock.layout.padding.top;
             cbWidth = Math.max(0, containingBlock.layout.width
                     - containingBlock.layout.border.left - containingBlock.layout.border.right
@@ -134,21 +134,21 @@ public final class LayoutEngine {
                     - containingBlock.layout.border.top - containingBlock.layout.border.bottom
                     - containingBlock.layout.padding.top - containingBlock.layout.padding.bottom);
         } else {
-            reportOffsetX = root.absX;
-            reportOffsetY = root.absY;
+            reportOffsetX = root.layout.absX;
+            reportOffsetY = root.layout.absY;
             cbReferenceX = 0;
             cbReferenceY = 0;
             if (rootWidthDefinite) {
                 cbWidth = rootAvailableWidth;
             } else {
-                cbReferenceX = root.absX + root.layout.border.left;
+                cbReferenceX = root.layout.absX + root.layout.border.left;
                 cbWidth = Math.max(0, root.layout.width - root.layout.border.left
                         - root.layout.border.right);
             }
             if (rootHeightDefinite) {
                 cbHeight = rootAvailableHeight;
             } else {
-                cbReferenceY = root.absY + root.layout.border.top;
+                cbReferenceY = root.layout.absY + root.layout.border.top;
                 cbHeight = Math.max(0, root.layout.height - root.layout.border.top
                         - root.layout.border.bottom);
             }
@@ -197,11 +197,11 @@ public final class LayoutEngine {
 
         layoutNode(node, reportX, reportY, cbWidth, cbHeight, cbWidth, cbHeight,
                 forcedWidth, forcedHeight, Sizing.CONTENT, Sizing.CONTENT);
-        node.absX = reportOffsetX + reportX;
-        node.absY = reportOffsetY + reportY;
+        node.layout.absX = reportOffsetX + reportX;
+        node.layout.absY = reportOffsetY + reportY;
         for (Node child : node.children) {
-            child.absX = node.absX + child.layout.x;
-            child.absY = node.absY + child.layout.y;
+            child.layout.absX = node.layout.absX + child.layout.x;
+            child.layout.absY = node.layout.absY + child.layout.y;
         }
     }
 
@@ -359,13 +359,13 @@ public final class LayoutEngine {
             }
         }
 
-        node.usedContentWidth = contentWidth;
-        node.usedContentHeight = contentHeight;
+        node.layout.usedContentWidth = contentWidth;
+        node.layout.usedContentHeight = contentHeight;
         return Size.of(width, height);
     }
 
     private static void detailReset(Node node) {
-        node.detailedGridInfo = null;
+        node.layout.detailedGridInfo = null;
     }
 
     private static AvailableSpace available(float value) {
@@ -641,7 +641,7 @@ public final class LayoutEngine {
 
         float usedHeight = Math.max(contentBottomUsed, Math.max(floatLeftBottom, floatRightBottom))
                 - contentTop;
-        node.usedContentHeight = usedHeight;
+        node.layout.usedContentHeight = usedHeight;
 
         float extraHeight = contentHeight - usedHeight;
         if (style.alignContent != null && extraHeight > 0) {
@@ -714,7 +714,7 @@ public final class LayoutEngine {
             items.add(item);
         }
         if (items.isEmpty()) {
-            node.usedContentHeight = 0;
+            node.layout.usedContentHeight = 0;
             return;
         }
 
@@ -834,8 +834,8 @@ public final class LayoutEngine {
                 cursor += outerMain + mainGap + distributed;
             }
         }
-        node.usedContentHeight = contentHeight;
-        node.usedContentWidth = contentWidth;
+        node.layout.usedContentHeight = contentHeight;
+        node.layout.usedContentWidth = contentWidth;
     }
 
     private static FlexItem measureFlexItem(Node child, boolean row, float contentWidth,
@@ -1204,8 +1204,8 @@ public final class LayoutEngine {
                     explicitColumns, explicitRows, style.direction == Direction.Rtl,
                     style.gridTemplateColumns, style.gridTemplateRows);
         }
-        node.usedContentWidth = contentWidth;
-        node.usedContentHeight = contentHeight;
+        node.layout.usedContentWidth = contentWidth;
+        node.layout.usedContentHeight = contentHeight;
     }
 
     private static boolean isStretch(AlignItems items, AlignSelf self) {
@@ -1962,7 +1962,7 @@ public final class LayoutEngine {
             info.items.add(new DetailedGridInfo.ItemInfo(item.rowStart + 1, item.rowEnd + 1,
                     item.columnStart + 1, item.columnEnd + 1));
         }
-        node.detailedGridInfo = info;
+        node.layout.detailedGridInfo = info;
     }
 
     private static void fillTrackInfo(DetailedGridInfo.TrackInfo info, List<GridTrack> tracks,
@@ -1997,22 +1997,22 @@ public final class LayoutEngine {
 
     private static void computeAbsolute(Node node, Node root, boolean isRoot) {
         if (isRoot) {
-            node.absX = node.layout.x;
-            node.absY = node.layout.y;
+            node.layout.absX = node.layout.x;
+            node.layout.absY = node.layout.y;
         }
         for (Node child : node.children) {
             if (isOutOfFlow(child)) {
-                Node cb = child.containingBlock;
+                Node cb = child.layout.containingBlock;
                 if (cb == null) {
-                    child.absX = root.absX + child.layout.x;
-                    child.absY = root.absY + child.layout.y;
+                    child.layout.absX = root.layout.absX + child.layout.x;
+                    child.layout.absY = root.layout.absY + child.layout.y;
                 } else {
-                    child.absX = cb.absX + child.layout.x;
-                    child.absY = cb.absY + child.layout.y;
+                    child.layout.absX = cb.layout.absX + child.layout.x;
+                    child.layout.absY = cb.layout.absY + child.layout.y;
                 }
             } else {
-                child.absX = node.absX + child.layout.x;
-                child.absY = node.absY + child.layout.y;
+                child.layout.absX = node.layout.absX + child.layout.x;
+                child.layout.absY = node.layout.absY + child.layout.y;
             }
             computeAbsolute(child, root, false);
         }
@@ -2022,9 +2022,10 @@ public final class LayoutEngine {
         float maxRight = 0;
         float maxBottom = 0;
         for (Node descendant : descendants(node)) {
-            maxRight = Math.max(maxRight, descendant.absX + descendant.layout.width - node.absX);
+            maxRight = Math.max(maxRight,
+                    descendant.layout.absX + descendant.layout.width - node.layout.absX);
             maxBottom = Math.max(maxBottom,
-                    descendant.absY + descendant.layout.height - node.absY);
+                    descendant.layout.absY + descendant.layout.height - node.layout.absY);
         }
         node.layout.contentWidth = Math.max(0, maxRight);
         node.layout.contentHeight = Math.max(0, maxBottom);

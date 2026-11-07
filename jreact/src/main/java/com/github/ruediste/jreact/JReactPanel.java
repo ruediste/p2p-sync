@@ -208,7 +208,7 @@ public class JReactPanel extends JPanel implements AutoCloseable {
     }
 
     /** Captures paint-relevant node state for comparing consecutive refreshes. */
-    private record Snapshot(String text, Map<Style.Property, Object> style, Rectangle2D bounds,
+    private record Snapshot(String text, Map<StyleProperties.Property<?>, Object> style, Rectangle2D bounds,
             boolean focus, Node.Kind kind, Object icon, List<String> options, Double slider, float opacity,
             Rectangle paintBounds) {
     }
@@ -217,7 +217,7 @@ public class JReactPanel extends JPanel implements AutoCloseable {
         var result = new LinkedHashMap<Node.Key, Snapshot>();
         nodes.forEach((key, node) -> {
             Rectangle rectangle = node.bounds.getBounds();
-            for (Style.Property property : List.of(Style.Property.BOX_SHADOW, Style.Property.TEXT_SHADOW)) {
+            for (var property : List.of(StyleProperties.BOX_SHADOW, StyleProperties.TEXT_SHADOW)) {
                 Style.Shadow shadow = node.style.get(property, null);
                 if (shadow != null) {
                     Rectangle shadowBounds = node.bounds.getBounds();
@@ -239,7 +239,7 @@ public class JReactPanel extends JPanel implements AutoCloseable {
     private static float opacity(Node node) {
         float opacity = 1;
         for (Node ancestor = node; ancestor != null; ancestor = ancestor.parent)
-            opacity *= (float) ancestor.style.number(Style.Property.OPACITY, 1);
+            opacity *= (float) ancestor.style.number(StyleProperties.OPACITY, 1);
         return opacity;
     }
 
@@ -356,7 +356,7 @@ public class JReactPanel extends JPanel implements AutoCloseable {
                 field.setEnabled(!node.disabled);
                 field.setFont(node.style.font());
                 field.setForeground(node.style.color());
-                field.setBackground(node.style.get(Style.Property.BACKGROUND, java.awt.Color.WHITE));
+                field.setBackground(node.style.get(StyleProperties.BACKGROUND, java.awt.Color.WHITE));
                 Style.Insets inset = node.style.inset();
                 field.setBorder(BorderFactory.createEmptyBorder((int) inset.top(), (int) inset.left(),
                         (int) inset.bottom(), (int) inset.right()));

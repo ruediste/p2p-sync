@@ -1,7 +1,6 @@
 package com.github.ruediste.jreact.layout;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -407,7 +406,7 @@ class GridPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout rootLayout = root.layout;
         assertEquals(100f, rootLayout.width, 0.01f);
@@ -441,7 +440,7 @@ class GridPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(200, 100);
+        LayoutEngine.computeLayout(root, (float) 200, (float) 100);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -467,7 +466,7 @@ class GridPortTest {
             root.addChild(children.get(i));
         }
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout layout0 = children.get(0).layout;
         Layout layout1 = children.get(1).layout;
@@ -499,7 +498,7 @@ class GridPortTest {
             root.addChild(children.get(i));
         }
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout layout0 = children.get(0).layout;
         Layout layout1 = children.get(1).layout;
@@ -531,7 +530,7 @@ class GridPortTest {
 
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(100f, childLayout.height, 0.01f);
@@ -553,7 +552,7 @@ class GridPortTest {
 
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(100f, childLayout.width, 0.01f);
@@ -582,7 +581,7 @@ class GridPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -615,7 +614,7 @@ class GridPortTest {
             }
         }
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         // Check column gap
         Layout layout0 = children.get(0).layout;
@@ -641,7 +640,7 @@ class GridPortTest {
 
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(40f, childLayout.x, 0.01f);
@@ -663,7 +662,7 @@ class GridPortTest {
 
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertTrue(childLayout.width <= 100);
@@ -692,7 +691,7 @@ class GridPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -723,7 +722,7 @@ class GridPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -747,7 +746,7 @@ class GridPortTest {
         rootStyle.setHeight(100);
         Node root = new Node(rootStyle, List.of(first, second));
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
         assertLayout(first.layout, 0, 0, 100, 20);
         assertLayout(second.layout, 0, 40, 50, 20);
     }
@@ -764,6 +763,16 @@ class GridPortTest {
                     .map(GridTemplateComponent::single).toList();
             default -> throw new IllegalArgumentException("Unknown grid property: " + property);
         }
+    }
+
+    private static Object getTracks(Style style, String property) {
+        return switch (property) {
+            case "gridAutoRows" -> style.gridAutoRows;
+            case "gridAutoColumns" -> style.gridAutoColumns;
+            case "gridTemplateRows" -> style.gridTemplateRows;
+            case "gridTemplateColumns" -> style.gridTemplateColumns;
+            default -> throw new IllegalArgumentException("Unknown grid property: " + property);
+        };
     }
 
     @SuppressWarnings("unchecked")
@@ -794,7 +803,7 @@ class GridPortTest {
         setTracks(style, property, tracks);
         Node root = new Node(style, children);
 
-        root.computeLayout(200, 200);
+        LayoutEngine.computeLayout(root, (float) 200, (float) 200);
         if (columns) {
             assertLayout(children.get(0).layout, 0, 0, 100, 200);
             assertLayout(children.get(1).layout, 100, 0, 100, 200);
@@ -802,8 +811,8 @@ class GridPortTest {
             assertLayout(children.get(0).layout, 0, 0, 200, 100);
             assertLayout(children.get(1).layout, 0, 100, 200, 100);
         }
-        assertEquals(tracks, trackList(root.style.copy().get(property), property));
-        assertEquals(tracks, trackList(style.get(property), property));
+        assertEquals(tracks, trackList(getTracks(root.style.copy(), property), property));
+        assertEquals(tracks, trackList(getTracks(style, property), property));
     }
 
     @Test
@@ -817,7 +826,7 @@ class GridPortTest {
                 List.of(track("50%", "50%"))));
         Node root = new Node(style, children);
 
-        root.computeLayout(200, 20);
+        LayoutEngine.computeLayout(root, (float) 200, (float) 20);
         assertEquals(100f, children.get(0).layout.width, 0.01f);
         assertEquals(100f, children.get(1).layout.x, 0.01f);
         assertEquals(100f, children.get(1).layout.width, 0.01f);
@@ -835,7 +844,7 @@ class GridPortTest {
         rootStyle.gridTemplateColumns = List.of(single(0, "50%"));
         Node root = new Node(rootStyle, List.of(child));
 
-        root.computeLayout(200, 20);
+        LayoutEngine.computeLayout(root, (float) 200, (float) 20);
         assertEquals(100f, child.layout.width, 0.01f);
     }
 
@@ -856,10 +865,8 @@ class GridPortTest {
         Node node = new Node(original);
         Style copied = node.style.copy();
 
-        assertEquals(tracks, trackList(copied.get(property), property));
-        Object copiedValue = copied.get(property);
-        assertEquals(tracks, trackList(copiedValue, property));
-        original.set(property, copiedValue);
-        assertEquals(tracks, trackList(original.get(property), property));
+        assertEquals(tracks, trackList(getTracks(copied, property), property));
+        setTracks(original, property, tracks);
+        assertEquals(tracks, trackList(getTracks(original, property), property));
     }
 }

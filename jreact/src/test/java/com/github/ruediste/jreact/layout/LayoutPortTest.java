@@ -2,7 +2,6 @@ package com.github.ruediste.jreact.layout;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -32,10 +31,6 @@ class LayoutPortTest {
         assertEquals(height, layout.height, EPS, "height");
     }
 
-    private static Object[] values(Object value) {
-        return (Object[]) value;
-    }
-
     // ---- Layout Computation ----
 
     @Test
@@ -54,7 +49,7 @@ class LayoutPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout rootLayout = root.layout;
         assertEquals(100f, rootLayout.width, EPS);
@@ -76,7 +71,7 @@ class LayoutPortTest {
         Node child = new Node(sized(20, 20));
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout layout = child.layout;
         assertEquals(40f, layout.x, EPS);
@@ -106,7 +101,7 @@ class LayoutPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout rootLayout = root.layout;
         assertEquals(100f, rootLayout.width, EPS);
@@ -133,7 +128,7 @@ class LayoutPortTest {
             root.addChild(child);
         }
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         for (Node child : children) {
             Layout layout = child.layout;
@@ -156,7 +151,7 @@ class LayoutPortTest {
         Node child = new Node(childStyle);
 
         root.addChild(child);
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(childLayout.width, childLayout.width);
@@ -184,7 +179,7 @@ class LayoutPortTest {
 
         root.addChild(child1);
         root.addChild(child2);
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -206,7 +201,7 @@ class LayoutPortTest {
         Node child = new Node(childStyle);
 
         root.addChild(child);
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertTrue(childLayout.width <= 100f);
@@ -225,7 +220,7 @@ class LayoutPortTest {
 
         Node child = new Node(sized(50, 50));
         root.addChild(child);
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(50f, childLayout.width, EPS);
@@ -247,7 +242,7 @@ class LayoutPortTest {
         Node child = new Node(childStyle);
 
         root.addChild(child);
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(50f, childLayout.width, EPS);
@@ -259,7 +254,7 @@ class LayoutPortTest {
     @Test
     void positionGetterReturnsPointWithXAndY() {
         Node root = new Node(sized(800, 600));
-        root.computeLayout(800, 600);
+        LayoutEngine.computeLayout(root, (float) 800, (float) 600);
 
         Point<java.lang.Float> position = root.layout.position();
         assertNotNull(position);
@@ -270,7 +265,7 @@ class LayoutPortTest {
     @Test
     void sizeGetterReturnsSizeWithWidthAndHeight() {
         Node root = new Node(sized(800, 600));
-        root.computeLayout(800, 600);
+        LayoutEngine.computeLayout(root, (float) 800, (float) 600);
 
         Size<java.lang.Float> size = root.layout.size();
         assertNotNull(size);
@@ -281,7 +276,7 @@ class LayoutPortTest {
     @Test
     void contentSizeGetterReturnsSizeWithContentWidthAndContentHeight() {
         Node root = new Node(new Style());
-        root.computeLayout(800, 600);
+        LayoutEngine.computeLayout(root, (float) 800, (float) 600);
 
         Size<java.lang.Float> contentSize = root.layout.contentSize();
         assertNotNull(contentSize);
@@ -292,7 +287,7 @@ class LayoutPortTest {
     @Test
     void scrollbarSizeGetterReturnsSizeWithScrollbarWidthAndScrollbarHeight() {
         Node root = new Node(new Style());
-        root.computeLayout(800, 600);
+        LayoutEngine.computeLayout(root, (float) 800, (float) 600);
 
         Size<java.lang.Float> scrollbarSize = root.layout.scrollbarSize();
         assertNotNull(scrollbarSize);
@@ -309,7 +304,7 @@ class LayoutPortTest {
                 LengthPercentage.length(3),
                 LengthPercentage.length(4));
         Node node = new Node(style);
-        node.computeLayout(100, 100);
+        LayoutEngine.computeLayout(node, (float) 100, (float) 100);
 
         Rect<java.lang.Float> border = node.layout.border;
         assertNotNull(border);
@@ -328,7 +323,7 @@ class LayoutPortTest {
                 LengthPercentage.length(5),
                 LengthPercentage.length(15));
         Node node = new Node(style);
-        node.computeLayout(100, 100);
+        LayoutEngine.computeLayout(node, (float) 100, (float) 100);
 
         Rect<java.lang.Float> padding = node.layout.padding;
         assertNotNull(padding);
@@ -347,7 +342,7 @@ class LayoutPortTest {
                 LengthPercentageAuto.length(8),
                 LengthPercentageAuto.length(12));
         Node node = new Node(style);
-        node.computeLayout(100, 100);
+        LayoutEngine.computeLayout(node, (float) 100, (float) 100);
 
         Rect<java.lang.Float> margin = node.layout.margin;
         assertNotNull(margin);
@@ -357,226 +352,14 @@ class LayoutPortTest {
         assertEquals(12f, margin.bottom, EPS);
     }
 
-    // ---- Layout.get() batch property retrieval ----
-
-    @Test
-    void getReturnsSingleValueForSingleKey() {
-        Node root = new Node(sized(800, 600));
-        root.computeLayout(800, 600);
-
-        Object width = root.layout.get("width");
-        assertEquals(800f, ((Number) width).floatValue(), EPS);
-    }
-
-    @Test
-    void getReturnsArrayForMultipleKeys() {
-        Node root = new Node(sized(800, 600));
-        root.computeLayout(800, 600);
-
-        Object[] result = values(root.layout.get("width", "height"));
-        assertEquals(800f, ((Number) result[0]).floatValue(), EPS);
-        assertEquals(600f, ((Number) result[1]).floatValue(), EPS);
-    }
-
-    @Test
-    void getWithCompoundPropertyPosition() {
-        Node root = new Node(sized(800, 600));
-        root.computeLayout(800, 600);
-
-        @SuppressWarnings("unchecked")
-        Point<java.lang.Float> position = (Point<java.lang.Float>) root.layout
-                .get("position");
-        assertNotNull(position);
-        assertEquals(0f, position.x, EPS);
-        assertEquals(0f, position.y, EPS);
-    }
-
-    @Test
-    void getWithCompoundPropertySize() {
-        Node root = new Node(sized(800, 600));
-        root.computeLayout(800, 600);
-
-        @SuppressWarnings("unchecked")
-        Size<java.lang.Float> size = (Size<java.lang.Float>) root.layout.get("size");
-        assertNotNull(size);
-        assertEquals(800f, size.width, EPS);
-        assertEquals(600f, size.height, EPS);
-    }
-
-    @Test
-    void getWithCompoundPropertyBorder() {
-        Style style = new Style();
-        style.border = new Rect<>(
-                LengthPercentage.length(1),
-                LengthPercentage.length(2),
-                LengthPercentage.length(3),
-                LengthPercentage.length(4));
-        Node node = new Node(style);
-        node.computeLayout(100, 100);
-
-        @SuppressWarnings("unchecked")
-        Rect<java.lang.Float> border = (Rect<java.lang.Float>) node.layout.get("border");
-        assertNotNull(border);
-        assertEquals(1f, border.left, EPS);
-        assertEquals(2f, border.right, EPS);
-        assertEquals(3f, border.top, EPS);
-        assertEquals(4f, border.bottom, EPS);
-    }
-
-    @Test
-    void getWithCompoundPropertyPadding() {
-        Style style = new Style();
-        style.padding = new Rect<>(
-                LengthPercentage.length(10),
-                LengthPercentage.length(20),
-                LengthPercentage.length(5),
-                LengthPercentage.length(15));
-        Node node = new Node(style);
-        node.computeLayout(100, 100);
-
-        @SuppressWarnings("unchecked")
-        Rect<java.lang.Float> padding = (Rect<java.lang.Float>) node.layout.get("padding");
-        assertNotNull(padding);
-        assertEquals(10f, padding.left, EPS);
-        assertEquals(20f, padding.right, EPS);
-        assertEquals(5f, padding.top, EPS);
-        assertEquals(15f, padding.bottom, EPS);
-    }
-
-    @Test
-    void getWithCompoundPropertyMargin() {
-        Style style = new Style();
-        style.margin = new Rect<>(
-                LengthPercentageAuto.length(5),
-                LengthPercentageAuto.length(10),
-                LengthPercentageAuto.length(8),
-                LengthPercentageAuto.length(12));
-        Node node = new Node(style);
-        node.computeLayout(100, 100);
-
-        @SuppressWarnings("unchecked")
-        Rect<java.lang.Float> margin = (Rect<java.lang.Float>) node.layout.get("margin");
-        assertNotNull(margin);
-        assertEquals(5f, margin.left, EPS);
-        assertEquals(10f, margin.right, EPS);
-        assertEquals(8f, margin.top, EPS);
-        assertEquals(12f, margin.bottom, EPS);
-    }
-
-    @Test
-    void getWithMixedCompoundAndIndividualProperties() {
-        Node root = new Node(sized(800, 600));
-        root.computeLayout(800, 600);
-
-        Object[] result = values(root.layout.get("position", "width", "paddingTop"));
-        @SuppressWarnings("unchecked")
-        Point<java.lang.Float> position = (Point<java.lang.Float>) result[0];
-        assertEquals(0f, position.x, EPS);
-        assertEquals(0f, position.y, EPS);
-        assertEquals(800f, ((Number) result[1]).floatValue(), EPS);
-        assertEquals(0f, ((Number) result[2]).floatValue(), EPS);
-    }
-
-    @Test
-    void getWithAllSpacingProperties() {
-        Style style = new Style();
-        style.border = new Rect<>(
-                LengthPercentage.length(1),
-                LengthPercentage.length(2),
-                LengthPercentage.length(3),
-                LengthPercentage.length(4));
-        style.padding = new Rect<>(
-                LengthPercentage.length(5),
-                LengthPercentage.length(6),
-                LengthPercentage.length(7),
-                LengthPercentage.length(8));
-        style.margin = new Rect<>(
-                LengthPercentageAuto.length(9),
-                LengthPercentageAuto.length(10),
-                LengthPercentageAuto.length(11),
-                LengthPercentageAuto.length(12));
-        Node node = new Node(style);
-        node.computeLayout(200, 200);
-
-        Object[] result = values(node.layout.get("border", "padding", "margin"));
-        @SuppressWarnings("unchecked")
-        Rect<java.lang.Float> border = (Rect<java.lang.Float>) result[0];
-        @SuppressWarnings("unchecked")
-        Rect<java.lang.Float> padding = (Rect<java.lang.Float>) result[1];
-        @SuppressWarnings("unchecked")
-        Rect<java.lang.Float> margin = (Rect<java.lang.Float>) result[2];
-
-        assertEquals(1f, border.left, EPS);
-        assertEquals(2f, border.right, EPS);
-        assertEquals(3f, border.top, EPS);
-        assertEquals(4f, border.bottom, EPS);
-
-        assertEquals(5f, padding.left, EPS);
-        assertEquals(6f, padding.right, EPS);
-        assertEquals(7f, padding.top, EPS);
-        assertEquals(8f, padding.bottom, EPS);
-
-        assertEquals(9f, margin.left, EPS);
-        assertEquals(10f, margin.right, EPS);
-        assertEquals(11f, margin.top, EPS);
-        assertEquals(12f, margin.bottom, EPS);
-    }
-
-    @Test
-    void getWorksCorrectlyWithFlexChildrenPositions() {
-
-        Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.Column;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
-        Node root = new Node(rootStyle);
-
-        Style childStyle = sized(50, 50);
-        childStyle.margin = new Rect<>(
-                LengthPercentageAuto.length(10),
-                LengthPercentageAuto.length(10),
-                LengthPercentageAuto.length(5),
-                LengthPercentageAuto.length(5));
-        Node child = new Node(childStyle);
-
-        root.addChild(child);
-        root.computeLayout(100, 100);
-
-        Object[] result = values(child.layout.get("position", "size", "margin"));
-        @SuppressWarnings("unchecked")
-        Point<java.lang.Float> position = (Point<java.lang.Float>) result[0];
-        @SuppressWarnings("unchecked")
-        Size<java.lang.Float> size = (Size<java.lang.Float>) result[1];
-        @SuppressWarnings("unchecked")
-        Rect<java.lang.Float> margin = (Rect<java.lang.Float>) result[2];
-
-        assertEquals(10f, position.x, EPS);
-        assertEquals(5f, position.y, EPS);
-        assertEquals(50f, size.width, EPS);
-        assertEquals(50f, size.height, EPS);
-        assertEquals(10f, margin.left, EPS);
-        assertEquals(10f, margin.right, EPS);
-        assertEquals(5f, margin.top, EPS);
-        assertEquals(5f, margin.bottom, EPS);
-    }
-
-    @Test
-    void getThrowsErrorForUnknownProperty() {
-        Node root = new Node(new Style());
-        root.computeLayout(800, 600);
-
-        Layout layout = root.layout;
-        assertThrows(IllegalArgumentException.class, () -> layout.get("unknownProperty"));
-    }
-
     // ---- printTree ----
 
     @Test
     void printTreeReturnsStringRepresentationOfSingleNode() {
         Node node = new Node(sized(100, 50));
-        node.computeLayout(100, 50);
+        LayoutEngine.computeLayout(node, (float) 100, (float) 50);
 
-        String output = node.printTree();
+        String output = LayoutEngine.printTree(node);
         assertTrue(output.length() > 0);
         assertTrue(output.contains("└──"));
         assertTrue(output.contains("x:"));
@@ -600,9 +383,9 @@ class LayoutPortTest {
 
         root.addChild(child1);
         root.addChild(child2);
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        String output = root.printTree();
+        String output = LayoutEngine.printTree(root);
         assertTrue(output.contains("└──"));
         assertTrue(output.contains("├──"));
 
@@ -624,9 +407,9 @@ class LayoutPortTest {
                 LengthPercentage.length(1),
                 LengthPercentage.length(2));
         Node node = new Node(style);
-        node.computeLayout(100, 50);
+        LayoutEngine.computeLayout(node, (float) 100, (float) 50);
 
-        String output = node.printTree();
+        String output = LayoutEngine.printTree(node);
         assertTrue(output.contains("x: 0"));
         assertTrue(output.contains("y: 0"));
         assertTrue(output.contains("w: 100"));
@@ -640,9 +423,9 @@ class LayoutPortTest {
     @Test
     void printTreeShowsLayoutInformationWithoutNodeId() {
         Node node = new Node(sized(100, 50));
-        node.computeLayout(100, 50);
+        LayoutEngine.computeLayout(node, (float) 100, (float) 50);
 
-        String output = node.printTree();
+        String output = LayoutEngine.printTree(node);
         assertTrue(output.startsWith("└── [x:"));
         assertTrue(output.contains("w: 100"));
     }
@@ -665,9 +448,9 @@ class LayoutPortTest {
         Node level3 = new Node(childStyle);
         level2.addChild(level3);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        String output = root.printTree();
+        String output = LayoutEngine.printTree(root);
         long lines = output.lines().filter(line -> !line.trim().isEmpty()).count();
         assertTrue(lines >= 4);
     }
@@ -681,7 +464,7 @@ class LayoutPortTest {
             children.add(new Node(childStyle));
         }
         Node node = new Node(rootStyle, children);
-        node.computeLayout(100, 50);
+        LayoutEngine.computeLayout(node, (float) 100, (float) 50);
 
         Layout layout = node.layout;
         assertEquals(expectedWidth, layout.contentWidth, EPS);
@@ -690,14 +473,6 @@ class LayoutPortTest {
         Size<java.lang.Float> contentSize = layout.contentSize();
         assertEquals(expectedWidth, contentSize.width, EPS);
         assertEquals(expectedHeight, contentSize.height, EPS);
-
-        Object[] result = values(layout.get("contentWidth", "contentHeight", "contentSize"));
-        assertEquals(expectedWidth, ((Number) result[0]).floatValue(), EPS);
-        assertEquals(expectedHeight, ((Number) result[1]).floatValue(), EPS);
-        @SuppressWarnings("unchecked")
-        Size<java.lang.Float> fromGet = (Size<java.lang.Float>) result[2];
-        assertEquals(expectedWidth, fromGet.width, EPS);
-        assertEquals(expectedHeight, fromGet.height, EPS);
     }
 
     @Test
@@ -762,7 +537,7 @@ class LayoutPortTest {
         rootStyle.border = Rect.all(LengthPercentage.length(5));
         Node root = new Node(rootStyle, List.of(parent));
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
         Layout layout = absolute.layout;
         return new float[] { layout.x, layout.y };
     }
@@ -811,7 +586,7 @@ class LayoutPortTest {
         rootStyle.border = Rect.all(LengthPercentage.length(5));
         Node root = new Node(rootStyle, List.of(child));
 
-        root.computeLayout(Size.of(availableWidth, availableHeight));
+        LayoutEngine.computeLayout(root, Size.of(availableWidth, availableHeight));
 
         Layout rootLayout = root.layout;
         Point<java.lang.Float> rootPosition2 = rootLayout.position();
@@ -891,7 +666,7 @@ class LayoutPortTest {
             rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
             Node root = new Node(rootStyle, List.of(child));
 
-            root.computeLayout(100, 100);
+            LayoutEngine.computeLayout(root, (float) 100, (float) 100);
             Layout layout = child.layout;
             assertEquals(0f, layout.x, EPS);
             assertEquals(0f, layout.y, EPS);

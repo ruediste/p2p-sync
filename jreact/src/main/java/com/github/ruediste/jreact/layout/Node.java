@@ -7,27 +7,39 @@ import java.util.List;
  * One node of a layout tree.
  *
  * <p>
- * A node owns its style, context, children, measurement callback and the layout
- * information computed for it. The engine only computes; all persistent state
- * lives in the nodes.
+ * A node owns its style, context, children and measurement callback, i.e. the
+ * inputs to layout. The computed results live in {@link #layout}; the engine
+ * only computes and all persistent state lives in the nodes.
  */
 public final class Node {
 
+    /** Layout properties of this node. */
     public Style style;
+
+    /**
+     * Opaque payload owned by the caller, for example the text or widget a
+     * measurement callback needs. The layout engine never reads or modifies it.
+     */
     public Object context;
+
+    /**
+     * Optional measurement callback for leaf nodes. It is only invoked for
+     * nodes without children, with a non-{@link Display#None none} display and
+     * without forced dimensions.
+     */
     public MeasureFunction measure;
 
+    /** Parent node, or {@code null} if this node is a root. */
     public Node parent;
-    public final List<Node> children = new ArrayList<>();
-    public final Layout layout = new Layout();
-    public DetailedGridInfo detailedGridInfo;
 
-    public Node containingBlock;
-    public float absX;
-    public float absY;
-    public boolean placedOutOfFlow;
-    public float usedContentWidth;
-    public float usedContentHeight;
+    /**
+     * Child nodes in layout order. Use the add and remove methods to keep the
+     * {@link #parent} links consistent.
+     */
+    public final List<Node> children = new ArrayList<>();
+
+    /** Layout computed for this node by {@link LayoutEngine}. */
+    public final Layout layout = new Layout();
 
     public Node() {
         this(new Style());
@@ -158,18 +170,6 @@ public final class Node {
         if (parent != null) {
             parent.removeChild(this);
         }
-    }
-
-    public void computeLayout(float width, float height) {
-        LayoutEngine.computeLayout(this, width, height);
-    }
-
-    public void computeLayout(Size<AvailableSpace> availableSpace) {
-        LayoutEngine.computeLayout(this, availableSpace);
-    }
-
-    public String printTree() {
-        return LayoutEngine.printTree(this);
     }
 
     private void detach(Node child) {

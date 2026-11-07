@@ -242,7 +242,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 50);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -267,7 +267,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -292,7 +292,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 50);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -316,7 +316,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -347,7 +347,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 50);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -377,7 +377,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 50);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -409,7 +409,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 50);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -439,7 +439,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 50);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -471,7 +471,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 50);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -495,7 +495,7 @@ class FlexPortTest {
 
         root.addChild(child1);
 
-        root.computeLayout(200, 50);
+        LayoutEngine.computeLayout(root, (float) 200, (float) 50);
 
         Layout child1Layout = child1.layout;
         assertEquals(100f, child1Layout.width, 0.01f);
@@ -520,7 +520,7 @@ class FlexPortTest {
             root.addChild(child);
         }
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         // Each 60px child wraps to its own row since only 1 fits in 100px
         Layout layout0 = children.get(0).layout;
@@ -548,7 +548,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -571,7 +571,7 @@ class FlexPortTest {
         Node child = new Node(sized(20, 20));
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(40f, childLayout.y, 0.01f);
@@ -589,7 +589,7 @@ class FlexPortTest {
         Node child = new Node(sized(20, 20));
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(40f, childLayout.x, 0.01f);
@@ -608,7 +608,7 @@ class FlexPortTest {
         Node child = new Node(sized(20, 20));
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(40f, childLayout.x, 0.01f);
@@ -630,7 +630,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 50);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -654,7 +654,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 50);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -679,7 +679,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 50);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -707,7 +707,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -734,7 +734,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 50);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -758,7 +758,7 @@ class FlexPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -797,7 +797,7 @@ class FlexPortTest {
         row1.addChild(child2);
         root.addChild(row1);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout row1Layout = row1.layout;
         Layout child1Layout = child1.layout;
@@ -822,7 +822,7 @@ class FlexPortTest {
         rootStyle.size = Size.of(Dimension.length(100), Dimension.length(10));
         Node root = new Node(rootStyle, List.of(first, second));
 
-        root.computeLayout(100, 10);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 10);
 
         assertEquals(80f, first.layout.x, 0.01f);
         assertEquals(60f, second.layout.x, 0.01f);
@@ -840,7 +840,7 @@ class FlexPortTest {
         safeRootStyle.justifyContent = JustifyContent.SafeCenter;
         Node safeRoot = new Node(safeRootStyle, List.of(oversized));
 
-        safeRoot.computeLayout(100, 20);
+        LayoutEngine.computeLayout(safeRoot, (float) 100, (float) 20);
         assertEquals(0f, oversized.layout.x, 0.01f);
         Style selfAlignedStyle = sized(20, 10);
         selfAlignedStyle.direction = Direction.Rtl;
@@ -854,7 +854,7 @@ class FlexPortTest {
         selfRootStyle.size = Size.of(Dimension.length(100), Dimension.length(20));
         Node selfRoot = new Node(selfRootStyle, List.of(selfAligned));
 
-        selfRoot.computeLayout(100, 20);
+        LayoutEngine.computeLayout(selfRoot, (float) 100, (float) 20);
         assertEquals(80f, selfAligned.layout.x, 0.01f);
     }
 }

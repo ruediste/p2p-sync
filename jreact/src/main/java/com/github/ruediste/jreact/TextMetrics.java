@@ -56,7 +56,7 @@ final class TextMetrics {
         Style.Insets inset = node.style.inset();
         double available = Math.max(0, width - inset.horizontal());
         List<String> lines = wrap(node.text, metrics, available);
-        double lineHeight = node.style.number(Style.Property.LINE_HEIGHT, Double.NaN);
+        double lineHeight = node.style.number(StyleProperties.LINE_HEIGHT, Double.NaN);
         if (Double.isNaN(lineHeight))
             lineHeight = metrics.getHeight();
         if (commit) {
@@ -64,7 +64,7 @@ final class TextMetrics {
             double baseline = inset.top() + (lineHeight - metrics.getHeight()) / 2 + metrics.getAscent();
             for (String line : lines) {
                 double spare = available - metrics.stringWidth(line);
-                double offset = switch (node.style.get(Style.Property.TEXT_ALIGN, Style.TextAlign.LEFT)) {
+                double offset = switch (node.style.get(StyleProperties.TEXT_ALIGN, Style.TextAlign.LEFT)) {
                     case LEFT -> 0;
                     case CENTER -> spare / 2;
                     case RIGHT -> spare;

@@ -196,11 +196,45 @@ class StyleLayoutTest {
             });
         }, 300, 100);
         Node parent = tree.children.getFirst();
-        assertEquals(Color.RED, parent.style.get(Style.Property.BACKGROUND, null));
-        assertNull(parent.children.get(2).style.get(Style.Property.BACKGROUND, null));
+        assertEquals(Color.RED, parent.style.get(StyleProperties.BACKGROUND, null));
+        assertEquals(Color.RED, parent.children.get(2).style.get(StyleProperties.BACKGROUND, null));
         assertEquals(Color.BLUE, parent.children.get(0).style.color());
         assertEquals(Color.PINK, parent.children.get(1).style.color());
         assertEquals(Color.YELLOW, parent.children.get(2).children.getFirst().style.color());
+    }
+
+    /**
+     * Verifies that default-scope rules reach every node emitted by the declaring
+     * component, including nodes nested below its top-level output.
+     */
+    @Test
+    void defaultScopeReachesNestedNodesOfDeclaringComponent() {
+        Node tree = render(() -> {
+            Styles.rules(Styles.rule(Selector.className("bar"), style -> style.color(Color.RED)));
+            div(() -> div(() -> text("x", style -> style.className("bar"))));
+        }, 100, 50);
+        Node leaf = tree.children.getFirst().children.getFirst().children.getFirst();
+        assertEquals(Color.RED, leaf.style.color());
+    }
+
+    /**
+     * Verifies that default-scope rules stop at nested component boundaries while
+     * transitive rules cross them.
+     */
+    @Test
+    void defaultScopeStopsAtComponentBoundaryButTransitiveScopeCrossesIt() {
+        Node defaultTree = render(() -> {
+            Styles.rules(Styles.rule(Selector.className("bar"), style -> style.color(Color.RED)));
+            component("child", () -> text("x", style -> style.className("bar")));
+        }, 100, 50);
+        assertNotEquals(Color.RED, defaultTree.children.getFirst().style.color());
+
+        Node transitiveTree = render(() -> {
+            Styles.rules(Styles.Scope.TRANSITIVE,
+                    Styles.rule(Selector.className("bar"), style -> style.color(Color.RED)));
+            component("child", () -> text("x", style -> style.className("bar")));
+        }, 100, 50);
+        assertEquals(Color.RED, transitiveTree.children.getFirst().style.color());
     }
 
     @Test
@@ -216,7 +250,7 @@ class StyleLayoutTest {
             });
         }, 100, 50);
         assertEquals(Color.BLUE, tree.children.getFirst().style.color());
-        assertEquals(Color.YELLOW, tree.children.getFirst().style.get(Style.Property.BACKGROUND, null));
+        assertEquals(Color.YELLOW, tree.children.getFirst().style.get(StyleProperties.BACKGROUND, null));
     }
 
     @Test
@@ -226,7 +260,7 @@ class StyleLayoutTest {
             Styles.rules(Styles.rule(Selector.type(Node.Kind.DIV), style -> style.opacity(0.5)));
         }, 100, 50);
         assertNotEquals(Color.RED, tree.children.getFirst().children.getFirst().style.color());
-        assertEquals(0.5, tree.children.getFirst().style.number(Style.Property.OPACITY, 1));
+        assertEquals(0.5, tree.children.getFirst().style.number(StyleProperties.OPACITY, 1));
     }
 
     @Test

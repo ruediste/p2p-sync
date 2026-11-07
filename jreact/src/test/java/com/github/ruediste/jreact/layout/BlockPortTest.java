@@ -166,7 +166,7 @@ class BlockPortTest {
         Node child = new Node(sized(50, 50));
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(50f, childLayout.width, 0.01f);
@@ -186,7 +186,7 @@ class BlockPortTest {
         root.addChild(child1);
         root.addChild(child2);
 
-        root.computeLayout(100, 200);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 200);
 
         Layout child1Layout = child1.layout;
         Layout child2Layout = child2.layout;
@@ -207,7 +207,7 @@ class BlockPortTest {
         Node child = new Node(childStyle);
         root.addChild(child);
 
-        root.computeLayout(200, 100);
+        LayoutEngine.computeLayout(root, (float) 200, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(100f, childLayout.width, 0.01f);
@@ -229,7 +229,7 @@ class BlockPortTest {
         Node child = new Node(childStyle);
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(50f, childLayout.width, 0.01f);
@@ -250,7 +250,7 @@ class BlockPortTest {
         Node child = new Node(childStyle);
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(30f, childLayout.height, 0.01f);
@@ -269,7 +269,7 @@ class BlockPortTest {
         Node child = new Node(childStyle);
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(50f, childLayout.width, 0.01f);
@@ -290,7 +290,7 @@ class BlockPortTest {
         Node child = new Node(childStyle);
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(10f, childLayout.x, 0.01f);
@@ -313,7 +313,7 @@ class BlockPortTest {
         Node child = new Node(childStyle);
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertEquals(25f, childLayout.x, 0.01f);
@@ -332,7 +332,7 @@ class BlockPortTest {
         Node child = new Node(childStyle);
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertLayout(childLayout, 10, 10, 80, 80);
@@ -353,7 +353,7 @@ class BlockPortTest {
         Node child = new Node(childStyle);
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertLayout(childLayout, 5, 5, 90, 90);
@@ -374,7 +374,7 @@ class BlockPortTest {
         Node child = new Node(childStyle);
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertTrue(childLayout.width <= 100f);
@@ -390,11 +390,12 @@ class BlockPortTest {
         Node root = new Node(rootStyle);
 
         Style childStyle = sized(20, 20);
-        childStyle.minSize = Size.of(Dimension.length(50), Dimension.length(50));
+        childStyle.setMinWidth(50);
+        childStyle.setMinHeight(50);
         Node child = new Node(childStyle);
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertTrue(childLayout.width >= 50f);
@@ -409,11 +410,12 @@ class BlockPortTest {
         Node root = new Node(rootStyle);
 
         Style childStyle = sized(100, 100);
-        childStyle.maxSize = Size.of(Dimension.length(50), Dimension.length(50));
+        childStyle.setMaxWidth(50);
+        childStyle.setMaxHeight(50);
         Node child = new Node(childStyle);
         root.addChild(child);
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         Layout childLayout = child.layout;
         assertTrue(childLayout.width <= 50f);
@@ -438,8 +440,7 @@ class BlockPortTest {
         rootStyle.size = Size.of(Dimension.length(100), Dimension.auto());
         Node root = new Node(rootStyle, List.of(floated, cleared));
 
-        root.computeLayout(
-                Size.of(AvailableSpace.definite(100), AvailableSpace.maxContent()));
+        LayoutEngine.computeLayout(root, Size.of(AvailableSpace.definite(100), AvailableSpace.maxContent()));
 
         assertEquals(0f, floated.layout.y, 0.01f);
         assertEquals(30f, cleared.layout.y, 0.01f);
@@ -457,7 +458,7 @@ class BlockPortTest {
         rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
         Node root = new Node(rootStyle, List.of(child));
 
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
         assertEquals(40f, child.layout.y, 0.01f);
     }
 }

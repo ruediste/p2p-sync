@@ -13,7 +13,8 @@ import org.junit.jupiter.params.provider.EnumSource;
 /**
  * Port of grid-details.test.ts from the TypeScript/WebAssembly test-suite.
  * WebAssembly resource cleanup ({@code free()}) is omitted; detailed grid
- * expectations are compared through the public fields of {@link DetailedGridInfo}.
+ * expectations are compared through the public fields of
+ * {@link DetailedGridInfo}.
  */
 class GridDetailsPortTest {
 
@@ -54,12 +55,12 @@ class GridDetailsPortTest {
         Node emptyGrid = new Node(gridStyle);
         Node grid = new Node(gridStyle, List.of(leaf));
 
-        assertNull(grid.detailedGridInfo);
-        grid.computeLayout(100, 100);
-        assertNotNull(grid.detailedGridInfo);
-        assertNull(leaf.detailedGridInfo);
-        emptyGrid.computeLayout(100, 100);
-        assertNull(emptyGrid.detailedGridInfo);
+        assertNull(grid.layout.detailedGridInfo);
+        LayoutEngine.computeLayout(grid, (float) 100, (float) 100);
+        assertNotNull(grid.layout.detailedGridInfo);
+        assertNull(leaf.layout.detailedGridInfo);
+        LayoutEngine.computeLayout(emptyGrid, (float) 100, (float) 100);
+        assertNull(emptyGrid.layout.detailedGridInfo);
     }
 
     @Test
@@ -75,9 +76,9 @@ class GridDetailsPortTest {
         rootStyle.gridTemplateRows = List.of(single(20, 20), single(30, 30));
 
         Node root = new Node(rootStyle, List.of(new Node(childStyle)));
-        root.computeLayout(200, 100);
+        LayoutEngine.computeLayout(root, (float) 200, (float) 100);
 
-        DetailedGridInfo info = root.detailedGridInfo;
+        DetailedGridInfo info = root.layout.detailedGridInfo;
         if (info == null) {
             throw new AssertionError("Expected detailed grid layout information");
         }
@@ -109,9 +110,9 @@ class GridDetailsPortTest {
         rootStyle.gridTemplateRows = List.of(single(40, 40));
 
         Node root = new Node(rootStyle, List.of(new Node(childStyle)));
-        root.computeLayout(300, 100);
+        LayoutEngine.computeLayout(root, (float) 300, (float) 100);
 
-        DetailedGridInfo info = root.detailedGridInfo;
+        DetailedGridInfo info = root.layout.detailedGridInfo;
         if (info == null) {
             throw new AssertionError("Expected detailed grid layout information");
         }
@@ -139,9 +140,9 @@ class GridDetailsPortTest {
 
         Node root = new Node(rootStyle,
                 List.of(new Node(firstStyle), new Node(secondStyle)));
-        root.computeLayout(300, 100);
+        LayoutEngine.computeLayout(root, (float) 300, (float) 100);
 
-        DetailedGridInfo info = root.detailedGridInfo;
+        DetailedGridInfo info = root.layout.detailedGridInfo;
         if (info == null) {
             throw new AssertionError("Expected detailed grid layout information");
         }
@@ -169,9 +170,9 @@ class GridDetailsPortTest {
         Style rootStyle = new Style();
         rootStyle.display = Display.Grid;
         Node root = new Node(rootStyle, List.of(new Node(childStyle)));
-        root.computeLayout(100, 100);
+        LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        DetailedGridInfo info = root.detailedGridInfo;
+        DetailedGridInfo info = root.layout.detailedGridInfo;
         if (info == null) {
             throw new AssertionError("Expected detailed grid layout information");
         }

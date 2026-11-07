@@ -88,7 +88,7 @@ class DebuggingDocsPortTest {
         rootStyle.border = Rect.all(LengthPercentage.length(5));
         Node root = new Node(rootStyle, List.of(parent));
 
-        root.computeLayout(300, 200);
+        LayoutEngine.computeLayout(root, (float) 300, (float) 200);
 
         List<RectCall> calls = new ArrayList<>();
         Point<java.lang.Float> zero = Point.of(0f, 0f);

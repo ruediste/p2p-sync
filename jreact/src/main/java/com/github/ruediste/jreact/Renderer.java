@@ -46,7 +46,7 @@ public final class Renderer {
     }
 
     private static Shape shape(Node node) {
-        double radius = node.style.number(Style.Property.RADIUS, 0);
+        double radius = node.style.number(StyleProperties.RADIUS, 0);
         return new RoundRectangle2D.Double(node.bounds.x, node.bounds.y, node.bounds.width, node.bounds.height,
                 radius * 2, radius * 2);
     }
@@ -54,20 +54,20 @@ public final class Renderer {
     private static void paintNode(Node node, Graphics2D graphics, float inheritedOpacity) {
         Graphics2D copy = (Graphics2D) graphics.create();
         try {
-            float opacity = inheritedOpacity * (float) node.style.number(Style.Property.OPACITY, 1);
+            float opacity = inheritedOpacity * (float) node.style.number(StyleProperties.OPACITY, 1);
             copy.setComposite(AlphaComposite.SrcOver.derive(opacity));
             Shape shape = shape(node);
-            Style.Shadow boxShadow = node.style.get(Style.Property.BOX_SHADOW, null);
+            Style.Shadow boxShadow = node.style.get(StyleProperties.BOX_SHADOW, null);
             if (boxShadow != null)
                 shadow(node, copy, boxShadow, layer -> layer.fill(shape));
-            Color background = node.style.get(Style.Property.BACKGROUND, null);
+            Color background = node.style.get(StyleProperties.BACKGROUND, null);
             if (background != null) {
                 copy.setColor(background);
                 copy.fill(shape);
             }
             border(node, copy, shape);
             if (node.kind == Node.Kind.TEXT) {
-                Style.Shadow textShadow = node.style.get(Style.Property.TEXT_SHADOW, null);
+                Style.Shadow textShadow = node.style.get(StyleProperties.TEXT_SHADOW, null);
                 if (textShadow != null)
                     shadow(node, copy, textShadow, layer -> text(node, layer));
                 copy.setColor(node.style.color());
@@ -114,7 +114,7 @@ public final class Renderer {
     }
 
     private static void border(Node node, Graphics2D graphics, Shape outer) {
-        Style.Border border = node.style.get(Style.Property.BORDER, null);
+        Style.Border border = node.style.get(StyleProperties.BORDER, null);
         if (border == null)
             return;
         Rectangle2D.Double bounds = node.bounds;
@@ -123,7 +123,7 @@ public final class Renderer {
         double innerRight = Math.max(innerLeft, right - border.right().width());
         double innerTop = Math.min(bottom, top + border.top().width());
         double innerBottom = Math.max(innerTop, bottom - border.bottom().width());
-        double radius = Math.max(0, node.style.number(Style.Property.RADIUS, 0)
+        double radius = Math.max(0, node.style.number(StyleProperties.RADIUS, 0)
                 - Math.max(Math.max(border.left().width(), border.right().width()),
                         Math.max(border.top().width(), border.bottom().width())));
         Area ring = new Area(outer);

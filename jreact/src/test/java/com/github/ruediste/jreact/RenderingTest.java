@@ -129,7 +129,7 @@ class RenderingTest {
                 panel.setSize(120, 100);
                 panel.refresh();
                 panel.dispatchEvent(new MouseEvent(panel, MouseEvent.MOUSE_MOVED, 0, 0, 10, 10, 0, false));
-                assertEquals(Color.RED, panel.tree().children.getFirst().style.get(Style.Property.BACKGROUND, null));
+                assertEquals(Color.RED, panel.tree().children.getFirst().style.get(StyleProperties.BACKGROUND, null));
                 panel.dispatchEvent(
                         new MouseEvent(panel, MouseEvent.MOUSE_PRESSED, 0, 0, 10, 10, 1, false, MouseEvent.BUTTON1));
                 panel.dispatchEvent(

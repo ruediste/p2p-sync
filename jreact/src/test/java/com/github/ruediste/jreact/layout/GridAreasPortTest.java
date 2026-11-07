@@ -13,7 +13,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Port of grid-areas.test.ts from the TypeScript/WebAssembly test-suite.
- * WebAssembly resource cleanup ({@code free()}) is omitted; all functional cases
+ * WebAssembly resource cleanup ({@code free()}) is omitted; all functional
+ * cases
  * and assertions are preserved.
  */
 class GridAreasPortTest {
@@ -44,7 +45,7 @@ class GridAreasPortTest {
         }
         Node root = new Node(style, children);
 
-        root.computeLayout(300, 200);
+        LayoutEngine.computeLayout(root, (float) 300, (float) 200);
 
         assertEquals(200f, children.get(2).layout.x, 0.01f);
         assertEquals(100f, children.get(3).layout.y, 0.01f);
@@ -81,9 +82,8 @@ class GridAreasPortTest {
         assertEquals(3, style.getGridTemplateAreaColumnCount());
     }
 
-    @ParameterizedTest(name = "shrinks and clears inferred grid dimensions through {0}")
-    @ValueSource(strings = { "assignment", "set" })
-    void shrinksAndClearsInferredGridDimensions(String update) {
+    @Test
+    void shrinksAndClearsInferredGridDimensions() {
         List<Node> children = List.of(new Node(new Style()), new Node(new Style()));
         Style style = new Style();
         style.display = Display.Grid;
@@ -97,15 +97,11 @@ class GridAreasPortTest {
                 List.of(new GridTemplateArea("main", 1, 2, 1, 2)),
                 List.of());
         for (List<GridTemplateArea> areas : updates) {
-            if (update.equals("assignment")) {
-                style.setGridTemplateAreas(areas);
-            } else {
-                style.set("gridTemplateAreas", areas);
-            }
+            style.setGridTemplateAreas(areas);
             assertEquals(areas.size(), style.getGridTemplateAreaRowCount());
             assertEquals(areas.size(), style.getGridTemplateAreaColumnCount());
             root.style = style.copy();
-            root.computeLayout(200, 100);
+            LayoutEngine.computeLayout(root, (float) 200, (float) 100);
 
             assertLayout(children.get(0).layout, 0, 0, 200, 50);
             assertLayout(children.get(1).layout, 0, 50, 200, 50);
@@ -176,15 +172,15 @@ class GridAreasPortTest {
 
         List<Node> children = List.of(new Node(new Style()), new Node(new Style()));
         Node root = new Node(style, children);
-        root.computeLayout(200, 100);
+        LayoutEngine.computeLayout(root, (float) 200, (float) 100);
         if (axis.equals("row")) {
             assertLayout(children.get(1).layout, 0, 50, 200, 50);
         } else {
             assertLayout(children.get(1).layout, 100, 0, 100, 100);
         }
 
-        style.set("gridTemplateAreaRowCount", 0);
-        style.set("gridTemplateAreaColumnCount", 0);
+        style.setGridTemplateAreaRowCount(0);
+        style.setGridTemplateAreaColumnCount(0);
         assertEquals(0, style.getGridTemplateAreaRowCount());
         assertEquals(0, style.getGridTemplateAreaColumnCount());
     }
@@ -207,8 +203,7 @@ class GridAreasPortTest {
             contexts.add(measuredNode.context);
             return Size.of(20f, 10f);
         };
-        node.computeLayout(
-                Size.of(AvailableSpace.definite(200), AvailableSpace.definite(100)));
+        LayoutEngine.computeLayout(node, Size.of(AvailableSpace.definite(200), AvailableSpace.definite(100)));
         assertTrue(measuredStyles.size() > 0);
         for (Style style : measuredStyles) {
             style.setGridTemplateAreas(List.of());

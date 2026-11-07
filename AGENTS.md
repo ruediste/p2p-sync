@@ -7,7 +7,9 @@ If there is an issue with generating the protobuf java files, a `mvn clean` some
 ## Tests
 When writing a test, add a short description of the test's purpose and how it verifies the expected behavior.
 
-Running:
+If possible, use a tool to run the java tests via the IDE/language server. If a tool is present, avoid running the maven tests.
+
+Running maven Tests:
 - `mvn test` runs the fast unit tests only. Integration tests (`*IT.java` and tests tagged `@Tag("integration")`, currently the slow mDNS loopback tests `MDnsDiscoveryIT` and `MDnsWireUpIT` plus any test method taking longer than one second) are excluded by default.
 - `mvn test -Pit` runs only the integration tests. They require working multicast networking and take several seconds each; they skip automatically (JUnit assumptions) when multicast is unavailable.
 - When changing test wiring, verify both: `mvn test` and `mvn test -Pit`.
