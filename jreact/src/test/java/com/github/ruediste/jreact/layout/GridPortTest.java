@@ -392,29 +392,29 @@ class GridPortTest {
         Style rootStyle = sizedStyle(100, 100);
         rootStyle.display(Display.Grid);
 
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style child1Style = new Style();
         child1Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         child1Style.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
-        Node child1 = new Node(child1Style);
+        NodeImpl child1 = new NodeImpl(child1Style);
 
         Style child2Style = new Style();
         child2Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         child2Style.gridColumn(Line.of(GridPlacement.line(2), GridPlacement.line(3)));
-        Node child2 = new Node(child2Style);
+        NodeImpl child2 = new NodeImpl(child2Style);
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout rootLayout = root.layout;
+        Layout rootLayout = root.getLayout();
         assertEquals(100f, rootLayout.width, 0.01f);
         assertEquals(100f, rootLayout.height, 0.01f);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
         assertTrue(child2Layout.x >= child1Layout.x);
     }
 
@@ -426,25 +426,25 @@ class GridPortTest {
         rootStyle.gridTemplateColumns(List.of(single(50, 50), single(100, 100),
                 single(50, 50)));
 
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style child1Style = new Style();
         child1Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         child1Style.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
-        Node child1 = new Node(child1Style);
+        NodeImpl child1 = new NodeImpl(child1Style);
 
         Style child2Style = new Style();
         child2Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         child2Style.gridColumn(Line.of(GridPlacement.line(2), GridPlacement.line(3)));
-        Node child2 = new Node(child2Style);
+        NodeImpl child2 = new NodeImpl(child2Style);
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 200, (float) 100);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         assertEquals(50f, child1Layout.width, 0.01f);
         assertEquals(100f, child2Layout.width, 0.01f);
@@ -459,20 +459,20 @@ class GridPortTest {
         rootStyle.gridAutoFlow(GridAutoFlow.Row);
         rootStyle.gridTemplateColumns(List.of(single(50, 50), single(50, 50)));
 
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        List<Node> children = new ArrayList<>();
+        List<NodeImpl> children = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
-            children.add(new Node(sizedStyle(20, 20)));
+            children.add(new NodeImpl(sizedStyle(20, 20)));
             root.addChild(children.get(i));
         }
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout layout0 = children.get(0).layout;
-        Layout layout1 = children.get(1).layout;
-        Layout layout2 = children.get(2).layout;
-        Layout layout3 = children.get(3).layout;
+        Layout layout0 = children.get(0).getLayout();
+        Layout layout1 = children.get(1).getLayout();
+        Layout layout2 = children.get(2).getLayout();
+        Layout layout3 = children.get(3).getLayout();
 
         // First row
         assertEquals(layout0.y, layout1.y, 0.01f);
@@ -491,19 +491,19 @@ class GridPortTest {
         rootStyle.gridAutoFlow(GridAutoFlow.Column);
         rootStyle.gridTemplateRows(List.of(single(50, 50), single(50, 50)));
 
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        List<Node> children = new ArrayList<>();
+        List<NodeImpl> children = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
-            children.add(new Node(sizedStyle(20, 20)));
+            children.add(new NodeImpl(sizedStyle(20, 20)));
             root.addChild(children.get(i));
         }
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout layout0 = children.get(0).layout;
-        Layout layout1 = children.get(1).layout;
-        Layout layout2 = children.get(2).layout;
+        Layout layout0 = children.get(0).getLayout();
+        Layout layout1 = children.get(1).getLayout();
+        Layout layout2 = children.get(2).getLayout();
 
         // First column
         assertEquals(layout0.x, layout1.x, 0.01f);
@@ -521,19 +521,19 @@ class GridPortTest {
         rootStyle.display(Display.Grid);
         rootStyle.gridTemplateRows(List.of(single(50, 50), single(50, 50)));
 
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         // Child spans 2 rows
         Style childStyle = new Style();
         childStyle.gridRow(Line.of(GridPlacement.line(1), GridPlacement.span(2)));
         childStyle.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
-        Node child = new Node(childStyle);
+        NodeImpl child = new NodeImpl(childStyle);
 
         root.addChild(child);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout childLayout = child.layout;
+        Layout childLayout = child.getLayout();
         assertEquals(100f, childLayout.height, 0.01f);
     }
 
@@ -544,18 +544,18 @@ class GridPortTest {
         rootStyle.display(Display.Grid);
         rootStyle.gridTemplateColumns(List.of(single(50, 50), single(50, 50)));
 
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style childStyle = new Style();
         childStyle.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         childStyle.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.span(2)));
-        Node child = new Node(childStyle);
+        NodeImpl child = new NodeImpl(childStyle);
 
         root.addChild(child);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout childLayout = child.layout;
+        Layout childLayout = child.getLayout();
         assertEquals(100f, childLayout.width, 0.01f);
     }
 
@@ -567,25 +567,25 @@ class GridPortTest {
         rootStyle.gap(Size.of(LengthPercentage.length(10), LengthPercentage.length(10)));
         rootStyle.gridTemplateColumns(List.of(single(45, 45), single(45, 45)));
 
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style child1Style = new Style();
         child1Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         child1Style.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
-        Node child1 = new Node(child1Style);
+        NodeImpl child1 = new NodeImpl(child1Style);
 
         Style child2Style = new Style();
         child2Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         child2Style.gridColumn(Line.of(GridPlacement.line(2), GridPlacement.line(3)));
-        Node child2 = new Node(child2Style);
+        NodeImpl child2 = new NodeImpl(child2Style);
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         float child1Right = child1Layout.x + child1Layout.width;
         assertEquals(10f, child2Layout.x - child1Right, 0.5f);
@@ -600,16 +600,16 @@ class GridPortTest {
         rootStyle.gridTemplateColumns(List.of(single(45, 45), single(45, 45)));
         rootStyle.gridTemplateRows(List.of(single(40, 40), single(40, 40)));
 
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        List<Node> children = new ArrayList<>();
+        List<NodeImpl> children = new ArrayList<>();
         for (int row = 1; row <= 2; row++) {
             for (int col = 1; col <= 2; col++) {
                 Style style = new Style();
                 style.gridRow(Line.of(GridPlacement.line(row), GridPlacement.line(row + 1)));
                 style.gridColumn(Line.of(GridPlacement.line(col),
                         GridPlacement.line(col + 1)));
-                Node child = new Node(style);
+                NodeImpl child = new NodeImpl(style);
                 children.add(child);
                 root.addChild(child);
             }
@@ -618,12 +618,12 @@ class GridPortTest {
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         // Check column gap
-        Layout layout0 = children.get(0).layout;
-        Layout layout1 = children.get(1).layout;
+        Layout layout0 = children.get(0).getLayout();
+        Layout layout1 = children.get(1).getLayout();
         assertEquals(10f, layout1.x - (layout0.x + layout0.width), 0.5f);
 
         // Check row gap
-        Layout layout2 = children.get(2).layout;
+        Layout layout2 = children.get(2).getLayout();
         assertEquals(20f, layout2.y - (layout0.y + layout0.height), 0.5f);
     }
 
@@ -635,15 +635,15 @@ class GridPortTest {
         rootStyle.layoutJustifyContent(JustifyContent.Center);
         rootStyle.layoutAlignItems(AlignItems.Center);
 
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child = new Node(sizedStyle(20, 20));
+        NodeImpl child = new NodeImpl(sizedStyle(20, 20));
 
         root.addChild(child);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout childLayout = child.layout;
+        Layout childLayout = child.getLayout();
         assertEquals(40f, childLayout.x, 0.01f);
         assertEquals(40f, childLayout.y, 0.01f);
     }
@@ -655,17 +655,17 @@ class GridPortTest {
         rootStyle.display(Display.Grid);
         rootStyle.scrollbarWidth(15);
 
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style childStyle = new Style();
         childStyle.size(Size.of(Dimension.percent(100), Dimension.percent(100)));
-        Node child = new Node(childStyle);
+        NodeImpl child = new NodeImpl(childStyle);
 
         root.addChild(child);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout childLayout = child.layout;
+        Layout childLayout = child.getLayout();
         assertTrue(childLayout.width <= 100);
         assertTrue(childLayout.height <= 100);
     }
@@ -677,25 +677,25 @@ class GridPortTest {
         rootStyle.display(Display.Grid);
         rootStyle.gridTemplateColumns(List.of(single("auto", "1fr"), single("auto", "2fr")));
 
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style child1Style = new Style();
         child1Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         child1Style.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
-        Node child1 = new Node(child1Style);
+        NodeImpl child1 = new NodeImpl(child1Style);
 
         Style child2Style = new Style();
         child2Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         child2Style.gridColumn(Line.of(GridPlacement.line(2), GridPlacement.line(3)));
-        Node child2 = new Node(child2Style);
+        NodeImpl child2 = new NodeImpl(child2Style);
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         // 1fr : 2fr = 1:2 ratio (with tolerance for integer rounding)
         assertTrue(Math.abs(child2Layout.width - child1Layout.width * 2) <= 2);
@@ -708,25 +708,25 @@ class GridPortTest {
         rootStyle.display(Display.Grid);
         rootStyle.gridTemplateColumns(List.of(single(20, 20), single("auto", "1fr")));
 
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style child1Style = new Style();
         child1Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         child1Style.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
-        Node child1 = new Node(child1Style);
+        NodeImpl child1 = new NodeImpl(child1Style);
 
         Style child2Style = new Style();
         child2Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         child2Style.gridColumn(Line.of(GridPlacement.line(2), GridPlacement.line(3)));
-        Node child2 = new Node(child2Style);
+        NodeImpl child2 = new NodeImpl(child2Style);
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         assertEquals(20f, child1Layout.width, 0.01f);
         assertEquals(80f, child2Layout.width, 0.01f);
@@ -738,18 +738,18 @@ class GridPortTest {
     void resolvesPercentageHeightsInImplicitGridRows() {
         Style firstStyle = new Style();
         firstStyle.setHeight("50%");
-        Node first = new Node(firstStyle);
-        Node second = new Node(sizedStyle(50, 20));
+        NodeImpl first = new NodeImpl(firstStyle);
+        NodeImpl second = new NodeImpl(sizedStyle(50, 20));
 
         Style rootStyle = new Style();
         rootStyle.display(Display.Grid);
         rootStyle.setWidth(100);
         rootStyle.setHeight(100);
-        Node root = new Node(rootStyle, List.of(first, second));
+        NodeImpl root = new NodeImpl(rootStyle, List.of(first, second));
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
-        assertLayout(first.layout, 0, 0, 100, 20);
-        assertLayout(second.layout, 0, 40, 50, 20);
+        assertLayout(first.getLayout(), 0, 0, 100, 20);
+        assertLayout(second.getLayout(), 0, 40, 50, 20);
     }
 
     // ---- Grid track sizing and serialization ----
@@ -795,58 +795,58 @@ class GridPortTest {
     void resolvesPercentagesAgainstTheContainer(String property) {
         boolean columns = property.endsWith("Columns");
         List<TrackSizingFunction> tracks = List.of(track("50%", "50%"), track("50%", "50%"));
-        List<Node> children = List.of(new Node(new Style()), new Node(new Style()));
+        List<NodeImpl> children = List.of(new NodeImpl(new Style()), new NodeImpl(new Style()));
         Style style = new Style();
         style.display(Display.Grid);
         style.setWidth(200);
         style.setHeight(200);
         style.gridAutoFlow(columns ? GridAutoFlow.Column : GridAutoFlow.Row);
         setTracks(style, property, tracks);
-        Node root = new Node(style, children);
+        NodeImpl root = new NodeImpl(style, children);
 
         LayoutEngine.computeLayout(root, (float) 200, (float) 200);
         if (columns) {
-            assertLayout(children.get(0).layout, 0, 0, 100, 200);
-            assertLayout(children.get(1).layout, 100, 0, 100, 200);
+            assertLayout(children.get(0).getLayout(), 0, 0, 100, 200);
+            assertLayout(children.get(1).getLayout(), 100, 0, 100, 200);
         } else {
-            assertLayout(children.get(0).layout, 0, 0, 200, 100);
-            assertLayout(children.get(1).layout, 0, 100, 200, 100);
+            assertLayout(children.get(0).getLayout(), 0, 0, 200, 100);
+            assertLayout(children.get(1).getLayout(), 0, 100, 200, 100);
         }
-        assertEquals(tracks, trackList(getTracks(root.style.copy(), property), property));
+        assertEquals(tracks, trackList(getTracks(root.getStyle().copy(), property), property));
         assertEquals(tracks, trackList(getTracks(style, property), property));
     }
 
     @Test
     void resolvesPercentageTracksNestedInARepeat() {
-        List<Node> children = List.of(new Node(new Style()), new Node(new Style()));
+        List<NodeImpl> children = List.of(new NodeImpl(new Style()), new NodeImpl(new Style()));
         Style style = new Style();
         style.display(Display.Grid);
         style.setWidth(200);
         style.setHeight(20);
         style.gridTemplateColumns(List.of(GridTemplateComponent.repeat(2,
                 List.of(track("50%", "50%")))));
-        Node root = new Node(style, children);
+        NodeImpl root = new NodeImpl(style, children);
 
         LayoutEngine.computeLayout(root, (float) 200, (float) 20);
-        assertEquals(100f, children.get(0).layout.width, 0.01f);
-        assertEquals(100f, children.get(1).layout.x, 0.01f);
-        assertEquals(100f, children.get(1).layout.width, 0.01f);
+        assertEquals(100f, children.get(0).getLayout().width, 0.01f);
+        assertEquals(100f, children.get(1).getLayout().x, 0.01f);
+        assertEquals(100f, children.get(1).getLayout().width, 0.01f);
         assertEquals(List.of(GridTemplateComponent.repeat(2, List.of(track("50%", "50%")))),
                 style.gridTemplateColumns());
     }
 
     @Test
     void limitsATrackWithAPercentageMaximumAndANumericMinimum() {
-        Node child = new Node(new Style());
+        NodeImpl child = new NodeImpl(new Style());
         Style rootStyle = new Style();
         rootStyle.display(Display.Grid);
         rootStyle.setWidth(200);
         rootStyle.setHeight(20);
         rootStyle.gridTemplateColumns(List.of(single(0, "50%")));
-        Node root = new Node(rootStyle, List.of(child));
+        NodeImpl root = new NodeImpl(rootStyle, List.of(child));
 
         LayoutEngine.computeLayout(root, (float) 200, (float) 20);
-        assertEquals(100f, child.layout.width, 0.01f);
+        assertEquals(100f, child.getLayout().width, 0.01f);
     }
 
     @ParameterizedTest(name = "preserves existing track values through {0} reads")
@@ -863,8 +863,8 @@ class GridPortTest {
                 track("auto", "auto"));
         Style original = new Style();
         setTracks(original, property, tracks);
-        Node node = new Node(original);
-        Style copied = node.style.copy();
+        NodeImpl node = new NodeImpl(original);
+        Style copied = node.getStyle().copy();
 
         assertEquals(tracks, trackList(getTracks(copied, property), property));
         setTracks(original, property, tracks);

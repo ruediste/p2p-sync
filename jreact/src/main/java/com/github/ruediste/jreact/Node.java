@@ -10,11 +10,17 @@ import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.DoubleConsumer;
 import java.util.function.IntConsumer;
 
+import com.github.ruediste.jreact.layout.AvailableSpace;
+import com.github.ruediste.jreact.layout.Layout;
+import com.github.ruediste.jreact.layout.LayoutEngine;
+import com.github.ruediste.jreact.layout.LayoutNode;
+import com.github.ruediste.jreact.layout.Size;
 import com.github.ruediste.jreact.nodes.ContainerNode;
 import com.github.ruediste.jreact.nodes.EditableNode;
 
@@ -23,10 +29,11 @@ import com.github.ruediste.jreact.nodes.EditableNode;
  *
  * <p>
  * A node connects declarative content and callbacks to the downstream UI
- * stages: {@link Styles} resolves its inline and scoped styles, layout fills
- * its bounds and text lines, and the node itself paints its box and content.
- * {@link JReactPanel} supplies interaction flags, dispatches callbacks, and
- * hosts the Swing editors owned by {@link EditableNode} subclasses.
+ * stages: {@link Styles} resolves its inline and scoped styles, the
+ * {@link LayoutEngine} fills its layout, and the node itself paints its box and
+ * content. {@link JReactPanel} supplies interaction flags, dispatches
+ * callbacks, and hosts the Swing editors owned by {@link EditableNode}
+ * subclasses.
  *
  * <p>
  * Nodes are mutable and recreated on each render. Their keys associate
@@ -40,7 +47,7 @@ import com.github.ruediste.jreact.nodes.EditableNode;
  * Bounds use root-relative logical pixels; text-line coordinates are relative
  * to their containing node's bounds.
  */
-public abstract class Node {
+public abstract class Node implements LayoutNode {
     /**
      * Associates a primitive with its owning fiber and its render-call position.
      *
@@ -64,6 +71,7 @@ public abstract class Node {
     public Node parent;
     public final List<Node> children = new ArrayList<>();
     public final Rectangle2D.Double bounds = new Rectangle2D.Double();
+    public final Layout layout = new Layout();
     public boolean hover, active, focus, disabled;
     public boolean focusable;
     public String accessibleName;
@@ -133,6 +141,61 @@ public abstract class Node {
      */
     public void addChild(Node child) {
         throw new UnsupportedOperationException(getClass().getSimpleName() + " does not accept children");
+    }
+
+    @Override
+    public Style getStyle() {
+        return style;
+    }
+
+    @Override
+    public LayoutNode getParent() {
+        return parent;
+    }
+
+    @Override
+    public List<LayoutNode> getChildren() {
+        return Collections.unmodifiableList(children);
+    }
+
+    @Override
+    public Layout getLayout() {
+        return layout;
+    }
+
+    @Override
+    public Size<java.lang.Float> measure(Size<AvailableSpace> knownDimensions,
+            Size<AvailableSpace> availableSpace) {
+        return null;
+    }
+
+    /**
+     * Computes the layout of this subtree for the given viewport size and copies
+     * the result into the root-relative {@link #bounds} of every node.
+     */
+    public final void layout(double width, double height) {
+        Style.nonNegative(width);
+        Style.nonNegative(height);
+        LayoutEngine.computeLayout(this, (float) width, (float) height);
+        applyLayout();
+    }
+
+    private void applyLayout() {
+        bounds.setRect(layout.absX, layout.absY, layout.width, layout.height);
+        layoutApplied();
+        for (Node child : children)
+            child.applyLayout();
+    }
+
+    /** Called after {@link #bounds} has been updated by layout. */
+    protected void layoutApplied() {
+    }
+
+    /**
+     * Applies layout defaults that depend on the concrete node type. Called for
+     * each node after style resolution and before layout.
+     */
+    public void applyLayoutDefaults() {
     }
 
     /**

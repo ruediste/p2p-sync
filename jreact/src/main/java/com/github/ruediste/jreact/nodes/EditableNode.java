@@ -86,9 +86,11 @@ public abstract class EditableNode extends TextualNode {
         field.setFont(style.font());
         field.setForeground(style.color());
         field.setBackground(style.get(StyleProperties.BACKGROUND, Color.WHITE));
-        Style.Insets inset = style.inset();
-        field.setBorder(BorderFactory.createEmptyBorder((int) inset.top(), (int) inset.left(), (int) inset.bottom(),
-                (int) inset.right()));
+        field.setBorder(BorderFactory.createEmptyBorder(
+                (int) (layout.border.top + layout.padding.top),
+                (int) (layout.border.left + layout.padding.left),
+                (int) (layout.border.bottom + layout.padding.bottom),
+                (int) (layout.border.right + layout.padding.right)));
         field.setBounds(bounds.getBounds());
         field.doLayout();
         field.getAccessibleContext().setAccessibleName(accessibleName);

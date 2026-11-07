@@ -235,18 +235,18 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutFlexDirection(FlexDirection.Row);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child1 = new Node(sized(30, 30));
-        Node child2 = new Node(sized(30, 30));
+        NodeImpl child1 = new NodeImpl(sized(30, 30));
+        NodeImpl child2 = new NodeImpl(sized(30, 30));
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         assertEquals(0f, child1Layout.x, 0.01f);
         assertEquals(30f, child2Layout.x, 0.01f);
@@ -260,18 +260,18 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutFlexDirection(FlexDirection.Column);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child1 = new Node(sized(50, 50));
-        Node child2 = new Node(sized(50, 50));
+        NodeImpl child1 = new NodeImpl(sized(50, 50));
+        NodeImpl child2 = new NodeImpl(sized(50, 50));
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         assertEquals(0f, child1Layout.y, 0.01f);
         assertEquals(50f, child2Layout.y, 0.01f);
@@ -285,18 +285,18 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutFlexDirection(FlexDirection.RowReverse);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child1 = new Node(sized(30, 30));
-        Node child2 = new Node(sized(30, 30));
+        NodeImpl child1 = new NodeImpl(sized(30, 30));
+        NodeImpl child2 = new NodeImpl(sized(30, 30));
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         // In row-reverse, first child should be on the right
         assertTrue(child1Layout.x > child2Layout.x);
@@ -309,18 +309,18 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutFlexDirection(FlexDirection.ColumnReverse);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child1 = new Node(sized(50, 30));
-        Node child2 = new Node(sized(50, 30));
+        NodeImpl child1 = new NodeImpl(sized(50, 30));
+        NodeImpl child2 = new NodeImpl(sized(50, 30));
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         // In column-reverse, first child should be at the bottom
         assertTrue(child1Layout.y > child2Layout.y);
@@ -335,23 +335,23 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutFlexDirection(FlexDirection.Row);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style child1Style = new Style();
         child1Style.flexGrow(1);
-        Node child1 = new Node(child1Style);
+        NodeImpl child1 = new NodeImpl(child1Style);
 
         Style child2Style = new Style();
         child2Style.flexGrow(1);
-        Node child2 = new Node(child2Style);
+        NodeImpl child2 = new NodeImpl(child2Style);
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         // Both should share space equally
         assertEquals(50f, child1Layout.width, 0.01f);
@@ -365,23 +365,23 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutFlexDirection(FlexDirection.Row);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style child1Style = new Style();
         child1Style.flexGrow(1);
-        Node child1 = new Node(child1Style);
+        NodeImpl child1 = new NodeImpl(child1Style);
 
         Style child2Style = new Style();
         child2Style.flexGrow(3);
-        Node child2 = new Node(child2Style);
+        NodeImpl child2 = new NodeImpl(child2Style);
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         // 1:3 ratio
         assertEquals(25f, child1Layout.width, 0.01f);
@@ -397,23 +397,23 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutFlexDirection(FlexDirection.Row);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style child1Style = sized(100, 30);
         child1Style.flexShrink(1);
-        Node child1 = new Node(child1Style);
+        NodeImpl child1 = new NodeImpl(child1Style);
 
         Style child2Style = sized(100, 30);
         child2Style.flexShrink(1);
-        Node child2 = new Node(child2Style);
+        NodeImpl child2 = new NodeImpl(child2Style);
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         // Both should shrink equally
         assertEquals(50f, child1Layout.width, 0.01f);
@@ -427,23 +427,23 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutFlexDirection(FlexDirection.Row);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style child1Style = sized(60, 30);
         child1Style.flexShrink(0);
-        Node child1 = new Node(child1Style);
+        NodeImpl child1 = new NodeImpl(child1Style);
 
         Style child2Style = sized(60, 30);
         child2Style.flexShrink(1);
-        Node child2 = new Node(child2Style);
+        NodeImpl child2 = new NodeImpl(child2Style);
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         // Child1 should keep its size, child2 shrinks
         assertEquals(60f, child1Layout.width, 0.01f);
@@ -459,23 +459,23 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutFlexDirection(FlexDirection.Row);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style child1Style = new Style();
         child1Style.setFlexBasis(30);
-        Node child1 = new Node(child1Style);
+        NodeImpl child1 = new NodeImpl(child1Style);
 
         Style child2Style = new Style();
         child2Style.setFlexBasis(70);
-        Node child2 = new Node(child2Style);
+        NodeImpl child2 = new NodeImpl(child2Style);
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         assertEquals(30f, child1Layout.width, 0.01f);
         assertEquals(70f, child2Layout.width, 0.01f);
@@ -488,17 +488,17 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutFlexDirection(FlexDirection.Row);
         rootStyle.size(Size.of(Dimension.length(200), Dimension.length(50)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style child1Style = new Style();
         child1Style.setFlexBasis("50%");
-        Node child1 = new Node(child1Style);
+        NodeImpl child1 = new NodeImpl(child1Style);
 
         root.addChild(child1);
 
         LayoutEngine.computeLayout(root, (float) 200, (float) 50);
 
-        Layout child1Layout = child1.layout;
+        Layout child1Layout = child1.getLayout();
         assertEquals(100f, child1Layout.width, 0.01f);
     }
 
@@ -512,11 +512,11 @@ class FlexPortTest {
         rootStyle.layoutFlexDirection(FlexDirection.Row);
         rootStyle.layoutFlexWrap(FlexWrap.Wrap);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        List<Node> children = new ArrayList<>();
+        List<NodeImpl> children = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
-            Node child = new Node(sized(60, 30));
+            NodeImpl child = new NodeImpl(sized(60, 30));
             children.add(child);
             root.addChild(child);
         }
@@ -524,9 +524,9 @@ class FlexPortTest {
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
         // Each 60px child wraps to its own row since only 1 fits in 100px
-        Layout layout0 = children.get(0).layout;
-        Layout layout1 = children.get(1).layout;
-        Layout layout2 = children.get(2).layout;
+        Layout layout0 = children.get(0).getLayout();
+        Layout layout1 = children.get(1).getLayout();
+        Layout layout2 = children.get(2).getLayout();
 
         // Each child should be on a different row
         assertTrue(layout1.y > layout0.y);
@@ -541,18 +541,18 @@ class FlexPortTest {
         rootStyle.layoutFlexDirection(FlexDirection.Row);
         rootStyle.layoutFlexWrap(FlexWrap.WrapReverse);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child1 = new Node(sized(60, 30));
-        Node child2 = new Node(sized(60, 30));
+        NodeImpl child1 = new NodeImpl(sized(60, 30));
+        NodeImpl child2 = new NodeImpl(sized(60, 30));
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         // In wrap-reverse, second row should appear above first
         assertTrue(child2Layout.y < child1Layout.y);
@@ -567,14 +567,14 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutAlignItems(AlignItems.Center);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child = new Node(sized(20, 20));
+        NodeImpl child = new NodeImpl(sized(20, 20));
         root.addChild(child);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout childLayout = child.layout;
+        Layout childLayout = child.getLayout();
         assertEquals(40f, childLayout.y, 0.01f);
     }
 
@@ -585,14 +585,14 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutJustifyContent(JustifyContent.Center);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child = new Node(sized(20, 20));
+        NodeImpl child = new NodeImpl(sized(20, 20));
         root.addChild(child);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout childLayout = child.layout;
+        Layout childLayout = child.getLayout();
         assertEquals(40f, childLayout.x, 0.01f);
     }
 
@@ -604,14 +604,14 @@ class FlexPortTest {
         rootStyle.layoutAlignItems(AlignItems.Center);
         rootStyle.layoutJustifyContent(JustifyContent.Center);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child = new Node(sized(20, 20));
+        NodeImpl child = new NodeImpl(sized(20, 20));
         root.addChild(child);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout childLayout = child.layout;
+        Layout childLayout = child.getLayout();
         assertEquals(40f, childLayout.x, 0.01f);
         assertEquals(40f, childLayout.y, 0.01f);
     }
@@ -623,18 +623,18 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutJustifyContent(JustifyContent.SpaceBetween);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child1 = new Node(sized(20, 20));
-        Node child2 = new Node(sized(20, 20));
+        NodeImpl child1 = new NodeImpl(sized(20, 20));
+        NodeImpl child2 = new NodeImpl(sized(20, 20));
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         assertEquals(0f, child1Layout.x, 0.01f);
         assertEquals(80f, child2Layout.x, 0.01f);
@@ -647,18 +647,18 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutJustifyContent(JustifyContent.SpaceAround);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child1 = new Node(sized(20, 20));
-        Node child2 = new Node(sized(20, 20));
+        NodeImpl child1 = new NodeImpl(sized(20, 20));
+        NodeImpl child2 = new NodeImpl(sized(20, 20));
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         // Space around: (100 - 40) / 4 = 15 per half-space
         assertEquals(15f, child1Layout.x, 0.01f);
@@ -672,18 +672,18 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutJustifyContent(JustifyContent.SpaceEvenly);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child1 = new Node(sized(20, 20));
-        Node child2 = new Node(sized(20, 20));
+        NodeImpl child1 = new NodeImpl(sized(20, 20));
+        NodeImpl child2 = new NodeImpl(sized(20, 20));
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         // Space evenly: (100 - 40) / 3 = 20 per space
         assertEquals(20f, child1Layout.x, 0.01f);
@@ -697,21 +697,21 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutAlignItems(AlignItems.Start);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child1 = new Node(sized(20, 20));
+        NodeImpl child1 = new NodeImpl(sized(20, 20));
 
         Style child2Style = sized(20, 20);
         child2Style.alignSelf(AlignSelf.End);
-        Node child2 = new Node(child2Style);
+        NodeImpl child2 = new NodeImpl(child2Style);
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         assertEquals(0f, child1Layout.y, 0.01f);
         assertEquals(80f, child2Layout.y, 0.01f);
@@ -727,18 +727,18 @@ class FlexPortTest {
         rootStyle.layoutFlexDirection(FlexDirection.Row);
         rootStyle.gap(Size.of(LengthPercentage.length(10), LengthPercentage.length(10)));
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child1 = new Node(sized(30, 30));
-        Node child2 = new Node(sized(30, 30));
+        NodeImpl child1 = new NodeImpl(sized(30, 30));
+        NodeImpl child2 = new NodeImpl(sized(30, 30));
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 50);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         assertEquals(10f, child2Layout.x - (child1Layout.x + child1Layout.width), 0.01f);
     }
@@ -751,18 +751,18 @@ class FlexPortTest {
         rootStyle.layoutFlexDirection(FlexDirection.Column);
         rootStyle.gap(Size.of(LengthPercentage.length(10), LengthPercentage.length(20)));
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child1 = new Node(sized(30, 20));
-        Node child2 = new Node(sized(30, 20));
+        NodeImpl child1 = new NodeImpl(sized(30, 20));
+        NodeImpl child2 = new NodeImpl(sized(30, 20));
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         assertEquals(20f, child2Layout.y - (child1Layout.y + child1Layout.height), 0.01f);
     }
@@ -776,23 +776,23 @@ class FlexPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutFlexDirection(FlexDirection.Column);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         // First row container
         Style row1Style = new Style();
         row1Style.display(Display.Flex);
         row1Style.layoutFlexDirection(FlexDirection.Row);
         row1Style.size(Size.of(Dimension.length(100), Dimension.length(50)));
-        Node row1 = new Node(row1Style);
+        NodeImpl row1 = new NodeImpl(row1Style);
 
         // Children for first row
         Style child1Style = new Style();
         child1Style.flexGrow(1);
-        Node child1 = new Node(child1Style);
+        NodeImpl child1 = new NodeImpl(child1Style);
 
         Style child2Style = new Style();
         child2Style.flexGrow(1);
-        Node child2 = new Node(child2Style);
+        NodeImpl child2 = new NodeImpl(child2Style);
 
         row1.addChild(child1);
         row1.addChild(child2);
@@ -800,9 +800,9 @@ class FlexPortTest {
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout row1Layout = row1.layout;
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout row1Layout = row1.getLayout();
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
 
         assertEquals(100f, row1Layout.width, 0.01f);
         assertEquals(50f, child1Layout.width, 0.01f);
@@ -814,48 +814,48 @@ class FlexPortTest {
     @Test
     void appliesRightToLeftDirectionThroughThePublicLayoutApi() {
         Style childStyle = sized(20, 10);
-        Node first = new Node(childStyle);
-        Node second = new Node(childStyle);
+        NodeImpl first = new NodeImpl(childStyle);
+        NodeImpl second = new NodeImpl(childStyle);
 
         Style rootStyle = new Style();
         rootStyle.display(Display.Flex);
         rootStyle.layoutDirection(Direction.Rtl);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(10)));
-        Node root = new Node(rootStyle, List.of(first, second));
+        NodeImpl root = new NodeImpl(rootStyle, List.of(first, second));
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 10);
 
-        assertEquals(80f, first.layout.x, 0.01f);
-        assertEquals(60f, second.layout.x, 0.01f);
+        assertEquals(80f, first.getLayout().x, 0.01f);
+        assertEquals(60f, second.getLayout().x, 0.01f);
     }
 
     @Test
     void appliesSafeAndSelfRelativeAlignment() {
         Style oversizedStyle = sized(150, 10);
         oversizedStyle.flexShrink(0);
-        Node oversized = new Node(oversizedStyle);
+        NodeImpl oversized = new NodeImpl(oversizedStyle);
 
         Style safeRootStyle = new Style();
         safeRootStyle.display(Display.Flex);
         safeRootStyle.size(Size.of(Dimension.length(100), Dimension.length(20)));
         safeRootStyle.layoutJustifyContent(JustifyContent.SafeCenter);
-        Node safeRoot = new Node(safeRootStyle, List.of(oversized));
+        NodeImpl safeRoot = new NodeImpl(safeRootStyle, List.of(oversized));
 
         LayoutEngine.computeLayout(safeRoot, (float) 100, (float) 20);
-        assertEquals(0f, oversized.layout.x, 0.01f);
+        assertEquals(0f, oversized.getLayout().x, 0.01f);
         Style selfAlignedStyle = sized(20, 10);
         selfAlignedStyle.layoutDirection(Direction.Rtl);
         selfAlignedStyle.alignSelf(AlignSelf.SelfStart);
-        Node selfAligned = new Node(selfAlignedStyle);
+        NodeImpl selfAligned = new NodeImpl(selfAlignedStyle);
 
         Style selfRootStyle = new Style();
         selfRootStyle.display(Display.Flex);
         selfRootStyle.layoutDirection(Direction.Ltr);
         selfRootStyle.layoutFlexDirection(FlexDirection.Column);
         selfRootStyle.size(Size.of(Dimension.length(100), Dimension.length(20)));
-        Node selfRoot = new Node(selfRootStyle, List.of(selfAligned));
+        NodeImpl selfRoot = new NodeImpl(selfRootStyle, List.of(selfAligned));
 
         LayoutEngine.computeLayout(selfRoot, (float) 100, (float) 20);
-        assertEquals(80f, selfAligned.layout.x, 0.01f);
+        assertEquals(80f, selfAligned.getLayout().x, 0.01f);
     }
 }

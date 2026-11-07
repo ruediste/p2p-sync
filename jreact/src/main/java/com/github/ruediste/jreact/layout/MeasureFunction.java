@@ -5,7 +5,7 @@ package com.github.ruediste.jreact.layout;
  *
  * <p>
  * A measurement callback is attached directly to the node it measures, see
- * {@link Node#measure}.
+ * {@link LayoutNode#measure}.
  */
 @FunctionalInterface
 public interface MeasureFunction {
@@ -17,5 +17,5 @@ public interface MeasureFunction {
      * @return measured border-box size
      */
     Size<java.lang.Float> measure(Size<AvailableSpace> knownDimensions,
-            Size<AvailableSpace> availableSpace, Node node);
+            Size<AvailableSpace> availableSpace, LayoutNode node);
 }

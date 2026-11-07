@@ -52,16 +52,16 @@ class GridDetailsPortTest {
         Style leafStyle = new Style();
         Style gridStyle = new Style();
         gridStyle.display(Display.Grid);
-        Node leaf = new Node(leafStyle);
-        Node emptyGrid = new Node(gridStyle);
-        Node grid = new Node(gridStyle, List.of(leaf));
+        NodeImpl leaf = new NodeImpl(leafStyle);
+        NodeImpl emptyGrid = new NodeImpl(gridStyle);
+        NodeImpl grid = new NodeImpl(gridStyle, List.of(leaf));
 
-        assertNull(grid.layout.detailedGridInfo);
+        assertNull(grid.getLayout().detailedGridInfo);
         LayoutEngine.computeLayout(grid, (float) 100, (float) 100);
-        assertNotNull(grid.layout.detailedGridInfo);
-        assertNull(leaf.layout.detailedGridInfo);
+        assertNotNull(grid.getLayout().detailedGridInfo);
+        assertNull(leaf.getLayout().detailedGridInfo);
         LayoutEngine.computeLayout(emptyGrid, (float) 100, (float) 100);
-        assertNull(emptyGrid.layout.detailedGridInfo);
+        assertNull(emptyGrid.getLayout().detailedGridInfo);
     }
 
     @Test
@@ -76,10 +76,10 @@ class GridDetailsPortTest {
         rootStyle.gridTemplateColumns(List.of(single(50, 50), single(70, 70)));
         rootStyle.gridTemplateRows(List.of(single(20, 20), single(30, 30)));
 
-        Node root = new Node(rootStyle, List.of(new Node(childStyle)));
+        NodeImpl root = new NodeImpl(rootStyle, List.of(new NodeImpl(childStyle)));
         LayoutEngine.computeLayout(root, (float) 200, (float) 100);
 
-        DetailedGridInfo info = root.layout.detailedGridInfo;
+        DetailedGridInfo info = root.getLayout().detailedGridInfo;
         if (info == null) {
             throw new AssertionError("Expected detailed grid layout information");
         }
@@ -110,10 +110,10 @@ class GridDetailsPortTest {
         rootStyle.gridTemplateColumns(List.of(single(50, 50), single(50, 50)));
         rootStyle.gridTemplateRows(List.of(single(40, 40)));
 
-        Node root = new Node(rootStyle, List.of(new Node(childStyle)));
+        NodeImpl root = new NodeImpl(rootStyle, List.of(new NodeImpl(childStyle)));
         LayoutEngine.computeLayout(root, (float) 300, (float) 100);
 
-        DetailedGridInfo info = root.layout.detailedGridInfo;
+        DetailedGridInfo info = root.getLayout().detailedGridInfo;
         if (info == null) {
             throw new AssertionError("Expected detailed grid layout information");
         }
@@ -139,11 +139,11 @@ class GridDetailsPortTest {
         rootStyle.gridTemplateColumns(List.of(GridTemplateComponent.repeat("auto-fit",
                 List.of(track(50, 50)))));
 
-        Node root = new Node(rootStyle,
-                List.of(new Node(firstStyle), new Node(secondStyle)));
+        NodeImpl root = new NodeImpl(rootStyle,
+                List.of(new NodeImpl(firstStyle), new NodeImpl(secondStyle)));
         LayoutEngine.computeLayout(root, (float) 300, (float) 100);
 
-        DetailedGridInfo info = root.layout.detailedGridInfo;
+        DetailedGridInfo info = root.getLayout().detailedGridInfo;
         if (info == null) {
             throw new AssertionError("Expected detailed grid layout information");
         }
@@ -170,10 +170,10 @@ class GridDetailsPortTest {
         childStyle.size(Size.of(Dimension.length(10), Dimension.length(10)));
         Style rootStyle = new Style();
         rootStyle.display(Display.Grid);
-        Node root = new Node(rootStyle, List.of(new Node(childStyle)));
+        NodeImpl root = new NodeImpl(rootStyle, List.of(new NodeImpl(childStyle)));
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        DetailedGridInfo info = root.layout.detailedGridInfo;
+        DetailedGridInfo info = root.getLayout().detailedGridInfo;
         if (info == null) {
             throw new AssertionError("Expected detailed grid layout information");
         }

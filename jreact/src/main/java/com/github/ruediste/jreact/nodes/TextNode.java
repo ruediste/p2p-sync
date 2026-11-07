@@ -12,8 +12,8 @@ import com.github.ruediste.jreact.Styles;
  * A standalone text node that paints its measured lines.
  *
  * <p>
- * Text is wrapped by {@link TextMetrics}; this class only renders the committed
- * lines, including an optional text shadow.
+ * Text is wrapped by {@link com.github.ruediste.jreact.TextLayout}; this class
+ * only renders the committed lines, including an optional text shadow.
  */
 public final class TextNode extends TextualNode {
     public TextNode(Key key, String text, Style inline, List<Styles.NodeStyleRules> declarations) {

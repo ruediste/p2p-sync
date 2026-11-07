@@ -14,7 +14,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -180,12 +179,7 @@ public class JReactPanel extends JPanel implements AutoCloseable {
             node.focus = Objects.equals(focused, node.key) && !node.disabled;
         }
         Styles.resolve(currentTree);
-        var metrics = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics();
-        try {
-            FlexLayout.layout(currentTree, Math.max(0, getWidth()), Math.max(0, getHeight()), metrics);
-        } finally {
-            metrics.dispose();
-        }
+        currentTree.layout(Math.max(0, getWidth()), Math.max(0, getHeight()));
         Rectangle dirty = Reconciler.dirtyRegion(currentTree, reconciliation);
         syncEditors(currentTree);
         if (layoutWidth != getWidth() || layoutHeight != getHeight()) {

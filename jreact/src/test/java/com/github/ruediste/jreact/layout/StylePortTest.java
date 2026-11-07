@@ -1475,39 +1475,39 @@ class StylePortTest {
         childStyle.setHeight(Dimension.length(100));
         childStyle.setMinWidth("50%");
         childStyle.setMaxHeight("50%");
-        Node child = new Node(childStyle);
+        NodeImpl child = new NodeImpl(childStyle);
 
         Style rootStyle = new Style();
         rootStyle.display(Display.Block);
         rootStyle.setWidth(Dimension.length(200));
         rootStyle.setHeight(Dimension.length(100));
-        Node root = new Node(rootStyle, List.of(child));
+        NodeImpl root = new NodeImpl(rootStyle, List.of(child));
 
         LayoutEngine.computeLayout(root, 200f, 100f);
-        assertEquals(100f, child.layout.width, 0.01f);
-        assertEquals(50f, child.layout.height, 0.01f);
+        assertEquals(100f, child.getLayout().width, 0.01f);
+        assertEquals(50f, child.getLayout().height, 0.01f);
 
-        Style constrained = child.style.copy();
+        Style constrained = child.getStyle().copy();
         assertEquals(Dimension.percent(50), constrained.getMinWidth());
         assertEquals(Dimension.auto(), constrained.getMinHeight());
         assertEquals(Dimension.auto(), constrained.getMaxWidth());
         assertEquals(Dimension.percent(50), constrained.getMaxHeight());
         constrained.setMinWidth(60);
         constrained.setMaxHeight(30);
-        child.style = constrained.copy();
+        child.setStyle(constrained.copy());
         LayoutEngine.computeLayout(root, 200f, 100f);
-        assertEquals(60f, child.layout.width, 0.01f);
-        assertEquals(30f, child.layout.height, 0.01f);
+        assertEquals(60f, child.getLayout().width, 0.01f);
+        assertEquals(30f, child.getLayout().height, 0.01f);
 
-        Style unconstrained = child.style.copy();
+        Style unconstrained = child.getStyle().copy();
         unconstrained.setMinWidth("auto");
         unconstrained.setMinHeight("auto");
         unconstrained.setMaxWidth("auto");
         unconstrained.setMaxHeight("auto");
-        child.style = unconstrained.copy();
+        child.setStyle(unconstrained.copy());
         LayoutEngine.computeLayout(root, 200f, 100f);
-        assertEquals(10f, child.layout.width, 0.01f);
-        assertEquals(100f, child.layout.height, 0.01f);
+        assertEquals(10f, child.getLayout().width, 0.01f);
+        assertEquals(100f, child.getLayout().height, 0.01f);
     }
 
     @Test
@@ -1517,27 +1517,27 @@ class StylePortTest {
         style.setHeight(Dimension.length(1));
         style.setMinHeight("20%");
         style.setMaxWidth("75%");
-        Node child = new Node(style);
+        NodeImpl child = new NodeImpl(style);
 
         Style rootStyle = new Style();
         rootStyle.display(Display.Block);
         rootStyle.setWidth(Dimension.length(200));
         rootStyle.setHeight(Dimension.length(100));
-        Node root = new Node(rootStyle, List.of(child));
+        NodeImpl root = new NodeImpl(rootStyle, List.of(child));
 
         LayoutEngine.computeLayout(root, 200f, 100f);
-        assertEquals(150f, child.layout.width, 0.01f);
-        assertEquals(20f, child.layout.height, 0.01f);
-        assertEquals(Dimension.percent(20), child.style.getMinHeight());
-        assertEquals(Dimension.percent(75), child.style.getMaxWidth());
+        assertEquals(150f, child.getLayout().width, 0.01f);
+        assertEquals(20f, child.getLayout().height, 0.01f);
+        assertEquals(Dimension.percent(20), child.getStyle().getMinHeight());
+        assertEquals(Dimension.percent(75), child.getStyle().getMaxWidth());
 
         style.setMinWidth("auto");
         style.setMinHeight(30);
         style.setMaxWidth(120);
         style.setMaxHeight("auto");
-        child.style = style.copy();
+        child.setStyle(style.copy());
         LayoutEngine.computeLayout(root, 200f, 100f);
-        assertEquals(120f, child.layout.width, 0.01f);
-        assertEquals(30f, child.layout.height, 0.01f);
+        assertEquals(120f, child.getLayout().width, 0.01f);
+        assertEquals(30f, child.getLayout().height, 0.01f);
     }
 }

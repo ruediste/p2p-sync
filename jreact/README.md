@@ -34,7 +34,7 @@ public class Counter {
     public static void CounterView() {
                 State<Integer> count = Hooks.useState(0);
                 Components controls = new Components(Theme.light());
-                div(style -> style.flexDirection(Style.Direction.COLUMN).padding(16), () -> {
+                div(style -> style.flexDirection(FlexDirection.Column).padding(16), () -> {
                         text("Count: " + count.get());
                         controls.button("Increment", () -> count.update(value -> value + 1));
                 });
@@ -197,7 +197,7 @@ exit.
 public void CounterComponent() {
     State<Integer> count = Hooks.useState(0);
 
-    Ui.div(style -> style.flexDirection(Style.Direction.COLUMN).padding(16), () -> {
+    Ui.div(style -> style.flexDirection(FlexDirection.Column).padding(16), () -> {
         Ui.text("Current count: " + count.get());
     });
 }

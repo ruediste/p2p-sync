@@ -1,6 +1,5 @@
 package com.github.ruediste.jreact.layout;
 
-import com.github.ruediste.jreact.Style;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -9,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
+import com.github.ruediste.jreact.Style;
 
 /**
  * Port of measure.test.ts from the TypeScript/WebAssembly test-suite.
@@ -21,18 +22,18 @@ class MeasurePortTest {
 
     @Test
     void measuresALeaf() {
-        Node node = new Node(new Style());
+        NodeImpl node = new NodeImpl(new Style());
         int[] calls = { 0 };
-        Node[] measuredNode = { null };
+        LayoutNode[] measuredNode = { null };
 
-        node.measure = (known, available, nodeBeingMeasured) -> {
+        node.setMeasure((known, available, nodeBeingMeasured) -> {
             calls[0]++;
             measuredNode[0] = nodeBeingMeasured;
             return Size.of(150f, 50f);
-        };
+        });
         LayoutEngine.computeLayout(node, Size.of(AvailableSpace.definite(300), AvailableSpace.definite(100)));
 
-        Layout layout = node.layout;
+        Layout layout = node.getLayout();
         assertTrue(calls[0] > 0);
         assertSame(node, measuredNode[0]);
         assertEquals(150f, layout.size().width, EPS);
@@ -46,20 +47,20 @@ class MeasurePortTest {
         style.boxSizing(boxSizing);
         style.layoutPadding(Rect.all(LengthPercentage.length(10)));
         style.layoutBorder(Rect.all(LengthPercentage.length(2)));
-        Node node = new Node(style);
+        NodeImpl node = new NodeImpl(style);
         List<AvailableSpace> measuredWidths = new ArrayList<>();
 
-        node.measure = (known, available, measuredNode) -> {
+        node.setMeasure((known, available, measuredNode) -> {
             assertSame(node, measuredNode);
-            assertEquals(Dimension.length(100), measuredNode.style.getWidth());
-            assertEquals(boxSizing, measuredNode.style.boxSizing());
+            assertEquals(Dimension.length(100), measuredNode.getStyle().getWidth());
+            assertEquals(boxSizing, measuredNode.getStyle().boxSizing());
             measuredWidths.add(available.width);
             float width = known.width.isDefinite() ? known.width.value : 40f;
             return Size.of(width, 30f);
-        };
+        });
         LayoutEngine.computeLayout(node, Size.of(AvailableSpace.definite(500), AvailableSpace.definite(500)));
 
-        Layout layout = node.layout;
+        Layout layout = node.getLayout();
         boolean containsWidth = measuredWidths.stream()
                 .anyMatch(space -> space.isDefinite() && Math.abs(space.value
                         - expectedAvailableWidth) < EPS);

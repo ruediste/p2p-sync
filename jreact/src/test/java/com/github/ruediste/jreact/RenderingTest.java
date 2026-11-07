@@ -33,7 +33,7 @@ class RenderingTest {
         try (var root = new RenderRoot(body, () -> {
         })) {
             root.render();
-            FlexLayout.layout(root.tree(), 120, 100, graphics);
+            root.tree().layout(120, 100);
             root.tree().paint(graphics, 1);
         } finally {
             graphics.dispose();

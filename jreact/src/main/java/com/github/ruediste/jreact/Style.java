@@ -1,6 +1,5 @@
 package com.github.ruediste.jreact;
 
-import static com.github.ruediste.jreact.StyleProperties.ALIGN;
 import static com.github.ruediste.jreact.StyleProperties.ALIGN_CONTENT;
 import static com.github.ruediste.jreact.StyleProperties.ALIGN_ITEMS;
 import static com.github.ruediste.jreact.StyleProperties.ALIGN_SELF;
@@ -12,7 +11,6 @@ import static com.github.ruediste.jreact.StyleProperties.BOX_SHADOW;
 import static com.github.ruediste.jreact.StyleProperties.BOX_SIZING;
 import static com.github.ruediste.jreact.StyleProperties.CLEAR;
 import static com.github.ruediste.jreact.StyleProperties.COLOR;
-import static com.github.ruediste.jreact.StyleProperties.DIRECTION;
 import static com.github.ruediste.jreact.StyleProperties.DISPLAY;
 import static com.github.ruediste.jreact.StyleProperties.FLEX_BASIS;
 import static com.github.ruediste.jreact.StyleProperties.FLEX_DIRECTION;
@@ -34,11 +32,9 @@ import static com.github.ruediste.jreact.StyleProperties.GRID_TEMPLATE_COLUMN_NA
 import static com.github.ruediste.jreact.StyleProperties.GRID_TEMPLATE_ROWS;
 import static com.github.ruediste.jreact.StyleProperties.GRID_TEMPLATE_ROW_NAMES;
 import static com.github.ruediste.jreact.StyleProperties.GROW;
-import static com.github.ruediste.jreact.StyleProperties.HEIGHT;
 import static com.github.ruediste.jreact.StyleProperties.ITALIC;
 import static com.github.ruediste.jreact.StyleProperties.ITEM_IS_REPLACED;
 import static com.github.ruediste.jreact.StyleProperties.ITEM_IS_TABLE;
-import static com.github.ruediste.jreact.StyleProperties.JUSTIFY;
 import static com.github.ruediste.jreact.StyleProperties.JUSTIFY_CONTENT;
 import static com.github.ruediste.jreact.StyleProperties.JUSTIFY_ITEMS;
 import static com.github.ruediste.jreact.StyleProperties.JUSTIFY_SELF;
@@ -48,22 +44,16 @@ import static com.github.ruediste.jreact.StyleProperties.LAYOUT_MARGIN;
 import static com.github.ruediste.jreact.StyleProperties.LAYOUT_PADDING;
 import static com.github.ruediste.jreact.StyleProperties.LAYOUT_TEXT_ALIGN;
 import static com.github.ruediste.jreact.StyleProperties.LINE_HEIGHT;
-import static com.github.ruediste.jreact.StyleProperties.MARGIN;
 import static com.github.ruediste.jreact.StyleProperties.MAX_SIZE;
 import static com.github.ruediste.jreact.StyleProperties.MIN_SIZE;
 import static com.github.ruediste.jreact.StyleProperties.OPACITY;
-import static com.github.ruediste.jreact.StyleProperties.ORDER;
 import static com.github.ruediste.jreact.StyleProperties.OVERFLOW;
-import static com.github.ruediste.jreact.StyleProperties.PADDING;
 import static com.github.ruediste.jreact.StyleProperties.POSITION;
 import static com.github.ruediste.jreact.StyleProperties.RADIUS;
 import static com.github.ruediste.jreact.StyleProperties.SCROLLBAR_WIDTH;
 import static com.github.ruediste.jreact.StyleProperties.SHRINK;
 import static com.github.ruediste.jreact.StyleProperties.SIZE;
-import static com.github.ruediste.jreact.StyleProperties.TEXT_ALIGN;
 import static com.github.ruediste.jreact.StyleProperties.TEXT_SHADOW;
-import static com.github.ruediste.jreact.StyleProperties.WIDTH;
-import static com.github.ruediste.jreact.StyleProperties.WRAP;
 import static com.github.ruediste.jreact.StyleProperties.WRITING_DIRECTION;
 
 import java.awt.Color;
@@ -98,6 +88,7 @@ import com.github.ruediste.jreact.layout.Point;
 import com.github.ruediste.jreact.layout.Position;
 import com.github.ruediste.jreact.layout.Rect;
 import com.github.ruediste.jreact.layout.Size;
+import com.github.ruediste.jreact.layout.TextAlign;
 import com.github.ruediste.jreact.layout.TrackSizingFunction;
 
 /**
@@ -114,57 +105,16 @@ import com.github.ruediste.jreact.layout.TrackSizingFunction;
  * Dimensions use logical pixels and numeric setters validate their ranges.
  * Auto dimensions and normal line height are represented internally by
  * {@link Double#NaN}. Layout interprets dimensions, insets, and flex
- * properties;
- * text measurement and rendering interpret fonts, colors, borders, and shadows.
- * This class does not parse CSS text or perform layout or painting itself.
+ * properties; text measurement and rendering interpret fonts, colors, borders,
+ * and shadows. This class does not parse CSS text or perform layout or painting
+ * itself.
  *
  * <p>
  * The properties used by {@link com.github.ruediste.jreact.layout.LayoutEngine}
  * follow the CSS box model and use the value types from the layout package.
- * They are stored in the same property map as the appearance properties and are
- * read through accessors such as {@link #display()}, {@link #size()} and
- * {@link #layoutMargin()}.
  */
 public final class Style {
-    public enum Direction {
-        ROW, COLUMN
-    }
-
-    public enum Wrap {
-        NOWRAP, WRAP, WRAP_REVERSE
-    }
-
-    public enum Justify {
-        START, CENTER, END, SPACE_BETWEEN, SPACE_AROUND, SPACE_EVENLY
-    }
-
-    public enum Align {
-        START, CENTER, END, STRETCH
-    }
-
-    public enum TextAlign {
-        LEFT, CENTER, RIGHT
-    }
-
     final HashMap<Property<?>, Object> values = new HashMap<>();
-
-    /** Non-negative per-side spacing in top, right, bottom, left order. */
-    public record Insets(double top, double right, double bottom, double left) {
-        public Insets {
-            nonNegative(top);
-            nonNegative(right);
-            nonNegative(bottom);
-            nonNegative(left);
-        }
-
-        public double horizontal() {
-            return left + right;
-        }
-
-        public double vertical() {
-            return top + bottom;
-        }
-    }
 
     /** Width and solid color of a single border edge. */
     public record Edge(double width, Color color) {
@@ -181,10 +131,6 @@ public final class Style {
             Objects.requireNonNull(right);
             Objects.requireNonNull(bottom);
             Objects.requireNonNull(left);
-        }
-
-        public Insets widths() {
-            return new Insets(top.width, right.width, bottom.width, left.width);
         }
     }
 
@@ -211,16 +157,12 @@ public final class Style {
         return this;
     }
 
-    public Style flexDirection(Direction value) {
-        return put(DIRECTION, value);
+    public Style flexDirection(FlexDirection value) {
+        return layoutFlexDirection(value);
     }
 
-    public Style flexWrap(Wrap value) {
-        return put(WRAP, value);
-    }
-
-    public Style order(int value) {
-        return put(ORDER, value);
+    public Style flexWrap(FlexWrap value) {
+        return layoutFlexWrap(value);
     }
 
     public Style flexGrow(double value) {
@@ -231,28 +173,42 @@ public final class Style {
         return dimension(SHRINK, value);
     }
 
-    public Style justifyContent(Justify value) {
-        return put(JUSTIFY, value);
+    public Style justifyContent(JustifyContent value) {
+        return layoutJustifyContent(value);
     }
 
-    public Style alignItems(Align value) {
-        return put(ALIGN, value);
+    public Style alignItems(AlignItems value) {
+        return layoutAlignItems(value);
     }
 
     public Style width(double value) {
-        return dimension(WIDTH, value);
+        nonNegative(value);
+        return width(Dimension.length((float) value));
+    }
+
+    public Style width(Dimension value) {
+        Size<Dimension> size = size().copy();
+        size.width = Objects.requireNonNull(value);
+        return size(size);
     }
 
     public Style height(double value) {
-        return dimension(HEIGHT, value);
+        nonNegative(value);
+        return height(Dimension.length((float) value));
+    }
+
+    public Style height(Dimension value) {
+        Size<Dimension> size = size().copy();
+        size.height = Objects.requireNonNull(value);
+        return size(size);
     }
 
     public Style widthAuto() {
-        return put(WIDTH, Double.NaN);
+        return width(Dimension.auto());
     }
 
     public Style heightAuto() {
-        return put(HEIGHT, Double.NaN);
+        return height(Dimension.auto());
     }
 
     public Style margin(double value) {
@@ -260,7 +216,15 @@ public final class Style {
     }
 
     public Style margin(double top, double right, double bottom, double left) {
-        return put(MARGIN, new Insets(top, right, bottom, left));
+        nonNegative(top);
+        nonNegative(right);
+        nonNegative(bottom);
+        nonNegative(left);
+        return layoutMargin(new Rect<>(
+                LengthPercentageAuto.length((float) left),
+                LengthPercentageAuto.length((float) right),
+                LengthPercentageAuto.length((float) top),
+                LengthPercentageAuto.length((float) bottom)));
     }
 
     public Style padding(double value) {
@@ -268,7 +232,15 @@ public final class Style {
     }
 
     public Style padding(double top, double right, double bottom, double left) {
-        return put(PADDING, new Insets(top, right, bottom, left));
+        nonNegative(top);
+        nonNegative(right);
+        nonNegative(bottom);
+        nonNegative(left);
+        return layoutPadding(new Rect<>(
+                LengthPercentage.length((float) left),
+                LengthPercentage.length((float) right),
+                LengthPercentage.length((float) top),
+                LengthPercentage.length((float) bottom)));
     }
 
     public Style backgroundColor(Color value) {
@@ -285,7 +257,12 @@ public final class Style {
     }
 
     public Style border(Border value) {
-        return put(BORDER, value);
+        put(BORDER, value);
+        return layoutBorder(new Rect<>(
+                LengthPercentage.length((float) value.left.width()),
+                LengthPercentage.length((float) value.right.width()),
+                LengthPercentage.length((float) value.top.width()),
+                LengthPercentage.length((float) value.bottom.width())));
     }
 
     public Style borderRadius(double value) {
@@ -310,7 +287,11 @@ public final class Style {
     }
 
     public Style textAlign(TextAlign value) {
-        return put(TEXT_ALIGN, value);
+        return put(LAYOUT_TEXT_ALIGN, value);
+    }
+
+    public double lineHeight() {
+        return number(LINE_HEIGHT, Double.NaN);
     }
 
     public Style lineHeight(double value) {
@@ -375,28 +356,6 @@ public final class Style {
 
     public double number(DoubleProperty property, double fallback) {
         return property.get(this, fallback);
-    }
-
-    public double width() {
-        return number(WIDTH, Double.NaN);
-    }
-
-    public double height() {
-        return number(HEIGHT, Double.NaN);
-    }
-
-    public Insets margin() {
-        return get(MARGIN, new Insets(0, 0, 0, 0));
-    }
-
-    public Insets inset() {
-        Insets padding = get(PADDING, new Insets(0, 0, 0, 0));
-        Border border = get(BORDER, null);
-        if (border == null)
-            return padding;
-        Insets widths = border.widths();
-        return new Insets(padding.top + widths.top, padding.right + widths.right,
-                padding.bottom + widths.bottom, padding.left + widths.left);
     }
 
     public Color color() {

@@ -18,7 +18,7 @@ Primitives are the built-in building blocks used inside user-defined Java compon
 For example:
 
 ```java
-Ui.div(style -> style.flexDirection(Style.Direction.COLUMN).padding(16), () -> {
+Ui.div(style -> style.flexDirection(FlexDirection.Column).padding(16), () -> {
     Ui.span(() -> Ui.text("Current count: " + count.get()));
 });
 ```

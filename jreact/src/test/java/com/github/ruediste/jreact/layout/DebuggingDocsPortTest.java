@@ -1,12 +1,13 @@
 package com.github.ruediste.jreact.layout;
 
-import com.github.ruediste.jreact.Style;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
+import com.github.ruediste.jreact.Style;
 
 /**
  * Port of debugging-docs.test.ts. The documentation markdown is not executed;
@@ -33,16 +34,16 @@ class DebuggingDocsPortTest {
         }
     }
 
-    private static void debugDraw(Node root, Node node, Point<java.lang.Float> parentOrigin,
+    private static void debugDraw(LayoutNode root, LayoutNode node, Point<java.lang.Float> parentOrigin,
             Point<java.lang.Float> absoluteOrigin, Point<java.lang.Float> rootOrigin,
             List<RectCall> calls) {
-        Style style = node.style;
+        Style style = node.getStyle();
         Position position = style.position();
 
         Point<java.lang.Float> origin = position == Position.Fixed
                 ? rootOrigin
                 : position == Position.Absolute ? absoluteOrigin : parentOrigin;
-        Layout layout = node.layout;
+        Layout layout = node.getLayout();
         Point<java.lang.Float> point = Point.of(origin.x + layout.x, origin.y + layout.y);
         calls.add(new RectCall(point.x, point.y, layout.width, layout.height));
 
@@ -50,7 +51,7 @@ class DebuggingDocsPortTest {
         Point<java.lang.Float> childAbsoluteOrigin = node == root || position != Position.Static
                 ? point
                 : absoluteOrigin;
-        for (Node child : node.children) {
+        for (LayoutNode child : node.getChildren()) {
             debugDraw(root, child, point, childAbsoluteOrigin, childRootOrigin, calls);
         }
     }
@@ -66,7 +67,7 @@ class DebuggingDocsPortTest {
                 LengthPercentageAuto.auto(),
                 LengthPercentageAuto.length(0),
                 LengthPercentageAuto.auto()));
-        Node child = new Node(childStyle);
+        NodeImpl child = new NodeImpl(childStyle);
 
         Style parentStyle = new Style();
         parentStyle.position(parentPosition);
@@ -76,7 +77,7 @@ class DebuggingDocsPortTest {
                 LengthPercentageAuto.length(0),
                 LengthPercentageAuto.length(30),
                 LengthPercentageAuto.length(0)));
-        Node parent = new Node(parentStyle, List.of(child));
+        NodeImpl parent = new NodeImpl(parentStyle, List.of(child));
 
         Style rootStyle = new Style();
         rootStyle.position(rootPosition);
@@ -87,7 +88,7 @@ class DebuggingDocsPortTest {
                 LengthPercentageAuto.length(30),
                 LengthPercentageAuto.length(0)));
         rootStyle.layoutBorder(Rect.all(LengthPercentage.length(5)));
-        Node root = new Node(rootStyle, List.of(parent));
+        NodeImpl root = new NodeImpl(rootStyle, List.of(parent));
 
         LayoutEngine.computeLayout(root, (float) 300, (float) 200);
 

@@ -125,6 +125,7 @@ public final class Styles {
         style.id = node.inline.id;
         style.className = node.inline.className;
         node.style = style;
+        node.applyLayoutDefaults();
         node.children.forEach(Styles::resolve);
     }
 }

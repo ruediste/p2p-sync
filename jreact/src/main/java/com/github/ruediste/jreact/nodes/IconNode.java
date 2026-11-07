@@ -9,13 +9,15 @@ import javax.swing.Icon;
 import com.github.ruediste.jreact.Node;
 import com.github.ruediste.jreact.Style;
 import com.github.ruediste.jreact.Styles;
+import com.github.ruediste.jreact.layout.AvailableSpace;
+import com.github.ruediste.jreact.layout.Size;
 
 /**
  * A leaf node that paints a Swing icon.
  *
  * <p>
  * The icon's preferred size contributes to layout; the icon is painted inside
- * the node's content insets.
+ * the node's content box.
  */
 public final class IconNode extends Node {
     public final Icon icon;
@@ -26,9 +28,16 @@ public final class IconNode extends Node {
     }
 
     @Override
+    public Size<java.lang.Float> measure(Size<AvailableSpace> knownDimensions,
+            Size<AvailableSpace> availableSpace) {
+        return Size.of((float) icon.getIconWidth(), (float) icon.getIconHeight());
+    }
+
+    @Override
     protected void paintContent(Graphics2D graphics) {
-        Style.Insets inset = style.inset();
-        icon.paintIcon(null, graphics, (int) (bounds.x + inset.left()), (int) (bounds.y + inset.top()));
+        icon.paintIcon(null, graphics,
+                (int) (bounds.x + layout.border.left + layout.padding.left),
+                (int) (bounds.y + layout.border.top + layout.padding.top));
     }
 
     @Override

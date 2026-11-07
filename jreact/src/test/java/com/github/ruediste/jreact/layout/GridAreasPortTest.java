@@ -39,16 +39,16 @@ class GridAreasPortTest {
 
         assertEquals(2, style.getGridTemplateAreaRowCount());
         assertEquals(3, style.getGridTemplateAreaColumnCount());
-        List<Node> children = new ArrayList<>();
+        List<NodeImpl> children = new ArrayList<>();
         for (int i = 0; i < 6; i++) {
-            children.add(new Node(new Style()));
+            children.add(new NodeImpl(new Style()));
         }
-        Node root = new Node(style, children);
+        NodeImpl root = new NodeImpl(style, children);
 
         LayoutEngine.computeLayout(root, (float) 300, (float) 200);
 
-        assertEquals(200f, children.get(2).layout.x, 0.01f);
-        assertEquals(100f, children.get(3).layout.y, 0.01f);
+        assertEquals(200f, children.get(2).getLayout().x, 0.01f);
+        assertEquals(100f, children.get(3).getLayout().y, 0.01f);
     }
 
     @Test
@@ -84,14 +84,14 @@ class GridAreasPortTest {
 
     @Test
     void shrinksAndClearsInferredGridDimensions() {
-        List<Node> children = List.of(new Node(new Style()), new Node(new Style()));
+        List<NodeImpl> children = List.of(new NodeImpl(new Style()), new NodeImpl(new Style()));
         Style style = new Style();
         style.display(Display.Grid);
         style.setWidth(200);
         style.setHeight(100);
         style.setGridTemplateAreas(
                 List.of(new GridTemplateArea("main", 1, 3, 1, 3)));
-        Node root = new Node(style, children);
+        NodeImpl root = new NodeImpl(style, children);
 
         List<List<GridTemplateArea>> updates = List.of(
                 List.of(new GridTemplateArea("main", 1, 2, 1, 2)),
@@ -100,11 +100,11 @@ class GridAreasPortTest {
             style.setGridTemplateAreas(areas);
             assertEquals(areas.size(), style.getGridTemplateAreaRowCount());
             assertEquals(areas.size(), style.getGridTemplateAreaColumnCount());
-            root.style = style.copy();
+            root.setStyle(style.copy());
             LayoutEngine.computeLayout(root, (float) 200, (float) 100);
 
-            assertLayout(children.get(0).layout, 0, 0, 200, 50);
-            assertLayout(children.get(1).layout, 0, 50, 200, 50);
+            assertLayout(children.get(0).getLayout(), 0, 0, 200, 50);
+            assertLayout(children.get(1).getLayout(), 0, 50, 200, 50);
         }
     }
 
@@ -116,20 +116,19 @@ class GridAreasPortTest {
         original.setGridTemplateAreas(List.of(area));
         original.setGridTemplateAreaRowCount(2);
         original.setGridTemplateAreaColumnCount(3);
-        Node node;
+        NodeImpl node;
         if (creation.equals("leaf")) {
-            node = new Node(original);
+            node = new NodeImpl(original);
         } else {
-            node = new Node(original, List.of());
+            node = new NodeImpl(original, List.of());
         }
 
-        Style grown = node.style.copy();
+        Style grown = node.getStyle().copy();
         grown.setGridTemplateAreas(List.of(new GridTemplateArea("main", 1, 5, 1, 6)));
         assertEquals(4, grown.getGridTemplateAreaRowCount());
         assertEquals(5, grown.getGridTemplateAreaColumnCount());
-        node.style = grown.copy();
-
-        Style cleared = node.style.copy();
+        node.setStyle(grown.copy());
+        Style cleared = node.getStyle().copy();
         cleared.setGridTemplateAreas(List.of());
         assertEquals(2, cleared.getGridTemplateAreaRowCount());
         assertEquals(3, cleared.getGridTemplateAreaColumnCount());
@@ -137,8 +136,8 @@ class GridAreasPortTest {
         // Replacing the entire style must discard the previous explicit counts.
         Style replacement = new Style();
         replacement.setGridTemplateAreas(List.of(area));
-        node.style = replacement.copy();
-        Style inferred = node.style.copy();
+        node.setStyle(replacement.copy());
+        Style inferred = node.getStyle().copy();
         inferred.setGridTemplateAreas(List.of());
         assertEquals(0, inferred.getGridTemplateAreaRowCount());
         assertEquals(0, inferred.getGridTemplateAreaColumnCount());
@@ -168,13 +167,13 @@ class GridAreasPortTest {
             assertEquals(2, style.getGridTemplateAreaColumnCount());
         }
 
-        List<Node> children = List.of(new Node(new Style()), new Node(new Style()));
-        Node root = new Node(style, children);
+        List<NodeImpl> children = List.of(new NodeImpl(new Style()), new NodeImpl(new Style()));
+        NodeImpl root = new NodeImpl(style, children);
         LayoutEngine.computeLayout(root, (float) 200, (float) 100);
         if (axis.equals("row")) {
-            assertLayout(children.get(1).layout, 0, 50, 200, 50);
+            assertLayout(children.get(1).getLayout(), 0, 50, 200, 50);
         } else {
-            assertLayout(children.get(1).layout, 100, 0, 100, 100);
+            assertLayout(children.get(1).getLayout(), 100, 0, 100, 100);
         }
 
         style.setGridTemplateAreaRowCount(0);
@@ -190,14 +189,14 @@ class GridAreasPortTest {
         original.setGridTemplateAreaColumnCount(3);
         original.setGridTemplateAreas(
                 List.of(new GridTemplateArea("main", 1, 5, 1, 6)));
-        Node node = new Node(original);
+        NodeImpl node = new NodeImpl(original);
         List<Style> measuredStyles = new ArrayList<>();
 
-        node.measure = (known, available, measuredNode) -> {
-            Style style = measuredNode.style.copy();
+        node.setMeasure((known, available, measuredNode) -> {
+            Style style = measuredNode.getStyle().copy();
             measuredStyles.add(style);
             return Size.of(20f, 10f);
-        };
+        });
         LayoutEngine.computeLayout(node, Size.of(AvailableSpace.definite(200), AvailableSpace.definite(100)));
         assertTrue(measuredStyles.size() > 0);
         for (Style style : measuredStyles) {

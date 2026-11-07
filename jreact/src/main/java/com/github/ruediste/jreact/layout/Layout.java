@@ -60,7 +60,7 @@ public final class Layout {
      * positioned node. Fixed nodes keep this {@code null} because they are
      * positioned relative to the viewport.
      */
-    public Node containingBlock;
+    public LayoutNode containingBlock;
 
     /**
      * Absolute horizontal position of this node in root coordinates, valid

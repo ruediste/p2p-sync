@@ -35,29 +35,29 @@ class LayoutPortTest {
     // ---- Layout Computation ----
 
     @Test
-    void validatesBasicFlexLayout() {
+    void validatesBasicFlexEngineLayout() {
 
         Style rootStyle = new Style();
         rootStyle.display(Display.Flex);
         rootStyle.layoutFlexDirection(FlexDirection.Column);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style childStyle = sized(50, 50);
-        Node child1 = new Node(childStyle);
-        Node child2 = new Node(childStyle);
+        NodeImpl child1 = new NodeImpl(childStyle);
+        NodeImpl child2 = new NodeImpl(childStyle);
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout rootLayout = root.layout;
+        Layout rootLayout = root.getLayout();
         assertEquals(100f, rootLayout.width, EPS);
         assertEquals(100f, rootLayout.height, EPS);
 
-        assertLayout(child1.layout, 0, 0, 50, 50);
-        assertLayout(child2.layout, 0, 50, 50, 50);
+        assertLayout(child1.getLayout(), 0, 0, 50, 50);
+        assertLayout(child2.getLayout(), 0, 50, 50, 50);
     }
 
     @Test
@@ -67,14 +67,14 @@ class LayoutPortTest {
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         rootStyle.layoutAlignItems(AlignItems.Center);
         rootStyle.layoutJustifyContent(JustifyContent.Center);
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child = new Node(sized(20, 20));
+        NodeImpl child = new NodeImpl(sized(20, 20));
         root.addChild(child);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout layout = child.layout;
+        Layout layout = child.getLayout();
         assertEquals(40f, layout.x, EPS);
         assertEquals(40f, layout.y, EPS);
     }
@@ -87,29 +87,29 @@ class LayoutPortTest {
         Style rootStyle = new Style();
         rootStyle.display(Display.Grid);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style child1Style = new Style();
         child1Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         child1Style.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
-        Node child1 = new Node(child1Style);
+        NodeImpl child1 = new NodeImpl(child1Style);
 
         Style child2Style = new Style();
         child2Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         child2Style.gridColumn(Line.of(GridPlacement.line(2), GridPlacement.line(3)));
-        Node child2 = new Node(child2Style);
+        NodeImpl child2 = new NodeImpl(child2Style);
 
         root.addChild(child1);
         root.addChild(child2);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout rootLayout = root.layout;
+        Layout rootLayout = root.getLayout();
         assertEquals(100f, rootLayout.width, EPS);
         assertEquals(100f, rootLayout.height, EPS);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
         assertTrue(child2Layout.x >= child1Layout.x);
     }
 
@@ -120,19 +120,19 @@ class LayoutPortTest {
         rootStyle.display(Display.Grid);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         rootStyle.gridAutoFlow(GridAutoFlow.Row);
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        List<Node> children = new ArrayList<>();
+        List<NodeImpl> children = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
-            Node child = new Node(sized(20, 20));
+            NodeImpl child = new NodeImpl(sized(20, 20));
             children.add(child);
             root.addChild(child);
         }
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        for (Node child : children) {
-            Layout layout = child.layout;
+        for (NodeImpl child : children) {
+            Layout layout = child.getLayout();
             assertEquals(20f, layout.width, EPS);
             assertEquals(20f, layout.height, EPS);
         }
@@ -144,17 +144,17 @@ class LayoutPortTest {
         Style rootStyle = new Style();
         rootStyle.display(Display.Grid);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style childStyle = new Style();
         childStyle.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         childStyle.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.span(2)));
-        Node child = new Node(childStyle);
+        NodeImpl child = new NodeImpl(childStyle);
 
         root.addChild(child);
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout childLayout = child.layout;
+        Layout childLayout = child.getLayout();
         assertEquals(childLayout.width, childLayout.width);
         assertEquals(childLayout.height, childLayout.height);
     }
@@ -166,24 +166,24 @@ class LayoutPortTest {
         rootStyle.display(Display.Grid);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         rootStyle.gap(Size.of(LengthPercentage.length(10), LengthPercentage.length(10)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style child1Style = new Style();
         child1Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         child1Style.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
-        Node child1 = new Node(child1Style);
+        NodeImpl child1 = new NodeImpl(child1Style);
 
         Style child2Style = new Style();
         child2Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         child2Style.gridColumn(Line.of(GridPlacement.line(2), GridPlacement.line(3)));
-        Node child2 = new Node(child2Style);
+        NodeImpl child2 = new NodeImpl(child2Style);
 
         root.addChild(child1);
         root.addChild(child2);
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout child1Layout = child1.layout;
-        Layout child2Layout = child2.layout;
+        Layout child1Layout = child1.getLayout();
+        Layout child2Layout = child2.getLayout();
         float child1Right = child1Layout.x + child1Layout.width;
         assertEquals(10f, child2Layout.x - child1Right, 0.5f);
     }
@@ -195,16 +195,16 @@ class LayoutPortTest {
         rootStyle.display(Display.Grid);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         rootStyle.scrollbarWidth(15);
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style childStyle = new Style();
         childStyle.size(Size.of(Dimension.percent(100), Dimension.percent(100)));
-        Node child = new Node(childStyle);
+        NodeImpl child = new NodeImpl(childStyle);
 
         root.addChild(child);
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout childLayout = child.layout;
+        Layout childLayout = child.getLayout();
         assertTrue(childLayout.width <= 100f);
         assertTrue(childLayout.height <= 100f);
     }
@@ -217,13 +217,13 @@ class LayoutPortTest {
         Style rootStyle = new Style();
         rootStyle.display(Display.Block);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
-        Node child = new Node(sized(50, 50));
+        NodeImpl child = new NodeImpl(sized(50, 50));
         root.addChild(child);
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout childLayout = child.layout;
+        Layout childLayout = child.getLayout();
         assertEquals(50f, childLayout.width, EPS);
         assertEquals(50f, childLayout.height, EPS);
     }
@@ -234,18 +234,18 @@ class LayoutPortTest {
         Style rootStyle = new Style();
         rootStyle.display(Display.Block);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style childStyle = new Style();
         childStyle.itemIsReplaced(true);
         childStyle.aspectRatio(2f);
         childStyle.size(Size.of(Dimension.length(50), Dimension.auto()));
-        Node child = new Node(childStyle);
+        NodeImpl child = new NodeImpl(childStyle);
 
         root.addChild(child);
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 
-        Layout childLayout = child.layout;
+        Layout childLayout = child.getLayout();
         assertEquals(50f, childLayout.width, EPS);
         assertEquals(25f, childLayout.height, EPS);
     }
@@ -254,10 +254,10 @@ class LayoutPortTest {
 
     @Test
     void positionGetterReturnsPointWithXAndY() {
-        Node root = new Node(sized(800, 600));
+        NodeImpl root = new NodeImpl(sized(800, 600));
         LayoutEngine.computeLayout(root, (float) 800, (float) 600);
 
-        Point<java.lang.Float> position = root.layout.position();
+        Point<java.lang.Float> position = root.getLayout().position();
         assertNotNull(position);
         assertEquals(0f, position.x, EPS);
         assertEquals(0f, position.y, EPS);
@@ -265,10 +265,10 @@ class LayoutPortTest {
 
     @Test
     void sizeGetterReturnsSizeWithWidthAndHeight() {
-        Node root = new Node(sized(800, 600));
+        NodeImpl root = new NodeImpl(sized(800, 600));
         LayoutEngine.computeLayout(root, (float) 800, (float) 600);
 
-        Size<java.lang.Float> size = root.layout.size();
+        Size<java.lang.Float> size = root.getLayout().size();
         assertNotNull(size);
         assertEquals(800f, size.width, EPS);
         assertEquals(600f, size.height, EPS);
@@ -276,10 +276,10 @@ class LayoutPortTest {
 
     @Test
     void contentSizeGetterReturnsSizeWithContentWidthAndContentHeight() {
-        Node root = new Node(new Style());
+        NodeImpl root = new NodeImpl(new Style());
         LayoutEngine.computeLayout(root, (float) 800, (float) 600);
 
-        Size<java.lang.Float> contentSize = root.layout.contentSize();
+        Size<java.lang.Float> contentSize = root.getLayout().contentSize();
         assertNotNull(contentSize);
         assertTrue(contentSize.width >= 0);
         assertTrue(contentSize.height >= 0);
@@ -287,10 +287,10 @@ class LayoutPortTest {
 
     @Test
     void scrollbarSizeGetterReturnsSizeWithScrollbarWidthAndScrollbarHeight() {
-        Node root = new Node(new Style());
+        NodeImpl root = new NodeImpl(new Style());
         LayoutEngine.computeLayout(root, (float) 800, (float) 600);
 
-        Size<java.lang.Float> scrollbarSize = root.layout.scrollbarSize();
+        Size<java.lang.Float> scrollbarSize = root.getLayout().scrollbarSize();
         assertNotNull(scrollbarSize);
         assertEquals(0f, scrollbarSize.width, EPS);
         assertEquals(0f, scrollbarSize.height, EPS);
@@ -304,10 +304,10 @@ class LayoutPortTest {
                 LengthPercentage.length(2),
                 LengthPercentage.length(3),
                 LengthPercentage.length(4)));
-        Node node = new Node(style);
+        NodeImpl node = new NodeImpl(style);
         LayoutEngine.computeLayout(node, (float) 100, (float) 100);
 
-        Rect<java.lang.Float> border = node.layout.border;
+        Rect<java.lang.Float> border = node.getLayout().border;
         assertNotNull(border);
         assertEquals(1f, border.left, EPS);
         assertEquals(2f, border.right, EPS);
@@ -323,10 +323,10 @@ class LayoutPortTest {
                 LengthPercentage.length(20),
                 LengthPercentage.length(5),
                 LengthPercentage.length(15)));
-        Node node = new Node(style);
+        NodeImpl node = new NodeImpl(style);
         LayoutEngine.computeLayout(node, (float) 100, (float) 100);
 
-        Rect<java.lang.Float> padding = node.layout.padding;
+        Rect<java.lang.Float> padding = node.getLayout().padding;
         assertNotNull(padding);
         assertEquals(10f, padding.left, EPS);
         assertEquals(20f, padding.right, EPS);
@@ -342,10 +342,10 @@ class LayoutPortTest {
                 LengthPercentageAuto.length(10),
                 LengthPercentageAuto.length(8),
                 LengthPercentageAuto.length(12)));
-        Node node = new Node(style);
+        NodeImpl node = new NodeImpl(style);
         LayoutEngine.computeLayout(node, (float) 100, (float) 100);
 
-        Rect<java.lang.Float> margin = node.layout.margin;
+        Rect<java.lang.Float> margin = node.getLayout().margin;
         assertNotNull(margin);
         assertEquals(5f, margin.left, EPS);
         assertEquals(10f, margin.right, EPS);
@@ -357,7 +357,7 @@ class LayoutPortTest {
 
     @Test
     void printTreeReturnsStringRepresentationOfSingleNode() {
-        Node node = new Node(sized(100, 50));
+        NodeImpl node = new NodeImpl(sized(100, 50));
         LayoutEngine.computeLayout(node, (float) 100, (float) 50);
 
         String output = LayoutEngine.printTree(node);
@@ -376,11 +376,11 @@ class LayoutPortTest {
         rootStyle.display(Display.Flex);
         rootStyle.layoutFlexDirection(FlexDirection.Column);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style childStyle = sized(50, 50);
-        Node child1 = new Node(childStyle);
-        Node child2 = new Node(childStyle);
+        NodeImpl child1 = new NodeImpl(childStyle);
+        NodeImpl child2 = new NodeImpl(childStyle);
 
         root.addChild(child1);
         root.addChild(child2);
@@ -407,7 +407,7 @@ class LayoutPortTest {
                 LengthPercentage.length(2),
                 LengthPercentage.length(1),
                 LengthPercentage.length(2)));
-        Node node = new Node(style);
+        NodeImpl node = new NodeImpl(style);
         LayoutEngine.computeLayout(node, (float) 100, (float) 50);
 
         String output = LayoutEngine.printTree(node);
@@ -423,7 +423,7 @@ class LayoutPortTest {
 
     @Test
     void printTreeShowsLayoutInformationWithoutNodeId() {
-        Node node = new Node(sized(100, 50));
+        NodeImpl node = new NodeImpl(sized(100, 50));
         LayoutEngine.computeLayout(node, (float) 100, (float) 50);
 
         String output = LayoutEngine.printTree(node);
@@ -437,16 +437,16 @@ class LayoutPortTest {
         Style rootStyle = new Style();
         rootStyle.display(Display.Flex);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-        Node root = new Node(rootStyle);
+        NodeImpl root = new NodeImpl(rootStyle);
 
         Style childStyle = sized(30, 30);
-        Node level1 = new Node(childStyle);
+        NodeImpl level1 = new NodeImpl(childStyle);
         root.addChild(level1);
 
-        Node level2 = new Node(childStyle);
+        NodeImpl level2 = new NodeImpl(childStyle);
         level1.addChild(level2);
 
-        Node level3 = new Node(childStyle);
+        NodeImpl level3 = new NodeImpl(childStyle);
         level2.addChild(level3);
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
@@ -460,14 +460,14 @@ class LayoutPortTest {
 
     private static void assertContentExtents(Style rootStyle, Style childStyle, float expectedWidth,
             float expectedHeight) {
-        List<Node> children = new ArrayList<>();
+        List<NodeImpl> children = new ArrayList<>();
         if (childStyle != null) {
-            children.add(new Node(childStyle));
+            children.add(new NodeImpl(childStyle));
         }
-        Node node = new Node(rootStyle, children);
+        NodeImpl node = new NodeImpl(rootStyle, children);
         LayoutEngine.computeLayout(node, (float) 100, (float) 50);
 
-        Layout layout = node.layout;
+        Layout layout = node.getLayout();
         assertEquals(expectedWidth, layout.contentWidth, EPS);
         assertEquals(expectedHeight, layout.contentHeight, EPS);
 
@@ -520,7 +520,7 @@ class LayoutPortTest {
                 LengthPercentageAuto.auto(),
                 LengthPercentageAuto.length(0),
                 LengthPercentageAuto.auto()));
-        Node absolute = new Node(absoluteStyle);
+        NodeImpl absolute = new NodeImpl(absoluteStyle);
 
         Style parentStyle = new Style();
         parentStyle.position(parentPosition);
@@ -530,16 +530,16 @@ class LayoutPortTest {
                 LengthPercentageAuto.length(0),
                 LengthPercentageAuto.length(30),
                 LengthPercentageAuto.length(0)));
-        Node parent = new Node(parentStyle, List.of(absolute));
+        NodeImpl parent = new NodeImpl(parentStyle, List.of(absolute));
 
         Style rootStyle = new Style();
         rootStyle.position(Position.Relative);
         rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         rootStyle.layoutBorder(Rect.all(LengthPercentage.length(5)));
-        Node root = new Node(rootStyle, List.of(parent));
+        NodeImpl root = new NodeImpl(rootStyle, List.of(parent));
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
-        Layout layout = absolute.layout;
+        Layout layout = absolute.getLayout();
         return new float[] { layout.x, layout.y };
     }
 
@@ -574,7 +574,7 @@ class LayoutPortTest {
                 LengthPercentageAuto.length(0),
                 LengthPercentageAuto.auto(),
                 LengthPercentageAuto.length(0)));
-        Node child = new Node(childStyle);
+        NodeImpl child = new NodeImpl(childStyle);
 
         Style rootStyle = new Style();
         rootStyle.position(rootPosition);
@@ -585,16 +585,16 @@ class LayoutPortTest {
                 LengthPercentageAuto.length(30),
                 LengthPercentageAuto.length(0)));
         rootStyle.layoutBorder(Rect.all(LengthPercentage.length(5)));
-        Node root = new Node(rootStyle, List.of(child));
+        NodeImpl root = new NodeImpl(rootStyle, List.of(child));
 
         LayoutEngine.computeLayout(root, Size.of(availableWidth, availableHeight));
 
-        Layout rootLayout = root.layout;
+        Layout rootLayout = root.getLayout();
         Point<java.lang.Float> rootPosition2 = rootLayout.position();
         assertEquals(20f, rootPosition2.x, EPS);
         assertEquals(30f, rootPosition2.y, EPS);
 
-        Layout layout = child.layout;
+        Layout layout = child.getLayout();
         assertEquals(expectedX, layout.x, EPS);
         assertEquals(expectedY, layout.y, EPS);
         assertEquals(expectedWidth, layout.width, EPS);
@@ -661,14 +661,14 @@ class LayoutPortTest {
                     LengthPercentageAuto.auto(),
                     LengthPercentageAuto.length(15),
                     LengthPercentageAuto.auto()));
-            Node child = new Node(childStyle);
+            NodeImpl child = new NodeImpl(childStyle);
 
             Style rootStyle = new Style();
             rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
-            Node root = new Node(rootStyle, List.of(child));
+            NodeImpl root = new NodeImpl(rootStyle, List.of(child));
 
             LayoutEngine.computeLayout(root, (float) 100, (float) 100);
-            Layout layout = child.layout;
+            Layout layout = child.getLayout();
             assertEquals(0f, layout.x, EPS);
             assertEquals(0f, layout.y, EPS);
         }

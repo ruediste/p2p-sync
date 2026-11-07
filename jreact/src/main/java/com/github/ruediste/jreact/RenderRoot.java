@@ -15,8 +15,8 @@ import com.github.ruediste.jreact.nodes.DivNode;
  * State and viewport changes mark the root dirty and notify the host through
  * the
  * invalidation callback; the host decides when to call {@link #render()}.
- * Layout is the responsibility of {@link FlexLayout}; painting lives in the
- * {@link Node} hierarchy.
+ * Layout is the responsibility of {@link com.github.ruediste.jreact.layout.LayoutEngine};
+ * painting lives in the {@link Node} hierarchy.
  *
  * <p>
  * Rendering, viewport changes, state updates, and disposal belong to the

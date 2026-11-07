@@ -91,13 +91,13 @@ public final class InputNode extends EditableNode {
 
         @Override
         public void paint(Graphics graphics) {
-            Graphics2D copy = (Graphics2D) graphics;
-            var previous = copy.getComposite();
-            copy.setComposite(AlphaComposite.SrcOver.derive(binding.node.effectiveOpacity()));
+            Graphics2D graphics2d = (Graphics2D) graphics;
+            var previous = graphics2d.getComposite();
+            graphics2d.setComposite(AlphaComposite.SrcOver.derive(binding.node.effectiveOpacity()));
             try {
                 super.paint(graphics);
             } finally {
-                copy.setComposite(previous);
+                graphics2d.setComposite(previous);
             }
         }
     }

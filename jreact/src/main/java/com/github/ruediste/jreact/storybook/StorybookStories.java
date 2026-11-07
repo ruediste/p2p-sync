@@ -5,6 +5,11 @@ import static com.github.ruediste.jreact.Ui.div;
 import static com.github.ruediste.jreact.Ui.icon;
 import static com.github.ruediste.jreact.Ui.text;
 
+import com.github.ruediste.jreact.layout.AlignItems;
+import com.github.ruediste.jreact.layout.JustifyContent;
+import com.github.ruediste.jreact.layout.FlexDirection;
+import com.github.ruediste.jreact.layout.FlexWrap;
+import com.github.ruediste.jreact.layout.TextAlign;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +67,7 @@ public final class StorybookStories {
                     ui.button("-", Components.Variant.SECONDARY, disabled.get(),
                             () -> count.update(value -> value - 1));
                     text(count.get(), style -> ui.typography(style).fontSize(24).width(72).height(36)
-                            .textAlign(Style.TextAlign.CENTER));
+                            .textAlign(TextAlign.LegacyCenter));
                     ui.button("+", Components.Variant.SECONDARY, disabled.get(),
                             () -> count.update(value -> value + 1));
                     ui.button("Reset", Components.Variant.SECONDARY, disabled.get(), () -> count.set(0));
@@ -123,23 +128,23 @@ public final class StorybookStories {
     public static void Layout(Theme theme) {
         Components ui = new Components(theme);
         var direction = Hooks.useState("Row");
-        var justification = Hooks.useState("START");
+        var justification = Hooks.useState("Start");
         ui.stack(18, () -> {
             ui.tabs(List.of("Row", "Column"), direction.get(), direction::set);
             ui.selectField("Justification", justification.get(),
-                    java.util.Arrays.stream(Style.Justify.values()).map(Enum::name).toList(),
+                    java.util.Arrays.stream(JustifyContent.values()).map(Enum::name).toList(),
                     false, justification::set);
             div(style -> style.height(260).flexShrink(0).padding(16).backgroundColor(theme.surface())
                     .border(1, theme.border())
-                    .flexDirection(direction.get().equals("Row") ? Style.Direction.ROW : Style.Direction.COLUMN)
-                    .flexWrap(Style.Wrap.WRAP).alignItems(Style.Align.CENTER)
-                    .justifyContent(Style.Justify.valueOf(justification.get())), () -> {
+                    .flexDirection(direction.get().equals("Row") ? FlexDirection.Row : FlexDirection.Column)
+                    .flexWrap(FlexWrap.Wrap).alignItems(AlignItems.Center)
+                    .justifyContent(JustifyContent.valueOf(justification.get())), () -> {
                         List<Color> colors = List.of(theme.primary(), new Color(194, 142, 26), theme.danger());
                         for (int index = 0; index < 3; index++) {
                             int number = index;
                             div(style -> style.width(72).height(56).margin(6).backgroundColor(colors.get(number))
                                     .borderRadius(6)
-                                    .alignItems(Style.Align.CENTER).justifyContent(Style.Justify.CENTER),
+                                    .alignItems(AlignItems.Center).justifyContent(JustifyContent.Center),
                                     () -> text(number + 1, style -> ui.typography(style).color(Color.WHITE)
                                             .fontWeight(true).fontSize(18)));
                         }

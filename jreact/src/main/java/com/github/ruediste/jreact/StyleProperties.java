@@ -96,17 +96,8 @@ public abstract class StyleProperties {
         }
     }
 
-    public static final Property<Style.Direction> DIRECTION = new ValueProperty<>("direction");
-    public static final Property<Style.Wrap> WRAP = new ValueProperty<>("wrap");
-    public static final Property<Integer> ORDER = new ValueProperty<>("order");
     public static final DoubleProperty GROW = new DoubleProperty("grow");
     public static final DoubleProperty SHRINK = new DoubleProperty("shrink");
-    public static final Property<Style.Justify> JUSTIFY = new ValueProperty<>("justify");
-    public static final Property<Style.Align> ALIGN = new ValueProperty<>("align");
-    public static final DoubleProperty WIDTH = new DoubleProperty("width");
-    public static final DoubleProperty HEIGHT = new DoubleProperty("height");
-    public static final Property<Style.Insets> MARGIN = new ValueProperty<>("margin");
-    public static final Property<Style.Insets> PADDING = new ValueProperty<>("padding");
     public static final Property<Color> BACKGROUND = new ValueProperty<>("background");
     public static final Property<Color> COLOR = new ValueProperty<>("color");
     public static final Property<Style.Border> BORDER = new ValueProperty<>("border");
@@ -115,7 +106,6 @@ public abstract class StyleProperties {
     public static final DoubleProperty FONT_SIZE = new DoubleProperty("font-size");
     public static final Property<Boolean> BOLD = new ValueProperty<>("bold");
     public static final Property<Boolean> ITALIC = new ValueProperty<>("italic");
-    public static final Property<Style.TextAlign> TEXT_ALIGN = new ValueProperty<>("text-align");
     public static final DoubleProperty LINE_HEIGHT = new DoubleProperty("line-height");
     public static final Property<Style.Shadow> BOX_SHADOW = new ValueProperty<>("box-shadow");
     public static final Property<Style.Shadow> TEXT_SHADOW = new ValueProperty<>("text-shadow");

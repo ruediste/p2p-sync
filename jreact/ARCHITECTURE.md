@@ -341,26 +341,19 @@ component bodies when the root is otherwise clean.
 
 ## 9. Layout and Painting
 
-[FlexLayout.java](src/main/java/com/github/ruediste/jreact/FlexLayout.java) consumes
-the styled node tree and a root width/height. It measures natural sizes, sorts
-children by `order`, forms wrapping lines, distributes grow or weighted shrink
-space, and places children using justification and cross-axis alignment. Padding
-and border widths form content insets; margins occupy external space. Rows are
-the default, with grow 0 and shrink 1. Auto-height content is remeasured at its
-allocated width so flex sizing can change text wrapping.
+[LayoutEngine.java](src/main/java/com/github/ruediste/jreact/layout/LayoutEngine.java)
+consumes the styled node tree through the [LayoutNode](src/main/java/com/github/ruediste/jreact/layout/LayoutNode.java)
+interface implemented by [Node.java](src/main/java/com/github/ruediste/jreact/Node.java).
+It supports block, flex, and grid layout with the CSS box model: margins,
+padding, borders, sizing, positioning, wrapping, alignment, and gaps. The tree
+is mutated only through `NodeImpl` for standalone use; the rendered tree keeps
+its children in `Node` and exposes them read-only to the engine.
 
-[TextMetrics.java](src/main/java/com/github/ruediste/jreact/TextMetrics.java) uses
-the selected Java font's metrics to wrap standalone text, calculate line height,
-and position aligned fragments. Measurement can return height without mutation,
-or commit fragments to the node. Explicit newlines and blank lines are preserved;
-oversized words are split without breaking surrogate pairs.
-
-[InlineLayout.java](src/main/java/com/github/ruediste/jreact/InlineLayout.java)
-maintains a shared line cursor across nested span content and icons. Component
-boundaries are already absent from the node tree, so they do not interrupt inline
-flow. Committing flow assigns fragment positions and enclosing node rectangles.
-Nested span decorations use those enclosing rectangles, not browser-style
-per-line fragment boxes.
+Text and icons participate through the measurement callback. After layout,
+`Node.layout(width, height)` copies the computed root-relative geometry into
+each node's bounds and lets textual nodes commit their wrapped lines. Text
+measurement and wrapping live in [TextLayout.java](src/main/java/com/github/ruediste/jreact/TextLayout.java);
+spans use normal wrapping flex layout rather than a separate inline pass.
 
 [Renderer.java](src/main/java/com/github/ruediste/jreact/Renderer.java) consumes the
 computed geometry. It paints backgrounds, rounded borders, text, icons, shadows,
@@ -472,7 +465,7 @@ opt-in rather than automatic UpperCamel matching.
 | Hook APIs and mutable state | [Hooks](src/main/java/com/github/ruediste/jreact/Hooks.java), [State](src/main/java/com/github/ruediste/jreact/State.java) |
 | Rendered primitive data | [Node](src/main/java/com/github/ruediste/jreact/Node.java) |
 | Typed properties and scoped cascade | [Style](src/main/java/com/github/ruediste/jreact/Style.java), [Styles](src/main/java/com/github/ruediste/jreact/Styles.java), [Selector](src/main/java/com/github/ruediste/jreact/Selector.java) |
-| Flex and inline geometry | [FlexLayout](src/main/java/com/github/ruediste/jreact/FlexLayout.java), [InlineLayout](src/main/java/com/github/ruediste/jreact/InlineLayout.java), [TextMetrics](src/main/java/com/github/ruediste/jreact/TextMetrics.java) |
+| Block, flex, and grid geometry | [LayoutEngine](src/main/java/com/github/ruediste/jreact/layout/LayoutEngine.java), [LayoutNode](src/main/java/com/github/ruediste/jreact/layout/LayoutNode.java), [TextLayout](src/main/java/com/github/ruediste/jreact/TextLayout.java) |
 | Java2D painting | [Renderer](src/main/java/com/github/ruediste/jreact/Renderer.java) |
 | Swing scheduling, input, and editors | [JReactPanel](src/main/java/com/github/ruediste/jreact/JReactPanel.java) |
 | Reusable themed controls | [Components](src/main/java/com/github/ruediste/jreact/components/Components.java), [Theme](src/main/java/com/github/ruediste/jreact/components/Theme.java) |

@@ -7,6 +7,9 @@ import static com.github.ruediste.jreact.Ui.text;
 import static com.github.ruediste.jreact.Ui.viewportHeight;
 import static com.github.ruediste.jreact.Ui.viewportWidth;
 
+import com.github.ruediste.jreact.layout.AlignItems;
+import com.github.ruediste.jreact.layout.JustifyContent;
+import com.github.ruediste.jreact.layout.FlexDirection;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -46,10 +49,10 @@ public final class Storybook {
         Theme theme = contrast.get() ? Theme.highContrast() : Theme.light();
         Components ui = new Components(theme);
         boolean narrow = viewportWidth() < 720;
-        div(style -> style.width(viewportWidth()).height(viewportHeight()).flexDirection(Style.Direction.COLUMN)
+        div(style -> style.width(viewportWidth()).height(viewportHeight()).flexDirection(FlexDirection.Column)
                 .backgroundColor(theme.canvas()), () -> {
                     div(style -> style.height(68).flexShrink(0).padding(16, 20, 16, 20).backgroundColor(theme.surface())
-                            .alignItems(Style.Align.CENTER).justifyContent(Style.Justify.SPACE_BETWEEN), () -> {
+                            .alignItems(AlignItems.Center).justifyContent(JustifyContent.SpaceBetween), () -> {
                                 ui.heading("JReact");
                                 ui.checkbox("High contrast", contrast.get(), false, contrast::set);
                             });
@@ -57,10 +60,10 @@ public final class Storybook {
                         select(selected.get(), STORIES, selected::set, style -> ui.typography(style).height(38)
                                 .margin(12, 20, 0, 20).backgroundColor(theme.surface())).accessibleName("Story");
                     }
-                    div(style -> style.flexGrow(1).flexDirection(Style.Direction.ROW), () -> {
+                    div(style -> style.flexGrow(1).flexDirection(FlexDirection.Row), () -> {
                         if (!narrow)
                             div(style -> style.width(190).flexShrink(0).padding(24, 12, 24, 12)
-                                    .backgroundColor(theme.surface()).flexDirection(Style.Direction.COLUMN), () -> {
+                                    .backgroundColor(theme.surface()).flexDirection(FlexDirection.Column), () -> {
                                         ui.muted("COMPONENTS");
                                         for (String story : STORIES)
                                             component("navigation", story,
@@ -70,20 +73,26 @@ public final class Storybook {
                                                             false, () -> selected.set(story),
                                                             style -> style.width(166).margin(10, 0, 0, 0)));
                                     });
-                        div(style -> style.flexGrow(1).padding(narrow ? 20 : 28).flexDirection(Style.Direction.COLUMN),
-                                () -> {
-                                    text(selected.get(), style -> ui.typography(style).fontSize(26).fontWeight(true)
-                                            .margin(0, 0, 22, 0));
-                                    switch (selected.get()) {
-                                        case "Overview" -> StorybookStories.Overview(theme);
-                                        case "Buttons" -> StorybookStories.Buttons(theme);
-                                        case "Inputs" -> StorybookStories.Inputs(theme);
-                                        case "Feedback" -> StorybookStories.Feedback(theme);
-                                        case "Layout" -> StorybookStories.Layout(theme);
-                                        case "Task Board" -> StorybookStories.Tasks(theme);
-                                        default -> throw new IllegalStateException("Unknown story");
-                                    }
-                                });
+                    div(style -> style.flexGrow(1).padding(narrow ? 20 : 28).flexDirection(FlexDirection.Column),
+                            () -> {
+                                text(selected.get(), style -> ui.typography(style).fontSize(26).fontWeight(true)
+                                        .margin(0, 0, 22, 0));
+                                switch (selected.get()) {
+                                    case "Overview" -> component("story", "Overview",
+                                            () -> StorybookStories.Overview(theme));
+                                    case "Buttons" -> component("story", "Buttons",
+                                            () -> StorybookStories.Buttons(theme));
+                                    case "Inputs" -> component("story", "Inputs",
+                                            () -> StorybookStories.Inputs(theme));
+                                    case "Feedback" -> component("story", "Feedback",
+                                            () -> StorybookStories.Feedback(theme));
+                                    case "Layout" -> component("story", "Layout",
+                                            () -> StorybookStories.Layout(theme));
+                                    case "Task Board" -> component("story", "Task Board",
+                                            () -> StorybookStories.Tasks(theme));
+                                    default -> throw new IllegalStateException("Unknown story");
+                                }
+                            });
                     });
                 });
     }
