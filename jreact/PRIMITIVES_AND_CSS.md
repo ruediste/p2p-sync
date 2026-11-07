@@ -1,6 +1,9 @@
 # JReact Primitives and CSS Subset
 
-This document defines the proposed initial set of built-in JReact primitives and layout properties. The `jreact` module does not implement these APIs yet; treat this as the contract to implement, not a description of current runtime behavior.
+This document defines the initial JReact primitive and style contract, now implemented
+in the `jreact` module. Java method names are `Ui.div`, `Ui.span`, and `Ui.text`;
+the capitalized names below describe primitive concepts. Typed enum spelling and
+working examples are in [README.md](README.md). Layout uses a pure-Java Flexbox subset.
 
 ## Primitive Components
 
@@ -15,8 +18,8 @@ Primitives are the built-in building blocks used inside user-defined Java compon
 For example:
 
 ```java
-Div(style -> style.flexDirection(Column).padding(16), () -> {
-    Span(() -> Text("Current count: " + count));
+Ui.div(style -> style.flexDirection(Style.Direction.COLUMN).padding(16), () -> {
+    Ui.span(() -> Ui.text("Current count: " + count.get()));
 });
 ```
 
@@ -55,13 +58,13 @@ The corresponding Java API should use typed values and numeric dimensions rather
 A component may declare selector-based style rules alongside its child primitives. Selectors are built with the DSL rather than written as CSS strings. The initial selector forms are primitive type selectors, named style classes, IDs, direct-child and descendant combinators, and pseudo-classes.
 
 ```java
-void Panel() {
-    Styles(Scope.DIRECT_CHILDREN,
-        Rule(Selector.type(Div.class), backgroundColor(panelColor)),
-        Rule(Selector.className("item").hover(), color(highlightColor)));
+void panel() {
+    Styles.rules(Styles.Scope.DIRECT_CHILDREN,
+        Styles.rule(Selector.type(Node.Kind.DIV), style -> style.backgroundColor(panelColor)),
+        Styles.rule(Selector.className("item").hover(), style -> style.color(highlightColor)));
 
-    Div(style -> style.className("item").padding(8).color(textColor),
-        () -> Text("Hover me"));
+    Ui.div(style -> style.className("item").padding(8).color(textColor),
+        () -> Ui.text("Hover me"));
 }
 ```
 
@@ -72,6 +75,16 @@ A primitive can set its `className` for selector matching and direct inline prop
 The initial pseudo-classes are `hover`, `active`, `focus`, and `disabled`. A pseudo-class matches when the corresponding interaction state is reported for the target node; unsupported states do not match. Additional pseudo-classes and pseudo-elements are out of scope.
 
 When multiple rules set the same property, a primitive's directly supplied style takes precedence over DSL rules. Among DSL rules, selector specificity is ordered by ID, then class and pseudo-class, then primitive type; ties are resolved by the nearest declaring component, then by later rule declaration. Scope determines whether a rule is eligible to match and does not add specificity.
+
+### Defined Swing Extensions
+
+`Ui.input(value, onChange, style)` overlays a controlled native JTextField. `Ui.select`
+overlays a JComboBox with a non-empty option list and a selected value from that list.
+Both support disabled state, keyboard focus, and an accessible name. `Ui.icon` paints
+a Swing Icon at its intrinsic size. These do not correspond to HTML elements.
+The component library builds higher-level controls from these extensions and primitives.
+Span accepts Text, nested Span, and Icon, but not block containers or native editors.
+Nested span decoration uses enclosing bounds rather than individual CSS fragment boxes.
 
 ### Not in the Initial Subset
 

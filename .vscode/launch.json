@@ -64,6 +64,14 @@
       "console": "integratedTerminal",
       // "args": ["${input:nodeDataDirectory}", "${input:nodeMountDirectory}"]
       "args": ["node2.db", "mount2"]
+    },
+    {
+      "type": "java",
+      "name": "JReact Storybook",
+      "request": "launch",
+      "mainClass": "com.github.ruediste.jreact.storybook.Storybook",
+      "projectName": "jreact",
+      "vmArgs": "-XX:+EnableDynamicAgentLoading"
     }
   ],
   "inputs": [
