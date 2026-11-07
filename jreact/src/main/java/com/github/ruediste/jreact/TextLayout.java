@@ -12,19 +12,18 @@ import com.github.ruediste.jreact.layout.Display;
 import com.github.ruediste.jreact.layout.Layout;
 import com.github.ruediste.jreact.layout.Size;
 import com.github.ruediste.jreact.layout.TextAlign;
-import com.github.ruediste.jreact.nodes.InputNode;
-import com.github.ruediste.jreact.nodes.SelectNode;
-import com.github.ruediste.jreact.nodes.TextualNode;
+import com.github.ruediste.jreact.nodes.TextNode;
 
 /**
- * Measures and wraps text for {@link TextualNode}.
+ * Measures and wraps text for textual nodes.
  *
  * <p>
- * Text nodes participate in layout through the measurement callback of the
- * layout engine: {@link #measure} reports the content-box size for a given
- * available width, and {@link #commit} records the final wrapped lines after
- * layout has allocated a content width. The committed {@link Node.Line}s are
- * node-local and are consumed by painting and by native editor synchronization.
+ * Nodes participate in layout through the measurement callback of the layout
+ * engine: {@link #measure} reports the content-box size for a given available
+ * width. For painted text, {@link #commit} records the final wrapped lines after
+ * layout has allocated a content width; those lines are consumed by
+ * {@link TextNode} when painting. Nodes backed by Swing components use the same
+ * measurement but do not consume the wrapped lines.
  */
 public final class TextLayout {
     private static final FontRenderContext RENDER_CONTEXT = new FontRenderContext(null, false, false);
@@ -32,10 +31,9 @@ public final class TextLayout {
     private TextLayout() {
     }
 
-    public static Size<java.lang.Float> measure(TextualNode node, AvailableSpace knownWidth,
-            AvailableSpace availableWidth) {
-        Font font = node.style.font();
-        String text = node.text;
+    public static Size<java.lang.Float> measure(String text, Style style, AvailableSpace knownWidth,
+            AvailableSpace availableWidth, float minimumWidth) {
+        Font font = style.font();
         float natural = naturalWidth(text, font);
         float width;
         if (knownWidth.isDefinite()) {
@@ -47,16 +45,14 @@ public final class TextLayout {
         } else {
             width = natural;
         }
-        if (!knownWidth.isDefinite()
-                && (node instanceof InputNode || node instanceof SelectNode)) {
-            width = Math.max(120, width);
-        }
+        if (!knownWidth.isDefinite())
+            width = Math.max(minimumWidth, width);
         width = Math.max(0, width);
-        float height = wrap(text, font, width).size() * lineHeight(node, font);
+        float height = wrap(text, font, width).size() * lineHeight(style, font);
         return Size.of(width, height);
     }
 
-    public static void commit(TextualNode node) {
+    public static void commit(TextNode node) {
         node.lines.clear();
         if (node.style.display() == Display.None) {
             return;
@@ -65,7 +61,7 @@ public final class TextLayout {
         Font font = node.style.font();
         float contentWidth = Math.max(0, layout.usedContentWidth);
         List<String> lines = wrap(node.text, font, contentWidth);
-        float lineHeight = lineHeight(node, font);
+        float lineHeight = lineHeight(node.style, font);
         LineMetrics metrics = font.getLineMetrics("Hg", RENDER_CONTEXT);
         float baseline = layout.border.top + layout.padding.top
                 + (lineHeight - metrics.getHeight()) / 2 + metrics.getAscent();
@@ -84,8 +80,8 @@ public final class TextLayout {
         }
     }
 
-    private static float lineHeight(TextualNode node, Font font) {
-        double configured = node.style.lineHeight();
+    private static float lineHeight(Style style, Font font) {
+        double configured = style.lineHeight();
         return Double.isNaN(configured) ? font.getLineMetrics("Hg", RENDER_CONTEXT).getHeight()
                 : (float) configured;
     }

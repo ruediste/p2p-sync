@@ -1,11 +1,48 @@
 package com.github.ruediste.jreact.layout;
 
+import java.util.Map;
+
 /**
  * Computed layout for one node. Positions are in the parent's border-box
  * coordinate system, except for absolute/fixed nodes, whose positions are
  * reported relative to their containing block's border box.
  */
 public final class Layout {
+
+    /**
+     * Memoized results of {@link LayoutNode#measure} for the current layout
+     * pass, keyed by the exact measure inputs. Cleared at the start of each
+     * pass so results are never reused across independent layout computations.
+     */
+    Map<MeasureKey, Size<java.lang.Float>> measuredCache;
+
+    /**
+     * Key for memoizing {@link LayoutNode#measure} results within one layout
+     * pass.
+     */
+    static final class MeasureKey {
+        final Size<AvailableSpace> knownDimensions;
+        final Size<AvailableSpace> availableSpace;
+
+        MeasureKey(Size<AvailableSpace> knownDimensions, Size<AvailableSpace> availableSpace) {
+            this.knownDimensions = knownDimensions;
+            this.availableSpace = availableSpace;
+        }
+
+        @Override
+        public boolean equals(Object object) {
+            if (!(object instanceof MeasureKey other)) {
+                return false;
+            }
+            return java.util.Objects.equals(knownDimensions, other.knownDimensions)
+                    && java.util.Objects.equals(availableSpace, other.availableSpace);
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(knownDimensions, availableSpace);
+        }
+    }
 
     /**
      * Horizontal position of the node's border box, in the parent's border-box

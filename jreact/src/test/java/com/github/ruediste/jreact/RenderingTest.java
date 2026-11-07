@@ -145,7 +145,7 @@ class RenderingTest {
     }
 
     @Test
-    void nativeEditorIsControlledAndRemovedOnUnmount() throws Exception {
+    void nativeComponentIsControlledAndRemovedOnUnmount() throws Exception {
         SwingUtilities.invokeAndWait(() -> {
             var visible = new AtomicReference<State<Boolean>>();
             var value = new AtomicReference<State<String>>();
@@ -157,14 +157,14 @@ class RenderingTest {
             })) {
                 panel.setSize(120, 100);
                 panel.refresh();
-                JTextField editor = (JTextField) panel.getComponent(0);
-                editor.setText("edited");
+                JTextField field = (JTextField) panel.getComponent(0);
+                field.setText("edited");
                 panel.refresh();
                 assertEquals("edited", value.get().get());
                 value.get().set("external");
                 panel.refresh();
-                assertSame(editor, panel.getComponent(0));
-                assertEquals("external", editor.getText());
+                assertSame(field, panel.getComponent(0));
+                assertEquals("external", field.getText());
                 visible.get().set(false);
                 panel.refresh();
                 assertEquals(0, panel.getComponentCount());

@@ -25,7 +25,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import com.github.ruediste.jreact.nodes.DivNode;
-import com.github.ruediste.jreact.nodes.TextualNode;
+import com.github.ruediste.jreact.nodes.TextNode;
 
 /**
  * Checks CSS cascade and flex geometry using headless font metrics and exact
@@ -183,7 +183,7 @@ class StyleLayoutTest {
                 () -> text("hello world\n\n\uD83D\uDE80end",
                         style -> style.width(40).fontSize(14).lineHeight(20).textAlign(TextAlign.LegacyRight)),
                 40, 200);
-        TextualNode text = (TextualNode) tree.children.getFirst();
+        TextNode text = (TextNode) tree.children.getFirst();
         assertTrue(text.lines.size() >= 4);
         assertTrue(text.lines.stream().anyMatch(line -> line.text().isEmpty()));
         assertEquals(20, text.lines.get(1).baseline() - text.lines.get(0).baseline());
@@ -294,8 +294,8 @@ class StyleLayoutTest {
             component("inline", () -> span(() -> text("world again", style -> style.color(Color.RED))));
         }), 300, 100);
         Node span = tree.children.getFirst();
-        TextualNode first = (TextualNode) span.children.getFirst();
-        TextualNode second = (TextualNode) span.children.get(1).children.getFirst();
+        TextNode first = (TextNode) span.children.getFirst();
+        TextNode second = (TextNode) span.children.get(1).children.getFirst();
         assertEquals("Hello ", first.text());
         assertEquals("world again", second.lines.stream().map(Node.Line::text).reduce("", String::concat));
         assertTrue(second.bounds.x > first.bounds.x);
@@ -315,7 +315,7 @@ class StyleLayoutTest {
             div(style -> style.width(50), () -> {
             });
         }), 100, 200);
-        TextualNode text = (TextualNode) tree.children.getFirst().children.getFirst();
+        TextNode text = (TextNode) tree.children.getFirst().children.getFirst();
         assertEquals(75, text.bounds.width, 0.01);
         assertTrue(text.lines.size() >= 2);
         assertEquals(text.lines.size() * 20, text.bounds.height, 0.01);
@@ -324,7 +324,7 @@ class StyleLayoutTest {
     @Test
     void inlineLongWordsUnicodeAndNewlinesRemainIntact() {
         Node tree = render(() -> span(() -> text("ab\uD83D\uDE80c\n\nlongword")), 12, 300);
-        TextualNode text = (TextualNode) tree.children.getFirst().children.getFirst();
+        TextNode text = (TextNode) tree.children.getFirst().children.getFirst();
         assertEquals("ab\uD83D\uDE80clongword", text.lines.stream().map(Node.Line::text).reduce("", String::concat));
         assertTrue(text.bounds.height > 60);
         for (Node.Line line : text.lines)

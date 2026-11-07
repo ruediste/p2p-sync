@@ -30,7 +30,7 @@ import com.github.ruediste.jreact.nodes.TextNode;
  * caller's
  * context on exit, including exceptional exit. Primitives, component calls, and
  * viewport queries require an active render; input and select nodes own native
- * editors that {@link JReactPanel} hosts.
+ * Swing components that {@link JReactPanel} hosts.
  */
 public final class Ui {
     static final ThreadLocal<Context> CURRENT = new ThreadLocal<>();

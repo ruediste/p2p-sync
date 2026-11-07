@@ -28,7 +28,7 @@ import javax.swing.SwingUtilities;
 import com.github.ruediste.jreact.events.ClickEvent;
 import com.github.ruediste.jreact.events.KeyboardEvent;
 import com.github.ruediste.jreact.events.PointerEvent;
-import com.github.ruediste.jreact.nodes.EditableNode;
+import com.github.ruediste.jreact.nodes.SwingNode;
 
 /**
  * Swing host for a JReact component tree and its user interactions.
@@ -37,7 +37,7 @@ import com.github.ruediste.jreact.nodes.EditableNode;
  * Owns a {@link RenderRoot}, coalesces invalidations into scheduled refreshes,
  * supplies viewport dimensions and interaction flags, resolves styles, and
  * invokes layout and Java2D painting. Nodes are reconciled with the previous
- * tree by key, transferring interaction state, retained editors, and the last
+ * tree by key, transferring interaction state, retained Swing components, and the last
  * committed paint state. Each node reports its own dirty region, so the panel
  * only unions those regions into localized repaint requests.
  *
@@ -50,7 +50,7 @@ import com.github.ruediste.jreact.nodes.EditableNode;
  * <p>
  * Construct, refresh, and close this panel on the Swing event dispatch thread.
  * The host must close it when its owning UI is disposed to unmount component
- * state, clean up effects, and remove native editors.
+ * state, clean up effects, and remove native Swing components.
  */
 public class JReactPanel extends JPanel implements AutoCloseable {
     private final RenderRoot root;
@@ -126,7 +126,7 @@ public class JReactPanel extends JPanel implements AutoCloseable {
         addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent event) {
-                if (!isEditor(event.getOppositeComponent())) {
+                if (!isSwingComponent(event.getOppositeComponent())) {
                     focused = null;
                     pressed = null;
                     refresh();
@@ -183,7 +183,7 @@ public class JReactPanel extends JPanel implements AutoCloseable {
         Styles.resolve(currentTree);
         currentTree.layout(Math.max(0, getWidth()), Math.max(0, getHeight()));
         Rectangle dirty = Reconciler.dirtyRegion(currentTree, reconciliation);
-        syncEditors(currentTree);
+        syncComponents(currentTree);
         if (layoutWidth != getWidth() || layoutHeight != getHeight()) {
             layoutWidth = getWidth();
             layoutHeight = getHeight();
@@ -255,8 +255,8 @@ public class JReactPanel extends JPanel implements AutoCloseable {
                         : Math.floorMod(current + (event.isShiftDown() ? -1 : 1), targets.size());
                 focused = targets.get(next).key;
                 Node node = nodes.get(focused);
-                if (node instanceof EditableNode editable && editable.editor() != null)
-                    editable.editor().requestFocusInWindow();
+                if (node instanceof SwingNode swingNode && swingNode.component() != null)
+                    swingNode.component().requestFocusInWindow();
             }
             event.consume();
         } else {
@@ -276,39 +276,39 @@ public class JReactPanel extends JPanel implements AutoCloseable {
         refresh();
     }
 
-    private void syncEditors(Node tree) {
-        var currentEditors = new LinkedHashSet<JComponent>();
+    private void syncComponents(Node tree) {
+        var currentComponents = new LinkedHashSet<JComponent>();
         for (Node node : tree.descendants()) {
-            if (!(node instanceof EditableNode editable))
+            if (!(node instanceof SwingNode swingNode))
                 continue;
-            editable.ensureEditor();
-            JComponent editor = editable.editor();
-            if (editor == null)
+            swingNode.ensureComponent();
+            JComponent component = swingNode.component();
+            if (component == null)
                 continue;
-            currentEditors.add(editor);
-            if (editor.getParent() != this) {
-                add(editor);
-                attachEditorListeners(editor, editable.key);
+            currentComponents.add(component);
+            if (component.getParent() != this) {
+                add(component);
+                attachComponentListeners(component, swingNode.key);
             }
-            editable.syncEditor();
+            swingNode.syncComponent();
         }
         for (Component child : getComponents())
-            if (child instanceof JComponent component && !currentEditors.contains(component))
+            if (child instanceof JComponent component && !currentComponents.contains(component))
                 remove(component);
     }
 
-    private void attachEditorListeners(JComponent editor, Node.Key key) {
-        editor.addKeyListener(new KeyAdapter() {
+    private void attachComponentListeners(JComponent component, Node.Key key) {
+        component.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent event) {
                 if (event.getKeyCode() == KeyEvent.VK_TAB) {
                     keyboard(event);
-                    if (!(nodes.get(focused) instanceof EditableNode))
+                    if (!(nodes.get(focused) instanceof SwingNode))
                         requestFocusInWindow();
                 }
             }
         });
-        editor.addFocusListener(new FocusAdapter() {
+        component.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent event) {
                 focused = key;
@@ -324,9 +324,9 @@ public class JReactPanel extends JPanel implements AutoCloseable {
         });
     }
 
-    private boolean isEditor(Component component) {
+    private boolean isSwingComponent(Component component) {
         for (Node node : nodes.values())
-            if (node instanceof EditableNode editable && editable.editor() == component)
+            if (node instanceof SwingNode swingNode && swingNode.component() == component)
                 return true;
         return false;
     }
@@ -351,8 +351,8 @@ public class JReactPanel extends JPanel implements AutoCloseable {
                 Node tree = root.tree();
                 if (tree != null)
                     for (Node node : tree.descendants())
-                        if (node instanceof EditableNode editable)
-                            editable.disposeEditor();
+                        if (node instanceof SwingNode swingNode)
+                            swingNode.disposeComponent();
                 nodes.clear();
                 removeAll();
             }

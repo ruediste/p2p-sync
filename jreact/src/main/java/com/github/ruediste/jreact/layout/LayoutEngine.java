@@ -1,6 +1,7 @@
 package com.github.ruediste.jreact.layout;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -64,6 +65,7 @@ public final class LayoutEngine {
         node.getLayout().detailedGridInfo = null;
         node.getLayout().usedContentHeight = 0;
         node.getLayout().usedContentWidth = 0;
+        node.getLayout().measuredCache = null;
         for (LayoutNode child : node.getChildren()) {
             reset(child);
         }
@@ -313,7 +315,7 @@ public final class LayoutEngine {
                     : Math.max(0, availableWidth - horizontalExtra);
             float availableContentHeight = finite(knownContentHeight) ? knownContentHeight
                     : Math.max(0, availableHeight - verticalExtra);
-            Size<java.lang.Float> measured = node.measure(
+            Size<java.lang.Float> measured = measureCached(node,
                     Size.of(available(knownContentWidth), available(knownContentHeight)),
                     Size.of(available(availableContentWidth), available(availableContentHeight)));
             if (measured != null) {
@@ -373,6 +375,26 @@ public final class LayoutEngine {
         return finite(value) ? AvailableSpace.definite(value) : AvailableSpace.maxContent();
     }
 
+    private static Size<java.lang.Float> measureCached(LayoutNode node,
+            Size<AvailableSpace> knownDimensions, Size<AvailableSpace> availableSpace) {
+        Layout layout = node.getLayout();
+        Layout.MeasureKey key = new Layout.MeasureKey(knownDimensions, availableSpace);
+        Size<java.lang.Float> cached = layout.measuredCache == null
+                ? null
+                : layout.measuredCache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        Size<java.lang.Float> measured = node.measure(knownDimensions, availableSpace);
+        if (measured != null) {
+            if (layout.measuredCache == null) {
+                layout.measuredCache = new HashMap<>();
+            }
+            layout.measuredCache.put(key, measured);
+        }
+        return measured;
+    }
+
     private static float resolveDimension(Dimension dimension, float basis, float extra,
             BoxSizing boxSizing) {
         if (dimension == null || dimension.isAuto()) {
@@ -425,7 +447,7 @@ public final class LayoutEngine {
                     resolveDimension(style.size().width, referenceWidth, extra, style.boxSizing()) - extra);
         }
         if (node.getChildren().isEmpty()) {
-            Size<java.lang.Float> measured = node.measure(
+            Size<java.lang.Float> measured = measureCached(node,
                     Size.of(AvailableSpace.maxContent(), AvailableSpace.maxContent()),
                     Size.of(AvailableSpace.maxContent(), AvailableSpace.maxContent()));
             return measured == null ? 0 : Math.max(0, measured.width);
@@ -494,7 +516,7 @@ public final class LayoutEngine {
         if (node.getChildren().isEmpty()) {
             AvailableSpace width = finite(contentWidth) ? AvailableSpace.definite(contentWidth)
                     : AvailableSpace.maxContent();
-            Size<java.lang.Float> measured = node.measure(
+            Size<java.lang.Float> measured = measureCached(node,
                     Size.of(width, AvailableSpace.maxContent()),
                     Size.of(width, AvailableSpace.maxContent()));
             return measured == null ? 0 : Math.max(0, measured.height);

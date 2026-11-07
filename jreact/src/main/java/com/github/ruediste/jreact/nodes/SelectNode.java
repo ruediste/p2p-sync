@@ -11,7 +11,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 
-import com.github.ruediste.jreact.EditorBinding;
+import com.github.ruediste.jreact.SwingBinding;
 import com.github.ruediste.jreact.Style;
 import com.github.ruediste.jreact.Styles;
 
@@ -20,10 +20,10 @@ import com.github.ruediste.jreact.Styles;
  *
  * <p>
  * The combo is controlled: selection changes call {@link #onChange} and
- * invalidate the render root, while {@link #syncEditor()} pushes the node's
+ * invalidate the render root, while {@link #syncComponent()} pushes the node's
  * value and options back into the combo without feedback.
  */
-public final class SelectNode extends EditableNode {
+public final class SelectNode extends SwingNode {
     public final List<String> options;
 
     public SelectNode(Key key, String text, List<String> options, Style inline,
@@ -34,9 +34,9 @@ public final class SelectNode extends EditableNode {
     }
 
     @Override
-    protected EditorBinding createBinding(Runnable invalidate) {
+    protected SwingBinding createBinding(Runnable invalidate) {
         var combo = new SelectCombo();
-        var binding = new EditorBinding(this, combo, invalidate);
+        var binding = new SwingBinding(this, combo, invalidate);
         combo.binding = binding;
         combo.addActionListener(event -> {
             if (!binding.node.isSyncing() && !binding.node.disabled && combo.getSelectedItem() != null) {
@@ -48,17 +48,17 @@ public final class SelectNode extends EditableNode {
     }
 
     @Override
-    protected boolean isCompatibleEditor(JComponent editor) {
-        return editor instanceof JComboBox;
+    protected boolean isCompatibleComponent(JComponent component) {
+        return component instanceof JComboBox;
     }
 
     @Override
-    public void syncEditor() {
-        var combo = (JComboBox<?>) editor();
+    public void syncComponent() {
+        var combo = (JComboBox<?>) component();
         setSyncing(true);
         try {
             if (combo.isPopupVisible()) {
-                // The user is interacting with the popup. Resyncing the editor
+                // The user is interacting with the popup. Resyncing the component
                 // (setSelectedItem / setBounds / doLayout / setModel) dismisses a
                 // showing lightweight popup, so the combobox would close as soon
                 // as the user moves the mouse to click an option. Defer the
@@ -75,7 +75,7 @@ public final class SelectNode extends EditableNode {
                 stringCombo.setModel(new DefaultComboBoxModel<>(options.toArray(String[]::new)));
             }
             combo.setSelectedItem(text);
-            applyCommonEditorStyle(combo);
+            applyCommonComponentStyle(combo);
         } finally {
             setSyncing(false);
         }
@@ -83,11 +83,10 @@ public final class SelectNode extends EditableNode {
 
     @Override
     protected PaintState paintState() {
-        return new SelectPaintState(basePaintState(), text, List.copyOf(lines), options);
+        return new SelectPaintState(basePaintState(), text, options);
     }
 
-    private record SelectPaintState(PaintState base, String text, List<Line> lines, List<String> options)
-            implements PaintState {
+    private record SelectPaintState(PaintState base, String text, List<String> options) implements PaintState {
         @Override
         public Rectangle paintBounds() {
             return base.paintBounds();
@@ -95,7 +94,7 @@ public final class SelectNode extends EditableNode {
     }
 
     private static final class SelectCombo extends JComboBox<String> {
-        EditorBinding binding;
+        SwingBinding binding;
 
         @Override
         public void paint(Graphics graphics) {

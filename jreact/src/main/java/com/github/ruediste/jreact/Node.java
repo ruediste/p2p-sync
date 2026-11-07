@@ -24,7 +24,7 @@ import com.github.ruediste.jreact.layout.LayoutEngine;
 import com.github.ruediste.jreact.layout.LayoutNode;
 import com.github.ruediste.jreact.layout.Size;
 import com.github.ruediste.jreact.nodes.ContainerNode;
-import com.github.ruediste.jreact.nodes.EditableNode;
+import com.github.ruediste.jreact.nodes.SwingNode;
 
 /**
  * Base class of the primitive node tree produced by a render.
@@ -34,14 +34,14 @@ import com.github.ruediste.jreact.nodes.EditableNode;
  * stages: {@link Styles} resolves its inline and scoped styles, the
  * {@link LayoutEngine} fills its layout, and the node itself paints its box and
  * content. {@link JReactPanel} supplies interaction flags, dispatches
- * callbacks, and hosts the Swing editors owned by {@link EditableNode}
+ * callbacks, and hosts the Swing components owned by {@link SwingNode}
  * subclasses.
  *
  * <p>
  * Nodes are mutable and recreated on each render. Their keys associate
  * corresponding primitives across renders. During reconciliation, a new node
  * receives the previous node with the same key and can transfer retained state
- * such as interaction flags, editor components, and the last committed paint
+ * such as interaction flags, Swing components, and the last committed paint
  * state. This lets the node hierarchy own retention and repaint detection
  * instead of the host.
  *
@@ -55,7 +55,7 @@ public abstract class Node implements LayoutNode {
      *
      * <p>
      * Equality connects successive node descriptions for interaction state,
-     * editor retention, and repaint comparisons. This is positional identity
+     * component retention, and repaint comparisons. This is positional identity
      * within a retained component, not matching by text, style ID, or node
      * type. Inserting earlier primitives can shift positions and associate
      * different output; use stable component boundaries when identity matters.
@@ -320,7 +320,7 @@ public abstract class Node implements LayoutNode {
      * Transfers retained state from the previous node with the same key.
      *
      * <p>
-     * Subclasses extend this to transfer editor components and other retained
+     * Subclasses extend this to transfer Swing components and other retained
      * state. The default transfers interaction flags and the last committed
      * paint state, which lets repaint detection compare the new node against
      * the state that was last presented.
