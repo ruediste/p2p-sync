@@ -32,6 +32,11 @@
             <version>5.11.4</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.antepod</groupId>
+            <artifactId>taffy4j</artifactId>
+            <version>0.13.0-2</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
