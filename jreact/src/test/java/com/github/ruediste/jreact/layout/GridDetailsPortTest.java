@@ -1,5 +1,6 @@
 package com.github.ruediste.jreact.layout;
 
+import com.github.ruediste.jreact.Style;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -20,7 +21,7 @@ class GridDetailsPortTest {
 
     private static Style sizedStyle(float width, float height) {
         Style style = new Style();
-        style.size = Size.of(Dimension.length(width), Dimension.length(height));
+        style.size(Size.of(Dimension.length(width), Dimension.length(height)));
         return style;
     }
 
@@ -50,7 +51,7 @@ class GridDetailsPortTest {
     void returnsNullWhenNoDetailedGridLayoutHasBeenComputed() {
         Style leafStyle = new Style();
         Style gridStyle = new Style();
-        gridStyle.display = Display.Grid;
+        gridStyle.display(Display.Grid);
         Node leaf = new Node(leafStyle);
         Node emptyGrid = new Node(gridStyle);
         Node grid = new Node(gridStyle, List.of(leaf));
@@ -67,13 +68,13 @@ class GridDetailsPortTest {
     void reportsGridGapsAndBorderRelativeTrackPositions() {
         Style childStyle = new Style();
         Style rootStyle = sizedStyle(200, 100);
-        rootStyle.display = Display.Grid;
-        rootStyle.padding = Rect.all(LengthPercentage.length(10));
-        rootStyle.border = Rect.all(LengthPercentage.length(2));
+        rootStyle.display(Display.Grid);
+        rootStyle.layoutPadding(Rect.all(LengthPercentage.length(10)));
+        rootStyle.layoutBorder(Rect.all(LengthPercentage.length(2)));
         rootStyle.setColumnGap(10);
         rootStyle.setRowGap(5);
-        rootStyle.gridTemplateColumns = List.of(single(50, 50), single(70, 70));
-        rootStyle.gridTemplateRows = List.of(single(20, 20), single(30, 30));
+        rootStyle.gridTemplateColumns(List.of(single(50, 50), single(70, 70)));
+        rootStyle.gridTemplateRows(List.of(single(20, 20), single(30, 30)));
 
         Node root = new Node(rootStyle, List.of(new Node(childStyle)));
         LayoutEngine.computeLayout(root, (float) 200, (float) 100);
@@ -102,12 +103,12 @@ class GridDetailsPortTest {
     void includesDistributedAlignmentSpaceInGridGutters() {
         Style childStyle = new Style();
         Style rootStyle = sizedStyle(300, 100);
-        rootStyle.display = Display.Grid;
+        rootStyle.display(Display.Grid);
         rootStyle.setColumnGap(10);
-        rootStyle.justifyContent = JustifyContent.SpaceBetween;
-        rootStyle.alignContent = AlignContent.Center;
-        rootStyle.gridTemplateColumns = List.of(single(50, 50), single(50, 50));
-        rootStyle.gridTemplateRows = List.of(single(40, 40));
+        rootStyle.layoutJustifyContent(JustifyContent.SpaceBetween);
+        rootStyle.alignContent(AlignContent.Center);
+        rootStyle.gridTemplateColumns(List.of(single(50, 50), single(50, 50)));
+        rootStyle.gridTemplateRows(List.of(single(40, 40)));
 
         Node root = new Node(rootStyle, List.of(new Node(childStyle)));
         LayoutEngine.computeLayout(root, (float) 300, (float) 100);
@@ -127,16 +128,16 @@ class GridDetailsPortTest {
     @EnumSource(Direction.class)
     void keepsCollapsedAutoFitTracksInLogicalOrder(Direction direction) {
         Style firstStyle = new Style();
-        firstStyle.gridColumn = Line.of(GridPlacement.line(1), GridPlacement.line(2));
+        firstStyle.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         Style secondStyle = new Style();
-        secondStyle.gridColumn = Line.of(GridPlacement.line(3), GridPlacement.line(4));
+        secondStyle.gridColumn(Line.of(GridPlacement.line(3), GridPlacement.line(4)));
         Style rootStyle = sizedStyle(300, 100);
-        rootStyle.display = Display.Grid;
-        rootStyle.direction = direction;
+        rootStyle.display(Display.Grid);
+        rootStyle.layoutDirection(direction);
         rootStyle.setColumnGap(10);
-        rootStyle.justifyContent = JustifyContent.SpaceBetween;
-        rootStyle.gridTemplateColumns = List.of(GridTemplateComponent.repeat("auto-fit",
-                List.of(track(50, 50))));
+        rootStyle.layoutJustifyContent(JustifyContent.SpaceBetween);
+        rootStyle.gridTemplateColumns(List.of(GridTemplateComponent.repeat("auto-fit",
+                List.of(track(50, 50)))));
 
         Node root = new Node(rootStyle,
                 List.of(new Node(firstStyle), new Node(secondStyle)));
@@ -165,10 +166,10 @@ class GridDetailsPortTest {
     @Test
     void preservesEmptyTrackArraysWhenTheGridHasOnlyAbsoluteChildren() {
         Style childStyle = new Style();
-        childStyle.position = Position.Absolute;
-        childStyle.size = Size.of(Dimension.length(10), Dimension.length(10));
+        childStyle.position(Position.Absolute);
+        childStyle.size(Size.of(Dimension.length(10), Dimension.length(10)));
         Style rootStyle = new Style();
-        rootStyle.display = Display.Grid;
+        rootStyle.display(Display.Grid);
         Node root = new Node(rootStyle, List.of(new Node(childStyle)));
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);
 

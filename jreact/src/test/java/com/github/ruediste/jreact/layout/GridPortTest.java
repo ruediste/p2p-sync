@@ -1,5 +1,6 @@
 package com.github.ruediste.jreact.layout;
 
+import com.github.ruediste.jreact.Style;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -48,7 +49,7 @@ class GridPortTest {
 
     private static Style sizedStyle(float width, float height) {
         Style style = new Style();
-        style.size = Size.of(Dimension.length(width), Dimension.length(height));
+        style.size(Size.of(Dimension.length(width), Dimension.length(height)));
         return style;
     }
 
@@ -57,12 +58,12 @@ class GridPortTest {
     @Test
     void gridTemplateRowsSetsAndGetsFixedLengthTracks() {
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
 
-        style.gridTemplateRows = List.of(single(100, 100), single(50, 50));
+        style.gridTemplateRows(List.of(single(100, 100), single(50, 50)));
 
-        assertEquals(2, style.gridTemplateRows.size());
-        List<GridTemplateComponent> readback = style.gridTemplateRows;
+        assertEquals(2, style.gridTemplateRows().size());
+        List<GridTemplateComponent> readback = style.gridTemplateRows();
         assertEquals(100f, readback.get(0).track.min.value, 0.0f);
         assertEquals(50f, readback.get(1).track.min.value, 0.0f);
     }
@@ -70,42 +71,42 @@ class GridPortTest {
     @Test
     void gridTemplateRowsSetsAndGetsAutoAndFrTracks() {
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
 
-        style.gridTemplateRows = List.of(single(100, 100), single("auto", "1fr"));
+        style.gridTemplateRows(List.of(single(100, 100), single("auto", "1fr")));
 
-        assertEquals(2, style.gridTemplateRows.size());
+        assertEquals(2, style.gridTemplateRows().size());
     }
 
     @Test
     void gridTemplateColumnsSetsAndGetsContentSizingTracks() {
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
 
-        style.gridTemplateColumns = List.of(single("50%", "max-content"),
-                single("min-content", "fit-content"));
+        style.gridTemplateColumns(List.of(single("50%", "max-content"),
+                single("min-content", "fit-content")));
 
-        assertEquals(2, style.gridTemplateColumns.size());
+        assertEquals(2, style.gridTemplateColumns().size());
     }
 
     @Test
     void gridTemplateColumnsSetsAndGetsFixedLengthTracks() {
         Style style = new Style();
 
-        style.gridTemplateColumns = List.of(single(60, 60), single("auto", "1fr"));
+        style.gridTemplateColumns(List.of(single(60, 60), single("auto", "1fr")));
 
-        assertEquals(2, style.gridTemplateColumns.size());
+        assertEquals(2, style.gridTemplateColumns().size());
     }
 
     @Test
     void gridAutoRowsSetsAndGetsContentSizingTracks() {
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
 
-        style.gridAutoRows = List.of(track("min-content", "max-content"));
+        style.gridAutoRows(List.of(track("min-content", "max-content")));
 
-        assertEquals(1, style.gridAutoRows.size());
-        TrackSizingFunction readback = style.gridAutoRows.get(0);
+        assertEquals(1, style.gridAutoRows().size());
+        TrackSizingFunction readback = style.gridAutoRows().get(0);
         assertEquals(MinTrackSizing.Kind.MIN_CONTENT, readback.min.kind);
         assertEquals(MaxTrackSizing.Kind.MAX_CONTENT, readback.max.kind);
     }
@@ -113,137 +114,137 @@ class GridPortTest {
     @Test
     void gridAutoColumnsSetsAndGetsFrTracks() {
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
 
-        style.gridAutoColumns = List.of(track("auto", "1fr"));
+        style.gridAutoColumns(List.of(track("auto", "1fr")));
 
-        assertEquals(1, style.gridAutoColumns.size());
+        assertEquals(1, style.gridAutoColumns().size());
     }
 
     @Test
     void gridAutoRowsSetsMultipleTracks() {
         Style style = new Style();
 
-        style.gridAutoRows = List.of(track(50, 50), track("auto", "1fr"));
+        style.gridAutoRows(List.of(track(50, 50), track("auto", "1fr")));
 
-        assertEquals(2, style.gridAutoRows.size());
+        assertEquals(2, style.gridAutoRows().size());
     }
 
     @Test
     void gridTemplateRowsSetsRepetitionTracks() {
         Style style = new Style();
 
-        style.gridTemplateRows = List.of(GridTemplateComponent.repeat(3, List.of(track(10, 10))));
+        style.gridTemplateRows(List.of(GridTemplateComponent.repeat(3, List.of(track(10, 10)))));
 
-        assertEquals(1, style.gridTemplateRows.size());
+        assertEquals(1, style.gridTemplateRows().size());
     }
 
     @Test
     void gridTemplateColumnsSetsRepetitionWithLineNames() {
         Style style = new Style();
 
-        style.gridTemplateColumns = List.of(GridTemplateComponent.repeat(2,
+        style.gridTemplateColumns(List.of(GridTemplateComponent.repeat(2,
                 List.of(track(10, 10)),
-                List.of(List.of("start"), List.of("middle"), List.of("end"))));
+                List.of(List.of("start"), List.of("middle"), List.of("end")))));
 
-        assertEquals(1, style.gridTemplateColumns.size());
+        assertEquals(1, style.gridTemplateColumns().size());
     }
 
     @Test
     void gridTemplateRowsSetsAutoFillRepetition() {
         Style style = new Style();
 
-        style.gridTemplateRows = List.of(GridTemplateComponent.repeat("auto-fill",
-                List.of(track(100, 100))));
+        style.gridTemplateRows(List.of(GridTemplateComponent.repeat("auto-fill",
+                List.of(track(100, 100)))));
 
-        assertEquals(1, style.gridTemplateRows.size());
+        assertEquals(1, style.gridTemplateRows().size());
     }
 
     @Test
     void gridTemplateColumnsSetsAutoFitRepetition() {
         Style style = new Style();
 
-        style.gridTemplateColumns = List.of(GridTemplateComponent.repeat("auto-fit",
-                List.of(track(50, "1fr"))));
+        style.gridTemplateColumns(List.of(GridTemplateComponent.repeat("auto-fit",
+                List.of(track(50, "1fr")))));
 
-        assertEquals(1, style.gridTemplateColumns.size());
+        assertEquals(1, style.gridTemplateColumns().size());
     }
 
     @Test
     void gridRowHandlesLineNumbers() {
         Style style = new Style();
 
-        style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(3));
-        assertLine(style.gridRow.start, 1);
-        assertLine(style.gridRow.end, 3);
+        style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(3)));
+        assertLine(style.gridRow().start, 1);
+        assertLine(style.gridRow().end, 3);
     }
 
     @Test
     void gridColumnHandlesLineNumbers() {
         Style style = new Style();
 
-        style.gridColumn = Line.of(GridPlacement.line(1), GridPlacement.line(4));
-        assertLine(style.gridColumn.start, 1);
-        assertLine(style.gridColumn.end, 4);
+        style.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(4)));
+        assertLine(style.gridColumn().start, 1);
+        assertLine(style.gridColumn().end, 4);
     }
 
     @Test
     void gridRowHandlesNegativeLineIndices() {
         Style style = new Style();
 
-        style.gridRow = Line.of(GridPlacement.line(-1), GridPlacement.line(-2));
-        assertLine(style.gridRow.start, -1);
-        assertLine(style.gridRow.end, -2);
+        style.gridRow(Line.of(GridPlacement.line(-1), GridPlacement.line(-2)));
+        assertLine(style.gridRow().start, -1);
+        assertLine(style.gridRow().end, -2);
 
-        style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(-1));
-        assertLine(style.gridRow.start, 1);
-        assertLine(style.gridRow.end, -1);
+        style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(-1)));
+        assertLine(style.gridRow().start, 1);
+        assertLine(style.gridRow().end, -1);
     }
 
     @Test
     void gridColumnHandlesNegativeLineIndices() {
         Style style = new Style();
 
-        style.gridColumn = Line.of(GridPlacement.line(-3), GridPlacement.line(-1));
-        assertLine(style.gridColumn.start, -3);
-        assertLine(style.gridColumn.end, -1);
+        style.gridColumn(Line.of(GridPlacement.line(-3), GridPlacement.line(-1)));
+        assertLine(style.gridColumn().start, -3);
+        assertLine(style.gridColumn().end, -1);
     }
 
     @Test
     void gridRowHandlesSpan() {
         Style style = new Style();
 
-        style.gridRow = Line.of(GridPlacement.line(2), GridPlacement.span(2));
-        assertLine(style.gridRow.start, 2);
-        assertSpan(style.gridRow.end, 2);
+        style.gridRow(Line.of(GridPlacement.line(2), GridPlacement.span(2)));
+        assertLine(style.gridRow().start, 2);
+        assertSpan(style.gridRow().end, 2);
     }
 
     @Test
     void gridColumnHandlesSpan() {
         Style style = new Style();
 
-        style.gridColumn = Line.of(GridPlacement.auto(), GridPlacement.span(3));
-        assertAuto(style.gridColumn.start);
-        assertSpan(style.gridColumn.end, 3);
+        style.gridColumn(Line.of(GridPlacement.auto(), GridPlacement.span(3)));
+        assertAuto(style.gridColumn().start);
+        assertSpan(style.gridColumn().end, 3);
     }
 
     @Test
     void gridRowHandlesNamedLinePlacement() {
         Style style = new Style();
 
-        style.gridRow = Line.of(GridPlacement.line(1, "header"), GridPlacement.auto());
-        assertEquals("header", style.gridRow.start.ident);
-        assertEquals(1, style.gridRow.start.line);
-        assertAuto(style.gridRow.end);
+        style.gridRow(Line.of(GridPlacement.line(1, "header"), GridPlacement.auto()));
+        assertEquals("header", style.gridRow().start.ident);
+        assertEquals(1, style.gridRow().start.line);
+        assertAuto(style.gridRow().end);
     }
 
     @Test
     void gridColumnHandlesNamedSpan() {
         Style style = new Style();
 
-        style.gridColumn = Line.of(GridPlacement.span(2, "sidebar"), GridPlacement.auto());
-        assertEquals(2, style.gridColumn.start.span);
-        assertEquals("sidebar", style.gridColumn.start.ident);
+        style.gridColumn(Line.of(GridPlacement.span(2, "sidebar"), GridPlacement.auto()));
+        assertEquals(2, style.gridColumn().start.span);
+        assertEquals("sidebar", style.gridColumn().start.ident);
     }
 
     @Test
@@ -251,49 +252,49 @@ class GridPortTest {
         Style style = new Style();
 
         // Span 1
-        style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.span(1));
-        assertSpan(style.gridRow.end, 1);
+        style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.span(1)));
+        assertSpan(style.gridRow().end, 1);
 
         // Large span
-        style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.span(10));
-        assertSpan(style.gridRow.end, 10);
+        style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.span(10)));
+        assertSpan(style.gridRow().end, 10);
 
         // Span on start
-        style.gridRow = Line.of(GridPlacement.span(3), GridPlacement.line(5));
-        assertSpan(style.gridRow.start, 3);
-        assertLine(style.gridRow.end, 5);
+        style.gridRow(Line.of(GridPlacement.span(3), GridPlacement.line(5)));
+        assertSpan(style.gridRow().start, 3);
+        assertLine(style.gridRow().end, 5);
     }
 
     @Test
     void gridColumnHandlesSpanOnBothSides() {
         Style style = new Style();
 
-        style.gridColumn = Line.of(GridPlacement.span(2), GridPlacement.span(3));
-        assertSpan(style.gridColumn.start, 2);
-        assertSpan(style.gridColumn.end, 3);
+        style.gridColumn(Line.of(GridPlacement.span(2), GridPlacement.span(3)));
+        assertSpan(style.gridColumn().start, 2);
+        assertSpan(style.gridColumn().end, 3);
     }
 
     @Test
     void gridRowHandlesAutoPlacement() {
         Style style = new Style();
 
-        style.gridRow = Line.of(GridPlacement.auto(), GridPlacement.auto());
-        assertAuto(style.gridRow.start);
-        assertAuto(style.gridRow.end);
+        style.gridRow(Line.of(GridPlacement.auto(), GridPlacement.auto()));
+        assertAuto(style.gridRow().start);
+        assertAuto(style.gridRow().end);
 
-        style.gridRow = Line.of(GridPlacement.auto(), GridPlacement.line(3));
-        assertAuto(style.gridRow.start);
-        assertLine(style.gridRow.end, 3);
+        style.gridRow(Line.of(GridPlacement.auto(), GridPlacement.line(3)));
+        assertAuto(style.gridRow().start);
+        assertLine(style.gridRow().end, 3);
     }
 
     @Test
     void gridTemplateRowNamesSetsAndGetsLineNames() {
         Style style = new Style();
 
-        style.gridTemplateRowNames = List.of(List.of("header-start"),
-                List.of("header-end", "main-start"));
+        style.gridTemplateRowNames(List.of(List.of("header-start"),
+                List.of("header-end", "main-start")));
 
-        List<List<String>> names = style.gridTemplateRowNames;
+        List<List<String>> names = style.gridTemplateRowNames();
         assertEquals(2, names.size());
         assertEquals("header-start", names.get(0).get(0));
         assertEquals("main-start", names.get(1).get(1));
@@ -303,32 +304,32 @@ class GridPortTest {
     void gridTemplateColumnNamesSetsAndGetsLineNames() {
         Style style = new Style();
 
-        style.gridTemplateColumnNames = List.of(List.of("col-start"), List.of("col-end"));
+        style.gridTemplateColumnNames(List.of(List.of("col-start"), List.of("col-end")));
 
-        assertEquals(2, style.gridTemplateColumnNames.size());
+        assertEquals(2, style.gridTemplateColumnNames().size());
     }
 
     @Test
     void gridTemplateRowNamesHandlesEmptyLineNames() {
         Style style = new Style();
 
-        style.gridTemplateRowNames = List.of(List.of(), List.of("named-line"), List.of(),
-                List.of("another-name"));
-        assertEquals(4, style.gridTemplateRowNames.size());
-        assertEquals(List.of(), style.gridTemplateRowNames.get(0));
-        assertEquals(List.of("named-line"), style.gridTemplateRowNames.get(1));
+        style.gridTemplateRowNames(List.of(List.of(), List.of("named-line"), List.of(),
+                List.of("another-name")));
+        assertEquals(4, style.gridTemplateRowNames().size());
+        assertEquals(List.of(), style.gridTemplateRowNames().get(0));
+        assertEquals(List.of("named-line"), style.gridTemplateRowNames().get(1));
     }
 
     @Test
     void gridTemplateColumnNamesHandlesMultipleNamesPerLine() {
         Style style = new Style();
 
-        style.gridTemplateColumnNames = List.of(
+        style.gridTemplateColumnNames(List.of(
                 List.of("content-start", "sidebar-end", "main-start"),
-                List.of("content-end", "sidebar-start"));
-        assertEquals(2, style.gridTemplateColumnNames.size());
+                List.of("content-end", "sidebar-start")));
+        assertEquals(2, style.gridTemplateColumnNames().size());
         assertEquals(List.of("content-start", "sidebar-end", "main-start"),
-                style.gridTemplateColumnNames.get(0));
+                style.gridTemplateColumnNames().get(0));
     }
 
     @Test
@@ -367,7 +368,7 @@ class GridPortTest {
     @Test
     void gridAutoFlowDefaultsToRow() {
         Style style = new Style();
-        assertEquals(GridAutoFlow.Row, style.gridAutoFlow);
+        assertEquals(GridAutoFlow.Row, style.gridAutoFlow());
     }
 
     @Test
@@ -378,8 +379,8 @@ class GridPortTest {
                 GridAutoFlow.RowDense, GridAutoFlow.ColumnDense);
 
         for (GridAutoFlow variant : variants) {
-            style.gridAutoFlow = variant;
-            assertEquals(variant, style.gridAutoFlow);
+            style.gridAutoFlow(variant);
+            assertEquals(variant, style.gridAutoFlow());
         }
     }
 
@@ -389,18 +390,18 @@ class GridPortTest {
     void validatesBasicGridLayoutWithExplicitPlacement() {
 
         Style rootStyle = sizedStyle(100, 100);
-        rootStyle.display = Display.Grid;
+        rootStyle.display(Display.Grid);
 
         Node root = new Node(rootStyle);
 
         Style child1Style = new Style();
-        child1Style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(2));
-        child1Style.gridColumn = Line.of(GridPlacement.line(1), GridPlacement.line(2));
+        child1Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
+        child1Style.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         Node child1 = new Node(child1Style);
 
         Style child2Style = new Style();
-        child2Style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(2));
-        child2Style.gridColumn = Line.of(GridPlacement.line(2), GridPlacement.line(3));
+        child2Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
+        child2Style.gridColumn(Line.of(GridPlacement.line(2), GridPlacement.line(3)));
         Node child2 = new Node(child2Style);
 
         root.addChild(child1);
@@ -421,20 +422,20 @@ class GridPortTest {
     void validatesGridWithFixedColumnWidths() {
 
         Style rootStyle = sizedStyle(200, 100);
-        rootStyle.display = Display.Grid;
-        rootStyle.gridTemplateColumns = List.of(single(50, 50), single(100, 100),
-                single(50, 50));
+        rootStyle.display(Display.Grid);
+        rootStyle.gridTemplateColumns(List.of(single(50, 50), single(100, 100),
+                single(50, 50)));
 
         Node root = new Node(rootStyle);
 
         Style child1Style = new Style();
-        child1Style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(2));
-        child1Style.gridColumn = Line.of(GridPlacement.line(1), GridPlacement.line(2));
+        child1Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
+        child1Style.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         Node child1 = new Node(child1Style);
 
         Style child2Style = new Style();
-        child2Style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(2));
-        child2Style.gridColumn = Line.of(GridPlacement.line(2), GridPlacement.line(3));
+        child2Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
+        child2Style.gridColumn(Line.of(GridPlacement.line(2), GridPlacement.line(3)));
         Node child2 = new Node(child2Style);
 
         root.addChild(child1);
@@ -454,9 +455,9 @@ class GridPortTest {
     void validatesGridAutoFlowRow() {
 
         Style rootStyle = sizedStyle(100, 100);
-        rootStyle.display = Display.Grid;
-        rootStyle.gridAutoFlow = GridAutoFlow.Row;
-        rootStyle.gridTemplateColumns = List.of(single(50, 50), single(50, 50));
+        rootStyle.display(Display.Grid);
+        rootStyle.gridAutoFlow(GridAutoFlow.Row);
+        rootStyle.gridTemplateColumns(List.of(single(50, 50), single(50, 50)));
 
         Node root = new Node(rootStyle);
 
@@ -486,9 +487,9 @@ class GridPortTest {
     void validatesGridAutoFlowColumn() {
 
         Style rootStyle = sizedStyle(100, 100);
-        rootStyle.display = Display.Grid;
-        rootStyle.gridAutoFlow = GridAutoFlow.Column;
-        rootStyle.gridTemplateRows = List.of(single(50, 50), single(50, 50));
+        rootStyle.display(Display.Grid);
+        rootStyle.gridAutoFlow(GridAutoFlow.Column);
+        rootStyle.gridTemplateRows(List.of(single(50, 50), single(50, 50)));
 
         Node root = new Node(rootStyle);
 
@@ -517,15 +518,15 @@ class GridPortTest {
     void validatesGridWithRowSpan() {
 
         Style rootStyle = sizedStyle(100, 100);
-        rootStyle.display = Display.Grid;
-        rootStyle.gridTemplateRows = List.of(single(50, 50), single(50, 50));
+        rootStyle.display(Display.Grid);
+        rootStyle.gridTemplateRows(List.of(single(50, 50), single(50, 50)));
 
         Node root = new Node(rootStyle);
 
         // Child spans 2 rows
         Style childStyle = new Style();
-        childStyle.gridRow = Line.of(GridPlacement.line(1), GridPlacement.span(2));
-        childStyle.gridColumn = Line.of(GridPlacement.line(1), GridPlacement.line(2));
+        childStyle.gridRow(Line.of(GridPlacement.line(1), GridPlacement.span(2)));
+        childStyle.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         Node child = new Node(childStyle);
 
         root.addChild(child);
@@ -540,14 +541,14 @@ class GridPortTest {
     void validatesGridWithColumnSpan() {
 
         Style rootStyle = sizedStyle(100, 100);
-        rootStyle.display = Display.Grid;
-        rootStyle.gridTemplateColumns = List.of(single(50, 50), single(50, 50));
+        rootStyle.display(Display.Grid);
+        rootStyle.gridTemplateColumns(List.of(single(50, 50), single(50, 50)));
 
         Node root = new Node(rootStyle);
 
         Style childStyle = new Style();
-        childStyle.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(2));
-        childStyle.gridColumn = Line.of(GridPlacement.line(1), GridPlacement.span(2));
+        childStyle.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
+        childStyle.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.span(2)));
         Node child = new Node(childStyle);
 
         root.addChild(child);
@@ -562,20 +563,20 @@ class GridPortTest {
     void validatesGridWithGapBetweenChildren() {
 
         Style rootStyle = sizedStyle(100, 100);
-        rootStyle.display = Display.Grid;
-        rootStyle.gap = Size.of(LengthPercentage.length(10), LengthPercentage.length(10));
-        rootStyle.gridTemplateColumns = List.of(single(45, 45), single(45, 45));
+        rootStyle.display(Display.Grid);
+        rootStyle.gap(Size.of(LengthPercentage.length(10), LengthPercentage.length(10)));
+        rootStyle.gridTemplateColumns(List.of(single(45, 45), single(45, 45)));
 
         Node root = new Node(rootStyle);
 
         Style child1Style = new Style();
-        child1Style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(2));
-        child1Style.gridColumn = Line.of(GridPlacement.line(1), GridPlacement.line(2));
+        child1Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
+        child1Style.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         Node child1 = new Node(child1Style);
 
         Style child2Style = new Style();
-        child2Style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(2));
-        child2Style.gridColumn = Line.of(GridPlacement.line(2), GridPlacement.line(3));
+        child2Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
+        child2Style.gridColumn(Line.of(GridPlacement.line(2), GridPlacement.line(3)));
         Node child2 = new Node(child2Style);
 
         root.addChild(child1);
@@ -594,10 +595,10 @@ class GridPortTest {
     void validatesGridWithRowAndColumnGaps() {
 
         Style rootStyle = sizedStyle(100, 100);
-        rootStyle.display = Display.Grid;
-        rootStyle.gap = Size.of(LengthPercentage.length(10), LengthPercentage.length(20));
-        rootStyle.gridTemplateColumns = List.of(single(45, 45), single(45, 45));
-        rootStyle.gridTemplateRows = List.of(single(40, 40), single(40, 40));
+        rootStyle.display(Display.Grid);
+        rootStyle.gap(Size.of(LengthPercentage.length(10), LengthPercentage.length(20)));
+        rootStyle.gridTemplateColumns(List.of(single(45, 45), single(45, 45)));
+        rootStyle.gridTemplateRows(List.of(single(40, 40), single(40, 40)));
 
         Node root = new Node(rootStyle);
 
@@ -605,9 +606,9 @@ class GridPortTest {
         for (int row = 1; row <= 2; row++) {
             for (int col = 1; col <= 2; col++) {
                 Style style = new Style();
-                style.gridRow = Line.of(GridPlacement.line(row), GridPlacement.line(row + 1));
-                style.gridColumn = Line.of(GridPlacement.line(col),
-                        GridPlacement.line(col + 1));
+                style.gridRow(Line.of(GridPlacement.line(row), GridPlacement.line(row + 1)));
+                style.gridColumn(Line.of(GridPlacement.line(col),
+                        GridPlacement.line(col + 1)));
                 Node child = new Node(style);
                 children.add(child);
                 root.addChild(child);
@@ -630,9 +631,9 @@ class GridPortTest {
     void validatesGridWithCenterAlignment() {
 
         Style rootStyle = sizedStyle(100, 100);
-        rootStyle.display = Display.Grid;
-        rootStyle.justifyContent = JustifyContent.Center;
-        rootStyle.alignItems = AlignItems.Center;
+        rootStyle.display(Display.Grid);
+        rootStyle.layoutJustifyContent(JustifyContent.Center);
+        rootStyle.layoutAlignItems(AlignItems.Center);
 
         Node root = new Node(rootStyle);
 
@@ -651,13 +652,13 @@ class GridPortTest {
     void validatesGridWithScrollbarWidth() {
 
         Style rootStyle = sizedStyle(100, 100);
-        rootStyle.display = Display.Grid;
-        rootStyle.scrollbarWidth = 15;
+        rootStyle.display(Display.Grid);
+        rootStyle.scrollbarWidth(15);
 
         Node root = new Node(rootStyle);
 
         Style childStyle = new Style();
-        childStyle.size = Size.of(Dimension.percent(100), Dimension.percent(100));
+        childStyle.size(Size.of(Dimension.percent(100), Dimension.percent(100)));
         Node child = new Node(childStyle);
 
         root.addChild(child);
@@ -673,19 +674,19 @@ class GridPortTest {
     void validatesGridWithFrUnits() {
 
         Style rootStyle = sizedStyle(100, 100);
-        rootStyle.display = Display.Grid;
-        rootStyle.gridTemplateColumns = List.of(single("auto", "1fr"), single("auto", "2fr"));
+        rootStyle.display(Display.Grid);
+        rootStyle.gridTemplateColumns(List.of(single("auto", "1fr"), single("auto", "2fr")));
 
         Node root = new Node(rootStyle);
 
         Style child1Style = new Style();
-        child1Style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(2));
-        child1Style.gridColumn = Line.of(GridPlacement.line(1), GridPlacement.line(2));
+        child1Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
+        child1Style.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         Node child1 = new Node(child1Style);
 
         Style child2Style = new Style();
-        child2Style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(2));
-        child2Style.gridColumn = Line.of(GridPlacement.line(2), GridPlacement.line(3));
+        child2Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
+        child2Style.gridColumn(Line.of(GridPlacement.line(2), GridPlacement.line(3)));
         Node child2 = new Node(child2Style);
 
         root.addChild(child1);
@@ -704,19 +705,19 @@ class GridPortTest {
     void validatesGridWithMixedFixedAndFrUnits() {
 
         Style rootStyle = sizedStyle(100, 100);
-        rootStyle.display = Display.Grid;
-        rootStyle.gridTemplateColumns = List.of(single(20, 20), single("auto", "1fr"));
+        rootStyle.display(Display.Grid);
+        rootStyle.gridTemplateColumns(List.of(single(20, 20), single("auto", "1fr")));
 
         Node root = new Node(rootStyle);
 
         Style child1Style = new Style();
-        child1Style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(2));
-        child1Style.gridColumn = Line.of(GridPlacement.line(1), GridPlacement.line(2));
+        child1Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
+        child1Style.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
         Node child1 = new Node(child1Style);
 
         Style child2Style = new Style();
-        child2Style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(2));
-        child2Style.gridColumn = Line.of(GridPlacement.line(2), GridPlacement.line(3));
+        child2Style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
+        child2Style.gridColumn(Line.of(GridPlacement.line(2), GridPlacement.line(3)));
         Node child2 = new Node(child2Style);
 
         root.addChild(child1);
@@ -741,7 +742,7 @@ class GridPortTest {
         Node second = new Node(sizedStyle(50, 20));
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Grid;
+        rootStyle.display(Display.Grid);
         rootStyle.setWidth(100);
         rootStyle.setHeight(100);
         Node root = new Node(rootStyle, List.of(first, second));
@@ -755,22 +756,22 @@ class GridPortTest {
 
     private static void setTracks(Style style, String property, List<TrackSizingFunction> tracks) {
         switch (property) {
-            case "gridAutoRows" -> style.gridAutoRows = tracks;
-            case "gridAutoColumns" -> style.gridAutoColumns = tracks;
-            case "gridTemplateRows" -> style.gridTemplateRows = tracks.stream()
-                    .map(GridTemplateComponent::single).toList();
-            case "gridTemplateColumns" -> style.gridTemplateColumns = tracks.stream()
-                    .map(GridTemplateComponent::single).toList();
+            case "gridAutoRows" -> style.gridAutoRows(tracks);
+            case "gridAutoColumns" -> style.gridAutoColumns(tracks);
+            case "gridTemplateRows" -> style.gridTemplateRows(tracks.stream()
+                    .map(GridTemplateComponent::single).toList());
+            case "gridTemplateColumns" -> style.gridTemplateColumns(tracks.stream()
+                    .map(GridTemplateComponent::single).toList());
             default -> throw new IllegalArgumentException("Unknown grid property: " + property);
         }
     }
 
     private static Object getTracks(Style style, String property) {
         return switch (property) {
-            case "gridAutoRows" -> style.gridAutoRows;
-            case "gridAutoColumns" -> style.gridAutoColumns;
-            case "gridTemplateRows" -> style.gridTemplateRows;
-            case "gridTemplateColumns" -> style.gridTemplateColumns;
+            case "gridAutoRows" -> style.gridAutoRows();
+            case "gridAutoColumns" -> style.gridAutoColumns();
+            case "gridTemplateRows" -> style.gridTemplateRows();
+            case "gridTemplateColumns" -> style.gridTemplateColumns();
             default -> throw new IllegalArgumentException("Unknown grid property: " + property);
         };
     }
@@ -796,10 +797,10 @@ class GridPortTest {
         List<TrackSizingFunction> tracks = List.of(track("50%", "50%"), track("50%", "50%"));
         List<Node> children = List.of(new Node(new Style()), new Node(new Style()));
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
         style.setWidth(200);
         style.setHeight(200);
-        style.gridAutoFlow = columns ? GridAutoFlow.Column : GridAutoFlow.Row;
+        style.gridAutoFlow(columns ? GridAutoFlow.Column : GridAutoFlow.Row);
         setTracks(style, property, tracks);
         Node root = new Node(style, children);
 
@@ -819,11 +820,11 @@ class GridPortTest {
     void resolvesPercentageTracksNestedInARepeat() {
         List<Node> children = List.of(new Node(new Style()), new Node(new Style()));
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
         style.setWidth(200);
         style.setHeight(20);
-        style.gridTemplateColumns = List.of(GridTemplateComponent.repeat(2,
-                List.of(track("50%", "50%"))));
+        style.gridTemplateColumns(List.of(GridTemplateComponent.repeat(2,
+                List.of(track("50%", "50%")))));
         Node root = new Node(style, children);
 
         LayoutEngine.computeLayout(root, (float) 200, (float) 20);
@@ -831,17 +832,17 @@ class GridPortTest {
         assertEquals(100f, children.get(1).layout.x, 0.01f);
         assertEquals(100f, children.get(1).layout.width, 0.01f);
         assertEquals(List.of(GridTemplateComponent.repeat(2, List.of(track("50%", "50%")))),
-                style.gridTemplateColumns);
+                style.gridTemplateColumns());
     }
 
     @Test
     void limitsATrackWithAPercentageMaximumAndANumericMinimum() {
         Node child = new Node(new Style());
         Style rootStyle = new Style();
-        rootStyle.display = Display.Grid;
+        rootStyle.display(Display.Grid);
         rootStyle.setWidth(200);
         rootStyle.setHeight(20);
-        rootStyle.gridTemplateColumns = List.of(single(0, "50%"));
+        rootStyle.gridTemplateColumns(List.of(single(0, "50%")));
         Node root = new Node(rootStyle, List.of(child));
 
         LayoutEngine.computeLayout(root, (float) 200, (float) 20);

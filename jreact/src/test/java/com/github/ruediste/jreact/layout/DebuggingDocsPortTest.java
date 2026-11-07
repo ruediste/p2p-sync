@@ -1,5 +1,6 @@
 package com.github.ruediste.jreact.layout;
 
+import com.github.ruediste.jreact.Style;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ class DebuggingDocsPortTest {
             Point<java.lang.Float> absoluteOrigin, Point<java.lang.Float> rootOrigin,
             List<RectCall> calls) {
         Style style = node.style;
-        Position position = style.position;
+        Position position = style.position();
 
         Point<java.lang.Float> origin = position == Position.Fixed
                 ? rootOrigin
@@ -58,34 +59,34 @@ class DebuggingDocsPortTest {
             Position rootPosition, float expectedX, float expectedY) {
 
         Style childStyle = new Style();
-        childStyle.position = position;
-        childStyle.size = Size.of(Dimension.length(10), Dimension.length(10));
-        childStyle.inset = new Rect<>(
+        childStyle.position(position);
+        childStyle.size(Size.of(Dimension.length(10), Dimension.length(10)));
+        childStyle.layoutInset(new Rect<>(
                 LengthPercentageAuto.length(0),
                 LengthPercentageAuto.auto(),
                 LengthPercentageAuto.length(0),
-                LengthPercentageAuto.auto());
+                LengthPercentageAuto.auto()));
         Node child = new Node(childStyle);
 
         Style parentStyle = new Style();
-        parentStyle.position = parentPosition;
-        parentStyle.size = Size.of(Dimension.length(50), Dimension.length(50));
-        parentStyle.margin = new Rect<>(
+        parentStyle.position(parentPosition);
+        parentStyle.size(Size.of(Dimension.length(50), Dimension.length(50)));
+        parentStyle.layoutMargin(new Rect<>(
                 LengthPercentageAuto.length(20),
                 LengthPercentageAuto.length(0),
                 LengthPercentageAuto.length(30),
-                LengthPercentageAuto.length(0));
+                LengthPercentageAuto.length(0)));
         Node parent = new Node(parentStyle, List.of(child));
 
         Style rootStyle = new Style();
-        rootStyle.position = rootPosition;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
-        rootStyle.margin = new Rect<>(
+        rootStyle.position(rootPosition);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
+        rootStyle.layoutMargin(new Rect<>(
                 LengthPercentageAuto.length(20),
                 LengthPercentageAuto.length(0),
                 LengthPercentageAuto.length(30),
-                LengthPercentageAuto.length(0));
-        rootStyle.border = Rect.all(LengthPercentage.length(5));
+                LengthPercentageAuto.length(0)));
+        rootStyle.layoutBorder(Rect.all(LengthPercentage.length(5)));
         Node root = new Node(rootStyle, List.of(parent));
 
         LayoutEngine.computeLayout(root, (float) 300, (float) 200);

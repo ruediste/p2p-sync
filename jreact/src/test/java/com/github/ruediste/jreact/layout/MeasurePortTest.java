@@ -1,5 +1,6 @@
 package com.github.ruediste.jreact.layout;
 
+import com.github.ruediste.jreact.Style;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -41,10 +42,10 @@ class MeasurePortTest {
     private static void assertBoxSizingMeasurement(BoxSizing boxSizing, float expectedWidth,
             float expectedAvailableWidth) {
         Style style = new Style();
-        style.size = Size.of(Dimension.length(100), Dimension.auto());
-        style.boxSizing = boxSizing;
-        style.padding = Rect.all(LengthPercentage.length(10));
-        style.border = Rect.all(LengthPercentage.length(2));
+        style.size(Size.of(Dimension.length(100), Dimension.auto()));
+        style.boxSizing(boxSizing);
+        style.layoutPadding(Rect.all(LengthPercentage.length(10)));
+        style.layoutBorder(Rect.all(LengthPercentage.length(2)));
         Object context = new Object();
         Node node = Node.withContext(style, context);
         List<AvailableSpace> measuredWidths = new ArrayList<>();
@@ -53,7 +54,7 @@ class MeasurePortTest {
             assertEquals(node, measuredNode);
             assertEquals(context, measuredNode.context);
             assertEquals(Dimension.length(100), measuredNode.style.getWidth());
-            assertEquals(boxSizing, measuredNode.style.boxSizing);
+            assertEquals(boxSizing, measuredNode.style.boxSizing());
             measuredWidths.add(available.width);
             float width = known.width.isDefinite() ? known.width.value : 40f;
             return Size.of(width, 30f);

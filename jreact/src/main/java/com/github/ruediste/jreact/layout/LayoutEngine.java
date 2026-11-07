@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.github.ruediste.jreact.Style;
+
 /**
  * Computes the layout of {@link Node} trees.
  *
@@ -42,8 +44,8 @@ public final class LayoutEngine {
                 finite(rootAvailableHeight) ? rootAvailableHeight : 0,
                 -1, -1, Sizing.FILL, Sizing.CONTENT);
 
-        float marginLeft = solveAuto(root.style.margin.left, rootAvailableWidth, 0);
-        float marginTop = solveAuto(root.style.margin.top, rootAvailableWidth, 0);
+        float marginLeft = solveAuto(root.style.layoutMargin().left, rootAvailableWidth, 0);
+        float marginTop = solveAuto(root.style.layoutMargin().top, rootAvailableWidth, 0);
         root.layout.x = marginLeft;
         root.layout.y = marginTop;
         root.layout.absX = root.layout.x;
@@ -97,16 +99,16 @@ public final class LayoutEngine {
     }
 
     private static boolean isOutOfFlow(Node node) {
-        return node.style.position == Position.Absolute || node.style.position == Position.Fixed;
+        return node.style.position() == Position.Absolute || node.style.position() == Position.Fixed;
     }
 
     private static void placeOutOfFlow(Node node, Node root, float rootAvailableWidth,
             float rootAvailableHeight, boolean rootWidthDefinite, boolean rootHeightDefinite) {
         Style style = node.style;
         Node containingBlock = null;
-        if (style.position != Position.Fixed) {
+        if (style.position() != Position.Fixed) {
             Node ancestor = node.parent;
-            while (ancestor != null && ancestor.style.position == Position.Static) {
+            while (ancestor != null && ancestor.style.position() == Position.Static) {
                 ancestor = ancestor.parent;
             }
             containingBlock = ancestor;
@@ -154,20 +156,20 @@ public final class LayoutEngine {
             }
         }
 
-        float marginLeft = solveAuto(style.margin.left, cbWidth, 0);
-        float marginRight = solveAuto(style.margin.right, cbWidth, 0);
-        float marginTop = solveAuto(style.margin.top, cbWidth, 0);
-        float marginBottom = solveAuto(style.margin.bottom, cbWidth, 0);
+        float marginLeft = solveAuto(style.layoutMargin().left, cbWidth, 0);
+        float marginRight = solveAuto(style.layoutMargin().right, cbWidth, 0);
+        float marginTop = solveAuto(style.layoutMargin().top, cbWidth, 0);
+        float marginBottom = solveAuto(style.layoutMargin().bottom, cbWidth, 0);
 
-        float left = solveAuto(style.inset.left, cbWidth, AUTO);
-        float right = solveAuto(style.inset.right, cbWidth, AUTO);
-        float top = solveAuto(style.inset.top, cbHeight, AUTO);
-        float bottom = solveAuto(style.inset.bottom, cbHeight, AUTO);
+        float left = solveAuto(style.layoutInset().left, cbWidth, AUTO);
+        float right = solveAuto(style.layoutInset().right, cbWidth, AUTO);
+        float top = solveAuto(style.layoutInset().top, cbHeight, AUTO);
+        float bottom = solveAuto(style.layoutInset().bottom, cbHeight, AUTO);
 
         float forcedWidth = -1;
         float forcedHeight = -1;
-        float width = resolveDimension(style.size.width, cbWidth, 0, style.boxSizing);
-        float height = resolveDimension(style.size.height, cbHeight, 0, style.boxSizing);
+        float width = resolveDimension(style.size().width, cbWidth, 0, style.boxSizing());
+        float height = resolveDimension(style.size().height, cbHeight, 0, style.boxSizing());
         if (!finite(width) && finite(left) && finite(right)) {
             forcedWidth = Math.max(0, cbWidth - left - right - marginLeft - marginRight);
         }
@@ -212,7 +214,7 @@ public final class LayoutEngine {
         Style style = node.style;
         detailReset(node);
 
-        if (style.display == Display.None) {
+        if (style.display() == Display.None) {
             node.layout.x = x;
             node.layout.y = y;
             node.layout.width = 0;
@@ -226,27 +228,27 @@ public final class LayoutEngine {
         float referenceWidth = finite(containingBlockWidth) ? containingBlockWidth : 0;
         float referenceHeight = finite(containingBlockHeight) ? containingBlockHeight : 0;
 
-        float paddingLeft = style.padding.left.resolve(referenceWidth);
-        float paddingRight = style.padding.right.resolve(referenceWidth);
-        float paddingTop = style.padding.top.resolve(referenceWidth);
-        float paddingBottom = style.padding.bottom.resolve(referenceWidth);
-        float borderLeft = style.border.left.resolve(referenceWidth);
-        float borderRight = style.border.right.resolve(referenceWidth);
-        float borderTop = style.border.top.resolve(referenceWidth);
-        float borderBottom = style.border.bottom.resolve(referenceWidth);
+        float paddingLeft = style.layoutPadding().left.resolve(referenceWidth);
+        float paddingRight = style.layoutPadding().right.resolve(referenceWidth);
+        float paddingTop = style.layoutPadding().top.resolve(referenceWidth);
+        float paddingBottom = style.layoutPadding().bottom.resolve(referenceWidth);
+        float borderLeft = style.layoutBorder().left.resolve(referenceWidth);
+        float borderRight = style.layoutBorder().right.resolve(referenceWidth);
+        float borderTop = style.layoutBorder().top.resolve(referenceWidth);
+        float borderBottom = style.layoutBorder().bottom.resolve(referenceWidth);
         float horizontalExtra = paddingLeft + paddingRight + borderLeft + borderRight;
         float verticalExtra = paddingTop + paddingBottom + borderTop + borderBottom;
 
-        float specifiedWidth = resolveDimension(style.size.width, referenceWidth, horizontalExtra,
-                style.boxSizing);
-        float specifiedHeight = resolveDimension(style.size.height, referenceHeight, verticalExtra,
-                style.boxSizing);
+        float specifiedWidth = resolveDimension(style.size().width, referenceWidth, horizontalExtra,
+                style.boxSizing());
+        float specifiedHeight = resolveDimension(style.size().height, referenceHeight, verticalExtra,
+                style.boxSizing());
 
-        if (style.aspectRatio != null && style.aspectRatio > 0) {
+        if (style.aspectRatio() != null && style.aspectRatio() > 0) {
             if (finite(specifiedWidth) && !finite(specifiedHeight)) {
-                specifiedHeight = specifiedWidth / style.aspectRatio;
+                specifiedHeight = specifiedWidth / style.aspectRatio();
             } else if (!finite(specifiedWidth) && finite(specifiedHeight)) {
-                specifiedWidth = specifiedHeight * style.aspectRatio;
+                specifiedWidth = specifiedHeight * style.aspectRatio();
             }
         }
 
@@ -261,8 +263,8 @@ public final class LayoutEngine {
             width = intrinsicWidth(node, availableWidth, availableHeight, referenceWidth,
                     referenceHeight) + horizontalExtra;
         }
-        width = clampDimension(width, style.minSize.width, style.maxSize.width, referenceWidth,
-                horizontalExtra, style.boxSizing);
+        width = clampDimension(width, style.minSize().width, style.maxSize().width, referenceWidth,
+                horizontalExtra, style.boxSizing());
         width = Math.max(0, width);
         float contentWidth = Math.max(0, width - horizontalExtra);
 
@@ -271,16 +273,16 @@ public final class LayoutEngine {
             height = forcedHeight;
         } else if (finite(specifiedHeight)) {
             height = specifiedHeight;
-        } else if (style.aspectRatio != null && style.aspectRatio > 0 && finite(width)) {
-            height = width / style.aspectRatio;
+        } else if (style.aspectRatio() != null && style.aspectRatio() > 0 && finite(width)) {
+            height = width / style.aspectRatio();
         } else if (heightSizing == Sizing.FILL && finite(availableHeight)) {
             height = availableHeight;
         } else {
             height = intrinsicHeight(node, contentWidth, availableWidth, availableHeight,
                     referenceWidth, referenceHeight) + verticalExtra;
         }
-        height = clampDimension(height, style.minSize.height, style.maxSize.height, referenceHeight,
-                verticalExtra, style.boxSizing);
+        height = clampDimension(height, style.minSize().height, style.maxSize().height, referenceHeight,
+                verticalExtra, style.boxSizing());
         height = Math.max(0, height);
         float contentHeight = Math.max(0, height - verticalExtra);
 
@@ -291,15 +293,15 @@ public final class LayoutEngine {
         node.layout.border = new Rect<>(borderLeft, borderRight, borderTop, borderBottom);
         node.layout.padding = new Rect<>(paddingLeft, paddingRight, paddingTop, paddingBottom);
         node.layout.margin = new Rect<>(
-                solveAuto(style.margin.left, referenceWidth, 0),
-                solveAuto(style.margin.right, referenceWidth, 0),
-                solveAuto(style.margin.top, referenceWidth, 0),
-                solveAuto(style.margin.bottom, referenceWidth, 0));
-        node.layout.scrollbarWidth = style.scrollbarWidth;
+                solveAuto(style.layoutMargin().left, referenceWidth, 0),
+                solveAuto(style.layoutMargin().right, referenceWidth, 0),
+                solveAuto(style.layoutMargin().top, referenceWidth, 0),
+                solveAuto(style.layoutMargin().bottom, referenceWidth, 0));
+        node.layout.scrollbarWidth = style.scrollbarWidth();
         node.layout.scrollbarHeight = 0;
 
         boolean leafMeasured = false;
-        if (node.children.isEmpty() && node.measure != null && style.display != Display.None
+        if (node.children.isEmpty() && node.measure != null && style.display() != Display.None
                 && forcedWidth < 0 && forcedHeight < 0) {
             float knownContentWidth = finite(specifiedWidth)
                     ? Math.max(0, specifiedWidth - horizontalExtra)
@@ -328,7 +330,7 @@ public final class LayoutEngine {
             }
         }
 
-        switch (style.display) {
+        switch (style.display()) {
             case Flex -> layoutFlex(node, contentWidth, contentHeight);
             case Grid -> layoutGrid(node, contentWidth, contentHeight);
             case Block, FlowRoot -> layoutBlock(node, contentWidth, contentHeight);
@@ -337,20 +339,20 @@ public final class LayoutEngine {
         }
 
         boolean heightAuto = forcedHeight < 0 && !finite(specifiedHeight)
-                && !(style.aspectRatio != null && style.aspectRatio > 0);
-        if (heightAuto && !leafMeasured && style.display != Display.None) {
+                && !(style.aspectRatio() != null && style.aspectRatio() > 0);
+        if (heightAuto && !leafMeasured && style.display() != Display.None) {
             float contentBottom = 0;
             float contentRight = 0;
             for (Node child : node.children) {
-                if (child.style.display == Display.None || isOutOfFlow(child)) {
+                if (child.style.display() == Display.None || isOutOfFlow(child)) {
                     continue;
                 }
                 contentBottom = Math.max(contentBottom,
                         child.layout.y + child.layout.height
-                                + solveAuto(child.style.margin.bottom, referenceWidth, 0));
+                                + solveAuto(child.style.layoutMargin().bottom, referenceWidth, 0));
                 contentRight = Math.max(contentRight,
                         child.layout.x + child.layout.width
-                                + solveAuto(child.style.margin.right, referenceWidth, 0));
+                                + solveAuto(child.style.layoutMargin().right, referenceWidth, 0));
             }
             if (contentBottom > 0 || contentRight > 0) {
                 height = Math.max(height, contentBottom + paddingBottom + borderBottom);
@@ -413,33 +415,33 @@ public final class LayoutEngine {
     private static float intrinsicWidth(Node node, float availableWidth, float availableHeight,
             float referenceWidth, float referenceHeight) {
         Style style = node.style;
-        float paddingLeft = style.padding.left.resolve(referenceWidth);
-        float paddingRight = style.padding.right.resolve(referenceWidth);
-        float borderLeft = style.border.left.resolve(referenceWidth);
-        float borderRight = style.border.right.resolve(referenceWidth);
+        float paddingLeft = style.layoutPadding().left.resolve(referenceWidth);
+        float paddingRight = style.layoutPadding().right.resolve(referenceWidth);
+        float borderLeft = style.layoutBorder().left.resolve(referenceWidth);
+        float borderRight = style.layoutBorder().right.resolve(referenceWidth);
         float extra = paddingLeft + paddingRight + borderLeft + borderRight;
 
-        if (!style.size.width.isAuto()) {
+        if (!style.size().width.isAuto()) {
             return Math.max(0,
-                    resolveDimension(style.size.width, referenceWidth, extra, style.boxSizing) - extra);
+                    resolveDimension(style.size().width, referenceWidth, extra, style.boxSizing()) - extra);
         }
         if (node.children.isEmpty()) {
             return 0;
         }
-        boolean row = style.flexDirection == FlexDirection.Row
-                || style.flexDirection == FlexDirection.RowReverse;
-        if (style.display == Display.Flex) {
-            float mainGap = row ? style.gap.width.resolve(availableWidth) : 0;
+        boolean row = style.layoutFlexDirection() == FlexDirection.Row
+                || style.layoutFlexDirection() == FlexDirection.RowReverse;
+        if (style.display() == Display.Flex) {
+            float mainGap = row ? style.gap().width.resolve(availableWidth) : 0;
             float total = 0;
             float max = 0;
             for (Node child : node.children) {
-                if (child.style.display == Display.None || isOutOfFlow(child)) {
+                if (child.style.display() == Display.None || isOutOfFlow(child)) {
                     continue;
                 }
                 float childWidth = intrinsicWidth(child, availableWidth, availableHeight,
                         availableWidth, availableHeight);
-                childWidth += solveAuto(child.style.margin.left, availableWidth, 0)
-                        + solveAuto(child.style.margin.right, availableWidth, 0);
+                childWidth += solveAuto(child.style.layoutMargin().left, availableWidth, 0)
+                        + solveAuto(child.style.layoutMargin().right, availableWidth, 0);
                 if (row) {
                     total += childWidth + mainGap;
                 } else {
@@ -448,9 +450,9 @@ public final class LayoutEngine {
             }
             return row ? Math.max(0, total - mainGap) : max;
         }
-        if (style.display == Display.Grid) {
+        if (style.display() == Display.Grid) {
             float total = 0;
-            for (GridTemplateComponent component : style.gridTemplateColumns) {
+            for (GridTemplateComponent component : style.gridTemplateColumns()) {
                 if (component.isSingle()) {
                     total += fixedTrackSize(component.track, availableWidth);
                 }
@@ -459,13 +461,13 @@ public final class LayoutEngine {
         }
         float max = 0;
         for (Node child : node.children) {
-            if (child.style.display == Display.None || isOutOfFlow(child)) {
+            if (child.style.display() == Display.None || isOutOfFlow(child)) {
                 continue;
             }
             max = Math.max(max, intrinsicWidth(child, availableWidth, availableHeight,
                     availableWidth, availableHeight)
-                    + solveAuto(child.style.margin.left, availableWidth, 0)
-                    + solveAuto(child.style.margin.right, availableWidth, 0));
+                    + solveAuto(child.style.layoutMargin().left, availableWidth, 0)
+                    + solveAuto(child.style.layoutMargin().right, availableWidth, 0));
         }
         return max;
     }
@@ -473,34 +475,34 @@ public final class LayoutEngine {
     private static float intrinsicHeight(Node node, float contentWidth, float availableWidth,
             float availableHeight, float referenceWidth, float referenceHeight) {
         Style style = node.style;
-        float paddingTop = style.padding.top.resolve(referenceWidth);
-        float paddingBottom = style.padding.bottom.resolve(referenceWidth);
-        float borderTop = style.border.top.resolve(referenceWidth);
-        float borderBottom = style.border.bottom.resolve(referenceWidth);
+        float paddingTop = style.layoutPadding().top.resolve(referenceWidth);
+        float paddingBottom = style.layoutPadding().bottom.resolve(referenceWidth);
+        float borderTop = style.layoutBorder().top.resolve(referenceWidth);
+        float borderBottom = style.layoutBorder().bottom.resolve(referenceWidth);
         float extra = paddingTop + paddingBottom + borderTop + borderBottom;
 
-        if (!style.size.height.isAuto()) {
+        if (!style.size().height.isAuto()) {
             return Math.max(0,
-                    resolveDimension(style.size.height, referenceHeight, extra, style.boxSizing) - extra);
+                    resolveDimension(style.size().height, referenceHeight, extra, style.boxSizing()) - extra);
         }
         if (node.children.isEmpty()) {
             return 0;
         }
-        boolean row = style.flexDirection == FlexDirection.Row
-                || style.flexDirection == FlexDirection.RowReverse;
-        if (style.display == Display.Flex) {
-            float gap = row ? style.gap.height.resolve(availableHeight) : style.gap.height.resolve(
+        boolean row = style.layoutFlexDirection() == FlexDirection.Row
+                || style.layoutFlexDirection() == FlexDirection.RowReverse;
+        if (style.display() == Display.Flex) {
+            float gap = row ? style.gap().height.resolve(availableHeight) : style.gap().height.resolve(
                     availableHeight);
             float total = 0;
             float max = 0;
             for (Node child : node.children) {
-                if (child.style.display == Display.None || isOutOfFlow(child)) {
+                if (child.style.display() == Display.None || isOutOfFlow(child)) {
                     continue;
                 }
                 float childHeight = intrinsicHeight(child, contentWidth, availableWidth,
                         availableHeight, availableWidth, availableHeight);
-                childHeight += solveAuto(child.style.margin.top, availableWidth, 0)
-                        + solveAuto(child.style.margin.bottom, availableWidth, 0);
+                childHeight += solveAuto(child.style.layoutMargin().top, availableWidth, 0)
+                        + solveAuto(child.style.layoutMargin().bottom, availableWidth, 0);
                 if (row) {
                     max = Math.max(max, childHeight);
                 } else {
@@ -509,9 +511,9 @@ public final class LayoutEngine {
             }
             return row ? max : Math.max(0, total - gap);
         }
-        if (style.display == Display.Grid) {
+        if (style.display() == Display.Grid) {
             float total = 0;
-            for (GridTemplateComponent component : style.gridTemplateRows) {
+            for (GridTemplateComponent component : style.gridTemplateRows()) {
                 if (component.isSingle()) {
                     total += fixedTrackSize(component.track, availableHeight);
                 }
@@ -520,13 +522,13 @@ public final class LayoutEngine {
         }
         float total = 0;
         for (Node child : node.children) {
-            if (child.style.display == Display.None || isOutOfFlow(child)) {
+            if (child.style.display() == Display.None || isOutOfFlow(child)) {
                 continue;
             }
             float childHeight = layoutNode(child, 0, 0, contentWidth, availableHeight,
                     contentWidth, availableHeight, -1, -1, Sizing.CONTENT, Sizing.CONTENT).height;
-            total += childHeight + solveAuto(child.style.margin.top, availableWidth, 0)
-                    + solveAuto(child.style.margin.bottom, availableWidth, 0);
+            total += childHeight + solveAuto(child.style.layoutMargin().top, availableWidth, 0)
+                    + solveAuto(child.style.layoutMargin().bottom, availableWidth, 0);
         }
         return total;
     }
@@ -550,37 +552,37 @@ public final class LayoutEngine {
         float floatRightBottom = contentTop;
 
         for (Node child : node.children) {
-            if (child.style.display == Display.None || isOutOfFlow(child)) {
+            if (child.style.display() == Display.None || isOutOfFlow(child)) {
                 continue;
             }
             Style childStyle = child.style;
-            float marginLeft = solveAuto(childStyle.margin.left, contentWidth, 0);
-            float marginRight = solveAuto(childStyle.margin.right, contentWidth, 0);
-            float marginTop = solveAuto(childStyle.margin.top, contentWidth, 0);
-            float marginBottom = solveAuto(childStyle.margin.bottom, contentWidth, 0);
-            boolean leftAuto = childStyle.margin.left.isAuto();
-            boolean rightAuto = childStyle.margin.right.isAuto();
+            float marginLeft = solveAuto(childStyle.layoutMargin().left, contentWidth, 0);
+            float marginRight = solveAuto(childStyle.layoutMargin().right, contentWidth, 0);
+            float marginTop = solveAuto(childStyle.layoutMargin().top, contentWidth, 0);
+            float marginBottom = solveAuto(childStyle.layoutMargin().bottom, contentWidth, 0);
+            boolean leftAuto = childStyle.layoutMargin().left.isAuto();
+            boolean rightAuto = childStyle.layoutMargin().right.isAuto();
 
-            boolean floating = childStyle.floatMode != null
-                    && childStyle.floatMode != Float.None;
+            boolean floating = childStyle.floatMode() != null
+                    && childStyle.floatMode() != Float.None;
             if (!floating) {
-                if (childStyle.clear == Clear.Left || childStyle.clear == Clear.Both) {
+                if (childStyle.clear() == Clear.Left || childStyle.clear() == Clear.Both) {
                     cursorY = Math.max(cursorY, floatLeftBottom);
                 }
-                if (childStyle.clear == Clear.Right || childStyle.clear == Clear.Both) {
+                if (childStyle.clear() == Clear.Right || childStyle.clear() == Clear.Both) {
                     cursorY = Math.max(cursorY, floatRightBottom);
                 }
             }
 
-            float specifiedWidth = resolveDimension(childStyle.size.width, contentWidth, 0,
-                    childStyle.boxSizing);
-            float specifiedHeight = resolveDimension(childStyle.size.height, contentHeight, 0,
-                    childStyle.boxSizing);
+            float specifiedWidth = resolveDimension(childStyle.size().width, contentWidth, 0,
+                    childStyle.boxSizing());
+            float specifiedHeight = resolveDimension(childStyle.size().height, contentHeight, 0,
+                    childStyle.boxSizing());
             float forcedWidth = -1;
             float childX;
-            if (!finite(specifiedWidth) && childStyle.aspectRatio != null
-                    && childStyle.aspectRatio > 0 && finite(specifiedHeight)) {
-                forcedWidth = specifiedHeight * childStyle.aspectRatio;
+            if (!finite(specifiedWidth) && childStyle.aspectRatio() != null
+                    && childStyle.aspectRatio() > 0 && finite(specifiedHeight)) {
+                forcedWidth = specifiedHeight * childStyle.aspectRatio();
                 childX = contentLeft + marginLeft;
             } else if (floating) {
                 if (finite(specifiedWidth)) {
@@ -589,7 +591,7 @@ public final class LayoutEngine {
                     forcedWidth = Math.max(0,
                             contentWidth - marginLeft - marginRight);
                 }
-                childX = childStyle.floatMode == Float.Right
+                childX = childStyle.floatMode() == Float.Right
                         ? contentLeft + contentWidth - forcedWidth - marginRight
                         : contentLeft + marginLeft;
             } else if (!finite(specifiedWidth)) {
@@ -608,12 +610,12 @@ public final class LayoutEngine {
                 childX = contentLeft + marginLeft;
             }
 
-            if (childStyle.textAlign == TextAlign.LegacyCenter
-                    || node.style.textAlign == TextAlign.LegacyCenter) {
+            if (childStyle.layoutTextAlign() == TextAlign.LegacyCenter
+                    || node.style.layoutTextAlign() == TextAlign.LegacyCenter) {
                 childX = contentLeft + Math.max(0,
                         (contentWidth - child.layout.width) / 2);
-            } else if (childStyle.textAlign == TextAlign.LegacyRight
-                    || node.style.textAlign == TextAlign.LegacyRight) {
+            } else if (childStyle.layoutTextAlign() == TextAlign.LegacyRight
+                    || node.style.layoutTextAlign() == TextAlign.LegacyRight) {
                 childX = contentLeft + Math.max(0, contentWidth - child.layout.width);
             }
 
@@ -621,14 +623,14 @@ public final class LayoutEngine {
             layoutNode(child, childX, childY, contentWidth, contentHeight, contentWidth,
                     contentHeight, forcedWidth, -1, Sizing.FILL, Sizing.CONTENT);
 
-            if (childStyle.position == Position.Relative) {
-                child.layout.x += solveAuto(childStyle.inset.left, contentWidth, 0);
-                child.layout.y += solveAuto(childStyle.inset.top, contentHeight, 0);
+            if (childStyle.position() == Position.Relative) {
+                child.layout.x += solveAuto(childStyle.layoutInset().left, contentWidth, 0);
+                child.layout.y += solveAuto(childStyle.layoutInset().top, contentHeight, 0);
             }
 
             if (floating) {
                 float bottom = child.layout.y + child.layout.height + marginBottom;
-                if (childStyle.floatMode == Float.Right) {
+                if (childStyle.floatMode() == Float.Right) {
                     floatRightBottom = Math.max(floatRightBottom, bottom);
                 } else {
                     floatLeftBottom = Math.max(floatLeftBottom, bottom);
@@ -644,19 +646,19 @@ public final class LayoutEngine {
         node.layout.usedContentHeight = usedHeight;
 
         float extraHeight = contentHeight - usedHeight;
-        if (style.alignContent != null && extraHeight > 0) {
-            float offset = alignmentOffset(style.alignContent, 0, extraHeight);
+        if (style.alignContent() != null && extraHeight > 0) {
+            float offset = alignmentOffset(style.alignContent(), 0, extraHeight);
             for (Node child : node.children) {
-                if (child.style.display == Display.None || isOutOfFlow(child)) {
+                if (child.style.display() == Display.None || isOutOfFlow(child)) {
                     continue;
                 }
                 child.layout.y += offset;
             }
             contentBottomUsed += offset;
-        } else if (style.justifyContent != null && extraHeight > 0) {
-            float offset = justifyOffset(style.justifyContent, 0, extraHeight);
+        } else if (style.layoutJustifyContent() != null && extraHeight > 0) {
+            float offset = justifyOffset(style.layoutJustifyContent(), 0, extraHeight);
             for (Node child : node.children) {
-                if (child.style.display == Display.None || isOutOfFlow(child)) {
+                if (child.style.display() == Display.None || isOutOfFlow(child)) {
                     continue;
                 }
                 child.layout.y += offset;
@@ -688,26 +690,26 @@ public final class LayoutEngine {
 
     private static void layoutFlex(Node node, float contentWidth, float contentHeight) {
         Style style = node.style;
-        boolean row = style.flexDirection == FlexDirection.Row
-                || style.flexDirection == FlexDirection.RowReverse;
-        boolean mainStartIsRight = row && (style.direction == Direction.Rtl)
-                != (style.flexDirection == FlexDirection.RowReverse);
+        boolean row = style.layoutFlexDirection() == FlexDirection.Row
+                || style.layoutFlexDirection() == FlexDirection.RowReverse;
+        boolean mainStartIsRight = row && (style.layoutDirection() == Direction.Rtl)
+                != (style.layoutFlexDirection() == FlexDirection.RowReverse);
         boolean mainStartIsBottom = !row
-                && style.flexDirection == FlexDirection.ColumnReverse;
-        boolean crossStartIsBottom = row && style.flexWrap == FlexWrap.WrapReverse;
+                && style.layoutFlexDirection() == FlexDirection.ColumnReverse;
+        boolean crossStartIsBottom = row && style.layoutFlexWrap() == FlexWrap.WrapReverse;
         boolean crossStartIsRight = !row
-                && ((style.direction == Direction.Rtl) != (style.flexWrap == FlexWrap.WrapReverse));
+                && ((style.layoutDirection() == Direction.Rtl) != (style.layoutFlexWrap() == FlexWrap.WrapReverse));
 
         float mainSize = row ? contentWidth : contentHeight;
         float crossSize = row ? contentHeight : contentWidth;
-        float mainGap = row ? style.gap.width.resolve(contentWidth)
-                : style.gap.height.resolve(contentHeight);
-        float crossGap = row ? style.gap.height.resolve(contentHeight)
-                : style.gap.width.resolve(contentWidth);
+        float mainGap = row ? style.gap().width.resolve(contentWidth)
+                : style.gap().height.resolve(contentHeight);
+        float crossGap = row ? style.gap().height.resolve(contentHeight)
+                : style.gap().width.resolve(contentWidth);
 
         List<FlexItem> items = new ArrayList<>();
         for (Node child : node.children) {
-            if (child.style.display == Display.None || isOutOfFlow(child)) {
+            if (child.style.display() == Display.None || isOutOfFlow(child)) {
                 continue;
             }
             FlexItem item = measureFlexItem(child, row, contentWidth, contentHeight, mainSize);
@@ -719,7 +721,7 @@ public final class LayoutEngine {
         }
 
         List<FlexLine> lines = new ArrayList<>();
-        boolean wrap = style.flexWrap != FlexWrap.NoWrap;
+        boolean wrap = style.layoutFlexWrap() != FlexWrap.NoWrap;
         if (wrap && finite(mainSize)) {
             FlexLine line = new FlexLine();
             float used = 0;
@@ -771,7 +773,7 @@ public final class LayoutEngine {
                 crossCursor += crossGap;
             }
             if (crossFree > 0) {
-                crossCursor += crossAlignmentOffset(style.alignContent, i, lines.size(),
+                crossCursor += crossAlignmentOffset(style.alignContent(), i, lines.size(),
                         crossFree, line.crossSize);
             }
             line.crossOffset = crossCursor;
@@ -780,10 +782,10 @@ public final class LayoutEngine {
 
         for (FlexLine line : lines) {
             float free = mainSize - usedMain(line, mainGap);
-            float offset = mainFreeOffset(style.justifyContent, free, line.items.size());
+            float offset = mainFreeOffset(style.layoutJustifyContent(), free, line.items.size());
             float cursor = offset;
             int count = line.items.size();
-            float distributed = distributedMainSpace(style.justifyContent, free, count);
+            float distributed = distributedMainSpace(style.layoutJustifyContent(), free, count);
             for (int index = 0; index < count; index++) {
                 FlexItem item = line.items.get(index);
                 float outerMain = item.mainSize + item.marginMainStart + item.marginMainEnd;
@@ -799,7 +801,7 @@ public final class LayoutEngine {
                 }
 
                 float crossOffset = line.crossOffset + crossItemOffset(item, line.crossSize, crossFree,
-                        style.alignItems);
+                        style.layoutAlignItems());
                 float childX;
                 float childY;
                 if (row) {
@@ -824,9 +826,9 @@ public final class LayoutEngine {
                     childY = node.layout.border.top + node.layout.padding.top + y;
                 }
 
-                if (item.node.style.position == Position.Relative) {
-                    childX += solveAuto(item.node.style.inset.left, contentWidth, 0);
-                    childY += solveAuto(item.node.style.inset.top, contentHeight, 0);
+                if (item.node.style.position() == Position.Relative) {
+                    childX += solveAuto(item.node.style.layoutInset().left, contentWidth, 0);
+                    childY += solveAuto(item.node.style.layoutInset().top, contentHeight, 0);
                 }
 
                 layoutNode(item.node, childX, childY, contentWidth, contentHeight, contentWidth,
@@ -843,13 +845,13 @@ public final class LayoutEngine {
         FlexItem item = new FlexItem();
         item.node = child;
         Style style = child.style;
-        item.grow = style.flexGrow;
-        item.shrink = style.flexShrink;
+        item.grow = style.flexGrow();
+        item.shrink = style.flexShrink();
 
-        float marginLeft = solveAuto(style.margin.left, contentWidth, 0);
-        float marginRight = solveAuto(style.margin.right, contentWidth, 0);
-        float marginTop = solveAuto(style.margin.top, contentWidth, 0);
-        float marginBottom = solveAuto(style.margin.bottom, contentWidth, 0);
+        float marginLeft = solveAuto(style.layoutMargin().left, contentWidth, 0);
+        float marginRight = solveAuto(style.layoutMargin().right, contentWidth, 0);
+        float marginTop = solveAuto(style.layoutMargin().top, contentWidth, 0);
+        float marginBottom = solveAuto(style.layoutMargin().bottom, contentWidth, 0);
 
         if (row) {
             item.marginMainStart = marginLeft;
@@ -865,15 +867,15 @@ public final class LayoutEngine {
 
         float mainBasis = row ? contentWidth : contentHeight;
         float crossBasis = row ? contentHeight : contentWidth;
-        Dimension mainDimension = row ? style.size.width : style.size.height;
-        Dimension crossDimension = row ? style.size.height : style.size.width;
+        Dimension mainDimension = row ? style.size().width : style.size().height;
+        Dimension crossDimension = row ? style.size().height : style.size().width;
 
         float base = AUTO;
-        if (!style.flexBasis.isAuto()) {
-            base = style.flexBasis.resolve(mainBasis);
+        if (!style.flexBasis().isAuto()) {
+            base = style.flexBasis().resolve(mainBasis);
         }
         if (!finite(base) && !mainDimension.isAuto()) {
-            base = resolveDimension(mainDimension, mainBasis, 0, style.boxSizing);
+            base = resolveDimension(mainDimension, mainBasis, 0, style.boxSizing());
         }
         if (!finite(base)) {
             Size<java.lang.Float> measured = layoutNode(child, 0, 0, contentWidth, contentHeight,
@@ -882,7 +884,7 @@ public final class LayoutEngine {
         }
         item.baseMain = Math.max(0, base);
 
-        float crossValue = resolveDimension(crossDimension, crossBasis, 0, style.boxSizing);
+        float crossValue = resolveDimension(crossDimension, crossBasis, 0, style.boxSizing());
         if (finite(crossValue)) {
             item.crossSize = crossValue;
             item.crossAuto = false;
@@ -1021,7 +1023,7 @@ public final class LayoutEngine {
 
     private static float crossItemOffset(FlexItem item, float lineCross, float free,
             AlignItems parentAlign) {
-        AlignSelf self = item.node.style.alignSelf;
+        AlignSelf self = item.node.style.alignSelf();
         AlignItems align = parentAlign;
         float freeCross = lineCross - item.crossSize - item.marginCrossStart
                 - item.marginCrossEnd;
@@ -1052,14 +1054,14 @@ public final class LayoutEngine {
     }
 
     private static float selfStartOffset(FlexItem item, float freeCross) {
-        if (item.node.style.direction == Direction.Rtl) {
+        if (item.node.style.layoutDirection() == Direction.Rtl) {
             return Math.max(0, freeCross);
         }
         return 0;
     }
 
     private static float selfEndOffset(FlexItem item, float freeCross) {
-        if (item.node.style.direction == Direction.Rtl) {
+        if (item.node.style.layoutDirection() == Direction.Rtl) {
             return 0;
         }
         return Math.max(0, freeCross);
@@ -1094,24 +1096,24 @@ public final class LayoutEngine {
 
     private static void layoutGrid(Node node, float contentWidth, float contentHeight) {
         Style style = node.style;
-        List<GridTrack> columns = buildTracks(style.gridTemplateColumns, style.gridAutoColumns,
-                contentWidth, style.gap.width.resolve(contentWidth), style.getGridTemplateAreaColumnCount());
-        List<GridTrack> rows = buildTracks(style.gridTemplateRows, style.gridAutoRows,
-                contentHeight, style.gap.height.resolve(contentHeight), style.getGridTemplateAreaRowCount());
+        List<GridTrack> columns = buildTracks(style.gridTemplateColumns(), style.gridAutoColumns(),
+                contentWidth, style.gap().width.resolve(contentWidth), style.getGridTemplateAreaColumnCount());
+        List<GridTrack> rows = buildTracks(style.gridTemplateRows(), style.gridAutoRows(),
+                contentHeight, style.gap().height.resolve(contentHeight), style.getGridTemplateAreaRowCount());
         int explicitColumns = columns.size();
         int explicitRows = rows.size();
 
         List<GridItemPlacement> items = new ArrayList<>();
         for (Node child : node.children) {
-            if (child.style.display == Display.None || isOutOfFlow(child)) {
+            if (child.style.display() == Display.None || isOutOfFlow(child)) {
                 continue;
             }
             GridItemPlacement item = new GridItemPlacement();
             item.node = child;
-            item.marginLeft = solveAuto(child.style.margin.left, contentWidth, 0);
-            item.marginRight = solveAuto(child.style.margin.right, contentWidth, 0);
-            item.marginTop = solveAuto(child.style.margin.top, contentWidth, 0);
-            item.marginBottom = solveAuto(child.style.margin.bottom, contentWidth, 0);
+            item.marginLeft = solveAuto(child.style.layoutMargin().left, contentWidth, 0);
+            item.marginRight = solveAuto(child.style.layoutMargin().right, contentWidth, 0);
+            item.marginTop = solveAuto(child.style.layoutMargin().top, contentWidth, 0);
+            item.marginBottom = solveAuto(child.style.layoutMargin().bottom, contentWidth, 0);
             Size<java.lang.Float> measured = layoutNode(child, 0, 0, contentWidth, contentHeight,
                     contentWidth, contentHeight, -1, -1, Sizing.CONTENT, Sizing.CONTENT);
             item.measuredWidth = measured.width;
@@ -1134,24 +1136,24 @@ public final class LayoutEngine {
             rowCount = 0;
         }
         while (columns.size() < columnCount) {
-            columns.add(implicitTrack(style.gridAutoColumns, columns.size() - explicitColumns,
-                    style.gridAutoFlow == GridAutoFlow.Column
-                            || style.gridAutoFlow == GridAutoFlow.ColumnDense));
+            columns.add(implicitTrack(style.gridAutoColumns(), columns.size() - explicitColumns,
+                    style.gridAutoFlow() == GridAutoFlow.Column
+                            || style.gridAutoFlow() == GridAutoFlow.ColumnDense));
         }
         while (rows.size() < rowCount) {
-            rows.add(implicitTrack(style.gridAutoRows, rows.size() - explicitRows,
-                    style.gridAutoFlow == GridAutoFlow.Row
-                            || style.gridAutoFlow == GridAutoFlow.RowDense));
+            rows.add(implicitTrack(style.gridAutoRows(), rows.size() - explicitRows,
+                    style.gridAutoFlow() == GridAutoFlow.Row
+                            || style.gridAutoFlow() == GridAutoFlow.RowDense));
         }
 
-        float columnGap = style.gap.width.resolve(contentWidth);
-        float rowGap = style.gap.height.resolve(contentHeight);
+        float columnGap = style.gap().width.resolve(contentWidth);
+        float rowGap = style.gap().height.resolve(contentHeight);
         sizeTracks(columns, items, true, contentWidth, columnGap,
-                style.justifyContent == null);
-        sizeTracks(rows, items, false, contentHeight, rowGap, style.alignContent == null);
+                style.layoutJustifyContent() == null);
+        sizeTracks(rows, items, false, contentHeight, rowGap, style.alignContent() == null);
         ColumnLayout columnLayout = alignTracks(columns, contentWidth, columnGap,
-                style.justifyContent, style.direction == Direction.Rtl);
-        RowLayout rowLayout = alignTracks(rows, contentHeight, rowGap, style.alignContent, false);
+                style.layoutJustifyContent(), style.layoutDirection() == Direction.Rtl);
+        RowLayout rowLayout = alignTracks(rows, contentHeight, rowGap, style.alignContent(), false);
 
         for (GridItemPlacement item : items) {
             float cellX = columnLayout.trackStart[item.columnStart];
@@ -1165,26 +1167,26 @@ public final class LayoutEngine {
             Style childStyle = item.node.style;
             float forcedWidth = -1;
             float forcedHeight = -1;
-            boolean widthAuto = childStyle.size.width.isAuto();
-            boolean heightAuto = childStyle.size.height.isAuto();
-            AlignItems justifyItems = childStyle.justifyItems == null ? style.justifyItems
-                    : childStyle.justifyItems;
-            AlignItems alignItems = childStyle.alignItems == null ? style.alignItems
-                    : childStyle.alignItems;
-            AlignSelf justifySelf = childStyle.justifySelf;
-            AlignSelf alignSelf = childStyle.alignSelf;
+            boolean widthAuto = childStyle.size().width.isAuto();
+            boolean heightAuto = childStyle.size().height.isAuto();
+            AlignItems justifyItems = childStyle.justifyItems() == null ? style.justifyItems()
+                    : childStyle.justifyItems();
+            AlignItems alignItems = childStyle.layoutAlignItems() == null ? style.layoutAlignItems()
+                    : childStyle.layoutAlignItems();
+            AlignSelf justifySelf = childStyle.justifySelf();
+            AlignSelf alignSelf = childStyle.alignSelf();
 
             if (widthAuto && isStretch(justifyItems, justifySelf)) {
                 forcedWidth = Math.max(0, cellWidth);
             } else if (!widthAuto) {
-                forcedWidth = resolveDimension(childStyle.size.width, cellWidth, 0,
-                        childStyle.boxSizing);
+                forcedWidth = resolveDimension(childStyle.size().width, cellWidth, 0,
+                        childStyle.boxSizing());
             }
             if (heightAuto && isStretch(alignItems, alignSelf)) {
                 forcedHeight = Math.max(0, cellHeight);
             } else if (!heightAuto) {
-                forcedHeight = resolveDimension(childStyle.size.height, cellHeight, 0,
-                        childStyle.boxSizing);
+                forcedHeight = resolveDimension(childStyle.size().height, cellHeight, 0,
+                        childStyle.boxSizing());
             }
 
             float childWidth = forcedWidth >= 0 ? forcedWidth : item.measuredWidth;
@@ -1201,8 +1203,8 @@ public final class LayoutEngine {
 
         if (!node.children.isEmpty()) {
             buildDetailedGridInfo(node, columns, rows, items, columnLayout, rowLayout,
-                    explicitColumns, explicitRows, style.direction == Direction.Rtl,
-                    style.gridTemplateColumns, style.gridTemplateRows);
+                    explicitColumns, explicitRows, style.layoutDirection() == Direction.Rtl,
+                    style.gridTemplateColumns(), style.gridTemplateRows());
         }
         node.layout.usedContentWidth = contentWidth;
         node.layout.usedContentHeight = contentHeight;
@@ -1311,10 +1313,10 @@ public final class LayoutEngine {
         for (GridItemPlacement item : items) {
             resolvePlacement(item, explicitColumns, explicitRows);
         }
-        boolean columnFlow = style.gridAutoFlow == GridAutoFlow.Column
-                || style.gridAutoFlow == GridAutoFlow.ColumnDense;
-        boolean dense = style.gridAutoFlow == GridAutoFlow.RowDense
-                || style.gridAutoFlow == GridAutoFlow.ColumnDense;
+        boolean columnFlow = style.gridAutoFlow() == GridAutoFlow.Column
+                || style.gridAutoFlow() == GridAutoFlow.ColumnDense;
+        boolean dense = style.gridAutoFlow() == GridAutoFlow.RowDense
+                || style.gridAutoFlow() == GridAutoFlow.ColumnDense;
         int columns = Math.max(1, explicitColumns);
         int rows = Math.max(1, explicitRows);
         Set<Long> occupied = new HashSet<>();
@@ -1470,10 +1472,10 @@ public final class LayoutEngine {
 
     private static void resolvePlacement(GridItemPlacement item, int explicitColumns,
             int explicitRows) {
-        GridPlacement columnStart = item.node.style.gridColumn.start;
-        GridPlacement columnEnd = item.node.style.gridColumn.end;
-        GridPlacement rowStart = item.node.style.gridRow.start;
-        GridPlacement rowEnd = item.node.style.gridRow.end;
+        GridPlacement columnStart = item.node.style.gridColumn().start;
+        GridPlacement columnEnd = item.node.style.gridColumn().end;
+        GridPlacement rowStart = item.node.style.gridRow().start;
+        GridPlacement rowEnd = item.node.style.gridRow().end;
 
         item.columnAuto = columnStart.isAuto() && columnEnd.isAuto();
         item.rowAuto = rowStart.isAuto() && rowEnd.isAuto();
@@ -1596,7 +1598,7 @@ public final class LayoutEngine {
         for (GridItemPlacement item : items) {
             float contribution = columns ? item.measuredWidth + item.marginLeft + item.marginRight
                     : item.measuredHeight + item.marginTop + item.marginBottom;
-            Dimension along = columns ? item.node.style.size.width : item.node.style.size.height;
+            Dimension along = columns ? item.node.style.size().width : item.node.style.size().height;
             boolean explicitSize = along != null && !along.isAuto();
             boolean percentSize = along != null && along.isPercent();
             int start = columns ? item.columnStart : item.rowStart;

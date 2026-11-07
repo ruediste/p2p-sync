@@ -1,5 +1,6 @@
 package com.github.ruediste.jreact.layout;
 
+import com.github.ruediste.jreact.Style;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
@@ -36,11 +37,11 @@ class AlignmentEnumsPortTest {
     @MethodSource("selfAlignmentCases")
     void returnsThePublicSelfAlignmentValue(AlignSelf value) {
         Style style = new Style();
-        style.alignSelf = value;
-        style.justifySelf = value;
+        style.alignSelf(value);
+        style.justifySelf(value);
 
-        assertEquals(value, style.alignSelf);
-        assertEquals(value, style.justifySelf);
+        assertEquals(value, style.alignSelf());
+        assertEquals(value, style.justifySelf());
     }
 
     static Stream<Arguments> distributionCases() {
@@ -59,11 +60,11 @@ class AlignmentEnumsPortTest {
     void returnsPublicDistributionValuesWithoutSwappingDistributionModes(String name,
             AlignContent alignContent, JustifyContent justifyContent) {
         Style style = new Style();
-        style.alignContent = alignContent;
-        style.justifyContent = justifyContent;
+        style.alignContent(alignContent);
+        style.layoutJustifyContent(justifyContent);
 
-        assertEquals(alignContent, style.alignContent);
-        assertEquals(justifyContent, style.justifyContent);
+        assertEquals(alignContent, style.alignContent());
+        assertEquals(justifyContent, style.layoutJustifyContent());
     }
 
     @Test
@@ -76,20 +77,20 @@ class AlignmentEnumsPortTest {
                 Display.FlowRoot.value));
 
         Style style = new Style();
-        style.display = Display.FlowRoot;
-        style.alignItems = AlignItems.SafeSelfStart;
-        style.alignSelf = AlignSelf.SafeCenter;
-        style.alignContent = AlignContent.SafeEnd;
-        style.justifyContent = JustifyContent.SafeFlexEnd;
-        style.justifyItems = AlignItems.SelfEnd;
-        style.justifySelf = AlignSelf.SafeSelfEnd;
+        style.display(Display.FlowRoot);
+        style.layoutAlignItems(AlignItems.SafeSelfStart);
+        style.alignSelf(AlignSelf.SafeCenter);
+        style.alignContent(AlignContent.SafeEnd);
+        style.layoutJustifyContent(JustifyContent.SafeFlexEnd);
+        style.justifyItems(AlignItems.SelfEnd);
+        style.justifySelf(AlignSelf.SafeSelfEnd);
 
-        assertEquals(Display.FlowRoot, style.display);
-        assertEquals(AlignItems.SafeSelfStart, style.alignItems);
-        assertEquals(AlignSelf.SafeCenter, style.alignSelf);
-        assertEquals(AlignContent.SafeEnd, style.alignContent);
-        assertEquals(JustifyContent.SafeFlexEnd, style.justifyContent);
-        assertEquals(AlignItems.SelfEnd, style.justifyItems);
-        assertEquals(AlignSelf.SafeSelfEnd, style.justifySelf);
+        assertEquals(Display.FlowRoot, style.display());
+        assertEquals(AlignItems.SafeSelfStart, style.layoutAlignItems());
+        assertEquals(AlignSelf.SafeCenter, style.alignSelf());
+        assertEquals(AlignContent.SafeEnd, style.alignContent());
+        assertEquals(JustifyContent.SafeFlexEnd, style.layoutJustifyContent());
+        assertEquals(AlignItems.SelfEnd, style.justifyItems());
+        assertEquals(AlignSelf.SafeSelfEnd, style.justifySelf());
     }
 }

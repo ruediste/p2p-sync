@@ -1,5 +1,6 @@
 package com.github.ruediste.jreact.layout;
 
+import com.github.ruediste.jreact.Style;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -17,7 +18,7 @@ class BlockPortTest {
 
     private static Style sized(float width, float height) {
         Style style = new Style();
-        style.size = Size.of(Dimension.length(width), Dimension.length(height));
+        style.size(Size.of(Dimension.length(width), Dimension.length(height)));
         return style;
     }
 
@@ -33,10 +34,10 @@ class BlockPortTest {
     @Test
     void displaySetsToBlockCorrectly() {
         Style style = new Style();
-        assertEquals(Display.Flex, style.display); // default
+        assertEquals(Display.Flex, style.display()); // default
 
-        style.display = Display.Block;
-        assertEquals(Display.Block, style.display);
+        style.display(Display.Block);
+        assertEquals(Display.Block, style.display());
     }
 
     // ---- Item Properties ----
@@ -44,25 +45,25 @@ class BlockPortTest {
     @Test
     void itemIsTableDefaultsToFalseSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertFalse(style.itemIsTable);
+        assertFalse(style.itemIsTable());
 
-        style.itemIsTable = true;
-        assertTrue(style.itemIsTable);
+        style.itemIsTable(true);
+        assertTrue(style.itemIsTable());
 
-        style.itemIsTable = false;
-        assertFalse(style.itemIsTable);
+        style.itemIsTable(false);
+        assertFalse(style.itemIsTable());
     }
 
     @Test
     void itemIsReplacedDefaultsToFalseSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertFalse(style.itemIsReplaced);
+        assertFalse(style.itemIsReplaced());
 
-        style.itemIsReplaced = true;
-        assertTrue(style.itemIsReplaced);
+        style.itemIsReplaced(true);
+        assertTrue(style.itemIsReplaced());
 
-        style.itemIsReplaced = false;
-        assertFalse(style.itemIsReplaced);
+        style.itemIsReplaced(false);
+        assertFalse(style.itemIsReplaced());
     }
 
     @Test
@@ -70,17 +71,17 @@ class BlockPortTest {
         Style style = new Style();
 
         for (int i = 0; i < 5; i++) {
-            style.itemIsTable = true;
-            assertTrue(style.itemIsTable);
-            style.itemIsTable = false;
-            assertFalse(style.itemIsTable);
+            style.itemIsTable(true);
+            assertTrue(style.itemIsTable());
+            style.itemIsTable(false);
+            assertFalse(style.itemIsTable());
         }
 
         for (int i = 0; i < 5; i++) {
-            style.itemIsReplaced = true;
-            assertTrue(style.itemIsReplaced);
-            style.itemIsReplaced = false;
-            assertFalse(style.itemIsReplaced);
+            style.itemIsReplaced(true);
+            assertTrue(style.itemIsReplaced());
+            style.itemIsReplaced(false);
+            assertFalse(style.itemIsReplaced());
         }
     }
 
@@ -89,32 +90,32 @@ class BlockPortTest {
     @Test
     void scrollbarWidthDefaultsToZeroSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(0f, style.scrollbarWidth, 0.01f);
+        assertEquals(0f, style.scrollbarWidth(), 0.01f);
 
-        style.scrollbarWidth = 15;
-        assertEquals(15f, style.scrollbarWidth, 0.01f);
+        style.scrollbarWidth(15);
+        assertEquals(15f, style.scrollbarWidth(), 0.01f);
 
-        style.scrollbarWidth = 0;
-        assertEquals(0f, style.scrollbarWidth, 0.01f);
+        style.scrollbarWidth(0);
+        assertEquals(0f, style.scrollbarWidth(), 0.01f);
     }
 
     @Test
     void scrollbarWidthHandlesDecimalValues() {
         Style style = new Style();
 
-        style.scrollbarWidth = 15.5f;
-        assertEquals(15.5f, style.scrollbarWidth, 0.00001f);
+        style.scrollbarWidth(15.5f);
+        assertEquals(15.5f, style.scrollbarWidth(), 0.00001f);
 
-        style.scrollbarWidth = 0.5f;
-        assertEquals(0.5f, style.scrollbarWidth, 0.00001f);
+        style.scrollbarWidth(0.5f);
+        assertEquals(0.5f, style.scrollbarWidth(), 0.00001f);
     }
 
     @Test
     void scrollbarWidthHandlesLargeValues() {
         Style style = new Style();
 
-        style.scrollbarWidth = 100;
-        assertEquals(100f, style.scrollbarWidth, 0.01f);
+        style.scrollbarWidth(100);
+        assertEquals(100f, style.scrollbarWidth(), 0.01f);
     }
 
     // ---- Text Align ----
@@ -122,19 +123,19 @@ class BlockPortTest {
     @Test
     void textAlignDefaultsToAutoSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(TextAlign.Auto, style.textAlign);
+        assertEquals(TextAlign.Auto, style.layoutTextAlign());
 
-        style.textAlign = TextAlign.LegacyLeft;
-        assertEquals(TextAlign.LegacyLeft, style.textAlign);
+        style.layoutTextAlign(TextAlign.LegacyLeft);
+        assertEquals(TextAlign.LegacyLeft, style.layoutTextAlign());
 
-        style.textAlign = TextAlign.LegacyRight;
-        assertEquals(TextAlign.LegacyRight, style.textAlign);
+        style.layoutTextAlign(TextAlign.LegacyRight);
+        assertEquals(TextAlign.LegacyRight, style.layoutTextAlign());
 
-        style.textAlign = TextAlign.LegacyCenter;
-        assertEquals(TextAlign.LegacyCenter, style.textAlign);
+        style.layoutTextAlign(TextAlign.LegacyCenter);
+        assertEquals(TextAlign.LegacyCenter, style.layoutTextAlign());
 
-        style.textAlign = TextAlign.Auto;
-        assertEquals(TextAlign.Auto, style.textAlign);
+        style.layoutTextAlign(TextAlign.Auto);
+        assertEquals(TextAlign.Auto, style.layoutTextAlign());
     }
 
     @Test
@@ -149,8 +150,8 @@ class BlockPortTest {
         };
 
         for (TextAlign variant : variants) {
-            style.textAlign = variant;
-            assertEquals(variant, style.textAlign);
+            style.layoutTextAlign(variant);
+            assertEquals(variant, style.layoutTextAlign());
         }
     }
 
@@ -160,7 +161,7 @@ class BlockPortTest {
     void validatesBlockLayoutWithFixedSize() {
 
         Style rootStyle = sized(100, 100);
-        rootStyle.display = Display.Block;
+        rootStyle.display(Display.Block);
         Node root = new Node(rootStyle);
 
         Node child = new Node(sized(50, 50));
@@ -177,7 +178,7 @@ class BlockPortTest {
     void validatesBlockStackedChildren() {
 
         Style rootStyle = sized(100, 200);
-        rootStyle.display = Display.Block;
+        rootStyle.display(Display.Block);
         Node root = new Node(rootStyle);
 
         Node child1 = new Node(sized(100, 50));
@@ -199,11 +200,11 @@ class BlockPortTest {
     void validatesBlockWithPercentageWidth() {
 
         Style rootStyle = sized(200, 100);
-        rootStyle.display = Display.Block;
+        rootStyle.display(Display.Block);
         Node root = new Node(rootStyle);
 
         Style childStyle = sized(0, 50);
-        childStyle.size = Size.of(Dimension.percent(50), Dimension.length(50));
+        childStyle.size(Size.of(Dimension.percent(50), Dimension.length(50)));
         Node child = new Node(childStyle);
         root.addChild(child);
 
@@ -219,13 +220,13 @@ class BlockPortTest {
     void validatesBlockLayoutWithItemIsReplaced() {
 
         Style rootStyle = sized(100, 100);
-        rootStyle.display = Display.Block;
+        rootStyle.display(Display.Block);
         Node root = new Node(rootStyle);
 
         Style childStyle = new Style();
-        childStyle.itemIsReplaced = true;
-        childStyle.aspectRatio = 2f;
-        childStyle.size = Size.of(Dimension.length(50), Dimension.auto());
+        childStyle.itemIsReplaced(true);
+        childStyle.aspectRatio(2f);
+        childStyle.size(Size.of(Dimension.length(50), Dimension.auto()));
         Node child = new Node(childStyle);
         root.addChild(child);
 
@@ -240,13 +241,13 @@ class BlockPortTest {
     void validatesBlockWithAspectRatioAndHeight() {
 
         Style rootStyle = sized(100, 100);
-        rootStyle.display = Display.Block;
+        rootStyle.display(Display.Block);
         Node root = new Node(rootStyle);
 
         Style childStyle = new Style();
-        childStyle.itemIsReplaced = true;
-        childStyle.aspectRatio = 2f;
-        childStyle.size = Size.of(Dimension.auto(), Dimension.length(30));
+        childStyle.itemIsReplaced(true);
+        childStyle.aspectRatio(2f);
+        childStyle.size(Size.of(Dimension.auto(), Dimension.length(30)));
         Node child = new Node(childStyle);
         root.addChild(child);
 
@@ -261,11 +262,11 @@ class BlockPortTest {
     void validatesBlockWithItemIsTable() {
 
         Style rootStyle = sized(100, 100);
-        rootStyle.display = Display.Block;
+        rootStyle.display(Display.Block);
         Node root = new Node(rootStyle);
 
         Style childStyle = sized(50, 50);
-        childStyle.itemIsTable = true;
+        childStyle.itemIsTable(true);
         Node child = new Node(childStyle);
         root.addChild(child);
 
@@ -282,11 +283,11 @@ class BlockPortTest {
     void validatesBlockWithMargin() {
 
         Style rootStyle = sized(100, 100);
-        rootStyle.display = Display.Block;
+        rootStyle.display(Display.Block);
         Node root = new Node(rootStyle);
 
         Style childStyle = sized(50, 50);
-        childStyle.margin = Rect.all(LengthPercentageAuto.length(10));
+        childStyle.layoutMargin(Rect.all(LengthPercentageAuto.length(10)));
         Node child = new Node(childStyle);
         root.addChild(child);
 
@@ -301,15 +302,15 @@ class BlockPortTest {
     void validatesBlockWithAutoMarginForCentering() {
 
         Style rootStyle = sized(100, 100);
-        rootStyle.display = Display.Block;
+        rootStyle.display(Display.Block);
         Node root = new Node(rootStyle);
 
         Style childStyle = sized(50, 50);
-        childStyle.margin = new Rect<>(
+        childStyle.layoutMargin(new Rect<>(
                 LengthPercentageAuto.auto(),
                 LengthPercentageAuto.auto(),
                 LengthPercentageAuto.length(0),
-                LengthPercentageAuto.length(0));
+                LengthPercentageAuto.length(0)));
         Node child = new Node(childStyle);
         root.addChild(child);
 
@@ -323,12 +324,12 @@ class BlockPortTest {
     void validatesBlockWithPadding() {
 
         Style rootStyle = sized(100, 100);
-        rootStyle.display = Display.Block;
-        rootStyle.padding = Rect.all(LengthPercentage.length(10));
+        rootStyle.display(Display.Block);
+        rootStyle.layoutPadding(Rect.all(LengthPercentage.length(10)));
         Node root = new Node(rootStyle);
 
         Style childStyle = new Style();
-        childStyle.size = Size.of(Dimension.percent(100), Dimension.percent(100));
+        childStyle.size(Size.of(Dimension.percent(100), Dimension.percent(100)));
         Node child = new Node(childStyle);
         root.addChild(child);
 
@@ -344,12 +345,12 @@ class BlockPortTest {
     void validatesBlockWithBorder() {
 
         Style rootStyle = sized(100, 100);
-        rootStyle.display = Display.Block;
-        rootStyle.border = Rect.all(LengthPercentage.length(5));
+        rootStyle.display(Display.Block);
+        rootStyle.layoutBorder(Rect.all(LengthPercentage.length(5)));
         Node root = new Node(rootStyle);
 
         Style childStyle = new Style();
-        childStyle.size = Size.of(Dimension.percent(100), Dimension.percent(100));
+        childStyle.size(Size.of(Dimension.percent(100), Dimension.percent(100)));
         Node child = new Node(childStyle);
         root.addChild(child);
 
@@ -365,12 +366,12 @@ class BlockPortTest {
     void validatesBlockWithScrollbarWidthAffectsContent() {
 
         Style rootStyle = sized(100, 100);
-        rootStyle.display = Display.Block;
-        rootStyle.scrollbarWidth = 10;
+        rootStyle.display(Display.Block);
+        rootStyle.scrollbarWidth(10);
         Node root = new Node(rootStyle);
 
         Style childStyle = new Style();
-        childStyle.size = Size.of(Dimension.percent(100), Dimension.percent(100));
+        childStyle.size(Size.of(Dimension.percent(100), Dimension.percent(100)));
         Node child = new Node(childStyle);
         root.addChild(child);
 
@@ -386,7 +387,7 @@ class BlockPortTest {
     void validatesBlockWithMinSize() {
 
         Style rootStyle = sized(100, 100);
-        rootStyle.display = Display.Block;
+        rootStyle.display(Display.Block);
         Node root = new Node(rootStyle);
 
         Style childStyle = sized(20, 20);
@@ -406,7 +407,7 @@ class BlockPortTest {
     void validatesBlockWithMaxSize() {
 
         Style rootStyle = sized(100, 100);
-        rootStyle.display = Display.Block;
+        rootStyle.display(Display.Block);
         Node root = new Node(rootStyle);
 
         Style childStyle = sized(100, 100);
@@ -428,16 +429,16 @@ class BlockPortTest {
     void containsFloatsInAFlowRootAndAppliesClear() {
 
         Style floatedStyle = sized(20, 30);
-        floatedStyle.floatMode = Float.Left;
+        floatedStyle.floatMode(Float.Left);
         Node floated = new Node(floatedStyle);
 
         Style clearedStyle = sized(30, 10);
-        clearedStyle.clear = Clear.Both;
+        clearedStyle.clear(Clear.Both);
         Node cleared = new Node(clearedStyle);
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.FlowRoot;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.auto());
+        rootStyle.display(Display.FlowRoot);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.auto()));
         Node root = new Node(rootStyle, List.of(floated, cleared));
 
         LayoutEngine.computeLayout(root, Size.of(AvailableSpace.definite(100), AvailableSpace.maxContent()));
@@ -453,9 +454,9 @@ class BlockPortTest {
         Node child = new Node(sized(20, 20));
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Block;
-        rootStyle.alignContent = AlignContent.Center;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
+        rootStyle.display(Display.Block);
+        rootStyle.alignContent(AlignContent.Center);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         Node root = new Node(rootStyle, List.of(child));
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 100);

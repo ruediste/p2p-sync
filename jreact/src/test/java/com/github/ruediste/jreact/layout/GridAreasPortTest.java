@@ -1,5 +1,6 @@
 package com.github.ruediste.jreact.layout;
 
+import com.github.ruediste.jreact.Style;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -29,7 +30,7 @@ class GridAreasPortTest {
     @Test
     void preservesUnnamedRowsAndColumnsInGridTemplateAreas() {
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
         style.setWidth(300);
         style.setHeight(200);
         style.setGridTemplateAreaRowCount(2);
@@ -86,7 +87,7 @@ class GridAreasPortTest {
     void shrinksAndClearsInferredGridDimensions() {
         List<Node> children = List.of(new Node(new Style()), new Node(new Style()));
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
         style.setWidth(200);
         style.setHeight(100);
         style.setGridTemplateAreas(
@@ -150,10 +151,10 @@ class GridAreasPortTest {
     @ValueSource(strings = { "row", "column" })
     void preservesOnlyTheExplicitlySetDimension(String axis) {
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
         style.setWidth(200);
         style.setHeight(100);
-        style.gridAutoFlow = axis.equals("row") ? GridAutoFlow.Column : GridAutoFlow.Row;
+        style.gridAutoFlow(axis.equals("row") ? GridAutoFlow.Column : GridAutoFlow.Row);
         style.setGridTemplateAreas(
                 List.of(new GridTemplateArea("main", 1, 4, 1, 4)));
         if (axis.equals("row")) {

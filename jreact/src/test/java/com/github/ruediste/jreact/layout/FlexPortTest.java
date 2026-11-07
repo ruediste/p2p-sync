@@ -1,5 +1,6 @@
 package com.github.ruediste.jreact.layout;
 
+import com.github.ruediste.jreact.Style;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -18,7 +19,7 @@ class FlexPortTest {
 
     private static Style sized(float width, float height) {
         Style style = new Style();
-        style.size = Size.of(Dimension.length(width), Dimension.length(height));
+        style.size(Size.of(Dimension.length(width), Dimension.length(height)));
         return style;
     }
 
@@ -32,19 +33,19 @@ class FlexPortTest {
     @Test
     void flexDirectionDefaultsToRowSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(FlexDirection.Row, style.flexDirection);
+        assertEquals(FlexDirection.Row, style.layoutFlexDirection());
 
-        style.flexDirection = FlexDirection.Column;
-        assertEquals(FlexDirection.Column, style.flexDirection);
+        style.layoutFlexDirection(FlexDirection.Column);
+        assertEquals(FlexDirection.Column, style.layoutFlexDirection());
 
-        style.flexDirection = FlexDirection.RowReverse;
-        assertEquals(FlexDirection.RowReverse, style.flexDirection);
+        style.layoutFlexDirection(FlexDirection.RowReverse);
+        assertEquals(FlexDirection.RowReverse, style.layoutFlexDirection());
 
-        style.flexDirection = FlexDirection.ColumnReverse;
-        assertEquals(FlexDirection.ColumnReverse, style.flexDirection);
+        style.layoutFlexDirection(FlexDirection.ColumnReverse);
+        assertEquals(FlexDirection.ColumnReverse, style.layoutFlexDirection());
 
-        style.flexDirection = FlexDirection.Row;
-        assertEquals(FlexDirection.Row, style.flexDirection);
+        style.layoutFlexDirection(FlexDirection.Row);
+        assertEquals(FlexDirection.Row, style.layoutFlexDirection());
     }
 
     // ---- Flex Wrap ----
@@ -52,16 +53,16 @@ class FlexPortTest {
     @Test
     void flexWrapDefaultsToNoWrapSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(FlexWrap.NoWrap, style.flexWrap);
+        assertEquals(FlexWrap.NoWrap, style.layoutFlexWrap());
 
-        style.flexWrap = FlexWrap.Wrap;
-        assertEquals(FlexWrap.Wrap, style.flexWrap);
+        style.layoutFlexWrap(FlexWrap.Wrap);
+        assertEquals(FlexWrap.Wrap, style.layoutFlexWrap());
 
-        style.flexWrap = FlexWrap.WrapReverse;
-        assertEquals(FlexWrap.WrapReverse, style.flexWrap);
+        style.layoutFlexWrap(FlexWrap.WrapReverse);
+        assertEquals(FlexWrap.WrapReverse, style.layoutFlexWrap());
 
-        style.flexWrap = FlexWrap.NoWrap;
-        assertEquals(FlexWrap.NoWrap, style.flexWrap);
+        style.layoutFlexWrap(FlexWrap.NoWrap);
+        assertEquals(FlexWrap.NoWrap, style.layoutFlexWrap());
     }
 
     // ---- Flex Grow and Shrink ----
@@ -69,31 +70,31 @@ class FlexPortTest {
     @Test
     void flexGrowDefaultsToZeroSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(0f, style.flexGrow, 0.01f);
+        assertEquals(0f, style.flexGrow(), 0.01f);
 
-        style.flexGrow = 1;
-        assertEquals(1f, style.flexGrow, 0.01f);
+        style.flexGrow(1);
+        assertEquals(1f, style.flexGrow(), 0.01f);
 
-        style.flexGrow = 2.5f;
-        assertEquals(2.5f, style.flexGrow, 0.01f);
+        style.flexGrow(2.5f);
+        assertEquals(2.5f, style.flexGrow(), 0.01f);
 
-        style.flexGrow = 0;
-        assertEquals(0f, style.flexGrow, 0.01f);
+        style.flexGrow(0);
+        assertEquals(0f, style.flexGrow(), 0.01f);
     }
 
     @Test
     void flexShrinkDefaultsToOneSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(1f, style.flexShrink, 0.01f);
+        assertEquals(1f, style.flexShrink(), 0.01f);
 
-        style.flexShrink = 0;
-        assertEquals(0f, style.flexShrink, 0.01f);
+        style.flexShrink(0);
+        assertEquals(0f, style.flexShrink(), 0.01f);
 
-        style.flexShrink = 3.5f;
-        assertEquals(3.5f, style.flexShrink, 0.01f);
+        style.flexShrink(3.5f);
+        assertEquals(3.5f, style.flexShrink(), 0.01f);
 
-        style.flexShrink = 1;
-        assertEquals(1f, style.flexShrink, 0.01f);
+        style.flexShrink(1);
+        assertEquals(1f, style.flexShrink(), 0.01f);
     }
 
     // ---- Flex Basis ----
@@ -101,16 +102,16 @@ class FlexPortTest {
     @Test
     void flexBasisDefaultsToAutoSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(LengthPercentageAuto.auto(), style.flexBasis);
+        assertEquals(LengthPercentageAuto.auto(), style.flexBasis());
 
         style.setFlexBasis(100);
-        assertEquals(LengthPercentageAuto.length(100), style.flexBasis);
+        assertEquals(LengthPercentageAuto.length(100), style.flexBasis());
 
         style.setFlexBasis("50%");
-        assertEquals(LengthPercentageAuto.percent(50), style.flexBasis);
+        assertEquals(LengthPercentageAuto.percent(50), style.flexBasis());
 
         style.setFlexBasis("auto");
-        assertEquals(LengthPercentageAuto.auto(), style.flexBasis);
+        assertEquals(LengthPercentageAuto.auto(), style.flexBasis());
     }
 
     @Test
@@ -118,16 +119,16 @@ class FlexPortTest {
         Style style = new Style();
 
         style.setFlexBasis(0);
-        assertEquals(LengthPercentageAuto.length(0), style.flexBasis);
+        assertEquals(LengthPercentageAuto.length(0), style.flexBasis());
 
         style.setFlexBasis(200);
-        assertEquals(LengthPercentageAuto.length(200), style.flexBasis);
+        assertEquals(LengthPercentageAuto.length(200), style.flexBasis());
 
         style.setFlexBasis("100%");
-        assertEquals(LengthPercentageAuto.percent(100), style.flexBasis);
+        assertEquals(LengthPercentageAuto.percent(100), style.flexBasis());
 
         style.setFlexBasis("25%");
-        assertEquals(LengthPercentageAuto.percent(25), style.flexBasis);
+        assertEquals(LengthPercentageAuto.percent(25), style.flexBasis());
     }
 
     // ---- Alignment Properties ----
@@ -135,94 +136,94 @@ class FlexPortTest {
     @Test
     void alignItemsSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertNull(style.alignItems);
+        assertNull(style.layoutAlignItems());
 
-        style.alignItems = AlignItems.Start;
-        assertEquals(AlignItems.Start, style.alignItems);
+        style.layoutAlignItems(AlignItems.Start);
+        assertEquals(AlignItems.Start, style.layoutAlignItems());
 
-        style.alignItems = AlignItems.End;
-        assertEquals(AlignItems.End, style.alignItems);
+        style.layoutAlignItems(AlignItems.End);
+        assertEquals(AlignItems.End, style.layoutAlignItems());
 
-        style.alignItems = AlignItems.Center;
-        assertEquals(AlignItems.Center, style.alignItems);
+        style.layoutAlignItems(AlignItems.Center);
+        assertEquals(AlignItems.Center, style.layoutAlignItems());
 
-        style.alignItems = AlignItems.Baseline;
-        assertEquals(AlignItems.Baseline, style.alignItems);
+        style.layoutAlignItems(AlignItems.Baseline);
+        assertEquals(AlignItems.Baseline, style.layoutAlignItems());
 
-        style.alignItems = AlignItems.Stretch;
-        assertEquals(AlignItems.Stretch, style.alignItems);
+        style.layoutAlignItems(AlignItems.Stretch);
+        assertEquals(AlignItems.Stretch, style.layoutAlignItems());
 
-        style.alignItems = null;
-        assertNull(style.alignItems);
+        style.layoutAlignItems(null);
+        assertNull(style.layoutAlignItems());
     }
 
     @Test
     void alignSelfSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(AlignSelf.Auto, style.alignSelf);
+        assertEquals(AlignSelf.Auto, style.alignSelf());
 
-        style.alignSelf = AlignSelf.FlexStart;
-        assertEquals(AlignSelf.FlexStart, style.alignSelf);
+        style.alignSelf(AlignSelf.FlexStart);
+        assertEquals(AlignSelf.FlexStart, style.alignSelf());
 
-        style.alignSelf = AlignSelf.FlexEnd;
-        assertEquals(AlignSelf.FlexEnd, style.alignSelf);
+        style.alignSelf(AlignSelf.FlexEnd);
+        assertEquals(AlignSelf.FlexEnd, style.alignSelf());
 
-        style.alignSelf = AlignSelf.Center;
-        assertEquals(AlignSelf.Center, style.alignSelf);
+        style.alignSelf(AlignSelf.Center);
+        assertEquals(AlignSelf.Center, style.alignSelf());
 
-        style.alignSelf = AlignSelf.Auto;
-        assertEquals(AlignSelf.Auto, style.alignSelf);
+        style.alignSelf(AlignSelf.Auto);
+        assertEquals(AlignSelf.Auto, style.alignSelf());
     }
 
     @Test
     void alignContentSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertNull(style.alignContent);
+        assertNull(style.alignContent());
 
-        style.alignContent = AlignContent.Start;
-        assertEquals(AlignContent.Start, style.alignContent);
+        style.alignContent(AlignContent.Start);
+        assertEquals(AlignContent.Start, style.alignContent());
 
-        style.alignContent = AlignContent.End;
-        assertEquals(AlignContent.End, style.alignContent);
+        style.alignContent(AlignContent.End);
+        assertEquals(AlignContent.End, style.alignContent());
 
-        style.alignContent = AlignContent.SpaceBetween;
-        assertEquals(AlignContent.SpaceBetween, style.alignContent);
+        style.alignContent(AlignContent.SpaceBetween);
+        assertEquals(AlignContent.SpaceBetween, style.alignContent());
 
-        style.alignContent = AlignContent.SpaceAround;
-        assertEquals(AlignContent.SpaceAround, style.alignContent);
+        style.alignContent(AlignContent.SpaceAround);
+        assertEquals(AlignContent.SpaceAround, style.alignContent());
 
-        style.alignContent = AlignContent.SpaceEvenly;
-        assertEquals(AlignContent.SpaceEvenly, style.alignContent);
+        style.alignContent(AlignContent.SpaceEvenly);
+        assertEquals(AlignContent.SpaceEvenly, style.alignContent());
 
-        style.alignContent = null;
-        assertNull(style.alignContent);
+        style.alignContent(null);
+        assertNull(style.alignContent());
     }
 
     @Test
     void justifyContentSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertNull(style.justifyContent);
+        assertNull(style.layoutJustifyContent());
 
-        style.justifyContent = JustifyContent.Start;
-        assertEquals(JustifyContent.Start, style.justifyContent);
+        style.layoutJustifyContent(JustifyContent.Start);
+        assertEquals(JustifyContent.Start, style.layoutJustifyContent());
 
-        style.justifyContent = JustifyContent.End;
-        assertEquals(JustifyContent.End, style.justifyContent);
+        style.layoutJustifyContent(JustifyContent.End);
+        assertEquals(JustifyContent.End, style.layoutJustifyContent());
 
-        style.justifyContent = JustifyContent.Center;
-        assertEquals(JustifyContent.Center, style.justifyContent);
+        style.layoutJustifyContent(JustifyContent.Center);
+        assertEquals(JustifyContent.Center, style.layoutJustifyContent());
 
-        style.justifyContent = JustifyContent.SpaceBetween;
-        assertEquals(JustifyContent.SpaceBetween, style.justifyContent);
+        style.layoutJustifyContent(JustifyContent.SpaceBetween);
+        assertEquals(JustifyContent.SpaceBetween, style.layoutJustifyContent());
 
-        style.justifyContent = JustifyContent.SpaceAround;
-        assertEquals(JustifyContent.SpaceAround, style.justifyContent);
+        style.layoutJustifyContent(JustifyContent.SpaceAround);
+        assertEquals(JustifyContent.SpaceAround, style.layoutJustifyContent());
 
-        style.justifyContent = JustifyContent.SpaceEvenly;
-        assertEquals(JustifyContent.SpaceEvenly, style.justifyContent);
+        style.layoutJustifyContent(JustifyContent.SpaceEvenly);
+        assertEquals(JustifyContent.SpaceEvenly, style.layoutJustifyContent());
 
-        style.justifyContent = null;
-        assertNull(style.justifyContent);
+        style.layoutJustifyContent(null);
+        assertNull(style.layoutJustifyContent());
     }
 
     // ---- Basic Flex Layout ----
@@ -231,9 +232,9 @@ class FlexPortTest {
     void validatesFlexRowLayout() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.Row;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(50));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.Row);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
         Node root = new Node(rootStyle);
 
         Node child1 = new Node(sized(30, 30));
@@ -256,9 +257,9 @@ class FlexPortTest {
     void validatesFlexColumnLayout() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.Column;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.Column);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         Node root = new Node(rootStyle);
 
         Node child1 = new Node(sized(50, 50));
@@ -281,9 +282,9 @@ class FlexPortTest {
     void validatesFlexRowReverseLayout() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.RowReverse;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(50));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.RowReverse);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
         Node root = new Node(rootStyle);
 
         Node child1 = new Node(sized(30, 30));
@@ -305,9 +306,9 @@ class FlexPortTest {
     void validatesFlexColumnReverseLayout() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.ColumnReverse;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.ColumnReverse);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         Node root = new Node(rootStyle);
 
         Node child1 = new Node(sized(50, 30));
@@ -331,17 +332,17 @@ class FlexPortTest {
     void validatesFlexGrowDistributesSpace() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.Row;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(50));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.Row);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
         Node root = new Node(rootStyle);
 
         Style child1Style = new Style();
-        child1Style.flexGrow = 1;
+        child1Style.flexGrow(1);
         Node child1 = new Node(child1Style);
 
         Style child2Style = new Style();
-        child2Style.flexGrow = 1;
+        child2Style.flexGrow(1);
         Node child2 = new Node(child2Style);
 
         root.addChild(child1);
@@ -361,17 +362,17 @@ class FlexPortTest {
     void validatesFlexGrowWithDifferentRatios() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.Row;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(50));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.Row);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
         Node root = new Node(rootStyle);
 
         Style child1Style = new Style();
-        child1Style.flexGrow = 1;
+        child1Style.flexGrow(1);
         Node child1 = new Node(child1Style);
 
         Style child2Style = new Style();
-        child2Style.flexGrow = 3;
+        child2Style.flexGrow(3);
         Node child2 = new Node(child2Style);
 
         root.addChild(child1);
@@ -393,17 +394,17 @@ class FlexPortTest {
     void validatesFlexShrinkWhenContentOverflows() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.Row;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(50));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.Row);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
         Node root = new Node(rootStyle);
 
         Style child1Style = sized(100, 30);
-        child1Style.flexShrink = 1;
+        child1Style.flexShrink(1);
         Node child1 = new Node(child1Style);
 
         Style child2Style = sized(100, 30);
-        child2Style.flexShrink = 1;
+        child2Style.flexShrink(1);
         Node child2 = new Node(child2Style);
 
         root.addChild(child1);
@@ -423,17 +424,17 @@ class FlexPortTest {
     void validatesFlexShrinkZeroPreventsShrinking() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.Row;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(50));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.Row);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
         Node root = new Node(rootStyle);
 
         Style child1Style = sized(60, 30);
-        child1Style.flexShrink = 0;
+        child1Style.flexShrink(0);
         Node child1 = new Node(child1Style);
 
         Style child2Style = sized(60, 30);
-        child2Style.flexShrink = 1;
+        child2Style.flexShrink(1);
         Node child2 = new Node(child2Style);
 
         root.addChild(child1);
@@ -455,9 +456,9 @@ class FlexPortTest {
     void validatesFlexBasisSetsInitialSize() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.Row;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(50));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.Row);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
         Node root = new Node(rootStyle);
 
         Style child1Style = new Style();
@@ -484,9 +485,9 @@ class FlexPortTest {
     void validatesFlexBasisWithPercentage() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.Row;
-        rootStyle.size = Size.of(Dimension.length(200), Dimension.length(50));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.Row);
+        rootStyle.size(Size.of(Dimension.length(200), Dimension.length(50)));
         Node root = new Node(rootStyle);
 
         Style child1Style = new Style();
@@ -507,10 +508,10 @@ class FlexPortTest {
     void validatesFlexWrap() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.Row;
-        rootStyle.flexWrap = FlexWrap.Wrap;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.Row);
+        rootStyle.layoutFlexWrap(FlexWrap.Wrap);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         Node root = new Node(rootStyle);
 
         List<Node> children = new ArrayList<>();
@@ -536,10 +537,10 @@ class FlexPortTest {
     void validatesFlexWrapReverse() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.Row;
-        rootStyle.flexWrap = FlexWrap.WrapReverse;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.Row);
+        rootStyle.layoutFlexWrap(FlexWrap.WrapReverse);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         Node root = new Node(rootStyle);
 
         Node child1 = new Node(sized(60, 30));
@@ -563,9 +564,9 @@ class FlexPortTest {
     void validatesAlignItemsCenter() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.alignItems = AlignItems.Center;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutAlignItems(AlignItems.Center);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         Node root = new Node(rootStyle);
 
         Node child = new Node(sized(20, 20));
@@ -581,9 +582,9 @@ class FlexPortTest {
     void validatesJustifyContentCenter() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.justifyContent = JustifyContent.Center;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutJustifyContent(JustifyContent.Center);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         Node root = new Node(rootStyle);
 
         Node child = new Node(sized(20, 20));
@@ -599,10 +600,10 @@ class FlexPortTest {
     void validatesAlignItemsAndJustifyContentCenter() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.alignItems = AlignItems.Center;
-        rootStyle.justifyContent = JustifyContent.Center;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutAlignItems(AlignItems.Center);
+        rootStyle.layoutJustifyContent(JustifyContent.Center);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         Node root = new Node(rootStyle);
 
         Node child = new Node(sized(20, 20));
@@ -619,9 +620,9 @@ class FlexPortTest {
     void validatesJustifyContentSpaceBetween() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.justifyContent = JustifyContent.SpaceBetween;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(50));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutJustifyContent(JustifyContent.SpaceBetween);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
         Node root = new Node(rootStyle);
 
         Node child1 = new Node(sized(20, 20));
@@ -643,9 +644,9 @@ class FlexPortTest {
     void validatesJustifyContentSpaceAround() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.justifyContent = JustifyContent.SpaceAround;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(50));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutJustifyContent(JustifyContent.SpaceAround);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
         Node root = new Node(rootStyle);
 
         Node child1 = new Node(sized(20, 20));
@@ -668,9 +669,9 @@ class FlexPortTest {
     void validatesJustifyContentSpaceEvenly() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.justifyContent = JustifyContent.SpaceEvenly;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(50));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutJustifyContent(JustifyContent.SpaceEvenly);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
         Node root = new Node(rootStyle);
 
         Node child1 = new Node(sized(20, 20));
@@ -693,15 +694,15 @@ class FlexPortTest {
     void validatesAlignSelfOverridesAlignItems() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.alignItems = AlignItems.Start;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutAlignItems(AlignItems.Start);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         Node root = new Node(rootStyle);
 
         Node child1 = new Node(sized(20, 20));
 
         Style child2Style = sized(20, 20);
-        child2Style.alignSelf = AlignSelf.End;
+        child2Style.alignSelf(AlignSelf.End);
         Node child2 = new Node(child2Style);
 
         root.addChild(child1);
@@ -722,10 +723,10 @@ class FlexPortTest {
     void validatesGapBetweenFlexItems() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.Row;
-        rootStyle.gap = Size.of(LengthPercentage.length(10), LengthPercentage.length(10));
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(50));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.Row);
+        rootStyle.gap(Size.of(LengthPercentage.length(10), LengthPercentage.length(10)));
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(50)));
         Node root = new Node(rootStyle);
 
         Node child1 = new Node(sized(30, 30));
@@ -746,10 +747,10 @@ class FlexPortTest {
     void validatesGapInColumnDirection() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.Column;
-        rootStyle.gap = Size.of(LengthPercentage.length(10), LengthPercentage.length(20));
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.Column);
+        rootStyle.gap(Size.of(LengthPercentage.length(10), LengthPercentage.length(20)));
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         Node root = new Node(rootStyle);
 
         Node child1 = new Node(sized(30, 20));
@@ -772,25 +773,25 @@ class FlexPortTest {
     void validatesNestedFlexContainers() {
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.flexDirection = FlexDirection.Column;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(100));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutFlexDirection(FlexDirection.Column);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(100)));
         Node root = new Node(rootStyle);
 
         // First row container
         Style row1Style = new Style();
-        row1Style.display = Display.Flex;
-        row1Style.flexDirection = FlexDirection.Row;
-        row1Style.size = Size.of(Dimension.length(100), Dimension.length(50));
+        row1Style.display(Display.Flex);
+        row1Style.layoutFlexDirection(FlexDirection.Row);
+        row1Style.size(Size.of(Dimension.length(100), Dimension.length(50)));
         Node row1 = new Node(row1Style);
 
         // Children for first row
         Style child1Style = new Style();
-        child1Style.flexGrow = 1;
+        child1Style.flexGrow(1);
         Node child1 = new Node(child1Style);
 
         Style child2Style = new Style();
-        child2Style.flexGrow = 1;
+        child2Style.flexGrow(1);
         Node child2 = new Node(child2Style);
 
         row1.addChild(child1);
@@ -817,9 +818,9 @@ class FlexPortTest {
         Node second = new Node(childStyle);
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Flex;
-        rootStyle.direction = Direction.Rtl;
-        rootStyle.size = Size.of(Dimension.length(100), Dimension.length(10));
+        rootStyle.display(Display.Flex);
+        rootStyle.layoutDirection(Direction.Rtl);
+        rootStyle.size(Size.of(Dimension.length(100), Dimension.length(10)));
         Node root = new Node(rootStyle, List.of(first, second));
 
         LayoutEngine.computeLayout(root, (float) 100, (float) 10);
@@ -831,27 +832,27 @@ class FlexPortTest {
     @Test
     void appliesSafeAndSelfRelativeAlignment() {
         Style oversizedStyle = sized(150, 10);
-        oversizedStyle.flexShrink = 0;
+        oversizedStyle.flexShrink(0);
         Node oversized = new Node(oversizedStyle);
 
         Style safeRootStyle = new Style();
-        safeRootStyle.display = Display.Flex;
-        safeRootStyle.size = Size.of(Dimension.length(100), Dimension.length(20));
-        safeRootStyle.justifyContent = JustifyContent.SafeCenter;
+        safeRootStyle.display(Display.Flex);
+        safeRootStyle.size(Size.of(Dimension.length(100), Dimension.length(20)));
+        safeRootStyle.layoutJustifyContent(JustifyContent.SafeCenter);
         Node safeRoot = new Node(safeRootStyle, List.of(oversized));
 
         LayoutEngine.computeLayout(safeRoot, (float) 100, (float) 20);
         assertEquals(0f, oversized.layout.x, 0.01f);
         Style selfAlignedStyle = sized(20, 10);
-        selfAlignedStyle.direction = Direction.Rtl;
-        selfAlignedStyle.alignSelf = AlignSelf.SelfStart;
+        selfAlignedStyle.layoutDirection(Direction.Rtl);
+        selfAlignedStyle.alignSelf(AlignSelf.SelfStart);
         Node selfAligned = new Node(selfAlignedStyle);
 
         Style selfRootStyle = new Style();
-        selfRootStyle.display = Display.Flex;
-        selfRootStyle.direction = Direction.Ltr;
-        selfRootStyle.flexDirection = FlexDirection.Column;
-        selfRootStyle.size = Size.of(Dimension.length(100), Dimension.length(20));
+        selfRootStyle.display(Display.Flex);
+        selfRootStyle.layoutDirection(Direction.Ltr);
+        selfRootStyle.layoutFlexDirection(FlexDirection.Column);
+        selfRootStyle.size(Size.of(Dimension.length(100), Dimension.length(20)));
         Node selfRoot = new Node(selfRootStyle, List.of(selfAligned));
 
         LayoutEngine.computeLayout(selfRoot, (float) 100, (float) 20);

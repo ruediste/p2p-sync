@@ -3,6 +3,8 @@ package com.github.ruediste.jreact.layout;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.ruediste.jreact.Style;
+
 /**
  * One node of a layout tree.
  *

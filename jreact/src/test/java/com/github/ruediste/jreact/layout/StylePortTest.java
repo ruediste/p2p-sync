@@ -1,5 +1,6 @@
 package com.github.ruediste.jreact.layout;
 
+import com.github.ruediste.jreact.Style;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -22,34 +23,34 @@ class StylePortTest {
     @Test
     void createsStyleWithDefaultsWhenNoArguments() {
         Style style = new Style();
-        assertEquals(Display.Flex, style.display);
-        assertEquals(Position.Static, style.position);
+        assertEquals(Display.Flex, style.display());
+        assertEquals(Position.Static, style.position());
     }
 
     @Test
     void createsStyleWithInitialProperties() {
         Style style = new Style();
-        style.display = Display.Grid;
-        style.flexDirection = FlexDirection.Column;
-        style.size.width = Dimension.length(200);
-        style.margin.left = LengthPercentageAuto.length(10);
-        assertEquals(Display.Grid, style.display);
-        assertEquals(FlexDirection.Column, style.flexDirection);
-        assertEquals(Dimension.length(200), style.size.width);
-        assertEquals(LengthPercentageAuto.length(10), style.margin.left);
+        style.display(Display.Grid);
+        style.layoutFlexDirection(FlexDirection.Column);
+        style.setWidth(Dimension.length(200));
+        style.setMarginLeft(LengthPercentageAuto.length(10));
+        assertEquals(Display.Grid, style.display());
+        assertEquals(FlexDirection.Column, style.layoutFlexDirection());
+        assertEquals(Dimension.length(200), style.size().width);
+        assertEquals(LengthPercentageAuto.length(10), style.layoutMargin().left);
     }
 
     @Test
     void createsStyleWithDotNotationProperties() {
         Style style = new Style();
-        style.size.width = Dimension.length(300);
-        style.size.height = Dimension.percent(50);
-        style.margin.left = LengthPercentageAuto.length(20);
-        style.margin.right = LengthPercentageAuto.auto();
-        assertEquals(Dimension.length(300), style.size.width);
-        assertEquals(Dimension.percent(50), style.size.height);
-        assertEquals(LengthPercentageAuto.length(20), style.margin.left);
-        assertEquals(LengthPercentageAuto.auto(), style.margin.right);
+        style.setWidth(Dimension.length(300));
+        style.setHeight(Dimension.percent(50));
+        style.setMarginLeft(LengthPercentageAuto.length(20));
+        style.setMarginRight(LengthPercentageAuto.auto());
+        assertEquals(Dimension.length(300), style.size().width);
+        assertEquals(Dimension.percent(50), style.size().height);
+        assertEquals(LengthPercentageAuto.length(20), style.layoutMargin().left);
+        assertEquals(LengthPercentageAuto.auto(), style.layoutMargin().right);
     }
 
     // Layout modes
@@ -57,25 +58,25 @@ class StylePortTest {
     @Test
     void displayDefaultsToFlexSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(Display.Flex, style.display);
+        assertEquals(Display.Flex, style.display());
 
-        style.display = Display.None;
-        assertEquals(Display.None, style.display);
+        style.display(Display.None);
+        assertEquals(Display.None, style.display());
 
-        style.display = Display.Flex;
-        assertEquals(Display.Flex, style.display);
+        style.display(Display.Flex);
+        assertEquals(Display.Flex, style.display());
 
-        style.display = Display.Grid;
-        assertEquals(Display.Grid, style.display);
+        style.display(Display.Grid);
+        assertEquals(Display.Grid, style.display());
 
-        style.display = Display.Block;
-        assertEquals(Display.Block, style.display);
+        style.display(Display.Block);
+        assertEquals(Display.Block, style.display());
     }
 
     @Test
     void positionDefaultsToStaticSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(Position.Static, style.position);
+        assertEquals(Position.Static, style.position());
 
         for (Position position : List.of(
                 Position.Relative,
@@ -83,36 +84,36 @@ class StylePortTest {
                 Position.Fixed,
                 Position.Sticky,
                 Position.Static)) {
-            style.position = position;
-            assertEquals(position, style.position);
+            style.position(position);
+            assertEquals(position, style.position());
         }
     }
 
     @Test
     void boxSizingDefaultsToBorderBoxSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(BoxSizing.BorderBox, style.boxSizing);
+        assertEquals(BoxSizing.BorderBox, style.boxSizing());
 
-        style.boxSizing = BoxSizing.ContentBox;
-        assertEquals(BoxSizing.ContentBox, style.boxSizing);
+        style.boxSizing(BoxSizing.ContentBox);
+        assertEquals(BoxSizing.ContentBox, style.boxSizing());
 
-        style.boxSizing = BoxSizing.BorderBox;
-        assertEquals(BoxSizing.BorderBox, style.boxSizing);
+        style.boxSizing(BoxSizing.BorderBox);
+        assertEquals(BoxSizing.BorderBox, style.boxSizing());
     }
 
     @Test
     void overflowDefaultsToVisibleSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(Overflow.Visible, style.overflow.x);
-        assertEquals(Overflow.Visible, style.overflow.y);
+        assertEquals(Overflow.Visible, style.overflow().x);
+        assertEquals(Overflow.Visible, style.overflow().y);
 
-        style.overflow = Point.of(Overflow.Hidden, Overflow.Scroll);
-        assertEquals(Overflow.Hidden, style.overflow.x);
-        assertEquals(Overflow.Scroll, style.overflow.y);
+        style.overflow(Point.of(Overflow.Hidden, Overflow.Scroll));
+        assertEquals(Overflow.Hidden, style.overflow().x);
+        assertEquals(Overflow.Scroll, style.overflow().y);
 
-        style.overflow = Point.of(Overflow.Clip, Overflow.Visible);
-        assertEquals(Overflow.Clip, style.overflow.x);
-        assertEquals(Overflow.Visible, style.overflow.y);
+        style.overflow(Point.of(Overflow.Clip, Overflow.Visible));
+        assertEquals(Overflow.Clip, style.overflow().x);
+        assertEquals(Overflow.Visible, style.overflow().y);
     }
 
     // Flexbox
@@ -120,67 +121,67 @@ class StylePortTest {
     @Test
     void flexDirectionDefaultsToRowSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(FlexDirection.Row, style.flexDirection);
+        assertEquals(FlexDirection.Row, style.layoutFlexDirection());
 
-        style.flexDirection = FlexDirection.Column;
-        assertEquals(FlexDirection.Column, style.flexDirection);
+        style.layoutFlexDirection(FlexDirection.Column);
+        assertEquals(FlexDirection.Column, style.layoutFlexDirection());
 
-        style.flexDirection = FlexDirection.RowReverse;
-        assertEquals(FlexDirection.RowReverse, style.flexDirection);
+        style.layoutFlexDirection(FlexDirection.RowReverse);
+        assertEquals(FlexDirection.RowReverse, style.layoutFlexDirection());
 
-        style.flexDirection = FlexDirection.ColumnReverse;
-        assertEquals(FlexDirection.ColumnReverse, style.flexDirection);
+        style.layoutFlexDirection(FlexDirection.ColumnReverse);
+        assertEquals(FlexDirection.ColumnReverse, style.layoutFlexDirection());
     }
 
     @Test
     void flexWrapDefaultsToNoWrapSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(FlexWrap.NoWrap, style.flexWrap);
+        assertEquals(FlexWrap.NoWrap, style.layoutFlexWrap());
 
-        style.flexWrap = FlexWrap.Wrap;
-        assertEquals(FlexWrap.Wrap, style.flexWrap);
+        style.layoutFlexWrap(FlexWrap.Wrap);
+        assertEquals(FlexWrap.Wrap, style.layoutFlexWrap());
 
-        style.flexWrap = FlexWrap.WrapReverse;
-        assertEquals(FlexWrap.WrapReverse, style.flexWrap);
+        style.layoutFlexWrap(FlexWrap.WrapReverse);
+        assertEquals(FlexWrap.WrapReverse, style.layoutFlexWrap());
     }
 
     @Test
     void flexGrowDefaultsToZeroSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(0f, style.flexGrow, 0f);
+        assertEquals(0f, style.flexGrow(), 0f);
 
-        style.flexGrow = 1;
-        assertEquals(1f, style.flexGrow, 0f);
+        style.flexGrow(1);
+        assertEquals(1f, style.flexGrow(), 0f);
 
-        style.flexGrow = 2.5f;
-        assertEquals(2.5f, style.flexGrow, 0f);
+        style.flexGrow(2.5f);
+        assertEquals(2.5f, style.flexGrow(), 0f);
     }
 
     @Test
     void flexShrinkDefaultsToOneSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(1f, style.flexShrink, 0f);
+        assertEquals(1f, style.flexShrink(), 0f);
 
-        style.flexShrink = 0;
-        assertEquals(0f, style.flexShrink, 0f);
+        style.flexShrink(0);
+        assertEquals(0f, style.flexShrink(), 0f);
 
-        style.flexShrink = 3.5f;
-        assertEquals(3.5f, style.flexShrink, 0f);
+        style.flexShrink(3.5f);
+        assertEquals(3.5f, style.flexShrink(), 0f);
     }
 
     @Test
     void flexBasisDefaultsToAutoSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(LengthPercentageAuto.auto(), style.flexBasis);
+        assertEquals(LengthPercentageAuto.auto(), style.flexBasis());
 
         style.setFlexBasis(100);
-        assertEquals(LengthPercentageAuto.length(100), style.flexBasis);
+        assertEquals(LengthPercentageAuto.length(100), style.flexBasis());
 
         style.setFlexBasis("50%");
-        assertEquals(LengthPercentageAuto.percent(50), style.flexBasis);
+        assertEquals(LengthPercentageAuto.percent(50), style.flexBasis());
 
         style.setFlexBasis("auto");
-        assertEquals(LengthPercentageAuto.auto(), style.flexBasis);
+        assertEquals(LengthPercentageAuto.auto(), style.flexBasis());
     }
 
     // Alignment properties
@@ -188,16 +189,16 @@ class StylePortTest {
     @Test
     void alignItemsSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertNull(style.alignItems);
+        assertNull(style.layoutAlignItems());
 
-        style.alignItems = AlignItems.Start;
-        assertEquals(AlignItems.Start, style.alignItems);
+        style.layoutAlignItems(AlignItems.Start);
+        assertEquals(AlignItems.Start, style.layoutAlignItems());
 
-        style.alignItems = null;
-        assertNull(style.alignItems);
+        style.layoutAlignItems(null);
+        assertNull(style.layoutAlignItems());
 
-        style.alignItems = AlignItems.Center;
-        assertEquals(AlignItems.Center, style.alignItems);
+        style.layoutAlignItems(AlignItems.Center);
+        assertEquals(AlignItems.Center, style.layoutAlignItems());
     }
 
     @Test
@@ -218,40 +219,40 @@ class StylePortTest {
     @Test
     void alignContentSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertNull(style.alignContent);
+        assertNull(style.alignContent());
 
-        style.alignContent = AlignContent.SpaceBetween;
-        assertEquals(AlignContent.SpaceBetween, style.alignContent);
+        style.alignContent(AlignContent.SpaceBetween);
+        assertEquals(AlignContent.SpaceBetween, style.alignContent());
 
-        style.alignContent = null;
-        assertNull(style.alignContent);
+        style.alignContent(null);
+        assertNull(style.alignContent());
     }
 
     @Test
     void justifyContentSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertNull(style.justifyContent);
+        assertNull(style.layoutJustifyContent());
 
-        style.justifyContent = JustifyContent.SpaceAround;
-        assertEquals(JustifyContent.SpaceAround, style.justifyContent);
+        style.layoutJustifyContent(JustifyContent.SpaceAround);
+        assertEquals(JustifyContent.SpaceAround, style.layoutJustifyContent());
 
-        style.justifyContent = null;
-        assertNull(style.justifyContent);
+        style.layoutJustifyContent(null);
+        assertNull(style.layoutJustifyContent());
     }
 
     @Test
     void justifyItemsSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertNull(style.justifyItems);
+        assertNull(style.justifyItems());
 
-        style.justifyItems = AlignItems.Center;
-        assertEquals(AlignItems.Center, style.justifyItems);
+        style.justifyItems(AlignItems.Center);
+        assertEquals(AlignItems.Center, style.justifyItems());
 
-        style.justifyItems = AlignItems.Start;
-        assertEquals(AlignItems.Start, style.justifyItems);
+        style.justifyItems(AlignItems.Start);
+        assertEquals(AlignItems.Start, style.justifyItems());
 
-        style.justifyItems = null;
-        assertNull(style.justifyItems);
+        style.justifyItems(null);
+        assertNull(style.justifyItems());
     }
 
     @Test
@@ -274,16 +275,16 @@ class StylePortTest {
     @Test
     void sizeDefaultsToAutoSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(Dimension.auto(), style.size.width);
-        assertEquals(Dimension.auto(), style.size.height);
+        assertEquals(Dimension.auto(), style.size().width);
+        assertEquals(Dimension.auto(), style.size().height);
 
-        style.size = Size.of(Dimension.length(100), Dimension.percent(50));
-        assertEquals(Dimension.length(100), style.size.width);
-        assertEquals(Dimension.percent(50), style.size.height);
+        style.size(Size.of(Dimension.length(100), Dimension.percent(50)));
+        assertEquals(Dimension.length(100), style.size().width);
+        assertEquals(Dimension.percent(50), style.size().height);
 
-        style.size = Size.of(Dimension.auto(), Dimension.length(200));
-        assertEquals(Dimension.auto(), style.size.width);
-        assertEquals(Dimension.length(200), style.size.height);
+        style.size(Size.of(Dimension.auto(), Dimension.length(200)));
+        assertEquals(Dimension.auto(), style.size().width);
+        assertEquals(Dimension.length(200), style.size().height);
     }
 
     @Test
@@ -318,44 +319,44 @@ class StylePortTest {
     @Test
     void aspectRatioSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertNull(style.aspectRatio);
+        assertNull(style.aspectRatio());
 
-        style.aspectRatio = 16f / 9f;
-        assertEquals(16f / 9f, style.aspectRatio, 1e-5f);
+        style.aspectRatio(16f / 9f);
+        assertEquals(16f / 9f, style.aspectRatio(), 1e-5f);
 
-        style.aspectRatio = null;
-        assertNull(style.aspectRatio);
+        style.aspectRatio(null);
+        assertNull(style.aspectRatio());
     }
 
     @Test
     void gapSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(LengthPercentage.zero(), style.gap.width);
-        assertEquals(LengthPercentage.zero(), style.gap.height);
+        assertEquals(LengthPercentage.zero(), style.gap().width);
+        assertEquals(LengthPercentage.zero(), style.gap().height);
 
-        style.gap = Size.of(LengthPercentage.length(10), LengthPercentage.percent(5));
-        assertEquals(LengthPercentage.length(10), style.gap.width);
-        assertEquals(LengthPercentage.percent(5), style.gap.height);
+        style.gap(Size.of(LengthPercentage.length(10), LengthPercentage.percent(5)));
+        assertEquals(LengthPercentage.length(10), style.gap().width);
+        assertEquals(LengthPercentage.percent(5), style.gap().height);
 
-        style.gap = Size.of(LengthPercentage.zero(), LengthPercentage.zero());
-        assertEquals(LengthPercentage.zero(), style.gap.width);
-        assertEquals(LengthPercentage.zero(), style.gap.height);
+        style.gap(Size.of(LengthPercentage.zero(), LengthPercentage.zero()));
+        assertEquals(LengthPercentage.zero(), style.gap().width);
+        assertEquals(LengthPercentage.zero(), style.gap().height);
     }
 
     @Test
     void marginSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(LengthPercentageAuto.length(0), style.margin.left);
-        assertEquals(LengthPercentageAuto.length(0), style.margin.right);
-        assertEquals(LengthPercentageAuto.length(0), style.margin.top);
-        assertEquals(LengthPercentageAuto.length(0), style.margin.bottom);
+        assertEquals(LengthPercentageAuto.length(0), style.layoutMargin().left);
+        assertEquals(LengthPercentageAuto.length(0), style.layoutMargin().right);
+        assertEquals(LengthPercentageAuto.length(0), style.layoutMargin().top);
+        assertEquals(LengthPercentageAuto.length(0), style.layoutMargin().bottom);
 
-        style.margin = new Rect<>(
+        style.layoutMargin(new Rect<>(
                 LengthPercentageAuto.length(10),
                 LengthPercentageAuto.auto(),
                 LengthPercentageAuto.percent(5),
-                LengthPercentageAuto.length(0));
-        Rect<LengthPercentageAuto> margin = style.margin;
+                LengthPercentageAuto.length(0)));
+        Rect<LengthPercentageAuto> margin = style.layoutMargin();
         assertEquals(LengthPercentageAuto.length(10), margin.left);
         assertEquals(LengthPercentageAuto.auto(), margin.right);
         assertEquals(LengthPercentageAuto.percent(5), margin.top);
@@ -365,17 +366,17 @@ class StylePortTest {
     @Test
     void paddingSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(LengthPercentage.zero(), style.padding.left);
-        assertEquals(LengthPercentage.zero(), style.padding.right);
-        assertEquals(LengthPercentage.zero(), style.padding.top);
-        assertEquals(LengthPercentage.zero(), style.padding.bottom);
+        assertEquals(LengthPercentage.zero(), style.layoutPadding().left);
+        assertEquals(LengthPercentage.zero(), style.layoutPadding().right);
+        assertEquals(LengthPercentage.zero(), style.layoutPadding().top);
+        assertEquals(LengthPercentage.zero(), style.layoutPadding().bottom);
 
-        style.padding = new Rect<>(
+        style.layoutPadding(new Rect<>(
                 LengthPercentage.length(10),
                 LengthPercentage.length(10),
                 LengthPercentage.percent(2),
-                LengthPercentage.percent(2));
-        Rect<LengthPercentage> padding = style.padding;
+                LengthPercentage.percent(2)));
+        Rect<LengthPercentage> padding = style.layoutPadding();
         assertEquals(LengthPercentage.length(10), padding.left);
         assertEquals(LengthPercentage.percent(2), padding.top);
     }
@@ -383,41 +384,41 @@ class StylePortTest {
     @Test
     void borderSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(LengthPercentage.zero(), style.border.left);
-        assertEquals(LengthPercentage.zero(), style.border.right);
-        assertEquals(LengthPercentage.zero(), style.border.top);
-        assertEquals(LengthPercentage.zero(), style.border.bottom);
+        assertEquals(LengthPercentage.zero(), style.layoutBorder().left);
+        assertEquals(LengthPercentage.zero(), style.layoutBorder().right);
+        assertEquals(LengthPercentage.zero(), style.layoutBorder().top);
+        assertEquals(LengthPercentage.zero(), style.layoutBorder().bottom);
 
-        style.border = new Rect<>(
+        style.layoutBorder(new Rect<>(
                 LengthPercentage.length(1),
                 LengthPercentage.length(1),
                 LengthPercentage.length(1),
-                LengthPercentage.length(1));
-        Rect<LengthPercentage> border = style.border;
+                LengthPercentage.length(1)));
+        Rect<LengthPercentage> border = style.layoutBorder();
         assertEquals(LengthPercentage.length(1), border.left);
 
-        style.border = new Rect<>(
+        style.layoutBorder(new Rect<>(
                 LengthPercentage.percent(10),
                 LengthPercentage.length(1),
                 LengthPercentage.length(1),
-                LengthPercentage.length(1));
-        assertEquals(LengthPercentage.percent(10), style.border.left);
+                LengthPercentage.length(1)));
+        assertEquals(LengthPercentage.percent(10), style.layoutBorder().left);
     }
 
     @Test
     void insetSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(LengthPercentageAuto.auto(), style.inset.left);
-        assertEquals(LengthPercentageAuto.auto(), style.inset.right);
-        assertEquals(LengthPercentageAuto.auto(), style.inset.top);
-        assertEquals(LengthPercentageAuto.auto(), style.inset.bottom);
+        assertEquals(LengthPercentageAuto.auto(), style.layoutInset().left);
+        assertEquals(LengthPercentageAuto.auto(), style.layoutInset().right);
+        assertEquals(LengthPercentageAuto.auto(), style.layoutInset().top);
+        assertEquals(LengthPercentageAuto.auto(), style.layoutInset().bottom);
 
-        style.inset = new Rect<>(
+        style.layoutInset(new Rect<>(
                 LengthPercentageAuto.auto(),
                 LengthPercentageAuto.length(20),
                 LengthPercentageAuto.percent(10),
-                LengthPercentageAuto.length(0));
-        Rect<LengthPercentageAuto> inset = style.inset;
+                LengthPercentageAuto.length(0)));
+        Rect<LengthPercentageAuto> inset = style.layoutInset();
         assertEquals(LengthPercentageAuto.auto(), inset.left);
         assertEquals(LengthPercentageAuto.length(20), inset.right);
         assertEquals(LengthPercentageAuto.percent(10), inset.top);
@@ -429,55 +430,55 @@ class StylePortTest {
     @Test
     void itemIsTableDefaultsToFalseSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertFalse(style.itemIsTable);
+        assertFalse(style.itemIsTable());
 
-        style.itemIsTable = true;
-        assertTrue(style.itemIsTable);
+        style.itemIsTable(true);
+        assertTrue(style.itemIsTable());
 
-        style.itemIsTable = false;
-        assertFalse(style.itemIsTable);
+        style.itemIsTable(false);
+        assertFalse(style.itemIsTable());
     }
 
     @Test
     void itemIsReplacedDefaultsToFalseSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertFalse(style.itemIsReplaced);
+        assertFalse(style.itemIsReplaced());
 
-        style.itemIsReplaced = true;
-        assertTrue(style.itemIsReplaced);
+        style.itemIsReplaced(true);
+        assertTrue(style.itemIsReplaced());
 
-        style.itemIsReplaced = false;
-        assertFalse(style.itemIsReplaced);
+        style.itemIsReplaced(false);
+        assertFalse(style.itemIsReplaced());
     }
 
     @Test
     void scrollbarWidthDefaultsToZeroSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(0f, style.scrollbarWidth, 0f);
+        assertEquals(0f, style.scrollbarWidth(), 0f);
 
-        style.scrollbarWidth = 15;
-        assertEquals(15f, style.scrollbarWidth, 0f);
+        style.scrollbarWidth(15);
+        assertEquals(15f, style.scrollbarWidth(), 0f);
 
-        style.scrollbarWidth = 0;
-        assertEquals(0f, style.scrollbarWidth, 0f);
+        style.scrollbarWidth(0);
+        assertEquals(0f, style.scrollbarWidth(), 0f);
     }
 
     @Test
     void textAlignDefaultsToAutoSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(TextAlign.Auto, style.textAlign);
+        assertEquals(TextAlign.Auto, style.layoutTextAlign());
 
-        style.textAlign = TextAlign.LegacyLeft;
-        assertEquals(TextAlign.LegacyLeft, style.textAlign);
+        style.layoutTextAlign(TextAlign.LegacyLeft);
+        assertEquals(TextAlign.LegacyLeft, style.layoutTextAlign());
 
-        style.textAlign = TextAlign.LegacyRight;
-        assertEquals(TextAlign.LegacyRight, style.textAlign);
+        style.layoutTextAlign(TextAlign.LegacyRight);
+        assertEquals(TextAlign.LegacyRight, style.layoutTextAlign());
 
-        style.textAlign = TextAlign.LegacyCenter;
-        assertEquals(TextAlign.LegacyCenter, style.textAlign);
+        style.layoutTextAlign(TextAlign.LegacyCenter);
+        assertEquals(TextAlign.LegacyCenter, style.layoutTextAlign());
 
-        style.textAlign = TextAlign.Auto;
-        assertEquals(TextAlign.Auto, style.textAlign);
+        style.layoutTextAlign(TextAlign.Auto);
+        assertEquals(TextAlign.Auto, style.layoutTextAlign());
     }
 
     // Grid layout properties
@@ -485,65 +486,65 @@ class StylePortTest {
     @Test
     void gridAutoFlowDefaultsToRowSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(GridAutoFlow.Row, style.gridAutoFlow);
+        assertEquals(GridAutoFlow.Row, style.gridAutoFlow());
 
-        style.gridAutoFlow = GridAutoFlow.Column;
-        assertEquals(GridAutoFlow.Column, style.gridAutoFlow);
+        style.gridAutoFlow(GridAutoFlow.Column);
+        assertEquals(GridAutoFlow.Column, style.gridAutoFlow());
 
-        style.gridAutoFlow = GridAutoFlow.RowDense;
-        assertEquals(GridAutoFlow.RowDense, style.gridAutoFlow);
+        style.gridAutoFlow(GridAutoFlow.RowDense);
+        assertEquals(GridAutoFlow.RowDense, style.gridAutoFlow());
 
-        style.gridAutoFlow = GridAutoFlow.ColumnDense;
-        assertEquals(GridAutoFlow.ColumnDense, style.gridAutoFlow);
+        style.gridAutoFlow(GridAutoFlow.ColumnDense);
+        assertEquals(GridAutoFlow.ColumnDense, style.gridAutoFlow());
 
-        style.gridAutoFlow = GridAutoFlow.Row;
-        assertEquals(GridAutoFlow.Row, style.gridAutoFlow);
+        style.gridAutoFlow(GridAutoFlow.Row);
+        assertEquals(GridAutoFlow.Row, style.gridAutoFlow());
     }
 
     @Test
     void gridRowDefaultsToAutoAutoSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(GridPlacement.auto(), style.gridRow.start);
-        assertEquals(GridPlacement.auto(), style.gridRow.end);
+        assertEquals(GridPlacement.auto(), style.gridRow().start);
+        assertEquals(GridPlacement.auto(), style.gridRow().end);
 
-        style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(3));
-        assertEquals(GridPlacement.line(1), style.gridRow.start);
-        assertEquals(GridPlacement.line(3), style.gridRow.end);
+        style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(3)));
+        assertEquals(GridPlacement.line(1), style.gridRow().start);
+        assertEquals(GridPlacement.line(3), style.gridRow().end);
 
-        style.gridRow = Line.of(GridPlacement.line(2), GridPlacement.span(2));
-        assertEquals(GridPlacement.line(2), style.gridRow.start);
-        assertEquals(GridPlacement.span(2), style.gridRow.end);
+        style.gridRow(Line.of(GridPlacement.line(2), GridPlacement.span(2)));
+        assertEquals(GridPlacement.line(2), style.gridRow().start);
+        assertEquals(GridPlacement.span(2), style.gridRow().end);
 
-        style.gridRow = Line.of(GridPlacement.auto(), GridPlacement.auto());
-        assertEquals(GridPlacement.auto(), style.gridRow.start);
-        assertEquals(GridPlacement.auto(), style.gridRow.end);
+        style.gridRow(Line.of(GridPlacement.auto(), GridPlacement.auto()));
+        assertEquals(GridPlacement.auto(), style.gridRow().start);
+        assertEquals(GridPlacement.auto(), style.gridRow().end);
     }
 
     @Test
     void gridColumnDefaultsToAutoAutoSetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(GridPlacement.auto(), style.gridColumn.start);
-        assertEquals(GridPlacement.auto(), style.gridColumn.end);
+        assertEquals(GridPlacement.auto(), style.gridColumn().start);
+        assertEquals(GridPlacement.auto(), style.gridColumn().end);
 
-        style.gridColumn = Line.of(GridPlacement.line(1), GridPlacement.line(4));
-        assertEquals(GridPlacement.line(1), style.gridColumn.start);
-        assertEquals(GridPlacement.line(4), style.gridColumn.end);
+        style.gridColumn(Line.of(GridPlacement.line(1), GridPlacement.line(4)));
+        assertEquals(GridPlacement.line(1), style.gridColumn().start);
+        assertEquals(GridPlacement.line(4), style.gridColumn().end);
 
-        style.gridColumn = Line.of(GridPlacement.auto(), GridPlacement.span(3));
-        assertEquals(GridPlacement.auto(), style.gridColumn.start);
-        assertEquals(GridPlacement.span(3), style.gridColumn.end);
+        style.gridColumn(Line.of(GridPlacement.auto(), GridPlacement.span(3)));
+        assertEquals(GridPlacement.auto(), style.gridColumn().start);
+        assertEquals(GridPlacement.span(3), style.gridColumn().end);
     }
 
     @Test
     void gridTemplateRowsDefaultsToEmptySetsAndGetsCorrectly() {
         Style style = new Style();
-        assertTrue(style.gridTemplateRows instanceof List);
-        assertEquals(0, style.gridTemplateRows.size());
+        assertTrue(style.gridTemplateRows() instanceof List);
+        assertEquals(0, style.gridTemplateRows().size());
 
         TrackSizingFunction track = TrackSizingFunction.of(10, "auto");
-        style.gridTemplateRows = List.of(GridTemplateComponent.single(track));
-        assertEquals(1, style.gridTemplateRows.size());
-        GridTemplateComponent readback = style.gridTemplateRows.get(0);
+        style.gridTemplateRows(List.of(GridTemplateComponent.single(track)));
+        assertEquals(1, style.gridTemplateRows().size());
+        GridTemplateComponent readback = style.gridTemplateRows().get(0);
         assertEquals(track, readback.track);
         assertEquals(MinTrackSizing.Kind.LENGTH, readback.track.min.kind);
         assertEquals(10f, readback.track.min.value, 0f);
@@ -552,23 +553,23 @@ class StylePortTest {
     @Test
     void gridTemplateColumnsDefaultsToEmptySetsAndGetsCorrectly() {
         Style style = new Style();
-        assertTrue(style.gridTemplateColumns instanceof List);
-        assertEquals(0, style.gridTemplateColumns.size());
+        assertTrue(style.gridTemplateColumns() instanceof List);
+        assertEquals(0, style.gridTemplateColumns().size());
 
-        style.gridTemplateColumns = List.of(
-                GridTemplateComponent.single(TrackSizingFunction.of("min-content", "max-content")));
-        assertEquals(1, style.gridTemplateColumns.size());
+        style.gridTemplateColumns(List.of(
+                GridTemplateComponent.single(TrackSizingFunction.of("min-content", "max-content"))));
+        assertEquals(1, style.gridTemplateColumns().size());
     }
 
     @Test
     void gridAutoRowsDefaultsToEmptySetsAndGetsCorrectly() {
         Style style = new Style();
-        assertTrue(style.gridAutoRows instanceof List);
-        assertEquals(0, style.gridAutoRows.size());
+        assertTrue(style.gridAutoRows() instanceof List);
+        assertEquals(0, style.gridAutoRows().size());
 
-        style.gridAutoRows = List.of(TrackSizingFunction.of(20, "auto"));
-        assertEquals(1, style.gridAutoRows.size());
-        TrackSizingFunction readback = style.gridAutoRows.get(0);
+        style.gridAutoRows(List.of(TrackSizingFunction.of(20, "auto")));
+        assertEquals(1, style.gridAutoRows().size());
+        TrackSizingFunction readback = style.gridAutoRows().get(0);
         assertEquals(MinTrackSizing.Kind.LENGTH, readback.min.kind);
         assertEquals(20f, readback.min.value, 0f);
     }
@@ -576,11 +577,11 @@ class StylePortTest {
     @Test
     void gridAutoColumnsDefaultsToEmptySetsAndGetsCorrectly() {
         Style style = new Style();
-        assertTrue(style.gridAutoColumns instanceof List);
-        assertEquals(0, style.gridAutoColumns.size());
+        assertTrue(style.gridAutoColumns() instanceof List);
+        assertEquals(0, style.gridAutoColumns().size());
 
-        style.gridAutoColumns = List.of(TrackSizingFunction.of("auto", "1fr"));
-        assertEquals(1, style.gridAutoColumns.size());
+        style.gridAutoColumns(List.of(TrackSizingFunction.of("auto", "1fr")));
+        assertEquals(1, style.gridAutoColumns().size());
     }
 
     @Test
@@ -601,95 +602,95 @@ class StylePortTest {
     @Test
     void gridTemplateRowNamesDefaultsToEmptySetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(List.of(), style.gridTemplateRowNames);
+        assertEquals(List.of(), style.gridTemplateRowNames());
 
         style.setGridTemplateRowNames(List.of(
                 List.of("header-start"),
                 List.of("header-end", "main-start"),
                 List.of("main-end")));
-        assertEquals(3, style.gridTemplateRowNames.size());
-        assertEquals(List.of("header-start"), style.gridTemplateRowNames.get(0));
-        assertEquals(List.of("header-end", "main-start"), style.gridTemplateRowNames.get(1));
+        assertEquals(3, style.gridTemplateRowNames().size());
+        assertEquals(List.of("header-start"), style.gridTemplateRowNames().get(0));
+        assertEquals(List.of("header-end", "main-start"), style.gridTemplateRowNames().get(1));
 
         style.setGridTemplateRowNames(List.of());
-        assertEquals(List.of(), style.gridTemplateRowNames);
+        assertEquals(List.of(), style.gridTemplateRowNames());
     }
 
     @Test
     void gridTemplateColumnNamesDefaultsToEmptySetsAndGetsCorrectly() {
         Style style = new Style();
-        assertEquals(List.of(), style.gridTemplateColumnNames);
+        assertEquals(List.of(), style.gridTemplateColumnNames());
 
         style.setGridTemplateColumnNames(List.of(
                 List.of("sidebar-start"),
                 List.of("sidebar-end", "main-start"),
                 List.of("main-end")));
-        assertEquals(3, style.gridTemplateColumnNames.size());
-        assertEquals(List.of("sidebar-start"), style.gridTemplateColumnNames.get(0));
+        assertEquals(3, style.gridTemplateColumnNames().size());
+        assertEquals(List.of("sidebar-start"), style.gridTemplateColumnNames().get(0));
 
         style.setGridTemplateColumnNames(List.of());
-        assertEquals(List.of(), style.gridTemplateColumnNames);
+        assertEquals(List.of(), style.gridTemplateColumnNames());
     }
 
     @Test
     void gridRowHandlesNegativeLineIndices() {
         Style style = new Style();
 
-        style.gridRow = Line.of(GridPlacement.line(-1), GridPlacement.line(-2));
-        assertEquals(GridPlacement.line(-1), style.gridRow.start);
-        assertEquals(GridPlacement.line(-2), style.gridRow.end);
+        style.gridRow(Line.of(GridPlacement.line(-1), GridPlacement.line(-2)));
+        assertEquals(GridPlacement.line(-1), style.gridRow().start);
+        assertEquals(GridPlacement.line(-2), style.gridRow().end);
 
-        style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(-1));
-        assertEquals(GridPlacement.line(1), style.gridRow.start);
-        assertEquals(GridPlacement.line(-1), style.gridRow.end);
+        style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(-1)));
+        assertEquals(GridPlacement.line(1), style.gridRow().start);
+        assertEquals(GridPlacement.line(-1), style.gridRow().end);
     }
 
     @Test
     void gridColumnHandlesNegativeLineIndices() {
         Style style = new Style();
 
-        style.gridColumn = Line.of(GridPlacement.line(-3), GridPlacement.line(-1));
-        assertEquals(GridPlacement.line(-3), style.gridColumn.start);
-        assertEquals(GridPlacement.line(-1), style.gridColumn.end);
+        style.gridColumn(Line.of(GridPlacement.line(-3), GridPlacement.line(-1)));
+        assertEquals(GridPlacement.line(-3), style.gridColumn().start);
+        assertEquals(GridPlacement.line(-1), style.gridColumn().end);
     }
 
     @Test
     void gridRowHandlesSpanWithVariousValues() {
         Style style = new Style();
 
-        style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.span(1));
-        assertEquals(GridPlacement.line(1), style.gridRow.start);
-        assertEquals(GridPlacement.span(1), style.gridRow.end);
+        style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.span(1)));
+        assertEquals(GridPlacement.line(1), style.gridRow().start);
+        assertEquals(GridPlacement.span(1), style.gridRow().end);
 
-        style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.span(10));
-        assertEquals(GridPlacement.line(1), style.gridRow.start);
-        assertEquals(GridPlacement.span(10), style.gridRow.end);
+        style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.span(10)));
+        assertEquals(GridPlacement.line(1), style.gridRow().start);
+        assertEquals(GridPlacement.span(10), style.gridRow().end);
 
-        style.gridRow = Line.of(GridPlacement.span(3), GridPlacement.line(5));
-        assertEquals(GridPlacement.span(3), style.gridRow.start);
-        assertEquals(GridPlacement.line(5), style.gridRow.end);
+        style.gridRow(Line.of(GridPlacement.span(3), GridPlacement.line(5)));
+        assertEquals(GridPlacement.span(3), style.gridRow().start);
+        assertEquals(GridPlacement.line(5), style.gridRow().end);
     }
 
     @Test
     void gridColumnHandlesSpanWithVariousValues() {
         Style style = new Style();
 
-        style.gridColumn = Line.of(GridPlacement.span(2), GridPlacement.span(3));
-        assertEquals(GridPlacement.span(2), style.gridColumn.start);
-        assertEquals(GridPlacement.span(3), style.gridColumn.end);
+        style.gridColumn(Line.of(GridPlacement.span(2), GridPlacement.span(3)));
+        assertEquals(GridPlacement.span(2), style.gridColumn().start);
+        assertEquals(GridPlacement.span(3), style.gridColumn().end);
     }
 
     @Test
     void gridRowAllAutoPlacement() {
         Style style = new Style();
 
-        style.gridRow = Line.of(GridPlacement.auto(), GridPlacement.auto());
-        assertEquals(GridPlacement.auto(), style.gridRow.start);
-        assertEquals(GridPlacement.auto(), style.gridRow.end);
+        style.gridRow(Line.of(GridPlacement.auto(), GridPlacement.auto()));
+        assertEquals(GridPlacement.auto(), style.gridRow().start);
+        assertEquals(GridPlacement.auto(), style.gridRow().end);
 
-        style.gridRow = Line.of(GridPlacement.auto(), GridPlacement.line(3));
-        assertEquals(GridPlacement.auto(), style.gridRow.start);
-        assertEquals(GridPlacement.line(3), style.gridRow.end);
+        style.gridRow(Line.of(GridPlacement.auto(), GridPlacement.line(3)));
+        assertEquals(GridPlacement.auto(), style.gridRow().start);
+        assertEquals(GridPlacement.line(3), style.gridRow().end);
     }
 
     @Test
@@ -726,11 +727,11 @@ class StylePortTest {
                 List.of("named-line"),
                 List.of(),
                 List.of("another-name")));
-        assertEquals(4, style.gridTemplateRowNames.size());
-        assertEquals(List.of(), style.gridTemplateRowNames.get(0));
-        assertEquals(List.of("named-line"), style.gridTemplateRowNames.get(1));
-        assertEquals(List.of(), style.gridTemplateRowNames.get(2));
-        assertEquals(List.of("another-name"), style.gridTemplateRowNames.get(3));
+        assertEquals(4, style.gridTemplateRowNames().size());
+        assertEquals(List.of(), style.gridTemplateRowNames().get(0));
+        assertEquals(List.of("named-line"), style.gridTemplateRowNames().get(1));
+        assertEquals(List.of(), style.gridTemplateRowNames().get(2));
+        assertEquals(List.of("another-name"), style.gridTemplateRowNames().get(3));
     }
 
     @Test
@@ -740,11 +741,11 @@ class StylePortTest {
         style.setGridTemplateColumnNames(List.of(
                 List.of("content-start", "sidebar-end", "main-start"),
                 List.of("content-end", "sidebar-start")));
-        assertEquals(2, style.gridTemplateColumnNames.size());
+        assertEquals(2, style.gridTemplateColumnNames().size());
         assertEquals(List.of("content-start", "sidebar-end", "main-start"),
-                style.gridTemplateColumnNames.get(0));
+                style.gridTemplateColumnNames().get(0));
         assertEquals(List.of("content-end", "sidebar-start"),
-                style.gridTemplateColumnNames.get(1));
+                style.gridTemplateColumnNames().get(1));
     }
 
     @Test
@@ -756,8 +757,8 @@ class StylePortTest {
                 GridAutoFlow.Column,
                 GridAutoFlow.RowDense,
                 GridAutoFlow.ColumnDense)) {
-            style.gridAutoFlow = variant;
-            assertEquals(variant, style.gridAutoFlow);
+            style.gridAutoFlow(variant);
+            assertEquals(variant, style.gridAutoFlow());
         }
     }
 
@@ -767,19 +768,19 @@ class StylePortTest {
     void scrollbarWidthHandlesDecimalValues() {
         Style style = new Style();
 
-        style.scrollbarWidth = 15.5f;
-        assertEquals(15.5f, style.scrollbarWidth, 1e-5f);
+        style.scrollbarWidth(15.5f);
+        assertEquals(15.5f, style.scrollbarWidth(), 1e-5f);
 
-        style.scrollbarWidth = 0.5f;
-        assertEquals(0.5f, style.scrollbarWidth, 1e-5f);
+        style.scrollbarWidth(0.5f);
+        assertEquals(0.5f, style.scrollbarWidth(), 1e-5f);
     }
 
     @Test
     void scrollbarWidthHandlesLargeValues() {
         Style style = new Style();
 
-        style.scrollbarWidth = 100;
-        assertEquals(100f, style.scrollbarWidth, 0f);
+        style.scrollbarWidth(100);
+        assertEquals(100f, style.scrollbarWidth(), 0f);
     }
 
     @Test
@@ -787,17 +788,17 @@ class StylePortTest {
         Style style = new Style();
 
         for (int i = 0; i < 5; i++) {
-            style.itemIsTable = true;
-            assertTrue(style.itemIsTable);
-            style.itemIsTable = false;
-            assertFalse(style.itemIsTable);
+            style.itemIsTable(true);
+            assertTrue(style.itemIsTable());
+            style.itemIsTable(false);
+            assertFalse(style.itemIsTable());
         }
 
         for (int i = 0; i < 5; i++) {
-            style.itemIsReplaced = true;
-            assertTrue(style.itemIsReplaced);
-            style.itemIsReplaced = false;
-            assertFalse(style.itemIsReplaced);
+            style.itemIsReplaced(true);
+            assertTrue(style.itemIsReplaced());
+            style.itemIsReplaced(false);
+            assertFalse(style.itemIsReplaced());
         }
     }
 
@@ -810,8 +811,8 @@ class StylePortTest {
                 TextAlign.LegacyLeft,
                 TextAlign.LegacyRight,
                 TextAlign.LegacyCenter)) {
-            style.textAlign = variant;
-            assertEquals(variant, style.textAlign);
+            style.layoutTextAlign(variant);
+            assertEquals(variant, style.layoutTextAlign());
         }
     }
 
@@ -829,12 +830,12 @@ class StylePortTest {
                 AlignItems.Center,
                 AlignItems.Baseline,
                 AlignItems.Stretch)) {
-            style.justifyItems = variant;
-            assertEquals(variant, style.justifyItems);
+            style.justifyItems(variant);
+            assertEquals(variant, style.justifyItems());
         }
 
-        style.justifyItems = null;
-        assertNull(style.justifyItems);
+        style.justifyItems(null);
+        assertNull(style.justifyItems());
     }
 
     @Test
@@ -850,8 +851,8 @@ class StylePortTest {
                 AlignSelf.Center,
                 AlignSelf.Baseline,
                 AlignSelf.Stretch)) {
-            style.justifySelf = variant;
-            assertEquals(variant, style.justifySelf);
+            style.justifySelf(variant);
+            assertEquals(variant, style.justifySelf());
         }
     }
 
@@ -860,18 +861,18 @@ class StylePortTest {
     @Test
     void gridPropertiesWorkWhenDisplayIsGrid() {
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
 
-        style.gridAutoFlow = GridAutoFlow.Column;
-        assertEquals(GridAutoFlow.Column, style.gridAutoFlow);
+        style.gridAutoFlow(GridAutoFlow.Column);
+        assertEquals(GridAutoFlow.Column, style.gridAutoFlow());
 
-        style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(3));
-        style.gridColumn = Line.of(GridPlacement.line(2), GridPlacement.line(4));
+        style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(3)));
+        style.gridColumn(Line.of(GridPlacement.line(2), GridPlacement.line(4)));
 
-        assertEquals(GridPlacement.line(1), style.gridRow.start);
-        assertEquals(GridPlacement.line(3), style.gridRow.end);
-        assertEquals(GridPlacement.line(2), style.gridColumn.start);
-        assertEquals(GridPlacement.line(4), style.gridColumn.end);
+        assertEquals(GridPlacement.line(1), style.gridRow().start);
+        assertEquals(GridPlacement.line(3), style.gridRow().end);
+        assertEquals(GridPlacement.line(2), style.gridColumn().start);
+        assertEquals(GridPlacement.line(4), style.gridColumn().end);
 
         style.setGridTemplateAreas(List.of(
                 new GridTemplateArea("content", 1, 2, 1, 2)));
@@ -879,20 +880,20 @@ class StylePortTest {
 
         style.setGridTemplateRowNames(List.of(List.of("top"), List.of("bottom")));
         style.setGridTemplateColumnNames(List.of(List.of("left"), List.of("right")));
-        assertEquals(2, style.gridTemplateRowNames.size());
-        assertEquals(2, style.gridTemplateColumnNames.size());
+        assertEquals(2, style.gridTemplateRowNames().size());
+        assertEquals(2, style.gridTemplateColumnNames().size());
     }
 
     @Test
     void gridPropertiesCanBeSetEvenWhenDisplayIsNotGrid() {
         Style style = new Style();
-        assertEquals(Display.Flex, style.display);
+        assertEquals(Display.Flex, style.display());
 
-        style.gridAutoFlow = GridAutoFlow.RowDense;
-        assertEquals(GridAutoFlow.RowDense, style.gridAutoFlow);
+        style.gridAutoFlow(GridAutoFlow.RowDense);
+        assertEquals(GridAutoFlow.RowDense, style.gridAutoFlow());
 
-        style.gridRow = Line.of(GridPlacement.line(1), GridPlacement.line(2));
-        assertEquals(GridPlacement.line(1), style.gridRow.start);
+        style.gridRow(Line.of(GridPlacement.line(1), GridPlacement.line(2)));
+        assertEquals(GridPlacement.line(1), style.gridRow().start);
     }
 
     // Individual overflow properties
@@ -933,8 +934,8 @@ class StylePortTest {
 
         assertEquals(Overflow.Hidden, style.getOverflowX());
         assertEquals(Overflow.Scroll, style.getOverflowY());
-        assertEquals(Overflow.Hidden, style.overflow.x);
-        assertEquals(Overflow.Scroll, style.overflow.y);
+        assertEquals(Overflow.Hidden, style.overflow().x);
+        assertEquals(Overflow.Scroll, style.overflow().y);
     }
 
     // Individual size properties
@@ -977,8 +978,8 @@ class StylePortTest {
 
         assertEquals(Dimension.length(300), style.getWidth());
         assertEquals(Dimension.percent(50), style.getHeight());
-        assertEquals(Dimension.length(300), style.size.width);
-        assertEquals(Dimension.percent(50), style.size.height);
+        assertEquals(Dimension.length(300), style.size().width);
+        assertEquals(Dimension.percent(50), style.size().height);
     }
 
     @Test
@@ -1114,10 +1115,10 @@ class StylePortTest {
         assertEquals(LengthPercentageAuto.auto(), style.getMarginRight());
         assertEquals(LengthPercentageAuto.percent(5), style.getMarginTop());
         assertEquals(LengthPercentageAuto.length(0), style.getMarginBottom());
-        assertEquals(LengthPercentageAuto.length(10), style.margin.left);
-        assertEquals(LengthPercentageAuto.auto(), style.margin.right);
-        assertEquals(LengthPercentageAuto.percent(5), style.margin.top);
-        assertEquals(LengthPercentageAuto.length(0), style.margin.bottom);
+        assertEquals(LengthPercentageAuto.length(10), style.layoutMargin().left);
+        assertEquals(LengthPercentageAuto.auto(), style.layoutMargin().right);
+        assertEquals(LengthPercentageAuto.percent(5), style.layoutMargin().top);
+        assertEquals(LengthPercentageAuto.length(0), style.layoutMargin().bottom);
     }
 
     // Individual padding properties
@@ -1240,7 +1241,7 @@ class StylePortTest {
         Style style = new Style();
         assertEquals(LengthPercentageAuto.auto(), style.getLeft());
 
-        style.position = Position.Absolute;
+        style.position(Position.Absolute);
         style.setLeft(0);
         assertEquals(LengthPercentageAuto.length(0), style.getLeft());
 
@@ -1256,7 +1257,7 @@ class StylePortTest {
         Style style = new Style();
         assertEquals(LengthPercentageAuto.auto(), style.getRight());
 
-        style.position = Position.Absolute;
+        style.position(Position.Absolute);
         style.setRight(20);
         assertEquals(LengthPercentageAuto.length(20), style.getRight());
 
@@ -1269,7 +1270,7 @@ class StylePortTest {
         Style style = new Style();
         assertEquals(LengthPercentageAuto.auto(), style.getTop());
 
-        style.position = Position.Absolute;
+        style.position(Position.Absolute);
         style.setTop(0);
         assertEquals(LengthPercentageAuto.length(0), style.getTop());
 
@@ -1282,7 +1283,7 @@ class StylePortTest {
         Style style = new Style();
         assertEquals(LengthPercentageAuto.auto(), style.getBottom());
 
-        style.position = Position.Absolute;
+        style.position(Position.Absolute);
         style.setBottom(10);
         assertEquals(LengthPercentageAuto.length(10), style.getBottom());
 
@@ -1293,7 +1294,7 @@ class StylePortTest {
     @Test
     void allInsetPropertiesAreIndependentOfEachOther() {
         Style style = new Style();
-        style.position = Position.Absolute;
+        style.position(Position.Absolute);
         style.setLeft(0);
         style.setRight(20);
         style.setTop("10%");
@@ -1303,10 +1304,10 @@ class StylePortTest {
         assertEquals(LengthPercentageAuto.length(20), style.getRight());
         assertEquals(LengthPercentageAuto.percent(10), style.getTop());
         assertEquals(LengthPercentageAuto.auto(), style.getBottom());
-        assertEquals(LengthPercentageAuto.length(0), style.inset.left);
-        assertEquals(LengthPercentageAuto.length(20), style.inset.right);
-        assertEquals(LengthPercentageAuto.percent(10), style.inset.top);
-        assertEquals(LengthPercentageAuto.auto(), style.inset.bottom);
+        assertEquals(LengthPercentageAuto.length(0), style.layoutInset().left);
+        assertEquals(LengthPercentageAuto.length(20), style.layoutInset().right);
+        assertEquals(LengthPercentageAuto.percent(10), style.layoutInset().top);
+        assertEquals(LengthPercentageAuto.auto(), style.layoutInset().bottom);
     }
 
     // Individual gap properties
@@ -1343,8 +1344,8 @@ class StylePortTest {
 
         assertEquals(LengthPercentage.length(10), style.getColumnGap());
         assertEquals(LengthPercentage.percent(5), style.getRowGap());
-        assertEquals(LengthPercentage.length(10), style.gap.width);
-        assertEquals(LengthPercentage.percent(5), style.gap.height);
+        assertEquals(LengthPercentage.length(10), style.gap().width);
+        assertEquals(LengthPercentage.percent(5), style.gap().height);
     }
 
     // Individual grid row/column properties
@@ -1352,7 +1353,7 @@ class StylePortTest {
     @Test
     void gridRowStartSetsAndGetsCorrectly() {
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
         assertEquals(GridPlacement.auto(), style.getGridRowStart());
 
         style.setGridRowStart(1);
@@ -1368,7 +1369,7 @@ class StylePortTest {
     @Test
     void gridRowEndSetsAndGetsCorrectly() {
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
         assertEquals(GridPlacement.auto(), style.getGridRowEnd());
 
         style.setGridRowEnd(3);
@@ -1381,7 +1382,7 @@ class StylePortTest {
     @Test
     void gridColumnStartSetsAndGetsCorrectly() {
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
         assertEquals(GridPlacement.auto(), style.getGridColumnStart());
 
         style.setGridColumnStart(1);
@@ -1394,7 +1395,7 @@ class StylePortTest {
     @Test
     void gridColumnEndSetsAndGetsCorrectly() {
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
         assertEquals(GridPlacement.auto(), style.getGridColumnEnd());
 
         style.setGridColumnEnd(4);
@@ -1407,7 +1408,7 @@ class StylePortTest {
     @Test
     void allGridRowColumnPropertiesAreIndependentOfEachOther() {
         Style style = new Style();
-        style.display = Display.Grid;
+        style.display(Display.Grid);
         style.setGridRowStart(1);
         style.setGridRowEnd(3);
         style.setGridColumnStart(2);
@@ -1417,10 +1418,10 @@ class StylePortTest {
         assertEquals(GridPlacement.line(3), style.getGridRowEnd());
         assertEquals(GridPlacement.line(2), style.getGridColumnStart());
         assertEquals(GridPlacement.line(4), style.getGridColumnEnd());
-        assertEquals(GridPlacement.line(1), style.gridRow.start);
-        assertEquals(GridPlacement.line(3), style.gridRow.end);
-        assertEquals(GridPlacement.line(2), style.gridColumn.start);
-        assertEquals(GridPlacement.line(4), style.gridColumn.end);
+        assertEquals(GridPlacement.line(1), style.gridRow().start);
+        assertEquals(GridPlacement.line(3), style.gridRow().end);
+        assertEquals(GridPlacement.line(2), style.gridColumn().start);
+        assertEquals(GridPlacement.line(4), style.gridColumn().end);
     }
 
     // Individual properties
@@ -1433,10 +1434,10 @@ class StylePortTest {
         style.setPaddingTop(5);
         style.setOverflowX(Overflow.Hidden);
 
-        assertEquals(Dimension.length(200), style.size.width);
-        assertEquals(LengthPercentageAuto.length(10), style.margin.left);
-        assertEquals(LengthPercentage.length(5), style.padding.top);
-        assertEquals(Overflow.Hidden, style.overflow.x);
+        assertEquals(Dimension.length(200), style.size().width);
+        assertEquals(LengthPercentageAuto.length(10), style.layoutMargin().left);
+        assertEquals(LengthPercentage.length(5), style.layoutPadding().top);
+        assertEquals(Overflow.Hidden, style.overflow().x);
     }
 
     @Test
@@ -1470,16 +1471,16 @@ class StylePortTest {
     @Test
     void preservesMinMaxDimensionsThroughLayoutAndTreeStyleEdits() {
         Style childStyle = new Style();
-        childStyle.size.width = Dimension.length(10);
-        childStyle.size.height = Dimension.length(100);
+        childStyle.setWidth(Dimension.length(10));
+        childStyle.setHeight(Dimension.length(100));
         childStyle.setMinWidth("50%");
         childStyle.setMaxHeight("50%");
         Node child = new Node(childStyle);
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Block;
-        rootStyle.size.width = Dimension.length(200);
-        rootStyle.size.height = Dimension.length(100);
+        rootStyle.display(Display.Block);
+        rootStyle.setWidth(Dimension.length(200));
+        rootStyle.setHeight(Dimension.length(100));
         Node root = new Node(rootStyle, List.of(child));
 
         LayoutEngine.computeLayout(root, 200f, 100f);
@@ -1512,16 +1513,16 @@ class StylePortTest {
     @Test
     void appliesPercentageMinHeightAndMaxWidthFromScalarProperties() {
         Style style = new Style();
-        style.size.width = Dimension.length(300);
-        style.size.height = Dimension.length(1);
+        style.setWidth(Dimension.length(300));
+        style.setHeight(Dimension.length(1));
         style.setMinHeight("20%");
         style.setMaxWidth("75%");
         Node child = new Node(style);
 
         Style rootStyle = new Style();
-        rootStyle.display = Display.Block;
-        rootStyle.size.width = Dimension.length(200);
-        rootStyle.size.height = Dimension.length(100);
+        rootStyle.display(Display.Block);
+        rootStyle.setWidth(Dimension.length(200));
+        rootStyle.setHeight(Dimension.length(100));
         Node root = new Node(rootStyle, List.of(child));
 
         LayoutEngine.computeLayout(root, 200f, 100f);
