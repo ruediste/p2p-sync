@@ -89,7 +89,7 @@ public final class Components {
                     .alignItems(AlignItems.Center).justifyContent(JustifyContent.Center).flexShrink(0);
             inline.accept(style);
         }, () -> text(label, style -> typography(style).color(foreground).fontWeight(true)))
-                .onClick(action).disabled(disabled).accessibleName(label);
+                .onClick(event -> action.run()).disabled(disabled).accessibleName(label);
     }
 
     public Node checkbox(String label, boolean checked, boolean disabled, Consumer<Boolean> change) {
@@ -101,7 +101,7 @@ public final class Components {
                             text("\u2713", style -> typography(style).color(theme.onPrimary()).fontSize(15));
                     });
             text(label, style -> typography(style).opacity(disabled ? 0.4 : 1));
-        }).onClick(() -> change.accept(!checked)).disabled(disabled)
+        }).onClick(event -> change.accept(!checked)).disabled(disabled)
                 .accessibleName(label + (checked ? ", checked" : ", unchecked"));
     }
 
@@ -138,13 +138,13 @@ public final class Components {
                                 });
                     });
                 });
-        node.onPointer = position -> change
-                .accept(quantize(minimum + position * (maximum - minimum), minimum, maximum, step));
+        node.onPointer(event -> change
+                .accept(quantize(minimum + event.position * (maximum - minimum), minimum, maximum, step)));
         node.focusable = true;
         node.disabled = disabled;
         node.accessibleName = label + ": " + value;
-        node.onKey = key -> {
-            double next = switch (key) {
+        node.onKey(event -> {
+            double next = switch (event.keyCode) {
                 case KeyEvent.VK_LEFT, KeyEvent.VK_DOWN -> value - step;
                 case KeyEvent.VK_RIGHT, KeyEvent.VK_UP -> value + step;
                 case KeyEvent.VK_HOME -> minimum;
@@ -152,7 +152,7 @@ public final class Components {
                 default -> value;
             };
             change.accept(quantize(next, minimum, maximum, step));
-        };
+        });
         return node;
     }
 

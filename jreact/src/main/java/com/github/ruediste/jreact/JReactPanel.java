@@ -25,6 +25,9 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import com.github.ruediste.jreact.events.ClickEvent;
+import com.github.ruediste.jreact.events.KeyboardEvent;
+import com.github.ruediste.jreact.events.PointerEvent;
 import com.github.ruediste.jreact.nodes.EditableNode;
 
 /**
@@ -113,9 +116,8 @@ public class JReactPanel extends JPanel implements AutoCloseable {
                 Node target = interactive(hitTest(event.getX(), event.getY()));
                 Node.Key previous = pressed;
                 pressed = null;
-                if (target != null && Objects.equals(previous, target.key) && !target.disabled
-                        && target.onClick != null)
-                    target.onClick.run();
+                if (target != null && Objects.equals(previous, target.key) && !target.disabled)
+                    target.dispatchEvent(new ClickEvent());
                 refresh();
             }
         };
@@ -218,7 +220,8 @@ public class JReactPanel extends JPanel implements AutoCloseable {
 
     private Node interactive(Node node) {
         for (Node current = node; current != null; current = current.parent)
-            if (current.focusable || current.onClick != null || current.onPointer != null)
+            if (current.focusable || current.hasEventListener(ClickEvent.class)
+                    || current.hasEventListener(PointerEvent.class))
                 return current;
         return null;
     }
@@ -236,8 +239,8 @@ public class JReactPanel extends JPanel implements AutoCloseable {
     }
 
     private void pointer(Node node, double x) {
-        if (node.onPointer != null && node.bounds.width > 0)
-            node.onPointer.accept(Math.max(0, Math.min(1, (x - node.bounds.x) / node.bounds.width)));
+        if (node.bounds.width > 0)
+            node.dispatchEvent(new PointerEvent(Math.max(0, Math.min(1, (x - node.bounds.x) / node.bounds.width))));
     }
 
     private void keyboard(KeyEvent event) {
@@ -260,11 +263,12 @@ public class JReactPanel extends JPanel implements AutoCloseable {
             Node node = nodes.get(focused);
             if (node != null && !node.disabled) {
                 if ((event.getKeyCode() == KeyEvent.VK_ENTER || event.getKeyCode() == KeyEvent.VK_SPACE)
-                        && node.onClick != null) {
-                    node.onClick.run();
+                        && node.hasEventListener(ClickEvent.class)) {
+                    node.dispatchEvent(new ClickEvent());
                     event.consume();
-                } else if (node.onPointer != null && node.onKey != null) {
-                    node.onKey.accept(event.getKeyCode());
+                } else if (node.hasEventListener(PointerEvent.class)
+                        && node.hasEventListener(KeyboardEvent.class)) {
+                    node.dispatchEvent(new KeyboardEvent(event.getKeyCode()));
                     event.consume();
                 }
             }

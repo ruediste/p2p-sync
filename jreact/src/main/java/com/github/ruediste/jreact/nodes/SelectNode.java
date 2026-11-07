@@ -57,6 +57,15 @@ public final class SelectNode extends EditableNode {
         var combo = (JComboBox<?>) editor();
         setSyncing(true);
         try {
+            if (combo.isPopupVisible()) {
+                // The user is interacting with the popup. Resyncing the editor
+                // (setSelectedItem / setBounds / doLayout / setModel) dismisses a
+                // showing lightweight popup, so the combobox would close as soon
+                // as the user moves the mouse to click an option. Defer the
+                // resync until the popup closes; the picked value is committed
+                // through onChange / actionListener instead.
+                return;
+            }
             var current = new ArrayList<String>();
             for (int index = 0; index < combo.getItemCount(); index++)
                 current.add((String) combo.getItemAt(index));

@@ -20,6 +20,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import com.github.ruediste.jreact.components.Components;
 import com.github.ruediste.jreact.components.Theme;
+import com.github.ruediste.jreact.events.ClickEvent;
+import com.github.ruediste.jreact.events.KeyboardEvent;
+import com.github.ruediste.jreact.events.PointerEvent;
 
 /**
  * Exercises controlled component callbacks, disabled states, range validation,
@@ -74,8 +77,8 @@ class ComponentsTest {
         }, () -> {
         })) {
             root.render();
-            root.tree().children.get(0).onClick.run();
-            root.tree().children.get(1).children.get(1).onClick.run();
+            root.tree().children.get(0).dispatchEvent(new ClickEvent());
+            root.tree().children.get(1).children.get(1).dispatchEvent(new ClickEvent());
             root.render();
             assertTrue(checked.get());
             assertEquals("Two", selected.get());
@@ -90,19 +93,19 @@ class ComponentsTest {
         })) {
             root.render();
             Node slider = root.tree().children.getFirst();
-            slider.onPointer.accept(0.123);
+            slider.dispatchEvent(new PointerEvent(0.123));
             assertEquals(10, value.get());
             root.render();
             slider = root.tree().children.getFirst();
-            slider.onKey.accept(KeyEvent.VK_RIGHT);
+            slider.dispatchEvent(new KeyboardEvent(KeyEvent.VK_RIGHT));
             assertEquals(15, value.get());
             root.render();
-            root.tree().children.getFirst().onKey.accept(KeyEvent.VK_END);
+            root.tree().children.getFirst().dispatchEvent(new KeyboardEvent(KeyEvent.VK_END));
             assertEquals(100, value.get());
             root.render();
-            root.tree().children.getFirst().onKey.accept(KeyEvent.VK_RIGHT);
+            root.tree().children.getFirst().dispatchEvent(new KeyboardEvent(KeyEvent.VK_RIGHT));
             assertEquals(100, value.get());
-            root.tree().children.getFirst().onKey.accept(KeyEvent.VK_HOME);
+            root.tree().children.getFirst().dispatchEvent(new KeyboardEvent(KeyEvent.VK_HOME));
             assertEquals(0, value.get());
         }
     }

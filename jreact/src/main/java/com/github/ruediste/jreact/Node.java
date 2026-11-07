@@ -11,11 +11,13 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.DoubleConsumer;
-import java.util.function.IntConsumer;
 
+import com.github.ruediste.jreact.events.ClickEvent;
+import com.github.ruediste.jreact.events.KeyboardEvent;
+import com.github.ruediste.jreact.events.PointerEvent;
 import com.github.ruediste.jreact.layout.AvailableSpace;
 import com.github.ruediste.jreact.layout.Layout;
 import com.github.ruediste.jreact.layout.LayoutEngine;
@@ -75,9 +77,19 @@ public abstract class Node implements LayoutNode {
     public boolean hover, active, focus, disabled;
     public boolean focusable;
     public String accessibleName;
-    public Runnable onClick;
-    public DoubleConsumer onPointer;
-    public IntConsumer onKey;
+    /**
+     * Event listeners registered on this node, keyed by the exact event class.
+     * There is at most one listener per event class; adding a listener for a
+     * class that already has one replaces it. The {@code capture} flag selects
+     * the phase: capture listeners fire while the event travels down to the
+     * target, bubble listeners fire while it travels back up.
+     */
+    private final Map<Class<? extends JReactEvent>, ListenerRegistration<?>> listeners = new LinkedHashMap<>();
+
+    /** A registered listener and the phase it fires in. */
+    private record ListenerRegistration<T extends JReactEvent>(EventListener<T> listener, boolean capture) {
+    }
+
     /**
      * Snapshot of the style-rule scopes of the component that created this
      * node and of all components enclosing it, outermost first.
@@ -101,16 +113,122 @@ public abstract class Node implements LayoutNode {
         this.declarations = declarations;
     }
 
-    public Node onClick(Runnable action) {
-        onClick = action;
+    /**
+     * Adds a listener for {@link ClickEvent}. There is at most one click
+     * listener per node; calling this again replaces it. The node becomes
+     * focusable so it can be activated with Enter/Space.
+     */
+    public Node onClick(EventListener<ClickEvent> listener) {
         focusable = true;
+        addEventListener(ClickEvent.class, listener, false);
         return this;
     }
 
-    public Node onPointer(DoubleConsumer action) {
-        onPointer = action;
-        focusable = true;
+    /**
+     * Adds a listener for {@link PointerEvent}. There is at most one pointer
+     * listener per node; calling this again replaces it.
+     */
+    public Node onPointer(EventListener<PointerEvent> listener) {
+        addEventListener(PointerEvent.class, listener, false);
         return this;
+    }
+
+    /**
+     * Adds a listener for {@link KeyboardEvent}. There is at most one keyboard
+     * listener per node; calling this again replaces it.
+     */
+    public Node onKey(EventListener<KeyboardEvent> listener) {
+        addEventListener(KeyboardEvent.class, listener, false);
+        return this;
+    }
+
+    /**
+     * Registers a listener for the given event class. There can only be one
+     * listener for a single event class per node; registering a new listener
+     * replaces any existing listener for that class. Set {@code capture} to
+     * {@code true} to fire the listener during the capture phase (root down to
+     * this node's parent) instead of the bubble phase (this node's parent up to
+     * the root). The listener on the target node itself always fires once.
+     *
+     * @param type     the exact event class the listener is registered for
+     * @param listener the listener to invoke
+     * @param capture  whether the listener fires during the capture phase
+     * @param <T>      the event class
+     */
+    public <T extends JReactEvent> void addEventListener(Class<T> type, EventListener<T> listener,
+            boolean capture) {
+        listeners.put(type, new ListenerRegistration<>(listener, capture));
+    }
+
+    /**
+     * Registers a bubble-phase listener for the given event class. There can
+     * only be one listener for a single event class per node; registering a new
+     * listener replaces any existing listener for that class.
+     *
+     * @param type     the exact event class the listener is registered for
+     * @param listener the listener to invoke
+     * @param <T>      the event class
+     * @see #addEventListener(Class, EventListener, boolean)
+     */
+    public <T extends JReactEvent> void addEventListener(Class<T> type, EventListener<T> listener) {
+        addEventListener(type, listener, false);
+    }
+
+    /**
+     * Returns the listener registered for the given exact event class, or
+     * {@code null} if none is registered.
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends JReactEvent> EventListener<T> getEventListener(Class<T> type) {
+        var registration = listeners.get(type);
+        return registration == null ? null : (EventListener<T>) registration.listener();
+    }
+
+    /** Whether a listener is registered for the given exact event class. */
+    public boolean hasEventListener(Class<? extends JReactEvent> type) {
+        return listeners.containsKey(type);
+    }
+
+    /**
+     * Dispatches the given event through the capture, target, and bubble phases
+     * along the path from the root to this node.
+     *
+     * <p>
+     * Capture phase invokes capture listeners on the ancestors from the root
+     * down to this node's parent. Target phase invokes the listener on this
+     * node once. Bubble phase invokes bubble listeners on the ancestors from
+     * this node's parent back up to the root. Listeners are matched by the
+     * exact event class, not by subclasses. Calling
+     * {@link JReactEvent#stopPropagation()} in a listener stops further phase
+     * delivery.
+     */
+    public void dispatchEvent(JReactEvent event) {
+        var path = new ArrayList<Node>();
+        for (Node node = this; node != null; node = node.parent)
+            path.add(node);
+        Collections.reverse(path);
+
+        int target = path.size() - 1;
+        for (int index = 0; index < target && !event.isStopPropagation(); index++)
+            invokeListener(path.get(index), event, Phase.CAPTURE);
+        if (!event.isStopPropagation())
+            invokeListener(this, event, Phase.TARGET);
+        for (int index = target - 1; index >= 0 && !event.isStopPropagation(); index--)
+            invokeListener(path.get(index), event, Phase.BUBBLE);
+    }
+
+    /** Delivery phase of an event. */
+    private enum Phase {
+        CAPTURE, TARGET, BUBBLE
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends JReactEvent> void invokeListener(Node node, JReactEvent event, Phase phase) {
+        var registration = (ListenerRegistration<T>) node.listeners.get(event.getClass());
+        if (registration != null && (phase == Phase.TARGET
+                || (phase == Phase.CAPTURE && registration.capture())
+                || (phase == Phase.BUBBLE && !registration.capture())))
+            registration.listener().handle((T) event);
     }
 
     public Node disabled(boolean value) {

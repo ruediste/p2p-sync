@@ -104,7 +104,7 @@ class RenderingTest {
             var clicks = new AtomicInteger();
             var disabled = new AtomicReference<>(false);
             try (var panel = new JReactPanel(() -> div(style -> style.width(100).height(50), () -> text("button"))
-                    .onClick(clicks::incrementAndGet).disabled(disabled.get()))) {
+                    .onClick(event -> clicks.incrementAndGet()).disabled(disabled.get()))) {
                 panel.setSize(120, 100);
                 panel.refresh();
                 click(panel, 10, 10);
@@ -112,7 +112,7 @@ class RenderingTest {
                 assertTrue(panel.tree().children.getFirst().focus);
             }
             try (var panel = new JReactPanel(() -> div(style -> style.width(100).height(50), () -> text("button"))
-                    .onClick(clicks::incrementAndGet).disabled(true))) {
+                    .onClick(event -> clicks.incrementAndGet()).disabled(true))) {
                 panel.setSize(120, 100);
                 panel.refresh();
                 click(panel, 10, 10);
@@ -129,7 +129,7 @@ class RenderingTest {
                 Styles.rules(
                         Styles.rule(Selector.className("button").hover(), style -> style.backgroundColor(Color.RED)));
                 div(style -> style.width(50).height(30).className("button"), () -> {
-                }).onClick(clicks::incrementAndGet);
+                }).onClick(event -> clicks.incrementAndGet());
             })) {
                 panel.setSize(120, 100);
                 panel.refresh();
@@ -190,11 +190,11 @@ class RenderingTest {
             var calls = new AtomicInteger();
             try (var panel = new JReactPanel(() -> {
                 div(style -> style.width(30).height(30), () -> {
-                }).onClick(calls::incrementAndGet);
+                }).onClick(event -> calls.incrementAndGet());
                 div(style -> style.width(30).height(30), () -> {
-                }).onClick(calls::incrementAndGet).disabled(true);
+                }).onClick(event -> calls.incrementAndGet()).disabled(true);
                 div(style -> style.width(30).height(30), () -> {
-                }).onClick(calls::incrementAndGet);
+                }).onClick(event -> calls.incrementAndGet());
             })) {
                 panel.setSize(120, 100);
                 panel.refresh();
@@ -276,7 +276,7 @@ class RenderingTest {
         SwingUtilities.invokeAndWait(() -> {
             var calls = new AtomicInteger();
             try (var panel = new JReactPanel(() -> div(style -> style.width(100).height(30), () -> text("Save"))
-                    .onClick(calls::incrementAndGet).accessibleName("Save document"))) {
+                    .onClick(event -> calls.incrementAndGet()).accessibleName("Save document"))) {
                 panel.setSize(120, 100);
                 panel.refresh();
                 panel.dispatchEvent(
