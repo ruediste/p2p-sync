@@ -6,12 +6,12 @@ import java.awt.font.LineMetrics;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.ruediste.jreact.layout.AvailableSpace;
-import com.github.ruediste.jreact.layout.Direction;
-import com.github.ruediste.jreact.layout.Display;
+import com.antepod.taffy.geometry.Size;
+import com.antepod.taffy.style.AvailableSpace;
+import com.antepod.taffy.style.Direction;
+import com.antepod.taffy.style.Display;
 import com.github.ruediste.jreact.layout.Layout;
-import com.github.ruediste.jreact.layout.Size;
-import com.github.ruediste.jreact.layout.TextAlign;
+import com.antepod.taffy.style.TextAlign;
 import com.github.ruediste.jreact.nodes.TextNode;
 
 /**
@@ -37,10 +37,10 @@ public final class TextLayout {
         float natural = naturalWidth(text, font);
         float width;
         if (knownWidth.isDefinite()) {
-            width = knownWidth.value;
+            width = knownWidth.unwrap();
         } else if (availableWidth.isDefinite()) {
-            width = Math.min(natural, availableWidth.value);
-        } else if (availableWidth.kind == AvailableSpace.Kind.MIN_CONTENT) {
+            width = Math.min(natural, availableWidth.unwrap());
+        } else if (availableWidth.kind() == AvailableSpace.Kind.MIN_CONTENT) {
             width = longestWordWidth(text, font);
         } else {
             width = natural;
@@ -49,12 +49,12 @@ public final class TextLayout {
             width = Math.max(minimumWidth, width);
         width = Math.max(0, width);
         float height = wrap(text, font, width).size() * lineHeight(style, font);
-        return Size.of(width, height);
+        return new Size<>(width, height);
     }
 
     public static void commit(TextNode node) {
         node.lines.clear();
-        if (node.style.display() == Display.None) {
+        if (node.style.display() == Display.NONE) {
             return;
         }
         Layout layout = node.getLayout();
@@ -65,14 +65,14 @@ public final class TextLayout {
         LineMetrics metrics = font.getLineMetrics("Hg", RENDER_CONTEXT);
         float baseline = layout.border.top + layout.padding.top
                 + (lineHeight - metrics.getHeight()) / 2 + metrics.getAscent();
-        TextAlign align = node.style.layoutTextAlign();
-        boolean rtl = node.style.layoutDirection() == Direction.Rtl;
+        TextAlign align = node.style.textAlign();
+        boolean rtl = node.style.layoutDirection() == Direction.RTL;
         for (String line : lines) {
             float offset = switch (align) {
-                case LegacyLeft -> 0;
-                case LegacyCenter -> (contentWidth - textWidth(line, font)) / 2;
-                case LegacyRight -> contentWidth - textWidth(line, font);
-                case Auto -> rtl ? contentWidth - textWidth(line, font) : 0;
+                case LEGACY_LEFT -> 0;
+                case LEGACY_CENTER -> (contentWidth - textWidth(line, font)) / 2;
+                case LEGACY_RIGHT -> contentWidth - textWidth(line, font);
+                case AUTO -> rtl ? contentWidth - textWidth(line, font) : 0;
             };
             node.lines.add(new Node.Line(line,
                     layout.border.left + layout.padding.left + Math.max(0, offset), baseline));

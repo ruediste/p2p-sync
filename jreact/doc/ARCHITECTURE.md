@@ -416,32 +416,6 @@ behavior rather than reproducing it on the canvas. They paint above the canvas,
 so applications must not overlap them with painted siblings. Painted controls do
 not yet provide a complete screen-reader accessibility tree.
 
-### Example State-Update Sequence
-
-```mermaid
-sequenceDiagram
-    participant Event as Swing event
-    participant State as State handle
-    participant Root as RenderRoot
-    participant Panel as JReactPanel
-    participant Body as Component bodies
-    participant Paint as Layout and painting
-    Event->>State: set(changedValue)
-    State->>Root: validate, assign, invalidate
-    Root->>Panel: invalidation callback
-    Panel->>Panel: enqueue coalesced EDT refresh
-    Panel->>Root: render if dirty
-    Root->>Body: run with retained fibers
-    Body-->>Root: fresh node tree and queued effects
-    Root->>Root: resolve styles and publish tree
-    Root->>Root: execute effects
-    Root-->>Panel: return current tree
-    Panel->>Panel: restore interaction flags and resolve styles
-    Panel->>Paint: layout tree and sync native editors
-    Panel->>Panel: request repaint region
-    Panel->>Paint: paintComponent and Swing child painting
-```
-
 Effects that update state schedule another refresh; they do not trigger a
 reentrant root render in this sequence. A synchronous event-handler refresh can
 process the update before the already queued callback executes.

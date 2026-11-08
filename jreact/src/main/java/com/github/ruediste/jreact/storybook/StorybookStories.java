@@ -14,11 +14,11 @@ import javax.swing.UIManager;
 import com.github.ruediste.jreact.Hooks;
 import com.github.ruediste.jreact.components.Components;
 import com.github.ruediste.jreact.components.Theme;
-import com.github.ruediste.jreact.layout.AlignItems;
-import com.github.ruediste.jreact.layout.FlexDirection;
-import com.github.ruediste.jreact.layout.FlexWrap;
-import com.github.ruediste.jreact.layout.JustifyContent;
-import com.github.ruediste.jreact.layout.TextAlign;
+import com.antepod.taffy.style.AlignContent;
+import com.antepod.taffy.style.AlignItems;
+import com.antepod.taffy.style.FlexDirection;
+import com.antepod.taffy.style.FlexWrap;
+import com.antepod.taffy.style.TextAlign;
 
 public final class StorybookStories {
     private StorybookStories() {
@@ -66,7 +66,7 @@ public final class StorybookStories {
                     ui.button("-", Components.Variant.SECONDARY, disabled.get(),
                             () -> count.update(value -> value - 1));
                     text(count.get(), style -> ui.typography(style).fontSize(24).width(72).height(36)
-                            .textAlign(TextAlign.LegacyCenter));
+                            .textAlign(TextAlign.LEGACY_CENTER));
                     ui.button("+", Components.Variant.SECONDARY, disabled.get(),
                             () -> count.update(value -> value + 1));
                     ui.button("Reset", Components.Variant.SECONDARY, disabled.get(), () -> count.set(0));
@@ -131,19 +131,19 @@ public final class StorybookStories {
         ui.stack(18, () -> {
             ui.tabs(List.of("Row", "Column"), direction.get(), direction::set);
             ui.selectField("Justification", justification.get(),
-                    java.util.Arrays.stream(JustifyContent.values()).map(Enum::name).toList(),
+                    List.of("Start", "Center", "End", "SpaceBetween", "SpaceAround", "SpaceEvenly"),
                     false, justification::set);
             div(style -> style.height(260).flexShrink(0).padding(16).backgroundColor(theme.surface())
                     .border(1, theme.border())
-                    .flexDirection(direction.get().equals("Row") ? FlexDirection.Row : FlexDirection.Column)
-                    .flexWrap(FlexWrap.Wrap).alignItems(AlignItems.Center)
-                    .justifyContent(JustifyContent.valueOf(justification.get())), () -> {
+                    .flexDirection(direction.get().equals("Row") ? FlexDirection.ROW : FlexDirection.COLUMN)
+                    .flexWrap(FlexWrap.WRAP).alignItems(AlignItems.CENTER)
+                    .justifyContent(alignContentOf(justification.get())), () -> {
                         List<Color> colors = List.of(theme.primary(), new Color(194, 142, 26), theme.danger());
                         for (int index = 0; index < 3; index++) {
                             int number = index;
                             div(style -> style.width(72).height(56).margin(6).backgroundColor(colors.get(number))
                                     .borderRadius(6)
-                                    .alignItems(AlignItems.Center).justifyContent(JustifyContent.Center),
+                                    .alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER),
                                     () -> text(number + 1, style -> ui.typography(style).color(Color.WHITE)
                                             .fontWeight(true).fontSize(18)));
                         }
@@ -190,5 +190,17 @@ public final class StorybookStories {
             ui.badge(tasks.get().stream().filter(Task::done).count() + " / " + tasks.get().size() + " complete",
                     Components.Tone.SUCCESS);
         });
+    }
+
+    private static AlignContent alignContentOf(String name) {
+        return switch (name) {
+            case "Start" -> AlignContent.START;
+            case "Center" -> AlignContent.CENTER;
+            case "End" -> AlignContent.END;
+            case "SpaceBetween" -> AlignContent.SPACE_BETWEEN;
+            case "SpaceAround" -> AlignContent.SPACE_AROUND;
+            case "SpaceEvenly" -> AlignContent.SPACE_EVENLY;
+            default -> AlignContent.START;
+        };
     }
 }

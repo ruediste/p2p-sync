@@ -7,6 +7,7 @@ import static com.github.ruediste.jreact.StyleProperties.ASPECT_RATIO;
 import static com.github.ruediste.jreact.StyleProperties.BACKGROUND;
 import static com.github.ruediste.jreact.StyleProperties.BOLD;
 import static com.github.ruediste.jreact.StyleProperties.BORDER;
+import static com.github.ruediste.jreact.StyleProperties.BORDER_DECORATION;
 import static com.github.ruediste.jreact.StyleProperties.BOX_SHADOW;
 import static com.github.ruediste.jreact.StyleProperties.BOX_SIZING;
 import static com.github.ruediste.jreact.StyleProperties.CLEAR;
@@ -38,11 +39,10 @@ import static com.github.ruediste.jreact.StyleProperties.ITEM_IS_TABLE;
 import static com.github.ruediste.jreact.StyleProperties.JUSTIFY_CONTENT;
 import static com.github.ruediste.jreact.StyleProperties.JUSTIFY_ITEMS;
 import static com.github.ruediste.jreact.StyleProperties.JUSTIFY_SELF;
-import static com.github.ruediste.jreact.StyleProperties.LAYOUT_BORDER;
-import static com.github.ruediste.jreact.StyleProperties.LAYOUT_INSET;
-import static com.github.ruediste.jreact.StyleProperties.LAYOUT_MARGIN;
-import static com.github.ruediste.jreact.StyleProperties.LAYOUT_PADDING;
-import static com.github.ruediste.jreact.StyleProperties.LAYOUT_TEXT_ALIGN;
+import static com.github.ruediste.jreact.StyleProperties.INSET;
+import static com.github.ruediste.jreact.StyleProperties.MARGIN;
+import static com.github.ruediste.jreact.StyleProperties.PADDING;
+import static com.github.ruediste.jreact.StyleProperties.TEXT_ALIGN;
 import static com.github.ruediste.jreact.StyleProperties.LINE_HEIGHT;
 import static com.github.ruediste.jreact.StyleProperties.MAX_SIZE;
 import static com.github.ruediste.jreact.StyleProperties.MIN_SIZE;
@@ -63,33 +63,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
+import com.antepod.taffy.geometry.Line;
+import com.antepod.taffy.geometry.Point;
+import com.antepod.taffy.geometry.Rect;
+import com.antepod.taffy.geometry.Size;
+import com.antepod.taffy.style.AlignContent;
+import com.antepod.taffy.style.AlignItems;
+import com.antepod.taffy.style.BoxSizing;
+import com.antepod.taffy.style.Clear;
+import com.antepod.taffy.style.Dimension;
+import com.antepod.taffy.style.Direction;
+import com.antepod.taffy.style.Display;
+import com.antepod.taffy.style.FlexDirection;
+import com.antepod.taffy.style.FlexWrap;
+import com.antepod.taffy.style.Float;
+import com.antepod.taffy.style.GridAutoFlow;
+import com.antepod.taffy.style.GridPlacement;
+import com.antepod.taffy.style.GridTemplateArea;
+import com.antepod.taffy.style.GridTemplateComponent;
+import com.antepod.taffy.style.LengthPercentage;
+import com.antepod.taffy.style.LengthPercentageAuto;
+import com.antepod.taffy.style.Overflow;
+import com.antepod.taffy.style.Position;
+import com.antepod.taffy.style.TextAlign;
+import com.antepod.taffy.style.TrackSizingFunction;
 import com.github.ruediste.jreact.StyleProperties.DoubleProperty;
 import com.github.ruediste.jreact.StyleProperties.Property;
-import com.github.ruediste.jreact.layout.AlignContent;
-import com.github.ruediste.jreact.layout.AlignItems;
-import com.github.ruediste.jreact.layout.AlignSelf;
-import com.github.ruediste.jreact.layout.BoxSizing;
-import com.github.ruediste.jreact.layout.Clear;
-import com.github.ruediste.jreact.layout.Dimension;
-import com.github.ruediste.jreact.layout.Display;
-import com.github.ruediste.jreact.layout.FlexDirection;
-import com.github.ruediste.jreact.layout.FlexWrap;
-import com.github.ruediste.jreact.layout.Float;
-import com.github.ruediste.jreact.layout.GridAutoFlow;
-import com.github.ruediste.jreact.layout.GridPlacement;
-import com.github.ruediste.jreact.layout.GridTemplateArea;
-import com.github.ruediste.jreact.layout.GridTemplateComponent;
-import com.github.ruediste.jreact.layout.JustifyContent;
-import com.github.ruediste.jreact.layout.LengthPercentage;
-import com.github.ruediste.jreact.layout.LengthPercentageAuto;
-import com.github.ruediste.jreact.layout.Line;
-import com.github.ruediste.jreact.layout.Overflow;
-import com.github.ruediste.jreact.layout.Point;
-import com.github.ruediste.jreact.layout.Position;
-import com.github.ruediste.jreact.layout.Rect;
-import com.github.ruediste.jreact.layout.Size;
-import com.github.ruediste.jreact.layout.TextAlign;
-import com.github.ruediste.jreact.layout.TrackSizingFunction;
 
 /**
  * Mutable, typed declarations for JReact's supported layout and appearance
@@ -111,7 +110,7 @@ import com.github.ruediste.jreact.layout.TrackSizingFunction;
  *
  * <p>
  * The properties used by {@link com.github.ruediste.jreact.layout.LayoutEngine}
- * follow the CSS box model and use the value types from the layout package.
+ * follow the CSS box model and use the value types from Taffy.
  */
 public final class Style {
     final HashMap<Property<?>, Object> values = new HashMap<>();
@@ -157,14 +156,6 @@ public final class Style {
         return this;
     }
 
-    public Style flexDirection(FlexDirection value) {
-        return layoutFlexDirection(value);
-    }
-
-    public Style flexWrap(FlexWrap value) {
-        return layoutFlexWrap(value);
-    }
-
     public Style flexGrow(double value) {
         return dimension(GROW, value);
     }
@@ -173,23 +164,14 @@ public final class Style {
         return dimension(SHRINK, value);
     }
 
-    public Style justifyContent(JustifyContent value) {
-        return layoutJustifyContent(value);
-    }
-
-    public Style alignItems(AlignItems value) {
-        return layoutAlignItems(value);
-    }
-
     public Style width(double value) {
         nonNegative(value);
         return width(Dimension.length((float) value));
     }
 
     public Style width(Dimension value) {
-        Size<Dimension> size = size().copy();
-        size.width = Objects.requireNonNull(value);
-        return size(size);
+        Size<Dimension> current = size();
+        return size(new Size<>(Objects.requireNonNull(value), current.height));
     }
 
     public Style height(double value) {
@@ -198,17 +180,16 @@ public final class Style {
     }
 
     public Style height(Dimension value) {
-        Size<Dimension> size = size().copy();
-        size.height = Objects.requireNonNull(value);
-        return size(size);
+        Size<Dimension> current = size();
+        return size(new Size<>(current.width, Objects.requireNonNull(value)));
     }
 
     public Style widthAuto() {
-        return width(Dimension.auto());
+        return width(Dimension.AUTO);
     }
 
     public Style heightAuto() {
-        return height(Dimension.auto());
+        return height(Dimension.AUTO);
     }
 
     public Style margin(double value) {
@@ -220,7 +201,7 @@ public final class Style {
         nonNegative(right);
         nonNegative(bottom);
         nonNegative(left);
-        return layoutMargin(new Rect<>(
+        return margin(new Rect<>(
                 LengthPercentageAuto.length((float) left),
                 LengthPercentageAuto.length((float) right),
                 LengthPercentageAuto.length((float) top),
@@ -236,7 +217,7 @@ public final class Style {
         nonNegative(right);
         nonNegative(bottom);
         nonNegative(left);
-        return layoutPadding(new Rect<>(
+        return padding(new Rect<>(
                 LengthPercentage.length((float) left),
                 LengthPercentage.length((float) right),
                 LengthPercentage.length((float) top),
@@ -257,8 +238,8 @@ public final class Style {
     }
 
     public Style border(Border value) {
-        put(BORDER, value);
-        return layoutBorder(new Rect<>(
+        put(BORDER_DECORATION, value);
+        return border(new Rect<>(
                 LengthPercentage.length((float) value.left.width()),
                 LengthPercentage.length((float) value.right.width()),
                 LengthPercentage.length((float) value.top.width()),
@@ -287,7 +268,7 @@ public final class Style {
     }
 
     public Style textAlign(TextAlign value) {
-        return put(LAYOUT_TEXT_ALIGN, value);
+        return put(TEXT_ALIGN, value);
     }
 
     public double lineHeight() {
@@ -371,7 +352,7 @@ public final class Style {
     // CSS layout properties used by the layout engine.
 
     public Display display() {
-        return get(DISPLAY, Display.Flex);
+        return get(DISPLAY, Display.FLEX);
     }
 
     public Style display(Display value) {
@@ -379,23 +360,23 @@ public final class Style {
     }
 
     public Position position() {
-        return get(POSITION, Position.Static);
+        return get(POSITION, Position.RELATIVE);
     }
 
     public Style position(Position value) {
         return put(POSITION, value);
     }
 
-    public com.github.ruediste.jreact.layout.Direction layoutDirection() {
-        return get(WRITING_DIRECTION, com.github.ruediste.jreact.layout.Direction.Ltr);
+    public Direction layoutDirection() {
+        return get(WRITING_DIRECTION, Direction.LTR);
     }
 
-    public Style layoutDirection(com.github.ruediste.jreact.layout.Direction value) {
+    public Style layoutDirection(Direction value) {
         return put(WRITING_DIRECTION, value);
     }
 
     public Float floatMode() {
-        return get(FLOAT_MODE, Float.None);
+        return get(FLOAT_MODE, Float.NONE);
     }
 
     public Style floatMode(Float value) {
@@ -403,7 +384,7 @@ public final class Style {
     }
 
     public Clear clear() {
-        return get(CLEAR, Clear.None);
+        return get(CLEAR, Clear.NONE);
     }
 
     public Style clear(Clear value) {
@@ -411,42 +392,38 @@ public final class Style {
     }
 
     public BoxSizing boxSizing() {
-        return get(BOX_SIZING, BoxSizing.BorderBox);
+        return get(BOX_SIZING, BoxSizing.BORDER_BOX);
     }
 
     public Style boxSizing(BoxSizing value) {
         return put(BOX_SIZING, value);
     }
 
-    public com.github.ruediste.jreact.layout.TextAlign layoutTextAlign() {
-        return get(LAYOUT_TEXT_ALIGN, com.github.ruediste.jreact.layout.TextAlign.Auto);
+    public TextAlign textAlign() {
+        return get(TEXT_ALIGN, TextAlign.AUTO);
     }
 
-    public Style layoutTextAlign(com.github.ruediste.jreact.layout.TextAlign value) {
-        return put(LAYOUT_TEXT_ALIGN, value);
-    }
-
-    public AlignItems layoutAlignItems() {
+    public AlignItems alignItems() {
         return get(ALIGN_ITEMS, null);
     }
 
-    public Style layoutAlignItems(AlignItems value) {
+    public Style alignItems(AlignItems value) {
         return putNullable(ALIGN_ITEMS, value);
     }
 
-    public AlignSelf alignSelf() {
-        return get(ALIGN_SELF, AlignSelf.Auto);
+    public AlignItems alignSelf() {
+        return get(ALIGN_SELF, null);
     }
 
-    public Style alignSelf(AlignSelf value) {
+    public Style alignSelf(AlignItems value) {
         return putNullable(ALIGN_SELF, value);
     }
 
-    public AlignSelf getAlignSelf() {
+    public AlignItems getAlignSelf() {
         return alignSelf();
     }
 
-    public void setAlignSelf(AlignSelf value) {
+    public void setAlignSelf(AlignItems value) {
         alignSelf(value);
     }
 
@@ -458,11 +435,11 @@ public final class Style {
         return putNullable(ALIGN_CONTENT, value);
     }
 
-    public JustifyContent layoutJustifyContent() {
+    public AlignContent justifyContent() {
         return get(JUSTIFY_CONTENT, null);
     }
 
-    public Style layoutJustifyContent(JustifyContent value) {
+    public Style justifyContent(AlignContent value) {
         return putNullable(JUSTIFY_CONTENT, value);
     }
 
@@ -474,35 +451,35 @@ public final class Style {
         return putNullable(JUSTIFY_ITEMS, value);
     }
 
-    public AlignSelf justifySelf() {
-        return get(JUSTIFY_SELF, AlignSelf.Auto);
+    public AlignItems justifySelf() {
+        return get(JUSTIFY_SELF, null);
     }
 
-    public Style justifySelf(AlignSelf value) {
+    public Style justifySelf(AlignItems value) {
         return putNullable(JUSTIFY_SELF, value);
     }
 
-    public AlignSelf getJustifySelf() {
+    public AlignItems getJustifySelf() {
         return justifySelf();
     }
 
-    public void setJustifySelf(AlignSelf value) {
+    public void setJustifySelf(AlignItems value) {
         justifySelf(value);
     }
 
-    public FlexDirection layoutFlexDirection() {
-        return get(FLEX_DIRECTION, FlexDirection.Row);
+    public FlexDirection flexDirection() {
+        return get(FLEX_DIRECTION, FlexDirection.ROW);
     }
 
-    public Style layoutFlexDirection(FlexDirection value) {
+    public Style flexDirection(FlexDirection value) {
         return put(FLEX_DIRECTION, value);
     }
 
-    public FlexWrap layoutFlexWrap() {
-        return get(FLEX_WRAP, FlexWrap.NoWrap);
+    public FlexWrap flexWrap() {
+        return get(FLEX_WRAP, FlexWrap.NO_WRAP);
     }
 
-    public Style layoutFlexWrap(FlexWrap value) {
+    public Style flexWrap(FlexWrap value) {
         return put(FLEX_WRAP, value);
     }
 
@@ -514,36 +491,36 @@ public final class Style {
         return (float) number(SHRINK, 1);
     }
 
-    public LengthPercentageAuto flexBasis() {
-        return get(FLEX_BASIS, LengthPercentageAuto.auto());
+    public Dimension flexBasis() {
+        return get(FLEX_BASIS, Dimension.AUTO);
     }
 
-    public Style flexBasis(LengthPercentageAuto value) {
+    public Style flexBasis(Dimension value) {
         return put(FLEX_BASIS, value);
     }
 
     public Size<Dimension> size() {
-        return get(SIZE, Size.of(Dimension.auto(), Dimension.auto()));
+        return get(SIZE, new Size<>(Dimension.AUTO, Dimension.AUTO));
     }
 
     public Style size(Size<Dimension> value) {
-        return put(SIZE, value.copy());
+        return put(SIZE, new Size<>(value.width, value.height));
     }
 
     public Size<Dimension> minSize() {
-        return get(MIN_SIZE, Size.of(Dimension.auto(), Dimension.auto()));
+        return get(MIN_SIZE, new Size<>(Dimension.AUTO, Dimension.AUTO));
     }
 
     public Style minSize(Size<Dimension> value) {
-        return put(MIN_SIZE, value.copy());
+        return put(MIN_SIZE, new Size<>(value.width, value.height));
     }
 
     public Size<Dimension> maxSize() {
-        return get(MAX_SIZE, Size.of(Dimension.auto(), Dimension.auto()));
+        return get(MAX_SIZE, new Size<>(Dimension.AUTO, Dimension.AUTO));
     }
 
     public Style maxSize(Size<Dimension> value) {
-        return put(MAX_SIZE, value.copy());
+        return put(MAX_SIZE, new Size<>(value.width, value.height));
     }
 
     public java.lang.Float aspectRatio() {
@@ -556,43 +533,47 @@ public final class Style {
 
     /** width is the column gap, height is the row gap. */
     public Size<LengthPercentage> gap() {
-        return get(GAP, Size.of(LengthPercentage.zero(), LengthPercentage.zero()));
+        return get(GAP, new Size<>(LengthPercentage.ZERO, LengthPercentage.ZERO));
     }
 
     public Style gap(Size<LengthPercentage> value) {
-        return put(GAP, value.copy());
+        return put(GAP, value);
     }
 
-    public Rect<LengthPercentageAuto> layoutMargin() {
-        return get(LAYOUT_MARGIN, Rect.all(LengthPercentageAuto.length(0)));
+    public Rect<LengthPercentageAuto> margin() {
+        return get(MARGIN, new Rect<>(LengthPercentageAuto.length(0), LengthPercentageAuto.length(0),
+                LengthPercentageAuto.length(0), LengthPercentageAuto.length(0)));
     }
 
-    public Style layoutMargin(Rect<LengthPercentageAuto> value) {
-        return put(LAYOUT_MARGIN, value.copy());
+    public Style margin(Rect<LengthPercentageAuto> value) {
+        return put(MARGIN, value);
     }
 
-    public Rect<LengthPercentage> layoutPadding() {
-        return get(LAYOUT_PADDING, Rect.all(LengthPercentage.zero()));
+    public Rect<LengthPercentage> padding() {
+        return get(PADDING, new Rect<>(LengthPercentage.ZERO, LengthPercentage.ZERO,
+                LengthPercentage.ZERO, LengthPercentage.ZERO));
     }
 
-    public Style layoutPadding(Rect<LengthPercentage> value) {
-        return put(LAYOUT_PADDING, value.copy());
+    public Style padding(Rect<LengthPercentage> value) {
+        return put(PADDING, value);
     }
 
-    public Rect<LengthPercentage> layoutBorder() {
-        return get(LAYOUT_BORDER, Rect.all(LengthPercentage.zero()));
+    public Rect<LengthPercentage> border() {
+        return get(BORDER, new Rect<>(LengthPercentage.ZERO, LengthPercentage.ZERO,
+                LengthPercentage.ZERO, LengthPercentage.ZERO));
     }
 
-    public Style layoutBorder(Rect<LengthPercentage> value) {
-        return put(LAYOUT_BORDER, value.copy());
+    public Style border(Rect<LengthPercentage> value) {
+        return put(BORDER, new Rect<>(value.left, value.right, value.top, value.bottom));
     }
 
-    public Rect<LengthPercentageAuto> layoutInset() {
-        return get(LAYOUT_INSET, Rect.all(LengthPercentageAuto.auto()));
+    public Rect<LengthPercentageAuto> inset() {
+        return get(INSET, new Rect<>(LengthPercentageAuto.AUTO, LengthPercentageAuto.AUTO,
+                LengthPercentageAuto.AUTO, LengthPercentageAuto.AUTO));
     }
 
-    public Style layoutInset(Rect<LengthPercentageAuto> value) {
-        return put(LAYOUT_INSET, value.copy());
+    public Style inset(Rect<LengthPercentageAuto> value) {
+        return put(INSET, new Rect<>(value.left, value.right, value.top, value.bottom));
     }
 
     public boolean itemIsTable() {
@@ -620,15 +601,15 @@ public final class Style {
     }
 
     public Point<Overflow> overflow() {
-        return get(OVERFLOW, Point.of(Overflow.Visible, Overflow.Visible));
+        return get(OVERFLOW, new Point<>(Overflow.VISIBLE, Overflow.VISIBLE));
     }
 
     public Style overflow(Point<Overflow> value) {
-        return put(OVERFLOW, value.copy());
+        return put(OVERFLOW, new Point<>(value.x, value.y));
     }
 
     public GridAutoFlow gridAutoFlow() {
-        return get(GRID_AUTO_FLOW, GridAutoFlow.Row);
+        return get(GRID_AUTO_FLOW, GridAutoFlow.ROW);
     }
 
     public Style gridAutoFlow(GridAutoFlow value) {
@@ -636,19 +617,19 @@ public final class Style {
     }
 
     public Line<GridPlacement> gridRow() {
-        return get(GRID_ROW, Line.of(GridPlacement.auto(), GridPlacement.auto()));
+        return get(GRID_ROW, new Line<>(GridPlacement.AUTO, GridPlacement.AUTO));
     }
 
     public Style gridRow(Line<GridPlacement> value) {
-        return put(GRID_ROW, Line.of(value.start, value.end));
+        return put(GRID_ROW, new Line<>(value.start, value.end));
     }
 
     public Line<GridPlacement> gridColumn() {
-        return get(GRID_COLUMN, Line.of(GridPlacement.auto(), GridPlacement.auto()));
+        return get(GRID_COLUMN, new Line<>(GridPlacement.AUTO, GridPlacement.AUTO));
     }
 
     public Style gridColumn(Line<GridPlacement> value) {
-        return put(GRID_COLUMN, Line.of(value.start, value.end));
+        return put(GRID_COLUMN, new Line<>(value.start, value.end));
     }
 
     public List<GridTemplateComponent> gridTemplateRows() {
@@ -703,248 +684,224 @@ public final class Style {
         return size().width;
     }
 
-    public void setWidth(Object value) {
-        Size<Dimension> size = size().copy();
-        size.width = Dimension.of(value);
-        size(size);
+    public void setWidth(Dimension value) {
+        Size<Dimension> current = size();
+        size(new Size<>(Objects.requireNonNull(value), current.height));
     }
 
     public Dimension getHeight() {
         return size().height;
     }
 
-    public void setHeight(Object value) {
-        Size<Dimension> size = size().copy();
-        size.height = Dimension.of(value);
-        size(size);
+    public void setHeight(Dimension value) {
+        Size<Dimension> current = size();
+        size(new Size<>(current.width, Objects.requireNonNull(value)));
     }
 
     public Dimension getMinWidth() {
         return minSize().width;
     }
 
-    public void setMinWidth(Object value) {
-        Size<Dimension> size = minSize().copy();
-        size.width = Dimension.of(value);
-        minSize(size);
+    public void setMinWidth(Dimension value) {
+        Size<Dimension> current = minSize();
+        minSize(new Size<>(Objects.requireNonNull(value), current.height));
     }
 
     public Dimension getMinHeight() {
         return minSize().height;
     }
 
-    public void setMinHeight(Object value) {
-        Size<Dimension> size = minSize().copy();
-        size.height = Dimension.of(value);
-        minSize(size);
+    public void setMinHeight(Dimension value) {
+        Size<Dimension> current = minSize();
+        minSize(new Size<>(current.width, Objects.requireNonNull(value)));
     }
 
     public Dimension getMaxWidth() {
         return maxSize().width;
     }
 
-    public void setMaxWidth(Object value) {
-        Size<Dimension> size = maxSize().copy();
-        size.width = Dimension.of(value);
-        maxSize(size);
+    public void setMaxWidth(Dimension value) {
+        Size<Dimension> current = maxSize();
+        maxSize(new Size<>(Objects.requireNonNull(value), current.height));
     }
 
     public Dimension getMaxHeight() {
         return maxSize().height;
     }
 
-    public void setMaxHeight(Object value) {
-        Size<Dimension> size = maxSize().copy();
-        size.height = Dimension.of(value);
-        maxSize(size);
+    public void setMaxHeight(Dimension value) {
+        Size<Dimension> current = maxSize();
+        maxSize(new Size<>(current.width, Objects.requireNonNull(value)));
     }
 
     public LengthPercentageAuto getMarginLeft() {
-        return layoutMargin().left;
+        return margin().left;
     }
 
-    public void setMarginLeft(Object value) {
-        Rect<LengthPercentageAuto> margin = layoutMargin().copy();
-        margin.left = LengthPercentageAuto.of(value);
-        layoutMargin(margin);
+    public void setMarginLeft(LengthPercentageAuto value) {
+        Rect<LengthPercentageAuto> current = margin();
+        margin(new Rect<>(Objects.requireNonNull(value), current.right, current.top, current.bottom));
     }
 
     public LengthPercentageAuto getMarginRight() {
-        return layoutMargin().right;
+        return margin().right;
     }
 
-    public void setMarginRight(Object value) {
-        Rect<LengthPercentageAuto> margin = layoutMargin().copy();
-        margin.right = LengthPercentageAuto.of(value);
-        layoutMargin(margin);
+    public void setMarginRight(LengthPercentageAuto value) {
+        Rect<LengthPercentageAuto> current = margin();
+        margin(new Rect<>(current.left, Objects.requireNonNull(value), current.top, current.bottom));
     }
 
     public LengthPercentageAuto getMarginTop() {
-        return layoutMargin().top;
+        return margin().top;
     }
 
-    public void setMarginTop(Object value) {
-        Rect<LengthPercentageAuto> margin = layoutMargin().copy();
-        margin.top = LengthPercentageAuto.of(value);
-        layoutMargin(margin);
+    public void setMarginTop(LengthPercentageAuto value) {
+        Rect<LengthPercentageAuto> current = margin();
+        margin(new Rect<>(current.left, current.right, Objects.requireNonNull(value), current.bottom));
     }
 
     public LengthPercentageAuto getMarginBottom() {
-        return layoutMargin().bottom;
+        return margin().bottom;
     }
 
-    public void setMarginBottom(Object value) {
-        Rect<LengthPercentageAuto> margin = layoutMargin().copy();
-        margin.bottom = LengthPercentageAuto.of(value);
-        layoutMargin(margin);
+    public void setMarginBottom(LengthPercentageAuto value) {
+        Rect<LengthPercentageAuto> current = margin();
+        margin(new Rect<>(current.left, current.right, current.top, Objects.requireNonNull(value)));
     }
 
     public LengthPercentage getPaddingLeft() {
-        return layoutPadding().left;
+        return padding().left;
     }
 
-    public void setPaddingLeft(Object value) {
-        Rect<LengthPercentage> padding = layoutPadding().copy();
-        padding.left = LengthPercentage.of(value);
-        layoutPadding(padding);
+    public void setPaddingLeft(LengthPercentage value) {
+        Rect<LengthPercentage> current = padding();
+        padding(new Rect<>(Objects.requireNonNull(value), current.right, current.top, current.bottom));
     }
 
     public LengthPercentage getPaddingRight() {
-        return layoutPadding().right;
+        return padding().right;
     }
 
-    public void setPaddingRight(Object value) {
-        Rect<LengthPercentage> padding = layoutPadding().copy();
-        padding.right = LengthPercentage.of(value);
-        layoutPadding(padding);
+    public void setPaddingRight(LengthPercentage value) {
+        Rect<LengthPercentage> current = padding();
+        padding(new Rect<>(current.left, Objects.requireNonNull(value), current.top, current.bottom));
     }
 
     public LengthPercentage getPaddingTop() {
-        return layoutPadding().top;
+        return padding().top;
     }
 
-    public void setPaddingTop(Object value) {
-        Rect<LengthPercentage> padding = layoutPadding().copy();
-        padding.top = LengthPercentage.of(value);
-        layoutPadding(padding);
+    public void setPaddingTop(LengthPercentage value) {
+        Rect<LengthPercentage> current = padding();
+        padding(new Rect<>(current.left, current.right, Objects.requireNonNull(value), current.bottom));
     }
 
     public LengthPercentage getPaddingBottom() {
-        return layoutPadding().bottom;
+        return padding().bottom;
     }
 
-    public void setPaddingBottom(Object value) {
-        Rect<LengthPercentage> padding = layoutPadding().copy();
-        padding.bottom = LengthPercentage.of(value);
-        layoutPadding(padding);
+    public void setPaddingBottom(LengthPercentage value) {
+        Rect<LengthPercentage> current = padding();
+        padding(new Rect<>(current.left, current.right, current.top, Objects.requireNonNull(value)));
     }
 
     public LengthPercentage getBorderLeft() {
-        return layoutBorder().left;
+        return border().left;
     }
 
-    public void setBorderLeft(Object value) {
-        Rect<LengthPercentage> border = layoutBorder().copy();
-        border.left = LengthPercentage.of(value);
-        layoutBorder(border);
+    public void setBorderLeft(LengthPercentage value) {
+        Rect<LengthPercentage> current = border();
+        border(new Rect<>(Objects.requireNonNull(value), current.right, current.top, current.bottom));
     }
 
     public LengthPercentage getBorderRight() {
-        return layoutBorder().right;
+        return border().right;
     }
 
-    public void setBorderRight(Object value) {
-        Rect<LengthPercentage> border = layoutBorder().copy();
-        border.right = LengthPercentage.of(value);
-        layoutBorder(border);
+    public void setBorderRight(LengthPercentage value) {
+        Rect<LengthPercentage> current = border();
+        border(new Rect<>(current.left, Objects.requireNonNull(value), current.top, current.bottom));
     }
 
     public LengthPercentage getBorderTop() {
-        return layoutBorder().top;
+        return border().top;
     }
 
-    public void setBorderTop(Object value) {
-        Rect<LengthPercentage> border = layoutBorder().copy();
-        border.top = LengthPercentage.of(value);
-        layoutBorder(border);
+    public void setBorderTop(LengthPercentage value) {
+        Rect<LengthPercentage> current = border();
+        border(new Rect<>(current.left, current.right, Objects.requireNonNull(value), current.bottom));
     }
 
     public LengthPercentage getBorderBottom() {
-        return layoutBorder().bottom;
+        return border().bottom;
     }
 
-    public void setBorderBottom(Object value) {
-        Rect<LengthPercentage> border = layoutBorder().copy();
-        border.bottom = LengthPercentage.of(value);
-        layoutBorder(border);
+    public void setBorderBottom(LengthPercentage value) {
+        Rect<LengthPercentage> current = border();
+        border(new Rect<>(current.left, current.right, current.top, Objects.requireNonNull(value)));
     }
 
     public LengthPercentageAuto getLeft() {
-        return layoutInset().left;
+        return inset().left;
     }
 
-    public void setLeft(Object value) {
-        Rect<LengthPercentageAuto> inset = layoutInset().copy();
-        inset.left = LengthPercentageAuto.of(value);
-        layoutInset(inset);
+    public void setLeft(LengthPercentageAuto value) {
+        Rect<LengthPercentageAuto> current = inset();
+        inset(new Rect<>(Objects.requireNonNull(value), current.right, current.top, current.bottom));
     }
 
     public LengthPercentageAuto getRight() {
-        return layoutInset().right;
+        return inset().right;
     }
 
-    public void setRight(Object value) {
-        Rect<LengthPercentageAuto> inset = layoutInset().copy();
-        inset.right = LengthPercentageAuto.of(value);
-        layoutInset(inset);
+    public void setRight(LengthPercentageAuto value) {
+        Rect<LengthPercentageAuto> current = inset();
+        inset(new Rect<>(current.left, Objects.requireNonNull(value), current.top, current.bottom));
     }
 
     public LengthPercentageAuto getTop() {
-        return layoutInset().top;
+        return inset().top;
     }
 
-    public void setTop(Object value) {
-        Rect<LengthPercentageAuto> inset = layoutInset().copy();
-        inset.top = LengthPercentageAuto.of(value);
-        layoutInset(inset);
+    public void setTop(LengthPercentageAuto value) {
+        Rect<LengthPercentageAuto> current = inset();
+        inset(new Rect<>(current.left, current.right, Objects.requireNonNull(value), current.bottom));
     }
 
     public LengthPercentageAuto getBottom() {
-        return layoutInset().bottom;
+        return inset().bottom;
     }
 
-    public void setBottom(Object value) {
-        Rect<LengthPercentageAuto> inset = layoutInset().copy();
-        inset.bottom = LengthPercentageAuto.of(value);
-        layoutInset(inset);
+    public void setBottom(LengthPercentageAuto value) {
+        Rect<LengthPercentageAuto> current = inset();
+        inset(new Rect<>(current.left, current.right, current.top, Objects.requireNonNull(value)));
     }
 
     public LengthPercentage getColumnGap() {
         return gap().width;
     }
 
-    public void setColumnGap(Object value) {
-        Size<LengthPercentage> gap = gap().copy();
-        gap.width = LengthPercentage.of(value);
-        gap(gap);
+    public void setColumnGap(LengthPercentage value) {
+        Size<LengthPercentage> current = gap();
+        gap(new Size<>(Objects.requireNonNull(value), current.height));
     }
 
     public LengthPercentage getRowGap() {
         return gap().height;
     }
 
-    public void setRowGap(Object value) {
-        Size<LengthPercentage> gap = gap().copy();
-        gap.height = LengthPercentage.of(value);
-        gap(gap);
+    public void setRowGap(LengthPercentage value) {
+        Size<LengthPercentage> current = gap();
+        gap(new Size<>(current.width, Objects.requireNonNull(value)));
     }
 
-    public LengthPercentageAuto getFlexBasis() {
+    public Dimension getFlexBasis() {
         return flexBasis();
     }
 
-    public void setFlexBasis(Object value) {
-        flexBasis(LengthPercentageAuto.of(value));
+    public void setFlexBasis(Dimension value) {
+        flexBasis(Objects.requireNonNull(value));
     }
 
     public java.lang.Float getAspectRatio() {
@@ -959,60 +916,54 @@ public final class Style {
         return overflow().x;
     }
 
-    public void setOverflowX(Object value) {
-        Point<Overflow> overflow = overflow().copy();
-        overflow.x = Overflow.of(value);
-        overflow(overflow);
+    public void setOverflowX(Overflow value) {
+        Point<Overflow> current = overflow();
+        overflow(new Point<>(Objects.requireNonNull(value), current.y));
     }
 
     public Overflow getOverflowY() {
         return overflow().y;
     }
 
-    public void setOverflowY(Object value) {
-        Point<Overflow> overflow = overflow().copy();
-        overflow.y = Overflow.of(value);
-        overflow(overflow);
+    public void setOverflowY(Overflow value) {
+        Point<Overflow> current = overflow();
+        overflow(new Point<>(current.x, Objects.requireNonNull(value)));
     }
 
     public GridPlacement getGridRowStart() {
         return gridRow().start;
     }
 
-    public void setGridRowStart(Object value) {
-        Line<GridPlacement> row = gridRow();
-        Line<GridPlacement> updated = Line.of(GridPlacement.of(value), row.end);
-        gridRow(updated);
+    public void setGridRowStart(GridPlacement value) {
+        Line<GridPlacement> current = gridRow();
+        gridRow(new Line<>(Objects.requireNonNull(value), current.end));
     }
 
     public GridPlacement getGridRowEnd() {
         return gridRow().end;
     }
 
-    public void setGridRowEnd(Object value) {
-        Line<GridPlacement> row = gridRow();
-        Line<GridPlacement> updated = Line.of(row.start, GridPlacement.of(value));
-        gridRow(updated);
+    public void setGridRowEnd(GridPlacement value) {
+        Line<GridPlacement> current = gridRow();
+        gridRow(new Line<>(current.start, Objects.requireNonNull(value)));
     }
 
     public GridPlacement getGridColumnStart() {
         return gridColumn().start;
     }
 
-    public void setGridColumnStart(Object value) {
-        Line<GridPlacement> column = gridColumn();
-        Line<GridPlacement> updated = Line.of(GridPlacement.of(value), column.end);
-        gridColumn(updated);
+    public void setGridColumnStart(GridPlacement value) {
+        Line<GridPlacement> current = gridColumn();
+        gridColumn(new Line<>(Objects.requireNonNull(value), current.end));
     }
 
     public GridPlacement getGridColumnEnd() {
         return gridColumn().end;
     }
 
-    public void setGridColumnEnd(Object value) {
-        Line<GridPlacement> column = gridColumn();
-        Line<GridPlacement> updated = Line.of(column.start, GridPlacement.of(value));
-        gridColumn(updated);
+    public void setGridColumnEnd(GridPlacement value) {
+        Line<GridPlacement> current = gridColumn();
+        gridColumn(new Line<>(current.start, Objects.requireNonNull(value)));
     }
 
     public void setGridRow(Line<GridPlacement> value) {
@@ -1116,16 +1067,16 @@ public final class Style {
 
     private static Object copyValue(Object value) {
         if (value instanceof Size<?> size) {
-            return size.copy();
+            return new Size<>(size.width, size.height);
         }
         if (value instanceof Rect<?> rect) {
-            return rect.copy();
+            return new Rect<>(rect.left, rect.right, rect.top, rect.bottom);
         }
         if (value instanceof Point<?> point) {
-            return point.copy();
+            return new Point<>(point.x, point.y);
         }
         if (value instanceof Line<?> line) {
-            return Line.of(line.start, line.end);
+            return new Line<>(line.start, line.end);
         }
         if (value instanceof List<?> list) {
             return copyList(list);

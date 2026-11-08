@@ -14,8 +14,8 @@ import com.github.ruediste.jreact.StyleProperties;
 import com.github.ruediste.jreact.Styles;
 import com.github.ruediste.jreact.SwingBinding;
 import com.github.ruediste.jreact.TextLayout;
-import com.github.ruediste.jreact.layout.AvailableSpace;
-import com.github.ruediste.jreact.layout.Size;
+import com.antepod.taffy.geometry.Size;
+import com.antepod.taffy.style.AvailableSpace;
 
 /**
  * Base class for nodes backed by a retained native Swing component.

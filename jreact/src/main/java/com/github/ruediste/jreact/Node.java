@@ -18,11 +18,11 @@ import java.util.Map;
 import com.github.ruediste.jreact.events.ClickEvent;
 import com.github.ruediste.jreact.events.KeyboardEvent;
 import com.github.ruediste.jreact.events.PointerEvent;
-import com.github.ruediste.jreact.layout.AvailableSpace;
+import com.antepod.taffy.geometry.Size;
+import com.antepod.taffy.style.AvailableSpace;
 import com.github.ruediste.jreact.layout.Layout;
 import com.github.ruediste.jreact.layout.LayoutEngine;
 import com.github.ruediste.jreact.layout.LayoutNode;
-import com.github.ruediste.jreact.layout.Size;
 import com.github.ruediste.jreact.nodes.ContainerNode;
 import com.github.ruediste.jreact.nodes.SwingNode;
 

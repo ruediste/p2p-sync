@@ -9,8 +9,8 @@ import javax.swing.Icon;
 import com.github.ruediste.jreact.Node;
 import com.github.ruediste.jreact.Style;
 import com.github.ruediste.jreact.Styles;
-import com.github.ruediste.jreact.layout.AvailableSpace;
-import com.github.ruediste.jreact.layout.Size;
+import com.antepod.taffy.geometry.Size;
+import com.antepod.taffy.style.AvailableSpace;
 
 /**
  * A leaf node that paints a Swing icon.
@@ -30,7 +30,7 @@ public final class IconNode extends Node {
     @Override
     public Size<java.lang.Float> measure(Size<AvailableSpace> knownDimensions,
             Size<AvailableSpace> availableSpace) {
-        return Size.of((float) icon.getIconWidth(), (float) icon.getIconHeight());
+        return new Size<>((float) icon.getIconWidth(), (float) icon.getIconHeight());
     }
 
     @Override

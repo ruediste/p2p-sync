@@ -1,8 +1,10 @@
 package com.github.ruediste.jreact;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import com.github.ruediste.jreact.nodes.DivNode;
 
@@ -15,7 +17,8 @@ import com.github.ruediste.jreact.nodes.DivNode;
  * State and viewport changes mark the root dirty and notify the host through
  * the
  * invalidation callback; the host decides when to call {@link #render()}.
- * Layout is the responsibility of {@link com.github.ruediste.jreact.layout.LayoutEngine};
+ * Layout is the responsibility of
+ * {@link com.github.ruediste.jreact.layout.LayoutEngine};
  * painting lives in the {@link Node} hierarchy.
  *
  * <p>
@@ -32,6 +35,9 @@ public final class RenderRoot implements AutoCloseable {
     private final Runnable onInvalidated;
     final List<Runnable> effects = new ArrayList<>();
     private Node tree;
+    public Style rootStyle = new Style();
+
+    private LinkedHashSet<Consumer<Runnable>> overlays = new LinkedHashSet<>();
 
     /**
      * Node that receives primitives emitted by the component body currently
@@ -65,6 +71,11 @@ public final class RenderRoot implements AutoCloseable {
         return tree;
     }
 
+    public Runnable addOverlay(Consumer<Runnable> overlay) {
+        overlays.add(overlay);
+        return () -> overlays.remove(overlay);
+    }
+
     public void viewport(double width, double height) {
         checkThread();
         Style.nonNegative(width);
@@ -92,7 +103,9 @@ public final class RenderRoot implements AutoCloseable {
         rendering = true;
         effects.clear();
         dirty = false;
-        Node nextTreeRoot = new DivNode(new Node.Key(rootFiber, -1), new Style(), List.of());
+
+        var context = new Ui.Context(this, rootFiber);
+        Node nextTreeRoot = new DivNode(new Node.Key(rootFiber, -1), rootStyle, context.styleRuleChain);
 
         // initialize the parent node to the synthetic root node
         parent = nextTreeRoot;
@@ -100,9 +113,13 @@ public final class RenderRoot implements AutoCloseable {
         try {
             Ui.Context previous = Ui.CURRENT.get();
             rootFiber.begin();
+
             Ui.CURRENT.set(new Ui.Context(this, rootFiber));
             try {
                 body.run();
+                for (Consumer<Runnable> overlay : overlays) {
+                    overlay.accept(() -> overlays.remove(overlay));
+                }
                 rootFiber.finish();
             } finally {
                 if (previous == null)

@@ -52,6 +52,8 @@ public final class Ui {
          * created in this scope copy the chain so that rule resolution can
          * consider every enclosing component and, at equal specificity, prefer
          * the nearest declaring component.
+         * 
+         * The list is not modified after construction; it is effectively immutable.
          */
         final List<Styles.NodeStyleRules> styleRuleChain;
 
@@ -201,7 +203,7 @@ public final class Ui {
         Style style = new Style();
         configure.accept(style);
         T node = factory.create(new Node.Key(context.fiber, context.fiber.nodeCursor++), style,
-                List.copyOf(context.styleRuleChain));
+                context.styleRuleChain);
         Node parent = context.runtime.parent;
         if (parent instanceof SpanNode && !(node instanceof SpanNode) && !(node instanceof TextNode)
                 && !(node instanceof IconNode))

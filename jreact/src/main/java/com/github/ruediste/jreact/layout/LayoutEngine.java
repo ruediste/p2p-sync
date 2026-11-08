@@ -11,6 +11,16 @@ import com.antepod.taffy.tree.DetailedLayoutInfo;
 import com.antepod.taffy.tree.MeasureFunction;
 import com.antepod.taffy.tree.NodeId;
 import com.antepod.taffy.tree.TaffyTree;
+import com.antepod.taffy.geometry.Line;
+import com.antepod.taffy.geometry.Rect;
+import com.antepod.taffy.geometry.Size;
+import com.antepod.taffy.style.AlignContent;
+import com.antepod.taffy.style.AlignItems;
+import com.antepod.taffy.style.AvailableSpace;
+import com.antepod.taffy.style.Dimension;
+import com.antepod.taffy.style.Display;
+import com.antepod.taffy.style.LengthPercentageAuto;
+import com.antepod.taffy.style.Position;
 import com.github.ruediste.jreact.Style;
 
 /**
@@ -25,22 +35,21 @@ import com.github.ruediste.jreact.Style;
  * into the nodes.
  */
 public final class LayoutEngine {
-    private static final MeasureFunction<LayoutNode> MEASURE =
-            (known, space, node, context, style) -> {
-                LayoutNode layoutNode = context.orElse(null);
-                Size<java.lang.Float> measured = layoutNode == null ? null
-                        : layoutNode.measure(toKnownJReact(known), toJReact(space));
-                if (measured == null) {
-                    return new com.antepod.taffy.geometry.Size<java.lang.Float>(0f, 0f);
-                }
-                return new com.antepod.taffy.geometry.Size<>(measured.width, measured.height);
-            };
+    private static final MeasureFunction<LayoutNode> MEASURE = (known, space, node, context, style) -> {
+        LayoutNode layoutNode = context.orElse(null);
+        Size<java.lang.Float> measured = layoutNode == null ? null
+                : layoutNode.measure(toKnownJReact(known), space);
+        if (measured == null) {
+            return new com.antepod.taffy.geometry.Size<java.lang.Float>(0f, 0f);
+        }
+        return new com.antepod.taffy.geometry.Size<>(measured.width, measured.height);
+    };
 
     private LayoutEngine() {
     }
 
     public static void computeLayout(LayoutNode root, float width, float height) {
-        computeLayout(root, Size.of(AvailableSpace.definite(width), AvailableSpace.definite(height)));
+        computeLayout(root, new Size<>(AvailableSpace.definite(width), AvailableSpace.definite(height)));
     }
 
     public static void computeLayout(LayoutNode root, Size<AvailableSpace> availableSpace) {
@@ -50,12 +59,12 @@ public final class LayoutEngine {
             // rather than to its content.
             Style rootStyle = root.getStyle();
             Size<Dimension> rootSize = rootStyle.size();
-            boolean overrideWidth = rootSize.width.kind == Dimension.Kind.AUTO && availableSpace.width.isDefinite();
-            boolean overrideHeight = rootSize.height.kind == Dimension.Kind.AUTO && availableSpace.height.isDefinite();
+            boolean overrideWidth = rootSize.width.isAuto() && availableSpace.width.isDefinite();
+            boolean overrideHeight = rootSize.height.isAuto() && availableSpace.height.isDefinite();
             if (overrideWidth || overrideHeight) {
                 rootStyle.size(new Size<>(
-                        overrideWidth ? Dimension.length(availableSpace.width.value) : rootSize.width,
-                        overrideHeight ? Dimension.length(availableSpace.height.value) : rootSize.height));
+                        overrideWidth ? Dimension.length(availableSpace.width.unwrap()) : rootSize.width,
+                        overrideHeight ? Dimension.length(availableSpace.height.unwrap()) : rootSize.height));
             }
 
             List<LayoutNode> nodes = new ArrayList<>();
@@ -65,7 +74,7 @@ public final class LayoutEngine {
             if (rootId == null) {
                 return;
             }
-            tree.computeLayoutWithMeasure(rootId, toTaffy(availableSpace), MEASURE);
+            tree.computeLayoutWithMeasure(rootId, availableSpace, MEASURE);
             for (LayoutNode node : nodes) {
                 applyLayout(node, tree.layout(idByNode.get(node)), node == root);
             }
@@ -74,7 +83,7 @@ public final class LayoutEngine {
             computeAbsolute(root);
             computeContentExtents(root);
             for (LayoutNode node : nodes) {
-                if (node.getStyle().display() == Display.Grid) {
+                if (node.getStyle().display() == Display.GRID) {
                     setDetailedGridInfo(tree, idByNode.get(node), node);
                 } else {
                     node.getLayout().detailedGridInfo = null;
@@ -217,25 +226,17 @@ public final class LayoutEngine {
 
     private static float trackAlignment(LayoutNode node, boolean columns) {
         if (columns) {
-            com.github.ruediste.jreact.layout.JustifyContent alignment = node.getStyle().layoutJustifyContent();
+            AlignContent alignment = node.getStyle().justifyContent();
             return alignment == null ? 0 : contentAlignment(alignment);
         }
-        com.github.ruediste.jreact.layout.AlignContent alignment = node.getStyle().alignContent();
+        AlignContent alignment = node.getStyle().alignContent();
         return alignment == null ? 0 : contentAlignment(alignment);
     }
 
-    private static float contentAlignment(com.github.ruediste.jreact.layout.AlignContent alignment) {
-        return switch (alignment) {
-            case End -> 1;
-            case Center -> 0.5f;
-            default -> 0;
-        };
-    }
-
-    private static float contentAlignment(com.github.ruediste.jreact.layout.JustifyContent alignment) {
-        return switch (alignment) {
-            case End -> 1;
-            case Center -> 0.5f;
+    private static float contentAlignment(AlignContent alignment) {
+        return switch (alignment.keyword) {
+            case END -> 1;
+            case CENTER -> 0.5f;
             default -> 0;
         };
     }
@@ -301,430 +302,86 @@ public final class LayoutEngine {
 
     private static com.antepod.taffy.style.Style buildTaffyStyle(Style style) {
         com.antepod.taffy.style.Style.Builder builder = com.antepod.taffy.style.Style.builder();
-        builder.display(taffyDisplay(style.display()));
+        builder.display(style.display());
         builder.itemIsTable(style.itemIsTable());
         builder.itemIsReplaced(style.itemIsReplaced());
-        builder.boxSizing(taffyBoxSizing(style.boxSizing()));
-        builder.direction(taffyDirection(style.layoutDirection()));
-        builder.overflow(new com.antepod.taffy.geometry.Point<>(taffyOverflow(style.overflow().x),
-                taffyOverflow(style.overflow().y)));
+        builder.boxSizing(style.boxSizing());
+        builder.direction(style.layoutDirection());
+        builder.overflow(style.overflow());
         builder.scrollbarWidth(style.scrollbarWidth());
-        builder.floatValue(taffyFloatValue(style.floatMode()));
-        builder.clear(taffyClear(style.clear()));
-        Position position = style.position();
-        builder.position(taffyPosition(position));
-        boolean ignoresInsets = position == Position.Static || position == Position.Sticky;
+        builder.floatValue(style.floatMode());
+        builder.clear(style.clear());
+        builder.position(style.position());
+        boolean ignoresInsets = style.position() == Position.RELATIVE;
         Rect<LengthPercentageAuto> inset = ignoresInsets
-                ? new Rect<>(LengthPercentageAuto.auto(), LengthPercentageAuto.auto(), LengthPercentageAuto.auto(),
-                        LengthPercentageAuto.auto())
-                : style.layoutInset();
-        builder.inset(new com.antepod.taffy.geometry.Rect<>(taffyLengthPercentageAuto(inset.left),
-                taffyLengthPercentageAuto(inset.right), taffyLengthPercentageAuto(inset.top),
-                taffyLengthPercentageAuto(inset.bottom)));
-        builder.size(new com.antepod.taffy.geometry.Size<>(taffyDimension(style.size().width),
-                taffyDimension(style.size().height)));
-        builder.minSize(new com.antepod.taffy.geometry.Size<>(taffyDimension(style.minSize().width),
-                taffyDimension(style.minSize().height)));
-        builder.maxSize(new com.antepod.taffy.geometry.Size<>(taffyDimension(style.maxSize().width),
-                taffyDimension(style.maxSize().height)));
+                ? new Rect<>(LengthPercentageAuto.AUTO, LengthPercentageAuto.AUTO, LengthPercentageAuto.AUTO,
+                        LengthPercentageAuto.AUTO)
+                : style.inset();
+        builder.inset(inset);
+        builder.size(style.size());
+        builder.minSize(style.minSize());
+        builder.maxSize(style.maxSize());
         builder.aspectRatio(style.aspectRatio() == null ? Optional.empty()
                 : Optional.of(java.lang.Float.valueOf(style.aspectRatio())));
-        builder.margin(new com.antepod.taffy.geometry.Rect<>(taffyLengthPercentageAuto(style.layoutMargin().left),
-                taffyLengthPercentageAuto(style.layoutMargin().right),
-                taffyLengthPercentageAuto(style.layoutMargin().top),
-                taffyLengthPercentageAuto(style.layoutMargin().bottom)));
-        builder.padding(new com.antepod.taffy.geometry.Rect<>(taffyLengthPercentage(style.layoutPadding().left),
-                taffyLengthPercentage(style.layoutPadding().right), taffyLengthPercentage(style.layoutPadding().top),
-                taffyLengthPercentage(style.layoutPadding().bottom)));
-        builder.border(new com.antepod.taffy.geometry.Rect<>(taffyLengthPercentage(style.layoutBorder().left),
-                taffyLengthPercentage(style.layoutBorder().right), taffyLengthPercentage(style.layoutBorder().top),
-                taffyLengthPercentage(style.layoutBorder().bottom)));
-        AlignItems alignItems = style.layoutAlignItems();
+        builder.margin(style.margin());
+        builder.padding(style.padding());
+        builder.border(style.border());
+        AlignItems alignItems = style.alignItems();
         if (alignItems != null) {
-            builder.alignItems(taffyAlignItems(alignItems));
+            builder.alignItems(alignItems);
         }
-        AlignSelf alignSelf = style.alignSelf();
-        if (alignSelf != AlignSelf.Auto) {
-            builder.alignSelf(taffyAlignSelf(alignSelf));
-        }
+        AlignItems alignSelf = style.alignSelf();
+        builder.alignSelf(alignSelf);
         AlignItems justifyItems = style.justifyItems();
         if (justifyItems != null) {
-            builder.justifyItems(taffyAlignItems(justifyItems));
+            builder.justifyItems(justifyItems);
         }
-        AlignSelf justifySelf = style.justifySelf();
-        if (justifySelf != AlignSelf.Auto) {
-            builder.justifySelf(taffyAlignSelf(justifySelf));
-        }
-        com.github.ruediste.jreact.layout.AlignContent alignContent = style.alignContent();
+        AlignItems justifySelf = style.justifySelf();
+        builder.justifySelf(justifySelf);
+        AlignContent alignContent = style.alignContent();
         if (alignContent != null) {
-            builder.alignContent(taffyAlignContent(alignContent));
+            builder.alignContent(alignContent);
         }
-        com.github.ruediste.jreact.layout.JustifyContent justifyContent = style.layoutJustifyContent();
+        AlignContent justifyContent = style.justifyContent();
         if (justifyContent != null) {
-            builder.justifyContent(taffyJustifyContent(justifyContent));
+            builder.justifyContent(justifyContent);
         }
-        builder.gap(new com.antepod.taffy.geometry.Size<>(taffyLengthPercentage(style.gap().width),
-                taffyLengthPercentage(style.gap().height)));
-        builder.textAlign(taffyTextAlign(style.layoutTextAlign()));
-        builder.flexDirection(taffyFlexDirection(style.layoutFlexDirection()));
-        builder.flexWrap(taffyFlexWrap(style.layoutFlexWrap()));
-        builder.flexBasis(taffyDimension(style.flexBasis()));
+        builder.gap(style.gap());
+        builder.textAlign(style.textAlign());
+        builder.flexDirection(style.flexDirection());
+        builder.flexWrap(style.flexWrap());
+        builder.flexBasis(style.flexBasis());
         builder.flexGrow(style.flexGrow());
         builder.flexShrink(style.flexShrink());
-        builder.gridTemplateRows(taffyGridTemplateComponents(style.gridTemplateRows()));
-        builder.gridTemplateColumns(taffyGridTemplateComponents(style.gridTemplateColumns()));
-        builder.gridAutoRows(taffyTrackSizingFunctions(style.gridAutoRows()));
-        builder.gridAutoColumns(taffyTrackSizingFunctions(style.gridAutoColumns()));
-        builder.gridAutoFlow(taffyGridAutoFlow(style.gridAutoFlow()));
+        builder.gridTemplateRows(style.gridTemplateRows());
+        builder.gridTemplateColumns(style.gridTemplateColumns());
+        builder.gridAutoRows(style.gridAutoRows());
+        builder.gridAutoColumns(style.gridAutoColumns());
+        builder.gridAutoFlow(style.gridAutoFlow());
         builder.gridTemplateAreas(Optional.ofNullable(taffyGridTemplateAreas(style)));
         builder.gridTemplateColumnNames(style.gridTemplateColumnNames());
         builder.gridTemplateRowNames(style.gridTemplateRowNames());
-        builder.gridRow(new com.antepod.taffy.geometry.Line<>(taffyGridPlacement(style.gridRow().start),
-                taffyGridPlacement(style.gridRow().end)));
-        builder.gridColumn(new com.antepod.taffy.geometry.Line<>(taffyGridPlacement(style.gridColumn().start),
-                taffyGridPlacement(style.gridColumn().end)));
+        builder.gridRow(style.gridRow());
+        builder.gridColumn(style.gridColumn());
         return builder.build();
     }
 
     private static com.antepod.taffy.style.GridTemplateAreas taffyGridTemplateAreas(Style style) {
-        List<com.antepod.taffy.style.GridTemplateArea> areas = new ArrayList<>();
-        for (com.github.ruediste.jreact.layout.GridTemplateArea area : style.getGridTemplateAreas()) {
-            areas.add(new com.antepod.taffy.style.GridTemplateArea(area.name, area.rowStart, area.rowEnd,
-                    area.columnStart, area.columnEnd));
-        }
+        List<com.antepod.taffy.style.GridTemplateArea> areas = new ArrayList<>(style.getGridTemplateAreas());
         return new com.antepod.taffy.style.GridTemplateAreas(areas, style.getGridTemplateAreaRowCount(),
                 style.getGridTemplateAreaColumnCount());
     }
 
-    private static List<com.antepod.taffy.style.GridTemplateComponent> taffyGridTemplateComponents(
-            List<com.github.ruediste.jreact.layout.GridTemplateComponent> components) {
-        List<com.antepod.taffy.style.GridTemplateComponent> result = new ArrayList<>(components.size());
-        for (com.github.ruediste.jreact.layout.GridTemplateComponent component : components) {
-            result.add(taffyGridTemplateComponent(component));
-        }
-        return result;
-    }
-
-    private static com.antepod.taffy.style.GridTemplateComponent taffyGridTemplateComponent(
-            com.github.ruediste.jreact.layout.GridTemplateComponent component) {
-        if (component.isSingle()) {
-            return com.antepod.taffy.style.GridTemplateComponent.single(taffyTrackSizingFunction(component.track));
-        }
-        com.antepod.taffy.style.RepetitionCount count;
-        if (component.repetition == com.github.ruediste.jreact.layout.GridTemplateComponent.Repetition.AUTO_FILL) {
-            count = com.antepod.taffy.style.RepetitionCount.AUTO_FILL;
-        } else if (component.repetition == com.github.ruediste.jreact.layout.GridTemplateComponent.Repetition.AUTO_FIT) {
-            count = com.antepod.taffy.style.RepetitionCount.AUTO_FIT;
-        } else {
-            count = com.antepod.taffy.style.RepetitionCount.count(component.repeatCount);
-        }
-        List<com.antepod.taffy.style.TrackSizingFunction> tracks = new ArrayList<>();
-        for (com.github.ruediste.jreact.layout.TrackSizingFunction track : component.tracks) {
-            tracks.add(taffyTrackSizingFunction(track));
-        }
-        return com.antepod.taffy.style.GridTemplateComponent.repeat(count, tracks);
-    }
-
-    private static com.antepod.taffy.style.TrackSizingFunction taffyTrackSizingFunction(
-            com.github.ruediste.jreact.layout.TrackSizingFunction track) {
-        return com.antepod.taffy.style.TrackSizingFunction.minmax(taffyMinTrack(track.min), taffyMaxTrack(track.max));
-    }
-
-    private static com.antepod.taffy.style.MinTrackSizingFunction taffyMinTrack(
-            com.github.ruediste.jreact.layout.MinTrackSizing min) {
-        return switch (min.kind) {
-            case LENGTH -> com.antepod.taffy.style.MinTrackSizingFunction.length(min.value);
-            case PERCENT -> com.antepod.taffy.style.MinTrackSizingFunction.percent(min.value / 100f);
-            case MIN_CONTENT -> com.antepod.taffy.style.MinTrackSizingFunction.minContent();
-            case MAX_CONTENT -> com.antepod.taffy.style.MinTrackSizingFunction.maxContent();
-            case AUTO -> com.antepod.taffy.style.MinTrackSizingFunction.auto();
-        };
-    }
-
-    private static com.antepod.taffy.style.MaxTrackSizingFunction taffyMaxTrack(
-            com.github.ruediste.jreact.layout.MaxTrackSizing max) {
-        return switch (max.kind) {
-            case LENGTH -> com.antepod.taffy.style.MaxTrackSizingFunction.length(max.value);
-            case PERCENT -> com.antepod.taffy.style.MaxTrackSizingFunction.percent(max.value / 100f);
-            case MIN_CONTENT -> com.antepod.taffy.style.MaxTrackSizingFunction.minContent();
-            case MAX_CONTENT -> com.antepod.taffy.style.MaxTrackSizingFunction.maxContent();
-            case FIT_CONTENT -> com.antepod.taffy.style.MaxTrackSizingFunction.fitContentPx(max.value);
-            case FLEX -> com.antepod.taffy.style.MaxTrackSizingFunction.fr(max.value);
-            case AUTO -> com.antepod.taffy.style.MaxTrackSizingFunction.auto();
-        };
-    }
-
-    private static List<com.antepod.taffy.style.TrackSizingFunction> taffyTrackSizingFunctions(
-            List<com.github.ruediste.jreact.layout.TrackSizingFunction> tracks) {
-        List<com.antepod.taffy.style.TrackSizingFunction> result = new ArrayList<>(tracks.size());
-        for (com.github.ruediste.jreact.layout.TrackSizingFunction track : tracks) {
-            result.add(taffyTrackSizingFunction(track));
-        }
-        return result;
-    }
-
-    private static com.antepod.taffy.style.GridPlacement taffyGridPlacement(
-            com.github.ruediste.jreact.layout.GridPlacement placement) {
-        return switch (placement.kind) {
-            case AUTO -> com.antepod.taffy.style.GridPlacement.auto();
-            case LINE -> com.antepod.taffy.style.GridPlacement.line(placement.line);
-            case SPAN -> com.antepod.taffy.style.GridPlacement.span(placement.span);
-        };
-    }
-
-    private static com.antepod.taffy.style.Display taffyDisplay(com.github.ruediste.jreact.layout.Display display) {
-        return switch (display) {
-            case Block -> com.antepod.taffy.style.Display.BLOCK;
-            case Flex -> com.antepod.taffy.style.Display.FLEX;
-            case Grid -> com.antepod.taffy.style.Display.GRID;
-            case None -> com.antepod.taffy.style.Display.NONE;
-            case FlowRoot -> com.antepod.taffy.style.Display.FLOW_ROOT;
-        };
-    }
-
-    private static com.antepod.taffy.style.BoxSizing taffyBoxSizing(BoxSizing boxSizing) {
-        return switch (boxSizing) {
-            case BorderBox -> com.antepod.taffy.style.BoxSizing.BORDER_BOX;
-            case ContentBox -> com.antepod.taffy.style.BoxSizing.CONTENT_BOX;
-        };
-    }
-
-    private static com.antepod.taffy.style.Direction taffyDirection(
-            com.github.ruediste.jreact.layout.Direction direction) {
-        return switch (direction) {
-            case Ltr -> com.antepod.taffy.style.Direction.LTR;
-            case Rtl -> com.antepod.taffy.style.Direction.RTL;
-        };
-    }
-
-    private static com.antepod.taffy.style.Overflow taffyOverflow(Overflow overflow) {
-        return switch (overflow) {
-            case Visible -> com.antepod.taffy.style.Overflow.VISIBLE;
-            case Clip -> com.antepod.taffy.style.Overflow.CLIP;
-            case Hidden -> com.antepod.taffy.style.Overflow.HIDDEN;
-            case Scroll -> com.antepod.taffy.style.Overflow.SCROLL;
-        };
-    }
-
-    private static com.antepod.taffy.style.Float taffyFloatValue(Float floatMode) {
-        return switch (floatMode) {
-            case Left -> com.antepod.taffy.style.Float.LEFT;
-            case Right -> com.antepod.taffy.style.Float.RIGHT;
-            case None -> com.antepod.taffy.style.Float.NONE;
-        };
-    }
-
-    private static com.antepod.taffy.style.Clear taffyClear(Clear clear) {
-        return switch (clear) {
-            case Left -> com.antepod.taffy.style.Clear.LEFT;
-            case Right -> com.antepod.taffy.style.Clear.RIGHT;
-            case Both -> com.antepod.taffy.style.Clear.BOTH;
-            case None -> com.antepod.taffy.style.Clear.NONE;
-        };
-    }
-
-    private static com.antepod.taffy.style.Position taffyPosition(Position position) {
-        return switch (position) {
-            case Relative -> com.antepod.taffy.style.Position.RELATIVE;
-            case Absolute -> com.antepod.taffy.style.Position.ABSOLUTE;
-            case Static -> com.antepod.taffy.style.Position.RELATIVE;
-            case Fixed -> com.antepod.taffy.style.Position.ABSOLUTE;
-            case Sticky -> com.antepod.taffy.style.Position.RELATIVE;
-        };
-    }
-
-    private static com.antepod.taffy.style.TextAlign taffyTextAlign(TextAlign textAlign) {
-        return switch (textAlign) {
-            case Auto -> com.antepod.taffy.style.TextAlign.AUTO;
-            case LegacyLeft -> com.antepod.taffy.style.TextAlign.LEGACY_LEFT;
-            case LegacyRight -> com.antepod.taffy.style.TextAlign.LEGACY_RIGHT;
-            case LegacyCenter -> com.antepod.taffy.style.TextAlign.LEGACY_CENTER;
-        };
-    }
-
-    private static com.antepod.taffy.style.AlignItems taffyAlignItems(AlignItems alignItems) {
-        return switch (alignItems) {
-            case Start -> com.antepod.taffy.style.AlignItems.START;
-            case End -> com.antepod.taffy.style.AlignItems.END;
-            case FlexStart -> com.antepod.taffy.style.AlignItems.FLEX_START;
-            case FlexEnd -> com.antepod.taffy.style.AlignItems.FLEX_END;
-            case Center -> com.antepod.taffy.style.AlignItems.CENTER;
-            case Baseline -> com.antepod.taffy.style.AlignItems.BASELINE;
-            case Stretch -> com.antepod.taffy.style.AlignItems.STRETCH;
-            case SelfStart -> com.antepod.taffy.style.AlignItems.SELF_START;
-            case SelfEnd -> com.antepod.taffy.style.AlignItems.SELF_END;
-            case SafeStart -> com.antepod.taffy.style.AlignItems.SAFE_START;
-            case SafeEnd -> com.antepod.taffy.style.AlignItems.SAFE_END;
-            case SafeFlexStart -> com.antepod.taffy.style.AlignItems.SAFE_FLEX_START;
-            case SafeFlexEnd -> com.antepod.taffy.style.AlignItems.SAFE_FLEX_END;
-            case SafeCenter -> com.antepod.taffy.style.AlignItems.SAFE_CENTER;
-            case SafeSelfStart -> com.antepod.taffy.style.AlignItems.SAFE_SELF_START;
-            case SafeSelfEnd -> com.antepod.taffy.style.AlignItems.SAFE_SELF_END;
-        };
-    }
-
-    private static com.antepod.taffy.style.AlignItems taffyAlignSelf(AlignSelf alignSelf) {
-        return switch (alignSelf) {
-            case Start -> com.antepod.taffy.style.AlignItems.START;
-            case End -> com.antepod.taffy.style.AlignItems.END;
-            case FlexStart -> com.antepod.taffy.style.AlignItems.FLEX_START;
-            case FlexEnd -> com.antepod.taffy.style.AlignItems.FLEX_END;
-            case Center -> com.antepod.taffy.style.AlignItems.CENTER;
-            case Baseline -> com.antepod.taffy.style.AlignItems.BASELINE;
-            case Stretch -> com.antepod.taffy.style.AlignItems.STRETCH;
-            case SelfStart -> com.antepod.taffy.style.AlignItems.SELF_START;
-            case SelfEnd -> com.antepod.taffy.style.AlignItems.SELF_END;
-            case SafeStart -> com.antepod.taffy.style.AlignItems.SAFE_START;
-            case SafeEnd -> com.antepod.taffy.style.AlignItems.SAFE_END;
-            case SafeFlexStart -> com.antepod.taffy.style.AlignItems.SAFE_FLEX_START;
-            case SafeFlexEnd -> com.antepod.taffy.style.AlignItems.SAFE_FLEX_END;
-            case SafeCenter -> com.antepod.taffy.style.AlignItems.SAFE_CENTER;
-            case SafeSelfStart -> com.antepod.taffy.style.AlignItems.SAFE_SELF_START;
-            case SafeSelfEnd -> com.antepod.taffy.style.AlignItems.SAFE_SELF_END;
-            case Auto -> com.antepod.taffy.style.AlignItems.START;
-        };
-    }
-
-    private static com.antepod.taffy.style.AlignContent taffyAlignContent(
-            com.github.ruediste.jreact.layout.AlignContent alignContent) {
-        return switch (alignContent) {
-            case Start -> com.antepod.taffy.style.AlignContent.START;
-            case End -> com.antepod.taffy.style.AlignContent.END;
-            case FlexStart -> com.antepod.taffy.style.AlignContent.FLEX_START;
-            case FlexEnd -> com.antepod.taffy.style.AlignContent.FLEX_END;
-            case Center -> com.antepod.taffy.style.AlignContent.CENTER;
-            case Stretch -> com.antepod.taffy.style.AlignContent.STRETCH;
-            case SpaceBetween -> com.antepod.taffy.style.AlignContent.SPACE_BETWEEN;
-            case SpaceAround -> com.antepod.taffy.style.AlignContent.SPACE_AROUND;
-            case SpaceEvenly -> com.antepod.taffy.style.AlignContent.SPACE_EVENLY;
-            case SafeStart -> com.antepod.taffy.style.AlignContent.SAFE_START;
-            case SafeEnd -> com.antepod.taffy.style.AlignContent.SAFE_END;
-            case SafeFlexStart -> com.antepod.taffy.style.AlignContent.SAFE_FLEX_START;
-            case SafeFlexEnd -> com.antepod.taffy.style.AlignContent.SAFE_FLEX_END;
-            case SafeCenter -> com.antepod.taffy.style.AlignContent.SAFE_CENTER;
-        };
-    }
-
-    private static com.antepod.taffy.style.AlignContent taffyJustifyContent(
-            com.github.ruediste.jreact.layout.JustifyContent justifyContent) {
-        return switch (justifyContent) {
-            case Start -> com.antepod.taffy.style.AlignContent.START;
-            case End -> com.antepod.taffy.style.AlignContent.END;
-            case FlexStart -> com.antepod.taffy.style.AlignContent.FLEX_START;
-            case FlexEnd -> com.antepod.taffy.style.AlignContent.FLEX_END;
-            case Center -> com.antepod.taffy.style.AlignContent.CENTER;
-            case Stretch -> com.antepod.taffy.style.AlignContent.STRETCH;
-            case SpaceBetween -> com.antepod.taffy.style.AlignContent.SPACE_BETWEEN;
-            case SpaceAround -> com.antepod.taffy.style.AlignContent.SPACE_AROUND;
-            case SpaceEvenly -> com.antepod.taffy.style.AlignContent.SPACE_EVENLY;
-            case SafeStart -> com.antepod.taffy.style.AlignContent.SAFE_START;
-            case SafeEnd -> com.antepod.taffy.style.AlignContent.SAFE_END;
-            case SafeFlexStart -> com.antepod.taffy.style.AlignContent.SAFE_FLEX_START;
-            case SafeFlexEnd -> com.antepod.taffy.style.AlignContent.SAFE_FLEX_END;
-            case SafeCenter -> com.antepod.taffy.style.AlignContent.SAFE_CENTER;
-        };
-    }
-
-    private static com.antepod.taffy.style.Dimension taffyDimension(Dimension dimension) {
-        return switch (dimension.kind) {
-            case LENGTH -> com.antepod.taffy.style.Dimension.length(dimension.value);
-            case PERCENT -> com.antepod.taffy.style.Dimension.percent(dimension.value / 100f);
-            case AUTO -> com.antepod.taffy.style.Dimension.AUTO;
-        };
-    }
-
-    private static com.antepod.taffy.style.Dimension taffyDimension(LengthPercentageAuto lengthPercentageAuto) {
-        return switch (lengthPercentageAuto.kind) {
-            case LENGTH -> com.antepod.taffy.style.Dimension.length(lengthPercentageAuto.value);
-            case PERCENT -> com.antepod.taffy.style.Dimension.percent(lengthPercentageAuto.value / 100f);
-            case AUTO -> com.antepod.taffy.style.Dimension.AUTO;
-        };
-    }
-
-    private static com.antepod.taffy.style.LengthPercentage taffyLengthPercentage(
-            LengthPercentage lengthPercentage) {
-        return switch (lengthPercentage.kind) {
-            case LENGTH -> com.antepod.taffy.style.LengthPercentage.length(lengthPercentage.value);
-            case PERCENT -> com.antepod.taffy.style.LengthPercentage.percent(lengthPercentage.value / 100f);
-        };
-    }
-
-    private static com.antepod.taffy.style.LengthPercentageAuto taffyLengthPercentageAuto(
-            LengthPercentageAuto lengthPercentageAuto) {
-        return switch (lengthPercentageAuto.kind) {
-            case LENGTH -> com.antepod.taffy.style.LengthPercentageAuto.length(lengthPercentageAuto.value);
-            case PERCENT -> com.antepod.taffy.style.LengthPercentageAuto.percent(lengthPercentageAuto.value / 100f);
-            case AUTO -> com.antepod.taffy.style.LengthPercentageAuto.AUTO;
-        };
-    }
-
-    private static com.antepod.taffy.style.FlexDirection taffyFlexDirection(
-            com.github.ruediste.jreact.layout.FlexDirection flexDirection) {
-        return switch (flexDirection) {
-            case Row -> com.antepod.taffy.style.FlexDirection.ROW;
-            case Column -> com.antepod.taffy.style.FlexDirection.COLUMN;
-            case RowReverse -> com.antepod.taffy.style.FlexDirection.ROW_REVERSE;
-            case ColumnReverse -> com.antepod.taffy.style.FlexDirection.COLUMN_REVERSE;
-        };
-    }
-
-    private static com.antepod.taffy.style.FlexWrap taffyFlexWrap(
-            com.github.ruediste.jreact.layout.FlexWrap flexWrap) {
-        return switch (flexWrap) {
-            case NoWrap -> com.antepod.taffy.style.FlexWrap.NO_WRAP;
-            case Wrap -> com.antepod.taffy.style.FlexWrap.WRAP;
-            case WrapReverse -> com.antepod.taffy.style.FlexWrap.WRAP_REVERSE;
-        };
-    }
-
-    private static com.antepod.taffy.style.GridAutoFlow taffyGridAutoFlow(
-            com.github.ruediste.jreact.layout.GridAutoFlow gridAutoFlow) {
-        return switch (gridAutoFlow) {
-            case Row -> com.antepod.taffy.style.GridAutoFlow.ROW;
-            case Column -> com.antepod.taffy.style.GridAutoFlow.COLUMN;
-            case RowDense -> com.antepod.taffy.style.GridAutoFlow.ROW_DENSE;
-            case ColumnDense -> com.antepod.taffy.style.GridAutoFlow.COLUMN_DENSE;
-        };
-    }
-
     // -- taffy -> jreact conversion -------------------------------------------
 
     // -- taffy -> jreact conversion -------------------------------------------
-
-    private static com.antepod.taffy.style.AvailableSpace toTaffy(AvailableSpace availableSpace) {
-        return switch (availableSpace.kind) {
-            case DEFINITE -> com.antepod.taffy.style.AvailableSpace.definite(availableSpace.value);
-            case MIN_CONTENT -> com.antepod.taffy.style.AvailableSpace.MIN_CONTENT;
-            case MAX_CONTENT -> com.antepod.taffy.style.AvailableSpace.MAX_CONTENT;
-        };
-    }
-
-    private static com.antepod.taffy.geometry.Size<com.antepod.taffy.style.AvailableSpace> toTaffy(
-            Size<AvailableSpace> availableSpace) {
-        return new com.antepod.taffy.geometry.Size<com.antepod.taffy.style.AvailableSpace>(
-                toTaffy(availableSpace.width),
-                toTaffy(availableSpace.height));
-    }
-
-    private static AvailableSpace toJReact(com.antepod.taffy.style.AvailableSpace availableSpace) {
-        return switch (availableSpace.kind()) {
-            case DEFINITE -> AvailableSpace.definite(availableSpace.unwrap());
-            case MIN_CONTENT -> AvailableSpace.minContent();
-            case MAX_CONTENT -> AvailableSpace.maxContent();
-        };
-    }
-
-    private static Size<AvailableSpace> toJReact(
-            com.antepod.taffy.geometry.Size<com.antepod.taffy.style.AvailableSpace> size) {
-        return new Size<>(toJReact(size.width), toJReact(size.height));
-    }
 
     private static Size<AvailableSpace> toKnownJReact(
-            com.antepod.taffy.geometry.Size<java.util.Optional<java.lang.Float>> size) {
+            Size<java.util.Optional<java.lang.Float>> size) {
         return new Size<>(toKnownJReact(size.width), toKnownJReact(size.height));
     }
 
     private static AvailableSpace toKnownJReact(java.util.Optional<java.lang.Float> value) {
-        return value.map(AvailableSpace::definite).orElseGet(AvailableSpace::minContent);
+        return value.map(AvailableSpace::definite).orElseGet(() -> AvailableSpace.MIN_CONTENT);
     }
 }

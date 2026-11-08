@@ -1,5 +1,8 @@
 package com.github.ruediste.jreact.layout;
 
+import com.antepod.taffy.geometry.Size;
+import com.antepod.taffy.style.AvailableSpace;
+
 /**
  * Measures a leaf node.
  *

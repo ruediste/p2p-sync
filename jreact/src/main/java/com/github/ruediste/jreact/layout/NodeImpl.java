@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.antepod.taffy.geometry.Size;
+import com.antepod.taffy.style.AvailableSpace;
 import com.github.ruediste.jreact.Style;
 
 /**

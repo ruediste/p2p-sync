@@ -7,9 +7,9 @@ import static com.github.ruediste.jreact.Ui.text;
 import static com.github.ruediste.jreact.Ui.viewportHeight;
 import static com.github.ruediste.jreact.Ui.viewportWidth;
 
-import com.github.ruediste.jreact.layout.AlignItems;
-import com.github.ruediste.jreact.layout.JustifyContent;
-import com.github.ruediste.jreact.layout.FlexDirection;
+import com.antepod.taffy.style.AlignContent;
+import com.antepod.taffy.style.AlignItems;
+import com.antepod.taffy.style.FlexDirection;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -49,10 +49,10 @@ public final class Storybook {
         Theme theme = contrast.get() ? Theme.highContrast() : Theme.light();
         Components ui = new Components(theme);
         boolean narrow = viewportWidth() < 720;
-        div(style -> style.width(viewportWidth()).height(viewportHeight()).flexDirection(FlexDirection.Column)
+        div(style -> style.width(viewportWidth()).height(viewportHeight()).flexDirection(FlexDirection.COLUMN)
                 .backgroundColor(theme.canvas()), () -> {
                     div(style -> style.height(68).flexShrink(0).padding(16, 20, 16, 20).backgroundColor(theme.surface())
-                            .alignItems(AlignItems.Center).justifyContent(JustifyContent.SpaceBetween), () -> {
+                            .alignItems(AlignItems.CENTER).justifyContent(AlignContent.SPACE_BETWEEN), () -> {
                                 ui.heading("JReact");
                                 ui.checkbox("High contrast", contrast.get(), false, contrast::set);
                             });
@@ -60,10 +60,10 @@ public final class Storybook {
                         select(selected.get(), STORIES, selected::set, style -> ui.typography(style).height(38)
                                 .margin(12, 20, 0, 20).backgroundColor(theme.surface())).accessibleName("Story");
                     }
-                    div(style -> style.flexGrow(1).flexDirection(FlexDirection.Row), () -> {
+                    div(style -> style.flexGrow(1).flexDirection(FlexDirection.ROW), () -> {
                         if (!narrow)
                             div(style -> style.width(190).flexShrink(0).padding(24, 12, 24, 12)
-                                    .backgroundColor(theme.surface()).flexDirection(FlexDirection.Column), () -> {
+                                    .backgroundColor(theme.surface()).flexDirection(FlexDirection.COLUMN), () -> {
                                         ui.muted("COMPONENTS");
                                         for (String story : STORIES)
                                             component("navigation", story,
@@ -73,7 +73,7 @@ public final class Storybook {
                                                             false, () -> selected.set(story),
                                                             style -> style.width(166).margin(10, 0, 0, 0)));
                                     });
-                    div(style -> style.flexGrow(1).padding(narrow ? 20 : 28).flexDirection(FlexDirection.Column),
+                    div(style -> style.flexGrow(1).padding(narrow ? 20 : 28).flexDirection(FlexDirection.COLUMN),
                             () -> {
                                 text(selected.get(), style -> ui.typography(style).fontSize(26).fontWeight(true)
                                         .margin(0, 0, 22, 0));

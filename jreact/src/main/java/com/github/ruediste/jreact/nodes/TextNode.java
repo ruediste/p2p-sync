@@ -11,8 +11,8 @@ import com.github.ruediste.jreact.Style;
 import com.github.ruediste.jreact.StyleProperties;
 import com.github.ruediste.jreact.Styles;
 import com.github.ruediste.jreact.TextLayout;
-import com.github.ruediste.jreact.layout.AvailableSpace;
-import com.github.ruediste.jreact.layout.Size;
+import com.antepod.taffy.geometry.Size;
+import com.antepod.taffy.style.AvailableSpace;
 
 /**
  * A standalone text node that measures, wraps, and paints its text.

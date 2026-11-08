@@ -3,6 +3,8 @@ package com.github.ruediste.jreact.layout;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.antepod.taffy.geometry.Line;
+
 /** Detailed information about a computed grid layout. */
 public final class DetailedGridInfo {
 

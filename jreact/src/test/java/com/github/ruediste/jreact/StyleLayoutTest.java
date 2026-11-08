@@ -10,18 +10,19 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.github.ruediste.jreact.layout.AlignItems;
-import com.github.ruediste.jreact.layout.FlexDirection;
-import com.github.ruediste.jreact.layout.FlexWrap;
-import com.github.ruediste.jreact.layout.JustifyContent;
-import com.github.ruediste.jreact.layout.TextAlign;
+import com.antepod.taffy.style.AlignContent;
+import com.antepod.taffy.style.AlignItems;
+import com.antepod.taffy.style.FlexDirection;
+import com.antepod.taffy.style.FlexWrap;
+import com.antepod.taffy.style.TextAlign;
 import java.awt.Color;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import com.github.ruediste.jreact.nodes.DivNode;
@@ -107,9 +108,14 @@ class StyleLayoutTest {
         assertEquals(0, tree.children.get(1).bounds.width);
     }
 
+    static Stream<AlignContent> justifications() {
+        return Stream.of(AlignContent.START, AlignContent.CENTER, AlignContent.END, AlignContent.SPACE_BETWEEN,
+                AlignContent.SPACE_AROUND, AlignContent.SPACE_EVENLY);
+    }
+
     @ParameterizedTest
-    @EnumSource(value = JustifyContent.class, names = { "Start", "Center", "End", "SpaceBetween", "SpaceAround", "SpaceEvenly" })
-    void allJustificationsPlaceItems(JustifyContent justify) {
+    @MethodSource("justifications")
+    void allJustificationsPlaceItems(AlignContent justify) {
         var parent = new AtomicReference<Node>();
         render(() -> parent.set(div(style -> style.width(300).height(50).justifyContent(justify), () -> {
             div(style -> style.width(50), () -> {
@@ -117,29 +123,33 @@ class StyleLayoutTest {
             div(style -> style.width(50), () -> {
             });
         })), 300, 50);
-        double first = switch (justify) {
-            case Start, SpaceBetween -> 0;
-            case Center -> 100;
-            case End -> 200;
-            case SpaceAround -> 50;
-            case SpaceEvenly -> 67.0;
-            default -> throw new IllegalStateException(justify.name());
+        double first = switch (justify.keyword) {
+            case START, SPACE_BETWEEN -> 0;
+            case CENTER -> 100;
+            case END -> 200;
+            case SPACE_AROUND -> 50;
+            case SPACE_EVENLY -> 67.0;
+            default -> throw new IllegalStateException(justify.keyword.name());
         };
         assertEquals(first, parent.get().children.getFirst().bounds.x, 0.01);
     }
 
+    static Stream<AlignItems> alignments() {
+        return Stream.of(AlignItems.START, AlignItems.CENTER, AlignItems.END, AlignItems.STRETCH);
+    }
+
     @ParameterizedTest
-    @EnumSource(value = AlignItems.class, names = { "Start", "Center", "End", "Stretch" })
+    @MethodSource("alignments")
     void allCrossAxisAlignments(AlignItems align) {
         Node tree = render(() -> div(style -> style.width(100).height(100).alignItems(align),
                 () -> div(style -> style.width(20).height(20), () -> {
                 })), 100, 100);
         var child = tree.children.getFirst().children.getFirst();
-        double expected = switch (align) {
-            case Start, Stretch -> 0;
-            case Center -> 40;
-            case End -> 80;
-            default -> throw new IllegalStateException(align.name());
+        double expected = switch (align.keyword) {
+            case START, STRETCH -> 0;
+            case CENTER -> 40;
+            case END -> 80;
+            default -> throw new IllegalStateException(align.keyword.name());
         };
         assertEquals(expected, child.bounds.y);
         assertEquals(20, child.bounds.height);
@@ -147,7 +157,7 @@ class StyleLayoutTest {
 
     @Test
     void columnInsetsIncludePerSideBorders() {
-        Node tree = render(() -> div(style -> style.width(100).height(100).flexDirection(FlexDirection.Column)
+        Node tree = render(() -> div(style -> style.width(100).height(100).flexDirection(FlexDirection.COLUMN)
                 .padding(2, 3, 4, 5).border(1, Color.BLACK), () -> {
                     div(style -> style.height(20), () -> {
                     });
@@ -163,7 +173,7 @@ class StyleLayoutTest {
 
     @Test
     void wrapAndReverseWrapProduceMultipleLines() {
-        for (FlexWrap wrap : new FlexWrap[] { FlexWrap.Wrap, FlexWrap.WrapReverse }) {
+        for (FlexWrap wrap : new FlexWrap[] { FlexWrap.WRAP, FlexWrap.WRAP_REVERSE }) {
             Node tree = render(() -> div(style -> style.width(100).height(80).flexWrap(wrap), () -> {
                 div(style -> style.width(60).height(20), () -> {
                 });
@@ -171,8 +181,8 @@ class StyleLayoutTest {
                 });
             }), 100, 80);
             Node parent = tree.children.getFirst();
-            assertEquals(wrap == FlexWrap.Wrap ? 0 : 60, parent.children.get(0).bounds.y);
-            assertEquals(wrap == FlexWrap.Wrap ? 40 : 20, parent.children.get(1).bounds.y);
+            assertEquals(wrap == FlexWrap.WRAP ? 0 : 60, parent.children.get(0).bounds.y);
+            assertEquals(wrap == FlexWrap.WRAP ? 40 : 20, parent.children.get(1).bounds.y);
             assertEquals(60, parent.children.get(0).bounds.width);
         }
     }
@@ -181,7 +191,7 @@ class StyleLayoutTest {
     void textWrapsUnicodeNewlinesAndAligns() {
         Node tree = render(
                 () -> text("hello world\n\n\uD83D\uDE80end",
-                        style -> style.width(40).fontSize(14).lineHeight(20).textAlign(TextAlign.LegacyRight)),
+                        style -> style.width(40).fontSize(14).lineHeight(20).textAlign(TextAlign.LEGACY_RIGHT)),
                 40, 200);
         TextNode text = (TextNode) tree.children.getFirst();
         assertTrue(text.lines.size() >= 4);
@@ -310,7 +320,7 @@ class StyleLayoutTest {
 
     @Test
     void flexShrinkRemeasuresTextHeightAtAllocatedWidth() {
-        Node tree = render(() -> div(style -> style.width(100).alignItems(AlignItems.Start), () -> {
+        Node tree = render(() -> div(style -> style.width(100).alignItems(AlignItems.START), () -> {
             text("long wrapping text here", style -> style.width(150).lineHeight(20));
             div(style -> style.width(50), () -> {
             });

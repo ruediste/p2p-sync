@@ -22,7 +22,7 @@ public final class PaintUtils {
     }
 
     public static void paintBorder(Node node, Graphics2D graphics, Shape outer) {
-        Style.Border border = node.style.get(StyleProperties.BORDER, null);
+        Style.Border border = node.style.get(StyleProperties.BORDER_DECORATION, null);
         if (border == null)
             return;
         java.awt.geom.Rectangle2D.Double bounds = node.bounds;

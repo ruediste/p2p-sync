@@ -5,10 +5,10 @@ import java.util.List;
 import com.github.ruediste.jreact.Style;
 import com.github.ruediste.jreact.StyleProperties;
 import com.github.ruediste.jreact.Styles;
-import com.github.ruediste.jreact.layout.AlignItems;
-import com.github.ruediste.jreact.layout.Display;
-import com.github.ruediste.jreact.layout.FlexDirection;
-import com.github.ruediste.jreact.layout.FlexWrap;
+import com.antepod.taffy.style.AlignItems;
+import com.antepod.taffy.style.Display;
+import com.antepod.taffy.style.FlexDirection;
+import com.antepod.taffy.style.FlexWrap;
 
 /**
  * An inline container whose text, icons, and nested spans share a line flow.
@@ -26,12 +26,12 @@ public final class SpanNode extends ContainerNode {
     @Override
     public void applyLayoutDefaults() {
         if (!StyleProperties.DISPLAY.isSet(style))
-            style.display(Display.Flex);
+            style.display(Display.FLEX);
         if (!StyleProperties.FLEX_DIRECTION.isSet(style))
-            style.layoutFlexDirection(FlexDirection.Row);
+            style.flexDirection(FlexDirection.ROW);
         if (!StyleProperties.FLEX_WRAP.isSet(style))
-            style.layoutFlexWrap(FlexWrap.Wrap);
+            style.flexWrap(FlexWrap.WRAP);
         if (!StyleProperties.ALIGN_ITEMS.isSet(style))
-            style.layoutAlignItems(AlignItems.Center);
+            style.alignItems(AlignItems.CENTER);
     }
 }

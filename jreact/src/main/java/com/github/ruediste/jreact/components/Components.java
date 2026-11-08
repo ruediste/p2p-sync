@@ -6,10 +6,10 @@ import static com.github.ruediste.jreact.Ui.input;
 import static com.github.ruediste.jreact.Ui.select;
 import static com.github.ruediste.jreact.Ui.text;
 
-import com.github.ruediste.jreact.layout.AlignItems;
-import com.github.ruediste.jreact.layout.JustifyContent;
-import com.github.ruediste.jreact.layout.FlexDirection;
-import com.github.ruediste.jreact.layout.FlexWrap;
+import com.antepod.taffy.style.AlignContent;
+import com.antepod.taffy.style.AlignItems;
+import com.antepod.taffy.style.FlexDirection;
+import com.antepod.taffy.style.FlexWrap;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.util.List;
@@ -86,17 +86,17 @@ public final class Components {
                 Styles.rule(Selector.className(className).disabled(), style -> style.opacity(0.4)));
         return div(style -> {
             style.className(className).height(36).padding(8, 14, 8, 14).borderRadius(6)
-                    .alignItems(AlignItems.Center).justifyContent(JustifyContent.Center).flexShrink(0);
+                    .alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER).flexShrink(0);
             inline.accept(style);
         }, () -> text(label, style -> typography(style).color(foreground).fontWeight(true)))
                 .onClick(event -> action.run()).disabled(disabled).accessibleName(label);
     }
 
     public Node checkbox(String label, boolean checked, boolean disabled, Consumer<Boolean> change) {
-        return div(style -> style.height(32).alignItems(AlignItems.Center), () -> {
+        return div(style -> style.height(32).alignItems(AlignItems.CENTER), () -> {
             div(style -> style.width(20).height(20).borderRadius(4).border(1, theme.border())
-                    .backgroundColor(checked ? theme.primary() : theme.surface()).margin(0, 10, 0, 0)
-                    .justifyContent(JustifyContent.Center).alignItems(AlignItems.Center), () -> {
+                .backgroundColor(checked ? theme.primary() : theme.surface()).margin(0, 10, 0, 0)
+                        .justifyContent(AlignContent.CENTER).alignItems(AlignItems.CENTER), () -> {
                         if (checked)
                             text("\u2713", style -> typography(style).color(theme.onPrimary()).fontSize(15));
                     });
@@ -106,7 +106,7 @@ public final class Components {
     }
 
     public Node textField(String label, String value, boolean disabled, Consumer<String> change) {
-        return div(style -> style.flexDirection(FlexDirection.Column).height(66).flexShrink(0), () -> {
+        return div(style -> style.flexDirection(FlexDirection.COLUMN).height(66).flexShrink(0), () -> {
             text(label, style -> typography(style).fontSize(12).fontWeight(true).margin(0, 0, 6, 0));
             input(value, change, style -> typography(style).height(36).padding(7, 10, 7, 10)
                     .border(1, theme.border()).borderRadius(5).backgroundColor(theme.surface()))
@@ -116,7 +116,7 @@ public final class Components {
 
     public Node selectField(String label, String value, List<String> options, boolean disabled,
             Consumer<String> change) {
-        return div(style -> style.flexDirection(FlexDirection.Column).height(66).flexShrink(0), () -> {
+        return div(style -> style.flexDirection(FlexDirection.COLUMN).height(66).flexShrink(0), () -> {
             text(label, style -> typography(style).fontSize(12).fontWeight(true).margin(0, 0, 6, 0));
             select(value, options, change, style -> typography(style).height(36).padding(4, 8, 4, 8)
                     .backgroundColor(theme.surface()).border(1, theme.border()).borderRadius(5))
@@ -129,7 +129,7 @@ public final class Components {
         range(value, minimum, maximum, step);
         double fraction = (value - minimum) / (maximum - minimum);
         SliderNode node = Ui.slider(fraction, theme.primary(),
-                style -> style.width(240).height(32).alignItems(AlignItems.Center)
+                style -> style.width(240).height(32).alignItems(AlignItems.CENTER)
                         .opacity(disabled ? 0.4 : 1),
                 () -> {
                     div(style -> style.width(240).height(8).borderRadius(4).backgroundColor(theme.border()), () -> {
@@ -192,7 +192,7 @@ public final class Components {
 
     public Node card(String title, Runnable content) {
         return div(style -> style.padding(16).border(1, theme.border()).backgroundColor(theme.surface())
-                .borderRadius(8).flexDirection(FlexDirection.Column).flexShrink(0), () -> {
+                .borderRadius(8).flexDirection(FlexDirection.COLUMN).flexShrink(0), () -> {
                     text(title, style -> typography(style).fontWeight(true).margin(0, 0, 12, 0));
                     content.run();
                 });
@@ -209,14 +209,14 @@ public final class Components {
     }
 
     public Node stack(double spacing, Runnable children) {
-        Node node = div(style -> style.flexDirection(FlexDirection.Column), children);
+        Node node = div(style -> style.flexDirection(FlexDirection.COLUMN), children);
         for (int index = 0; index < node.children.size() - 1; index++)
             node.children.get(index).inline.margin(0, 0, spacing, 0);
         return node;
     }
 
     public Node row(double spacing, Runnable children) {
-        Node node = div(style -> style.alignItems(AlignItems.Center).flexWrap(FlexWrap.Wrap), children);
+        Node node = div(style -> style.alignItems(AlignItems.CENTER).flexWrap(FlexWrap.WRAP), children);
         for (int index = 0; index < node.children.size(); index++)
             node.children.get(index).inline.margin(0, spacing, spacing, 0);
         return node;

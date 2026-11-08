@@ -2,6 +2,11 @@ package com.github.ruediste.jreact.layout;
 
 import java.util.Map;
 
+import com.antepod.taffy.geometry.Point;
+import com.antepod.taffy.geometry.Rect;
+import com.antepod.taffy.geometry.Size;
+import com.antepod.taffy.style.AvailableSpace;
+
 /**
  * Computed layout for one node. Positions are in the parent's border-box
  * coordinate system, except for absolute/fixed nodes, whose positions are
@@ -77,13 +82,13 @@ public final class Layout {
     public float scrollbarHeight;
 
     /** Resolved border widths, in pixels. */
-    public Rect<java.lang.Float> border = Rect.all(0f);
+    public Rect<java.lang.Float> border = new Rect<>(0f, 0f, 0f, 0f);
 
     /** Resolved padding widths, in pixels. */
-    public Rect<java.lang.Float> padding = Rect.all(0f);
+    public Rect<java.lang.Float> padding = new Rect<>(0f, 0f, 0f, 0f);
 
     /** Resolved margins, in pixels. */
-    public Rect<java.lang.Float> margin = Rect.all(0f);
+    public Rect<java.lang.Float> margin = new Rect<>(0f, 0f, 0f, 0f);
 
     /**
      * Track and item details of the grid layout computed for this node, or
@@ -124,18 +129,18 @@ public final class Layout {
     public float usedContentHeight;
 
     public Point<java.lang.Float> position() {
-        return Point.of(x, y);
+        return new Point<>(x, y);
     }
 
     public Size<java.lang.Float> size() {
-        return Size.of(width, height);
+        return new Size<>(width, height);
     }
 
     public Size<java.lang.Float> contentSize() {
-        return Size.of(contentWidth, contentHeight);
+        return new Size<>(contentWidth, contentHeight);
     }
 
     public Size<java.lang.Float> scrollbarSize() {
-        return Size.of(scrollbarWidth, scrollbarHeight);
+        return new Size<>(scrollbarWidth, scrollbarHeight);
     }
 }
