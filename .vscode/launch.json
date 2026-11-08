@@ -70,7 +70,7 @@
       "name": "JReact Storybook",
       "request": "launch",
       "mainClass": "com.github.ruediste.jreact.storybook.Storybook",
-      "projectName": "jreact",
+      "projectName": "jreact-storybook",
       "vmArgs": "-XX:+EnableDynamicAgentLoading"
     }
   ],

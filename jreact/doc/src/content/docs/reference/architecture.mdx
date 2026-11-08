@@ -9,7 +9,7 @@ import CodeSnippet from '@components/CodeSnippet.astro';
 
 This document describes the current implementation, rather than the original
 React/Yoga-inspired proposal. JReact is a synchronous Java component runtime with
-a pure-Java layout engine and a Swing/Java2D host. It does not use a web view,
+a Taffy-based layout engine and a Swing/Java2D host. It does not use a web view,
 rewrite component method bodies, or implement React's concurrent scheduler.
 
 For usage, see [README.md](../README.md). For the style contract, see
@@ -318,12 +318,13 @@ entry. The declaration is shared by the component's emitted nodes, and nested
 component contexts extend the enclosing declaration chain. Consequently, rules
 may be declared before or after the nodes they style: resolution happens later.
 
-`DIRECT_CHILDREN` rules are eligible when `node.parent == declaration.anchor`.
-They can therefore reach immediate output from a nested component at that same
-anchor; they do not reach deeper primitive children merely because those children
-were emitted by the declaring method. `TRANSITIVE` rules are eligible on every
-node carrying that enclosing component declaration. A component does not attach
-its new declaration to the preexisting anchor itself.
+`DIRECT_CHILDREN` rules are eligible only for nodes rendered directly by the
+declaring component itself — the last declaration in a node's enclosing chain.
+They do not reach output emitted by nested components merely because that output
+appears under the same anchor. `TRANSITIVE` rules are eligible on every node
+carrying an enclosing component declaration, including nodes produced by nested
+components. Scope determines eligibility; it does not change selector matching.
+A component does not attach its new declaration to the preexisting anchor itself.
 
 [Selector.java](../../../src/main/java/com/github/ruediste/jreact/Selector.java) matches node
 types, IDs, named classes, pseudo-classes, compounds, and ancestor relationships.
@@ -348,7 +349,8 @@ component bodies when the root is otherwise clean.
 [LayoutEngine.java](../../../src/main/java/com/github/ruediste/jreact/layout/LayoutEngine.java)
 consumes the styled node tree through the [LayoutNode](../../../src/main/java/com/github/ruediste/jreact/layout/LayoutNode.java)
 interface implemented by [Node.java](../../../src/main/java/com/github/ruediste/jreact/Node.java).
-It supports block, flex, and grid layout with the CSS box model: margins,
+It builds a native Taffy tree through the Taffy4J bindings and computes flex and
+grid layout with the CSS box model: margins,
 padding, borders, sizing, positioning, wrapping, alignment, and gaps. The tree
 is mutated only through `NodeImpl` for standalone use; the rendered tree keeps
 its children in `Node` and exposes them read-only to the engine.
@@ -396,8 +398,9 @@ the renderer; the graphics clip limits the requested paint region.
 
 Hit testing examines current node bounds in reverse indexed traversal order.
 Activation walks up from the hit node to the nearest interactive ancestor, so a
-text label can activate its enclosing button. This is ancestor target selection,
-not a DOM event-bubbling/capture system. Left-button release activates a click
+text label can activate its enclosing button. Nodes deliver events through
+capture, target, and bubble phases with `stopPropagation` support; the panel
+resolves activation by walking ancestors. Left-button release activates a click
 callback only when press and release resolve to the same enabled target.
 
 Hover is reported on the hit node and its ancestors. Active state follows the

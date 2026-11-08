@@ -10,7 +10,8 @@ import CodeSnippet from '@components/CodeSnippet.astro';
 This document defines the initial JReact primitive and style contract, now implemented
 in the `jreact` module. Java method names are `Ui.div`, `Ui.span`, and `Ui.text`;
 the capitalized names below describe primitive concepts. Typed enum spelling and
-working examples are in [README.md](../README.md). Layout uses a pure-Java Flexbox subset.
+working examples are in [README.md](../README.md). Layout uses a Taffy-based
+Flexbox and grid layout engine.
 
 ## Primitive Components
 
@@ -19,7 +20,7 @@ Primitives are the built-in building blocks used inside user-defined Java compon
 | Primitive | Purpose | Children |
 | --- | --- | --- |
 | `Div` | A general-purpose rectangular container and the default Flexbox layout node. | Any primitives or user components. |
-| `Span` | An inline semantic grouping for text and other inline content. It does not create a separate Flexbox container. | Text and inline content. |
+| `Span` | An inline grouping for text and inline content. | `Text`, nested `Span`, and `Icon`. |
 | `Text` | Displays a string, including a string produced from a Java value. | None. |
 
 For example:
@@ -34,22 +35,21 @@ JReact styles are declared inline in Java components using a typed, CSS-inspired
 
 | Property | Supported initial values / behavior |
 | --- | --- |
-| `display` | `flex` only; layout nodes use Flexbox. `Text` is leaf content. |
-| `flex-direction` | `row` or `column`. |
+| `display` | `flex` (default), `block`, or `grid`, passed through to the layout engine. `Text` is leaf content. |
+| `flex-direction` | `row`, `column`, `row-reverse`, or `column-reverse`. |
 | `flex-wrap` | `nowrap`, `wrap`, or `wrap-reverse`; defaults to `nowrap`. |
-| `order` | Any integer; defaults to `0`. |
 | `flex-grow`, `flex-shrink` | Non-negative numeric factors; default to `0` and `1`, respectively. |
-| `justify-content` | `flex-start`, `center`, `flex-end`, `space-between`, `space-around`, or `space-evenly`. |
-| `align-items` | `flex-start`, `center`, `flex-end`, or `stretch`. |
-| `width`, `height` | A non-negative numeric size in logical pixels, or `auto` for content/layout-driven sizing. |
-| `margin`, `padding` | A non-negative numeric size in logical pixels, applied uniformly or per side. |
+| `justify-content` | `start`, `end`, `flex-start`, `flex-end`, `center`, `stretch`, `space-between`, or `space-evenly` (Taffy `AlignContent` values). |
+| `align-items` | `start`, `end`, `flex-start`, `flex-end`, `self-start`, `self-end`, `center`, or `baseline` (Taffy `AlignItems` values). |
+| `width`, `height` | A non-negative numeric size in logical pixels, `auto` for content/layout-driven sizing, or a percentage via the typed `Dimension` API. |
+| `margin`, `padding` | A non-negative numeric size in logical pixels, or a percentage, applied uniformly or per side. |
 | `background-color`, `color` | Solid colors, supplied as typed Java color values. `color` sets text color. |
 | `border` | A solid border with a non-negative logical-pixel width and a color; uniform on all sides or set per side. |
 | `border-radius` | A uniform non-negative logical-pixel corner radius. |
 | `font-family` | A font family available to Java on the host system. |
 | `font-size` | A positive logical-pixel size. |
 | `font-weight`, `font-style` | `normal` or `bold`; `normal` or `italic`, respectively. |
-| `text-align` | `left`, `center`, or `right` for text content. |
+| `text-align` | `auto`, `legacy_left`, `legacy_right`, or `legacy_center` (Taffy `TextAlign` values) for text content. |
 | `line-height` | `normal` or a positive logical-pixel line height. |
 | `box-shadow`, `text-shadow` | A single shadow with horizontal and vertical offsets, a non-negative blur radius, and a color; no spread, inset, or multiple shadows. |
 | `opacity` | A value from `0` (transparent) to `1` (opaque); defaults to `1`. |
@@ -82,4 +82,9 @@ Nested span decoration uses enclosing bounds rather than individual CSS fragment
 
 ### Not in the Initial Subset
 
-The following are not supported by this initial contract: CSS files or raw inline CSS strings; automatic property inheritance; attribute, sibling, or universal selectors; pseudo-elements and pseudo-classes beyond those listed above; grid, absolute, or fixed positioning; percentage, viewport, or font-relative dimensions; background images or gradients; dashed or dotted borders and per-corner radii; text decoration; transforms, transitions, and animations. These can be specified separately when their Java API and rendering behavior are defined.
+The following are not supported by this initial contract: CSS files or raw inline CSS strings; automatic property inheritance; attribute, sibling, or universal selectors; pseudo-elements and pseudo-classes beyond those listed above; fixed positioning; viewport or font-relative dimensions; background images or gradients; dashed or dotted borders and per-corner radii; text decoration; transforms, transitions, and animations. These can be specified separately when their Java API and rendering behavior are defined.
+
+Grid (`display(grid)` plus grid track properties) and absolute positioning
+(`position(Position.ABSOLUTE)` with `top`/`left`/`right`/`bottom` insets) are
+available through the layout engine but are not listed in the subset table
+above. Percentage sizes are supported through the typed `Dimension` API.

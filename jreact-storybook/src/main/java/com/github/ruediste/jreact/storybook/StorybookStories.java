@@ -12,13 +12,18 @@ import java.util.List;
 import javax.swing.UIManager;
 
 import com.github.ruediste.jreact.Hooks;
+import com.github.ruediste.jreact.Selector;
+import com.github.ruediste.jreact.Styles;
 import com.github.ruediste.jreact.components.Components;
 import com.github.ruediste.jreact.components.Theme;
+import com.github.ruediste.jreact.events.ClickEvent;
 import com.antepod.taffy.style.AlignContent;
 import com.antepod.taffy.style.AlignItems;
 import com.antepod.taffy.style.FlexDirection;
 import com.antepod.taffy.style.FlexWrap;
+import com.antepod.taffy.style.LengthPercentage;
 import com.antepod.taffy.style.TextAlign;
+import com.antepod.taffy.geometry.Size;
 
 public final class StorybookStories {
     private StorybookStories() {
@@ -194,6 +199,35 @@ public final class StorybookStories {
             ui.badge(tasks.get().stream().filter(Task::done).count() + " / " + tasks.get().size() + " complete",
                     Components.Tone.SUCCESS);
         });
+    }
+
+    public static void CustomDialog(Theme theme) {
+        // --8<-- [start:custom-dialog]
+        String close = "dialog-close";
+        Styles.rules(Styles.Scope.DIRECT_CHILDREN,
+                Styles.rule(Selector.className(close),
+                        style -> style.width(28).height(28).borderRadius(14)
+                                .backgroundColor(theme.danger()).alignItems(AlignItems.CENTER)
+                                .justifyContent(AlignContent.CENTER)),
+                Styles.rule(Selector.className(close).hover(),
+                        style -> style.backgroundColor(theme.danger().darker())),
+                Styles.rule(Selector.className(close).active(),
+                        style -> style.backgroundColor(theme.danger().darker().darker())));
+        div(style -> style.flexDirection(FlexDirection.COLUMN).padding(24)
+                .gap(new Size<>(LengthPercentage.length(16), LengthPercentage.length(16)))
+                .backgroundColor(theme.surface()).borderRadius(8), () -> {
+            text("Discard unsaved changes?",
+                    style -> style.color(theme.text()).fontWeight(true).fontSize(16));
+            div(style -> style.flexDirection(FlexDirection.ROW).justifyContent(AlignContent.FLEX_END), () -> {
+                text("Cancel", style -> style.color(theme.primary()));
+                div(style -> {
+                    style.className(close).width(24).height(24).margin(0, 0, 0, 12);
+                }, () -> text("✕", style -> style.color(Color.WHITE).fontWeight(true)))
+                        .onClick(event -> {
+                        });
+            });
+        });
+        // --8<-- [end:custom-dialog]
     }
 
     private static AlignContent alignContentOf(String name) {
