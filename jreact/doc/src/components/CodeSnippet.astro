@@ -1,0 +1,19 @@
+---
+import { Code } from '@astrojs/starlight/components';
+import { getJavaSnippet } from '../utils/snippetParser.js';
+
+interface Props {
+  file: string;
+  tag: string;
+  title?: string;
+  lang?: string;
+}
+
+const { file, tag, title, lang = 'java' } = Astro.props;
+
+const code = getJavaSnippet(file, tag);
+
+const displayTitle = title || file.split('/').pop();
+---
+
+<Code code={code} lang={lang} title={displayTitle} />

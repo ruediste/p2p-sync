@@ -44,10 +44,12 @@ public final class Storybook {
     }
 
     private static void app(String initialStory) {
+        // --8<-- [start:storybook-state]
         var selected = Hooks.useState(initialStory);
         var contrast = Hooks.useState(false);
         Theme theme = contrast.get() ? Theme.highContrast() : Theme.light();
         Components ui = new Components(theme);
+        // --8<-- [end:storybook-state]
         boolean narrow = viewportWidth() < 720;
         div(style -> style.width(viewportWidth()).height(viewportHeight()).flexDirection(FlexDirection.COLUMN)
                 .backgroundColor(theme.canvas()), () -> {
@@ -69,30 +71,30 @@ public final class Storybook {
                                             component("navigation", story,
                                                     () -> ui.button(story,
                                                             story.equals(selected.get()) ? Components.Variant.PRIMARY
-                                                                    : Components.Variant.SECONDARY,
+                                                                : Components.Variant.SECONDARY,
                                                             false, () -> selected.set(story),
                                                             style -> style.width(166).margin(10, 0, 0, 0)));
                                     });
-                    div(style -> style.flexGrow(1).padding(narrow ? 20 : 28).flexDirection(FlexDirection.COLUMN),
-                            () -> {
-                                text(selected.get(), style -> ui.typography(style).fontSize(26).fontWeight(true)
-                                        .margin(0, 0, 22, 0));
-                                switch (selected.get()) {
-                                    case "Overview" -> component("story", "Overview",
-                                            () -> StorybookStories.Overview(theme));
-                                    case "Buttons" -> component("story", "Buttons",
-                                            () -> StorybookStories.Buttons(theme));
-                                    case "Inputs" -> component("story", "Inputs",
-                                            () -> StorybookStories.Inputs(theme));
-                                    case "Feedback" -> component("story", "Feedback",
-                                            () -> StorybookStories.Feedback(theme));
-                                    case "Layout" -> component("story", "Layout",
-                                            () -> StorybookStories.Layout(theme));
-                                    case "Task Board" -> component("story", "Task Board",
-                                            () -> StorybookStories.Tasks(theme));
-                                    default -> throw new IllegalStateException("Unknown story");
-                                }
-                            });
+                        div(style -> style.flexGrow(1).padding(narrow ? 20 : 28).flexDirection(FlexDirection.COLUMN),
+                                () -> {
+                                    text(selected.get(), style -> ui.typography(style).fontSize(26).fontWeight(true)
+                                            .margin(0, 0, 22, 0));
+                                    switch (selected.get()) {
+                                        case "Overview" -> component("story", "Overview",
+                                                () -> StorybookStories.Overview(theme));
+                                        case "Buttons" -> component("story", "Buttons",
+                                                () -> StorybookStories.Buttons(theme));
+                                        case "Inputs" -> component("story", "Inputs",
+                                                () -> StorybookStories.Inputs(theme));
+                                        case "Feedback" -> component("story", "Feedback",
+                                                () -> StorybookStories.Feedback(theme));
+                                        case "Layout" -> component("story", "Layout",
+                                                () -> StorybookStories.Layout(theme));
+                                        case "Task Board" -> component("story", "Task Board",
+                                                () -> StorybookStories.Tasks(theme));
+                                        default -> throw new IllegalStateException("Unknown story");
+                                    }
+                                });
                     });
                 });
     }

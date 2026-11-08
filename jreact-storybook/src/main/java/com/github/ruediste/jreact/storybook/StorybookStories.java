@@ -62,6 +62,7 @@ public final class StorybookStories {
                 ui.button("Danger", Components.Variant.DANGER, disabled.get(), () -> count.update(value -> value + 1));
             }));
             ui.card("Counter", () -> {
+                // --8<-- [start:counter]
                 ui.row(10, () -> {
                     ui.button("-", Components.Variant.SECONDARY, disabled.get(),
                             () -> count.update(value -> value - 1));
@@ -71,6 +72,7 @@ public final class StorybookStories {
                             () -> count.update(value -> value + 1));
                     ui.button("Reset", Components.Variant.SECONDARY, disabled.get(), () -> count.set(0));
                 });
+                // --8<-- [end:counter]
                 ui.checkbox("Disable buttons", disabled.get(), false, disabled::set);
             });
         });
@@ -138,6 +140,7 @@ public final class StorybookStories {
                     .flexDirection(direction.get().equals("Row") ? FlexDirection.ROW : FlexDirection.COLUMN)
                     .flexWrap(FlexWrap.WRAP).alignItems(AlignItems.CENTER)
                     .justifyContent(alignContentOf(justification.get())), () -> {
+                        // --8<-- [start:flex-layout]
                         List<Color> colors = List.of(theme.primary(), new Color(194, 142, 26), theme.danger());
                         for (int index = 0; index < 3; index++) {
                             int number = index;
@@ -147,6 +150,7 @@ public final class StorybookStories {
                                     () -> text(number + 1, style -> ui.typography(style).color(Color.WHITE)
                                             .fontWeight(true).fontSize(18)));
                         }
+                        // --8<-- [end:flex-layout]
                     });
         });
     }

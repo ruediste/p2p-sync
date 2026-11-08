@@ -77,8 +77,15 @@ class StorybookTest {
     private void activate(JReactPanel panel, String name) {
         Node node = panel.tree().descendants().stream().filter(item -> name.equals(item.accessibleName)).findFirst()
                 .orElseThrow();
-        RenderingTest.click(panel, (int) node.bounds.getCenterX(), (int) node.bounds.getCenterY());
+        click(panel, (int) node.bounds.getCenterX(), (int) node.bounds.getCenterY());
         panel.refresh();
+    }
+
+    private static void click(JReactPanel panel, int x, int y) {
+        panel.dispatchEvent(new java.awt.event.MouseEvent(panel, java.awt.event.MouseEvent.MOUSE_PRESSED, 0, 0, x, y, 1,
+                false, java.awt.event.MouseEvent.BUTTON1));
+        panel.dispatchEvent(new java.awt.event.MouseEvent(panel, java.awt.event.MouseEvent.MOUSE_RELEASED, 0, 0, x, y, 1,
+                false, java.awt.event.MouseEvent.BUTTON1));
     }
 
     @Test

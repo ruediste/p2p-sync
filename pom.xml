@@ -15,6 +15,7 @@
   <modules>
     <module>p2p-sync</module>
     <module>jreact</module>
+    <module>jreact-storybook</module>
   </modules>
 
   <properties>

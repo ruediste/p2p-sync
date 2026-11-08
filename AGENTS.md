@@ -1,4 +1,34 @@
+# Overview 
+This project has two major parts: JReact, a Java UI Framework, and `p2p-sync`, a peer to peer file/data synchronization project.
+
+Currently, p2p-sync uses swing and has no dependency on JReact, but this will likely be changed in the future
+
+# JReact
+## Documentation
+
+The documentation can be found in `jreact/doc`
+
+When starting the dev server, use background mode:
+
+```
+astro dev --background
+```
+
+Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
+
+## Documentation of the Astro/Starlight
+
+Full documentation: https://docs.astro.build
+
+Consult these guides before working on related tasks:
+
+- [Adding pages, dynamic routes, or middleware](https://docs.astro.build/en/guides/routing/)
+
+
+# P2P-Sync
+
 This is a p2p file storage and synchronization project. It is based on IPFS, but does not use an existing library.
+
 The Maven parent project is at the repository root, with `p2p-sync` and `jreact` child modules.
 The application sources and documentation live in `p2p-sync/src` and `p2p-sync/doc`.
 
