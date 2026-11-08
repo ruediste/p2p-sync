@@ -20,7 +20,7 @@ import com.github.ruediste.jreact.events.KeyboardEvent;
 import com.github.ruediste.jreact.events.PointerEvent;
 import com.antepod.taffy.geometry.Size;
 import com.antepod.taffy.style.AvailableSpace;
-import com.github.ruediste.jreact.layout.Layout;
+import com.antepod.taffy.tree.Layout;
 import com.github.ruediste.jreact.layout.LayoutEngine;
 import com.github.ruediste.jreact.layout.LayoutNode;
 import com.github.ruediste.jreact.nodes.ContainerNode;
@@ -73,7 +73,8 @@ public abstract class Node implements LayoutNode {
     public Node parent;
     public final List<Node> children = new ArrayList<>();
     public final Rectangle2D.Double bounds = new Rectangle2D.Double();
-    public final Layout layout = new Layout();
+    public Layout layout = Layout.zero();
+
     public boolean hover, active, focus, disabled;
     public boolean focusable;
     public String accessibleName;
@@ -282,6 +283,11 @@ public abstract class Node implements LayoutNode {
     }
 
     @Override
+    public void setLayout(Layout layout) {
+        this.layout = layout;
+    }
+
+    @Override
     public Size<java.lang.Float> measure(Size<AvailableSpace> knownDimensions,
             Size<AvailableSpace> availableSpace) {
         return null;
@@ -299,7 +305,12 @@ public abstract class Node implements LayoutNode {
     }
 
     private void applyLayout() {
-        bounds.setRect(layout.absX, layout.absY, layout.width, layout.height);
+        float x = 0, y = 0;
+        for (Node n = this; n != null; n = n.parent) {
+            x += n.layout.location.x;
+            y += n.layout.location.y;
+        }
+        bounds.setRect(x, y, layout.size.width, layout.size.height);
         layoutApplied();
         for (Node child : children)
             child.applyLayout();

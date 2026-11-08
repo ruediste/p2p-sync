@@ -16,3 +16,6 @@ The UI provides mechanisms to add remove nodes to the end of the root node.
 Place using "display: absolute";
 
 Open question: need to get width/height of popup component before display. Idea: add `useLayoutEffect`, measure node, adjust placement.
+
+## Icons
+Use https://kordamp.org/ikonli/ for icons

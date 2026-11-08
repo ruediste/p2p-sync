@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.antepod.taffy.geometry.Size;
 import com.antepod.taffy.style.AvailableSpace;
+import com.antepod.taffy.tree.Layout;
 import com.github.ruediste.jreact.Style;
 
 /**
@@ -28,7 +29,7 @@ public final class NodeImpl implements LayoutNode {
 
     private final List<LayoutNode> childrenView = Collections.unmodifiableList(children);
 
-    private final Layout layout = new Layout();
+    private Layout layout = Layout.zero();
 
     public NodeImpl() {
         this(new Style());
@@ -83,6 +84,11 @@ public final class NodeImpl implements LayoutNode {
     @Override
     public Layout getLayout() {
         return layout;
+    }
+
+    @Override
+    public void setLayout(Layout layout) {
+        this.layout = layout;
     }
 
     /** Adds a child at the end of the child list. */

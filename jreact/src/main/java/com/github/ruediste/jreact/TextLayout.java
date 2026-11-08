@@ -10,7 +10,7 @@ import com.antepod.taffy.geometry.Size;
 import com.antepod.taffy.style.AvailableSpace;
 import com.antepod.taffy.style.Direction;
 import com.antepod.taffy.style.Display;
-import com.github.ruediste.jreact.layout.Layout;
+import com.antepod.taffy.tree.Layout;
 import com.antepod.taffy.style.TextAlign;
 import com.github.ruediste.jreact.nodes.TextNode;
 
@@ -59,7 +59,7 @@ public final class TextLayout {
         }
         Layout layout = node.getLayout();
         Font font = node.style.font();
-        float contentWidth = Math.max(0, layout.usedContentWidth);
+        float contentWidth = Math.max(0, node.getLayout().contentSize.width);
         List<String> lines = wrap(node.text, font, contentWidth);
         float lineHeight = lineHeight(node.style, font);
         LineMetrics metrics = font.getLineMetrics("Hg", RENDER_CONTEXT);
