@@ -1,26 +1,25 @@
 ---
 title: JReact
-description: A Java 21+ declarative UI framework backed by Swing and Java2D.
+description: A declarative UI framework for Java backed by Swing and Java2D and Taffy.
 ---
 
 import CodeSnippet from '../../components/CodeSnippet.astro';
 
-# JReact
+JReact is declarative UI framework backed by Swing and Java2D. It brings React's component model 
+and web-standard styling and layout model (Flexbox) directly to Java, completely bypassing web views 
+and HTML/JS bridges.
 
-JReact is an implemented Java 21+ declarative UI framework backed by Swing and Java2D.
-It includes a component runtime, hooks, typed styles and scoped selectors, a pure-Java
-Flexbox subset, a reusable control library, and an interactive desktop storybook.
+todo: Advantages: 
+- no separate language
+- no separate build system
+- no client/server issues (requests, serialization, data transfer)
+- no web view overhead
+- small footprint
+- leverages existing Java ecosystem
+- can use existing Swing components
 
-It brings React's component model and a web-standard layout model (Flexbox) directly to
-Java and Swing, completely bypassing web views and HTML/JS bridges.
+## Examples
+todo: show a few basic examples of JReact components and layouts
 
-## Guides
-
-- [Architecture](/architecture/) — core mechanisms, fibers, hooks, layout, and painting.
-- [Primitives & CSS](/primitives-and-css/) — built-in primitives and the supported style subset.
-
-## A first component
-
-<CodeSnippet file="StorybookStories.java" tag="flex-layout" lang="java" title="A flex container" />
-
-See the [Architecture](/architecture/) guide for how components, fibers, and hooks fit together.
+## Where to go from here
+todo: link to guides/getting started and reference

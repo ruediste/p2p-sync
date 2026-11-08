@@ -1,6 +1,6 @@
 # JReact
 
-JReact is an implemented Java 21+ declarative UI framework backed by Swing and Java2D.
+JReact is a Java 21+ declarative UI framework backed by Swing and Java2D.
 It includes a component runtime, hooks, typed styles and scoped selectors, a pure-Java
 Flexbox subset, a reusable control library, and an interactive desktop storybook.
 

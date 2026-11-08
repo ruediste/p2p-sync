@@ -10,11 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.antepod.taffy.style.AlignContent;
-import com.antepod.taffy.style.AlignItems;
-import com.antepod.taffy.style.FlexDirection;
-import com.antepod.taffy.style.FlexWrap;
-import com.antepod.taffy.style.TextAlign;
 import java.awt.Color;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.DoubleStream;
@@ -25,6 +20,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import com.antepod.taffy.style.AlignContent;
+import com.antepod.taffy.style.AlignItems;
+import com.antepod.taffy.style.FlexDirection;
+import com.antepod.taffy.style.FlexWrap;
+import com.antepod.taffy.style.TextAlign;
 import com.github.ruediste.jreact.nodes.DivNode;
 import com.github.ruediste.jreact.nodes.TextNode;
 
@@ -34,7 +34,7 @@ import com.github.ruediste.jreact.nodes.TextNode;
  */
 class StyleLayoutTest {
     private Node render(Runnable body, double width, double height) {
-        try (var root = new RenderRoot(body, () -> {
+        try (var root = new JReactRoot(body, () -> {
         })) {
             root.render();
             root.tree().layout(width, height);
@@ -245,14 +245,14 @@ class StyleLayoutTest {
     void defaultScopeStopsAtComponentBoundaryButTransitiveScopeCrossesIt() {
         Node defaultTree = render(() -> {
             Styles.rules(Styles.rule(Selector.className("bar"), style -> style.color(Color.RED)));
-            component("child", () -> text("x", style -> style.className("bar")));
+            component("child", null, () -> text("x", style -> style.className("bar")));
         }, 100, 50);
         assertNotEquals(Color.RED, defaultTree.children.getFirst().style.color());
 
         Node transitiveTree = render(() -> {
             Styles.rules(Styles.Scope.TRANSITIVE,
                     Styles.rule(Selector.className("bar"), style -> style.color(Color.RED)));
-            component("child", () -> text("x", style -> style.className("bar")));
+            component("child", null, () -> text("x", style -> style.className("bar")));
         }, 100, 50);
         assertEquals(Color.RED, transitiveTree.children.getFirst().style.color());
     }
@@ -263,7 +263,7 @@ class StyleLayoutTest {
             Styles.rules(Styles.Scope.TRANSITIVE,
                     Styles.rule(Selector.className("item"), style -> style.color(Color.RED)),
                     Styles.rule(Selector.id("id"), style -> style.backgroundColor(Color.YELLOW)));
-            component("child", () -> {
+            component("child", null, () -> {
                 Styles.rules(Styles.rule(Selector.className("item"),
                         style -> style.color(Color.BLUE).backgroundColor(Color.RED)));
                 text("x", style -> style.className("item").id("id"));
@@ -301,7 +301,7 @@ class StyleLayoutTest {
     void spanLaysOutNestedInlineContentAcrossComponentBoundaries() {
         Node tree = render(() -> span(() -> {
             text("Hello ");
-            component("inline", () -> span(() -> text("world again", style -> style.color(Color.RED))));
+            component("inline", null, () -> span(() -> text("world again", style -> style.color(Color.RED))));
         }), 300, 100);
         Node span = tree.children.getFirst();
         TextNode first = (TextNode) span.children.getFirst();

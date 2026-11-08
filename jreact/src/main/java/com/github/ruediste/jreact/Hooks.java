@@ -12,7 +12,7 @@ import java.util.function.Supplier;
  * kinds on every render. They do not create a component boundary themselves.
  *
  * <p>
- * State changes invalidate the owning {@link RenderRoot}; reference changes
+ * State changes invalidate the owning {@link JReactRoot}; reference changes
  * do not. Memo factories run during rendering, whereas effect setup runs after
  * the node tree is published. Effect cleanup runs before replacement setup and
  * on unmount. Memo and effect dependencies are compared with
@@ -25,6 +25,12 @@ public final class Hooks {
     private Hooks() {
     }
 
+    public interface Hook {
+        default void close() {
+        }
+
+    }
+
     public static <T> State<T> useState(T initial) {
         return useStateLazy(() -> initial);
     }
@@ -32,34 +38,39 @@ public final class Hooks {
     @SuppressWarnings("unchecked")
     public static <T> State<T> useStateLazy(Supplier<T> initial) {
         var context = Ui.context();
-        return (State<T>) context.fiber.slot(State.class,
+        return (State<T>) context.fiber.getOrCreateHook(State.class,
                 () -> new State<>(initial.get(), context.runtime::invalidate, context.runtime::checkUpdate));
     }
 
     public static void useEffect(Supplier<Runnable> effect, Object... dependencies) {
         var context = Ui.context();
-        var slot = (Effect) context.fiber.slot(Effect.class, Effect::new);
-        if (!slot.initialized || !Arrays.deepEquals(slot.dependencies, dependencies)) {
+        var hook = context.fiber.getOrCreateHook(Effect.class, Effect::new);
+        if (!hook.initialized || !Arrays.deepEquals(hook.dependencies, dependencies)) {
             Object[] snapshot = dependencies.clone();
-            context.runtime.effects.add(() -> {
-                slot.clean();
-                slot.dependencies = snapshot;
-                slot.initialized = true;
-                slot.cleanup = effect.get();
+            // queue the effect to run after the node tree is published
+            context.runtime.pendingEffects.add(() -> {
+                hook.close();
+                hook.dependencies = snapshot;
+                hook.initialized = true;
+                hook.cleanup = effect.get();
             });
         }
     }
 
+    // todo: delay the effect until after painting.
+    // todo: add layoutEffect, which runs after the layout, but before Swing
+    // paints()
+
     public static <T> Ref<T> useRef(T initial) {
         var context = Ui.context();
         @SuppressWarnings("unchecked")
-        var ref = (Ref<T>) context.fiber.slot(Ref.class, () -> new Ref<>(initial));
+        var ref = (Ref<T>) context.fiber.getOrCreateHook(Ref.class, () -> new Ref<>(initial));
         return ref;
     }
 
     public static <T> T useMemo(Supplier<T> factory, Object... dependencies) {
         var context = Ui.context();
-        var memo = (Memo) context.fiber.slot(Memo.class, Memo::new);
+        var memo = (Memo) context.fiber.getOrCreateHook(Memo.class, Memo::new);
         if (!memo.initialized || !Arrays.deepEquals(memo.dependencies, dependencies)) {
             memo.value = factory.get();
             memo.dependencies = dependencies.clone();
@@ -76,7 +87,7 @@ public final class Hooks {
      *
      * @param <T> the referenced value type
      */
-    public static final class Ref<T> {
+    public static final class Ref<T> implements Hook {
         public T current;
 
         Ref(T value) {
@@ -85,19 +96,20 @@ public final class Hooks {
     }
 
     /** Stores a memoized result and the dependencies used to compute it. */
-    static final class Memo {
+    static final class Memo implements Hook {
         Object value;
         Object[] dependencies;
         boolean initialized;
     }
 
     /** Stores an effect's dependencies and owns its current cleanup callback. */
-    static final class Effect {
+    static final class Effect implements Hook {
         Runnable cleanup;
         Object[] dependencies;
         boolean initialized;
 
-        void clean() {
+        @Override
+        public void close() {
             var previous = cleanup;
             cleanup = null;
             if (previous != null)

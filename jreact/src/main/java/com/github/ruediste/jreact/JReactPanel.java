@@ -34,10 +34,11 @@ import com.github.ruediste.jreact.nodes.SwingNode;
  * Swing host for a JReact component tree and its user interactions.
  *
  * <p>
- * Owns a {@link RenderRoot}, coalesces invalidations into scheduled refreshes,
+ * Owns a {@link JReactRoot}, coalesces invalidations into scheduled refreshes,
  * supplies viewport dimensions and interaction flags, resolves styles, and
  * invokes layout and Java2D painting. Nodes are reconciled with the previous
- * tree by key, transferring interaction state, retained Swing components, and the last
+ * tree by key, transferring interaction state, retained Swing components, and
+ * the last
  * committed paint state. Each node reports its own dirty region, so the panel
  * only unions those regions into localized repaint requests.
  *
@@ -53,7 +54,7 @@ import com.github.ruediste.jreact.nodes.SwingNode;
  * state, clean up effects, and remove native Swing components.
  */
 public class JReactPanel extends JPanel implements AutoCloseable {
-    private final RenderRoot root;
+    private final JReactRoot root;
     private Map<Node.Key, Node> nodes = new LinkedHashMap<>();
     private Node.Key hovered, pressed, focused;
     private boolean scheduled, closed;
@@ -61,7 +62,7 @@ public class JReactPanel extends JPanel implements AutoCloseable {
 
     public JReactPanel(Runnable component) {
         requireEdt();
-        root = new RenderRoot(component, this::schedule);
+        root = new JReactRoot(component, this::schedule);
         setLayout(null);
         setFocusable(true);
         setToolTipText("");
@@ -167,10 +168,17 @@ public class JReactPanel extends JPanel implements AutoCloseable {
             return;
         Node previousTree = root.tree();
         root.viewport(Math.max(0, getWidth()), Math.max(0, getHeight()));
+
+        // todo: move to the JReactRoot
+
+        // trigger render if the root is dirty or has no tree
         if (root.isDirty() || root.tree() == null)
             root.render();
+
         Node currentTree = root.tree();
-        var reconciliation = Reconciler.reconcile(currentTree, previousTree);
+        var reconciliation = NodeReconciler.reconcile(currentTree, previousTree);
+
+        // update pseudo classes (hover, active, focus) for all nodes
         nodes = new LinkedHashMap<>();
         currentTree.descendants().forEach(node -> nodes.put(node.key, node));
         if (!nodes.containsKey(focused) || nodes.get(focused).disabled)
@@ -180,10 +188,22 @@ public class JReactPanel extends JPanel implements AutoCloseable {
             node.active = Objects.equals(pressed, node.key) && !node.disabled;
             node.focus = Objects.equals(focused, node.key) && !node.disabled;
         }
+
+        // apply styles
         Styles.resolve(currentTree);
+
+        // calculate layout
         currentTree.layout(Math.max(0, getWidth()), Math.max(0, getHeight()));
-        Rectangle dirty = Reconciler.dirtyRegion(currentTree, reconciliation);
+
+        // reconcile nodes
+        Rectangle dirty = NodeReconciler.dirtyRegion(currentTree, reconciliation);
+
+        // todo: move to JReactRoot until here
+
+        // todo: defer effects until after paint() has been called
+
         syncComponents(currentTree);
+
         if (layoutWidth != getWidth() || layoutHeight != getHeight()) {
             layoutWidth = getWidth();
             layoutHeight = getHeight();

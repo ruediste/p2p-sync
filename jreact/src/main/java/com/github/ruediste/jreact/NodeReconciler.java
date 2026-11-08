@@ -16,7 +16,7 @@ import java.util.Set;
  * paint state with the state it inherited, and adds the paint bounds of
  * previous nodes that no longer have a successor.
  */
-final class Reconciler {
+final class NodeReconciler {
     static final class Result {
         final Node previous;
         final Map<Node.Key, Node> previousByKey;
@@ -28,7 +28,7 @@ final class Reconciler {
         }
     }
 
-    private Reconciler() {
+    private NodeReconciler() {
     }
 
     static Result reconcile(Node current, Node previous) {
@@ -44,6 +44,7 @@ final class Reconciler {
                 node.reconcile(old);
             }
         }
+        // todo: add closing of nodes that are no longer present in the current tree
         return result;
     }
 

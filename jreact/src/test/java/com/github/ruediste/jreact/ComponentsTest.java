@@ -33,7 +33,7 @@ class ComponentsTest {
 
     @Test
     void nestedButtonVariantsKeepTheirScopedThemeColors() {
-        try (var root = new RenderRoot(() -> ui.card("Buttons", () -> ui.row(8, () -> {
+        try (var root = new JReactRoot(() -> ui.card("Buttons", () -> ui.row(8, () -> {
             for (Components.Variant variant : Components.Variant.values())
                 ui.button(variant.name(), variant, false, () -> {
                 });
@@ -71,7 +71,7 @@ class ComponentsTest {
     void checkboxAndTabsAreControlled() {
         var checked = new AtomicReference<>(false);
         var selected = new AtomicReference<>("One");
-        try (var root = new RenderRoot(() -> {
+        try (var root = new JReactRoot(() -> {
             ui.checkbox("Enabled", checked.get(), false, checked::set);
             ui.tabs(List.of("One", "Two"), selected.get(), selected::set);
         }, () -> {
@@ -89,7 +89,7 @@ class ComponentsTest {
     @Test
     void sliderQuantizesClampsAndSupportsKeyboard() {
         var value = new AtomicReference<>(0.0);
-        try (var root = new RenderRoot(() -> ui.slider("Level", value.get(), 0, 100, 5, false, value::set), () -> {
+        try (var root = new JReactRoot(() -> ui.slider("Level", value.get(), 0, 100, 5, false, value::set), () -> {
         })) {
             root.render();
             Node slider = root.tree().children.getFirst();
@@ -126,7 +126,7 @@ class ComponentsTest {
         }));
         assertThrows(IllegalArgumentException.class, () -> ui.tabs(List.of("a", "a"), "a", value -> {
         }));
-        try (var root = new RenderRoot(() -> Ui.select("missing", List.of("a"), value -> {
+        try (var root = new JReactRoot(() -> Ui.select("missing", List.of("a"), value -> {
         }, style -> {
         }), () -> {
         })) {
@@ -169,7 +169,7 @@ class ComponentsTest {
     @ParameterizedTest
     @EnumSource(Components.Tone.class)
     void feedbackComponentsRenderForEveryTone(Components.Tone tone) {
-        try (var root = new RenderRoot(() -> ui.card("Status", () -> {
+        try (var root = new JReactRoot(() -> ui.card("Status", () -> {
             ui.badge("Ready", tone);
             ui.alert("Operation complete", tone);
             ui.progress(0.5);

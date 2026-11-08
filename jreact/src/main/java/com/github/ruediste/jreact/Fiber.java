@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import com.github.ruediste.jreact.Hooks.Hook;
+
 /**
  * Retains one component's identity, hook slots, and child components across
  * renders, independently of the transient {@link Node} tree.
@@ -21,7 +23,7 @@ import java.util.function.Supplier;
  *
  * <p>
  * This is runtime bookkeeping, not a layout or painting node. It is confined
- * to its owning {@link RenderRoot}'s thread.
+ * to its owning {@link JReactRoot}'s thread.
  */
 final class Fiber {
     /** Identifies a child component within its parent fiber. */
@@ -32,7 +34,7 @@ final class Fiber {
     record Position(int index) {
     }
 
-    final List<Object> hooks = new ArrayList<>();
+    final List<Hook> hooks = new ArrayList<>();
 
     /**
      * Child fibers keyed by their identity within this fiber. These represent the
@@ -59,7 +61,7 @@ final class Fiber {
         seen.clear();
     }
 
-    Object slot(Class<?> kind, Supplier<Object> initial) {
+    public <T extends Hook> T getOrCreateHook(Class<T> kind, Supplier<T> initial) {
         if (cursor == hooks.size()) {
             if (rendered)
                 throw new IllegalStateException("Hook count changed; hooks must be unconditional");
@@ -68,7 +70,7 @@ final class Fiber {
         Object slot = hooks.get(cursor++);
         if (!kind.isInstance(slot))
             throw new IllegalStateException("Hook order changed; expected " + slot.getClass().getSimpleName());
-        return slot;
+        return kind.cast(slot);
     }
 
     void finish() {
@@ -109,18 +111,14 @@ final class Fiber {
                     failure.addSuppressed(exception);
             }
         }
-        for (Object slot : hooks) {
-            if (slot instanceof State<?> state)
-                state.unmount();
-            if (slot instanceof Hooks.Effect effect) {
-                try {
-                    effect.clean();
-                } catch (RuntimeException exception) {
-                    if (failure == null)
-                        failure = exception;
-                    else
-                        failure.addSuppressed(exception);
-                }
+        for (var slot : hooks) {
+            try {
+                slot.close();
+            } catch (RuntimeException exception) {
+                if (failure == null)
+                    failure = exception;
+                else
+                    failure.addSuppressed(exception);
             }
         }
         children.clear();

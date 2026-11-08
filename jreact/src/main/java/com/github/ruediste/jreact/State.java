@@ -3,12 +3,14 @@ package com.github.ruediste.jreact;
 import java.util.Objects;
 import java.util.function.UnaryOperator;
 
+import com.github.ruediste.jreact.Hooks.Hook;
+
 /**
  * A mutable value retained by a component's state hook.
  *
  * <p>
  * Writes that differ according to {@link Objects#equals(Object, Object)} are
- * validated before assignment and invalidate the owning {@link RenderRoot}.
+ * validated before assignment and invalidate the owning {@link JReactRoot}.
  * The root rejects changed-value writes from another thread or during component
  * rendering. This handle is not a scheduler: the host controls when an
  * invalidated root renders again.
@@ -19,7 +21,7 @@ import java.util.function.UnaryOperator;
  *
  * @param <T> the stored value type
  */
-public final class State<T> {
+public final class State<T> implements Hook {
     private T value;
     private final Runnable invalidate;
     private final Runnable validate;
@@ -47,7 +49,8 @@ public final class State<T> {
         set(update.apply(value));
     }
 
-    void unmount() {
+    @Override
+    public void close() {
         mounted = false;
     }
 }

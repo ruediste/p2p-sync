@@ -105,7 +105,7 @@ class RuntimeTest {
     void stateRetainsValueAndOnlyInvalidatesOnChange() {
         var state = new AtomicReference<State<Integer>>();
         var invalidations = new AtomicInteger();
-        try (var root = new RenderRoot(() -> state.set(Hooks.useState(0)), invalidations::incrementAndGet)) {
+        try (var root = new JReactRoot(() -> state.set(Hooks.useState(0)), invalidations::incrementAndGet)) {
             root.render();
             state.get().set(0);
             assertEquals(0, invalidations.get());
@@ -122,7 +122,7 @@ class RuntimeTest {
     @Test
     void lazyInitializerRunsOnce() {
         var calls = new AtomicInteger();
-        try (var root = new RenderRoot(() -> Hooks.useStateLazy(calls::incrementAndGet), () -> {
+        try (var root = new JReactRoot(() -> Hooks.useStateLazy(calls::incrementAndGet), () -> {
         })) {
             root.render();
             root.render();
@@ -134,7 +134,7 @@ class RuntimeTest {
     void keyedChildrenRetainStateOnReorderAndResetOnRemoval() {
         var keys = new ArrayList<>(List.of("a", "b"));
         var states = new java.util.HashMap<String, State<String>>();
-        try (var root = new RenderRoot(() -> keys.forEach(key -> Ui.component("item", key,
+        try (var root = new JReactRoot(() -> keys.forEach(key -> Ui.component("item", key,
                 () -> states.put(key, Hooks.useState(key)))), () -> {
                 })) {
             root.render();
@@ -154,7 +154,7 @@ class RuntimeTest {
     void effectsRunAfterRenderAndCleanBeforeReplacementAndUnmount() {
         var events = new ArrayList<String>();
         var dependency = new AtomicInteger();
-        var root = new RenderRoot(() -> {
+        var root = new JReactRoot(() -> {
             int value = dependency.get();
             Hooks.useEffect(() -> {
                 events.add("effect" + value);
@@ -176,9 +176,9 @@ class RuntimeTest {
     void removedChildCleansEffect() {
         var visible = new AtomicReference<>(true);
         var cleans = new AtomicInteger();
-        try (var root = new RenderRoot(() -> {
+        try (var root = new JReactRoot(() -> {
             if (visible.get())
-                Ui.component("child", () -> Hooks.useEffect(() -> cleans::incrementAndGet));
+                Ui.component("child", null, () -> Hooks.useEffect(() -> cleans::incrementAndGet));
         }, () -> {
         })) {
             root.render();
@@ -191,7 +191,7 @@ class RuntimeTest {
     @Test
     void changedHookCountIsRejectedAndContextIsRestored() {
         var extra = new AtomicReference<>(false);
-        try (var root = new RenderRoot(() -> {
+        try (var root = new JReactRoot(() -> {
             Hooks.useState(1);
             if (extra.get())
                 Hooks.useState(2);
@@ -207,7 +207,7 @@ class RuntimeTest {
     @Test
     void fewerHooksAndChangedKindsAreRejected() {
         var mode = new AtomicInteger();
-        try (var root = new RenderRoot(() -> {
+        try (var root = new JReactRoot(() -> {
             if (mode.get() == 0)
                 Hooks.useState(1);
             else if (mode.get() == 2)
@@ -224,9 +224,9 @@ class RuntimeTest {
 
     @Test
     void nestedComponentsRestoreParentCursor() {
-        try (var root = new RenderRoot(() -> {
+        try (var root = new JReactRoot(() -> {
             assertEquals("first", Hooks.useState("first").get());
-            Ui.component("child", () -> assertEquals("child", Hooks.useState("child").get()));
+            Ui.component("child", null, () -> assertEquals("child", Hooks.useState("child").get()));
             assertEquals("last", Hooks.useState("last").get());
         }, () -> {
         })) {
@@ -241,10 +241,10 @@ class RuntimeTest {
         var fail = new AtomicReference<>(true);
         var childFailure = new IllegalStateException("child");
         var parentState = new AtomicReference<State<String>>();
-        try (var root = new RenderRoot(() -> {
+        try (var root = new JReactRoot(() -> {
             Hooks.useState("before");
             try {
-                Ui.component("child", () -> {
+                Ui.component("child", null, () -> {
                     Hooks.useState("child");
                     if (fail.get())
                         throw childFailure;
@@ -264,7 +264,7 @@ class RuntimeTest {
 
     @Test
     void duplicateKeysAreRejected() {
-        try (var root = new RenderRoot(() -> {
+        try (var root = new JReactRoot(() -> {
             Ui.component("item", "same", () -> {
             });
             Ui.component("item", "same", () -> {
@@ -280,7 +280,7 @@ class RuntimeTest {
         var dependency = new AtomicInteger();
         var calls = new AtomicInteger();
         var refs = new ArrayList<Hooks.Ref<String>>();
-        try (var root = new RenderRoot(() -> {
+        try (var root = new JReactRoot(() -> {
             refs.add(Hooks.useRef("initial"));
             Hooks.useMemo(calls::incrementAndGet, dependency.get());
         }, () -> {
@@ -299,8 +299,8 @@ class RuntimeTest {
 
     @Test
     void closedAndReentrantRootsAreRejected() {
-        var holder = new AtomicReference<RenderRoot>();
-        var root = new RenderRoot(() -> holder.get().render(), () -> {
+        var holder = new AtomicReference<JReactRoot>();
+        var root = new JReactRoot(() -> holder.get().render(), () -> {
         });
         holder.set(root);
         assertThrows(IllegalStateException.class, root::render);
@@ -310,8 +310,8 @@ class RuntimeTest {
 
     @Test
     void implicitPositionsDoNotCollideWithExplicitIntegerKeys() {
-        try (var root = new RenderRoot(() -> {
-            Ui.component("item", () -> Hooks.useState(1));
+        try (var root = new JReactRoot(() -> {
+            Ui.component("item", null, () -> Hooks.useState(1));
             Ui.component("item", 0, () -> Hooks.useState(2));
         }, () -> {
         })) {
@@ -321,12 +321,12 @@ class RuntimeTest {
 
     @Test
     void renderPhaseUpdatesAreRejectedButEffectsMayUpdateState() {
-        try (var root = new RenderRoot(() -> Hooks.useState(0).set(1), () -> {
+        try (var root = new JReactRoot(() -> Hooks.useState(0).set(1), () -> {
         })) {
             assertThrows(IllegalStateException.class, root::render);
         }
         var state = new AtomicReference<State<Integer>>();
-        try (var root = new RenderRoot(() -> {
+        try (var root = new JReactRoot(() -> {
             state.set(Hooks.useState(0));
             Hooks.useEffect(() -> {
                 state.get().set(1);
@@ -345,7 +345,7 @@ class RuntimeTest {
     void crossThreadUpdatesAreRejectedBeforeMutatingValue() throws InterruptedException {
         var state = new AtomicReference<State<Integer>>();
         var failure = new AtomicReference<Throwable>();
-        try (var root = new RenderRoot(() -> state.set(Hooks.useState(0)), () -> {
+        try (var root = new JReactRoot(() -> state.set(Hooks.useState(0)), () -> {
         })) {
             root.render();
             var thread = new Thread(() -> {
@@ -366,7 +366,7 @@ class RuntimeTest {
     void cleanupFailureDoesNotPreventOtherCleanupsOrUnmountingState() {
         var state = new AtomicReference<State<Integer>>();
         var calls = new AtomicInteger();
-        var root = new RenderRoot(() -> {
+        var root = new JReactRoot(() -> {
             Hooks.useEffect(() -> () -> {
                 throw new IllegalArgumentException("cleanup");
             });
@@ -385,12 +385,12 @@ class RuntimeTest {
     void removedChildrenAreAllDisposedEvenIfOneCleanupFails() {
         var visible = new AtomicReference<>(true);
         var cleans = new AtomicInteger();
-        try (var root = new RenderRoot(() -> {
+        try (var root = new JReactRoot(() -> {
             if (visible.get()) {
-                Ui.component("first", () -> Hooks.useEffect(() -> () -> {
+                Ui.component("first", null, () -> Hooks.useEffect(() -> () -> {
                     throw new IllegalArgumentException("cleanup");
                 }));
-                Ui.component("second", () -> Hooks.useEffect(() -> cleans::incrementAndGet));
+                Ui.component("second", null, () -> Hooks.useEffect(() -> cleans::incrementAndGet));
             }
         }, () -> {
         })) {

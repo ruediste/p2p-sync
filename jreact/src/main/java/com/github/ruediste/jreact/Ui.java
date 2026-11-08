@@ -26,7 +26,7 @@ import com.github.ruediste.jreact.nodes.TextNode;
  *
  * <p>
  * A thread-local context connects these static methods to the active
- * {@link RenderRoot} and fiber. Nested component rendering restores the
+ * {@link JReactRoot} and fiber. Nested component rendering restores the
  * caller's
  * context on exit, including exceptional exit. Primitives, component calls, and
  * viewport queries require an active render; input and select nodes own native
@@ -40,7 +40,7 @@ public final class Ui {
      * style declarations for the duration of its render.
      */
     static final class Context {
-        final RenderRoot runtime;
+        final JReactRoot runtime;
         final Fiber fiber;
 
         /** Style rules of the current component */
@@ -58,7 +58,7 @@ public final class Ui {
         final List<Styles.NodeStyleRules> styleRuleChain;
 
         /** Creates the context of a root render without an enclosing component. */
-        Context(RenderRoot runtime, Fiber fiber) {
+        Context(JReactRoot runtime, Fiber fiber) {
             this(runtime, fiber, List.of());
         }
 
@@ -67,7 +67,7 @@ public final class Ui {
             this(parent.runtime, fiber, parent.styleRuleChain);
         }
 
-        private Context(RenderRoot runtime, Fiber fiber, List<Styles.NodeStyleRules> parentDeclarations) {
+        private Context(JReactRoot runtime, Fiber fiber, List<Styles.NodeStyleRules> parentDeclarations) {
             this.runtime = runtime;
             this.fiber = fiber;
             styleRules = new Styles.NodeStyleRules();
@@ -79,39 +79,11 @@ public final class Ui {
     private Ui() {
     }
 
-    static Context context() {
+    public static Context context() {
         Context result = CURRENT.get();
         if (result == null)
             throw new IllegalStateException("JReact primitives and hooks require a rendering component");
         return result;
-    }
-
-    /**
-     * Renders a child component identified by its type and sibling call position.
-     *
-     * <p>
-     * The child receives its own retained {@link Fiber}, hook slots, and style
-     * declaration scope. Repeating the same type at the same component-call
-     * position under the same parent reuses that fiber. Changing the type or
-     * position starts a different component lifetime, so use the keyed overload
-     * for reorderable lists.
-     *
-     * <p>
-     * This establishes a runtime boundary, not a visual container: primitives
-     * emitted by the body are appended to the current node parent. An ordinary
-     * helper method not transformed by the runtime agent shares the caller's
-     * hook and style scope.
-     *
-     * @param type stable, non-null component identity token; not necessarily a
-     *             Java class
-     * @param body component render body, executed synchronously on every call
-     * @throws IllegalStateException if no component render is active or the
-     *                               body's hook count or kind changes
-     * @throws NullPointerException  if {@code type} or {@code body} is null
-     * @see #component(Object, Object, Runnable)
-     */
-    public static void component(Object type, Runnable body) {
-        component(type, null, body);
     }
 
     public static DivNode div(Consumer<Style> style, Runnable children) {
@@ -188,12 +160,12 @@ public final class Ui {
             Runnable children) {
         T node = node(factory, style);
         var runtime = context().runtime;
-        Node previous = runtime.parent;
-        runtime.parent = node;
+        Node previous = runtime.currentParentNode;
+        runtime.currentParentNode = node;
         try {
             children.run();
         } finally {
-            runtime.parent = previous;
+            runtime.currentParentNode = previous;
         }
         return node;
     }
@@ -204,7 +176,7 @@ public final class Ui {
         configure.accept(style);
         T node = factory.create(new Node.Key(context.fiber, context.fiber.nodeCursor++), style,
                 context.styleRuleChain);
-        Node parent = context.runtime.parent;
+        Node parent = context.runtime.currentParentNode;
         if (parent instanceof SpanNode && !(node instanceof SpanNode) && !(node instanceof TextNode)
                 && !(node instanceof IconNode))
             throw new IllegalArgumentException("Span accepts only inline text, spans, and icons");
@@ -279,24 +251,32 @@ public final class Ui {
         }
     }
 
-    /** Opens the retained component boundary used by the runtime agent. */
-    public static ComponentScope enterComponent(String type) {
-        return enterComponent(type, null);
-    }
-
-    private static ComponentScope enterComponent(Object type, Object key) {
-        var parent = context();
-        int position = parent.fiber.childCursor++;
+    /**
+     * Opens the retained component boundary used by the runtime agent.
+     *
+     * @param type stable, non-null identity of the component implementation,
+     *             compared by equality; not necessarily a Java class
+     * @param key  stable identity of an instance among siblings of the same type,
+     *             or null for positional identity
+     * @return the component scope, which must be closed after the component body
+     *         has been executed
+     * @throws IllegalArgumentException if the identity has already been visited
+     *                                  in the current parent render
+     * @throws NullPointerException     if {@code type} is null
+     */
+    public static ComponentScope enterComponent(Object type, Object key) {
+        var parentContext = context();
+        int position = parentContext.fiber.childCursor++;
         var identity = new Fiber.Identity(Objects.requireNonNull(type),
                 key == null ? new Fiber.Position(position) : key);
-        if (!parent.fiber.seen.add(identity))
+        if (!parentContext.fiber.seen.add(identity))
             throw new IllegalArgumentException("Duplicate component identity: " + identity);
 
         // get the existing fiber or create a new one if it doesn't exist
-        Fiber child = parent.fiber.children.computeIfAbsent(identity, ignored -> new Fiber());
-        child.begin();
-        CURRENT.set(new Context(parent, child));
-        return new ComponentScope(child, parent);
+        Fiber childFiber = parentContext.fiber.children.computeIfAbsent(identity, ignored -> new Fiber());
+        childFiber.begin();
+        CURRENT.set(new Context(parentContext, childFiber));
+        return new ComponentScope(childFiber, parentContext);
     }
 
     /** Closes a component boundary entered by {@link #enterComponent(String)}. */

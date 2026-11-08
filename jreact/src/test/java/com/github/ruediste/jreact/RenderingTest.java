@@ -30,7 +30,7 @@ class RenderingTest {
     private BufferedImage image(Runnable body) {
         var image = new BufferedImage(120, 100, BufferedImage.TYPE_INT_ARGB);
         var graphics = image.createGraphics();
-        try (var root = new RenderRoot(body, () -> {
+        try (var root = new JReactRoot(body, () -> {
         })) {
             root.render();
             root.tree().layout(120, 100);

@@ -28,37 +28,33 @@ import com.github.ruediste.jreact.nodes.DivNode;
  * Swing event dispatch thread. Closing the root unmounts its fibers and cleans
  * up their effects.
  */
-public final class RenderRoot implements AutoCloseable {
+public final class JReactRoot implements AutoCloseable {
     private final Fiber rootFiber = new Fiber();
     private final Thread owner = Thread.currentThread();
     private final Runnable body;
     private final Runnable onInvalidated;
-    final List<Runnable> effects = new ArrayList<>();
-    private Node tree;
+    final List<Runnable> pendingEffects = new ArrayList<>();
+    private Node treeRoot;
     public Style rootStyle = new Style();
 
     private LinkedHashSet<Consumer<Runnable>> overlays = new LinkedHashSet<>();
 
     /**
      * Node that receives primitives emitted by the component body currently
-     * being rendered.
-     *
-     * <p>
-     * {@link #render()} initializes it to the synthetic root node before
-     * running the body and resets it to {@code null} afterwards. While a
-     * container primitive renders its children, it temporarily replaces this
-     * with its own node, and each primitive creates its node under the current
-     * value. Nested component calls share the same node parent, so component
-     * boundaries do not introduce visual containers.
+     * being rendered. While rendering the component body, this points to the
+     * current parent node under which new nodes are added.
+     * 
+     * todo: likely a good idea to replace with a callback receiving the nodes being
+     * created
      */
-    Node parent;
+    Node currentParentNode;
 
     double viewportWidth, viewportHeight;
     private boolean dirty = true;
     private boolean rendering;
     private boolean closed;
 
-    public RenderRoot(Runnable body, Runnable onInvalidated) {
+    public JReactRoot(Runnable body, Runnable onInvalidated) {
         this.body = Objects.requireNonNull(body);
         this.onInvalidated = Objects.requireNonNull(onInvalidated);
     }
@@ -68,7 +64,7 @@ public final class RenderRoot implements AutoCloseable {
     }
 
     public Node tree() {
-        return tree;
+        return treeRoot;
     }
 
     public Runnable addOverlay(Consumer<Runnable> overlay) {
@@ -101,14 +97,14 @@ public final class RenderRoot implements AutoCloseable {
         if (rendering)
             throw new IllegalStateException("Cannot render reentrantly");
         rendering = true;
-        effects.clear();
+        pendingEffects.clear();
         dirty = false;
 
         var context = new Ui.Context(this, rootFiber);
         Node nextTreeRoot = new DivNode(new Node.Key(rootFiber, -1), rootStyle, context.styleRuleChain);
 
         // initialize the parent node to the synthetic root node
-        parent = nextTreeRoot;
+        currentParentNode = nextTreeRoot;
 
         try {
             Ui.Context previous = Ui.CURRENT.get();
@@ -128,14 +124,14 @@ public final class RenderRoot implements AutoCloseable {
                     Ui.CURRENT.set(previous);
             }
             Styles.resolve(nextTreeRoot);
-            tree = nextTreeRoot;
-            List.copyOf(effects).forEach(Runnable::run);
+            treeRoot = nextTreeRoot;
+            List.copyOf(pendingEffects).forEach(Runnable::run);
         } catch (RuntimeException | Error exception) {
             dirty = true;
             throw exception;
         } finally {
-            effects.clear();
-            parent = null;
+            pendingEffects.clear();
+            currentParentNode = null;
             rendering = false;
         }
     }

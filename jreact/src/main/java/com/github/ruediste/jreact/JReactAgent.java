@@ -61,7 +61,7 @@ public final class JReactAgent {
 
         @Advice.OnMethodEnter
         public static Ui.ComponentScope enter(@Advice.Origin("#t.#m#d") String identity) {
-            return Ui.enterComponent(identity);
+            return Ui.enterComponent(identity, null);
         }
 
         @Advice.OnMethodExit(onThrowable = Throwable.class)
