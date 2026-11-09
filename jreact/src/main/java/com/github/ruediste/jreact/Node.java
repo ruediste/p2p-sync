@@ -15,12 +15,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.github.ruediste.jreact.events.ClickEvent;
-import com.github.ruediste.jreact.events.KeyboardEvent;
-import com.github.ruediste.jreact.events.PointerEvent;
 import com.antepod.taffy.geometry.Size;
 import com.antepod.taffy.style.AvailableSpace;
 import com.antepod.taffy.tree.Layout;
+import com.github.ruediste.jreact.events.ClickEvent;
+import com.github.ruediste.jreact.events.KeyboardEvent;
+import com.github.ruediste.jreact.events.PointerEvent;
 import com.github.ruediste.jreact.layout.LayoutEngine;
 import com.github.ruediste.jreact.layout.LayoutNode;
 import com.github.ruediste.jreact.nodes.ContainerNode;
@@ -438,6 +438,8 @@ public abstract class Node implements LayoutNode {
      * an ancestor opacity change invalidates its descendants even when their own
      * style is unchanged. Nodes whose state is unchanged avoid repaint entirely.
      */
+    // todo: remove paint state, add method to Node to decide if a node needs
+    // repaint based on its own logic
     public interface PaintState {
         /**
          * Bounds this state occupied when painted, including box and text
