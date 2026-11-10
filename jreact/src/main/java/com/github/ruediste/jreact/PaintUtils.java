@@ -11,6 +11,8 @@ import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
 import java.util.function.Consumer;
 
+import com.github.ruediste.jreact.nodes.Node;
+
 public final class PaintUtils {
     private PaintUtils() {
     }

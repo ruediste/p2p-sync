@@ -3,6 +3,8 @@ package com.github.ruediste.jreact;
 import java.util.Objects;
 import java.util.function.Predicate;
 
+import com.github.ruediste.jreact.nodes.Node;
+
 /**
  * Immutable node-matching expression for scoped style rules.
  *

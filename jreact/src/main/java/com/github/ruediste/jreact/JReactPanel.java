@@ -1,381 +1,320 @@
 package com.github.ruediste.jreact;
 
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
-import com.github.ruediste.jreact.events.ClickEvent;
-import com.github.ruediste.jreact.events.KeyboardEvent;
-import com.github.ruediste.jreact.events.PointerEvent;
-import com.github.ruediste.jreact.nodes.SwingNode;
+import com.antepod.taffy.style.Display;
+import com.github.ruediste.jreact.nodes.InputNode;
+import com.github.ruediste.jreact.nodes.Node;
+import com.github.ruediste.jreact.nodes.SelectNode;
+import com.github.ruediste.jreact.nodes.VisualNode;
 
-/**
- * Swing host for a JReact component tree and its user interactions.
- *
- * <p>
- * Owns a {@link JReactRoot}, coalesces invalidations into scheduled refreshes,
- * supplies viewport dimensions and interaction flags, resolves styles, and
- * invokes layout and Java2D painting. Nodes are reconciled with the previous
- * tree by key, transferring interaction state, retained Swing components, and
- * the last
- * committed paint state. Each node reports its own dirty region, so the panel
- * only unions those regions into localized repaint requests.
- *
- * <p>
- * Input and select nodes own their controlled {@link javax.swing.JTextField}
- * and {@link javax.swing.JComboBox} components. The panel adds and removes
- * those components from its Swing hierarchy and dispatches focus and keyboard
- * events; value synchronization and change callbacks stay in the node.
- *
- * <p>
- * Construct, refresh, and close this panel on the Swing event dispatch thread.
- * The host must close it when its owning UI is disposed to unmount component
- * state, clean up effects, and remove native Swing components.
- */
-public class JReactPanel extends JPanel implements AutoCloseable {
+public final class JReactPanel extends JPanel {
+
     private final JReactRoot root;
-    private Map<Node.Key, Node> nodes = new LinkedHashMap<>();
-    private Node.Key hovered, pressed, focused;
-    private boolean scheduled, closed;
-    private int layoutWidth = -1, layoutHeight = -1;
+    private final Map<List<Node.Identity>, JComponent> editors = new LinkedHashMap<>();
+    private final Map<JComponent, Node> editorNodes = new IdentityHashMap<>();
 
-    public JReactPanel(Runnable component) {
-        requireEdt();
-        root = new JReactRoot(component, this::schedule);
+    private RefreshResult prepared;
+    private boolean refreshScheduled;
+    private boolean paintPending;
+    private boolean passiveScheduled;
+    private boolean syncingEditors;
+
+    public JReactPanel(Runnable rootRender) {
+        if (!SwingUtilities.isEventDispatchThread())
+            throw new IllegalStateException("JReactPanel must be created on the event dispatch thread");
+        root = new JReactRoot(Objects.requireNonNull(rootRender));
+        root.setInvalidationCallback(this::requestRefresh);
         setLayout(null);
         setFocusable(true);
-        setToolTipText("");
-        setFocusTraversalKeysEnabled(false);
-        setBackground(java.awt.Color.WHITE);
-        setPreferredSize(new Dimension(960, 720));
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent event) {
-                schedule();
-            }
-        });
-        MouseAdapter mouse = new MouseAdapter() {
-            @Override
-            public void mouseMoved(MouseEvent event) {
-                hover(event.getX(), event.getY());
-            }
-
-            @Override
-            public void mouseExited(MouseEvent event) {
-                hovered = null;
-                refresh();
-            }
-
+        addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent event) {
-                if (!SwingUtilities.isLeftMouseButton(event))
-                    return;
-                Node target = interactive(hitTest(event.getX(), event.getY()));
-                pressed = target == null ? null : target.key;
-                if (target != null && !target.disabled) {
-                    focused = target.key;
-                    requestFocusInWindow();
-                    pointer(target, event.getX());
-                }
-                refresh();
-            }
-
-            @Override
-            public void mouseDragged(MouseEvent event) {
-                Node target = nodes.get(pressed);
-                if (target != null && !target.disabled)
-                    pointer(target, event.getX());
-                hover(event.getX(), event.getY());
-                refresh();
+                requestFocusInWindow();
+                root.pointerPressed(event.getX(), event.getY());
             }
 
             @Override
             public void mouseReleased(MouseEvent event) {
-                if (!SwingUtilities.isLeftMouseButton(event))
-                    return;
-                Node target = interactive(hitTest(event.getX(), event.getY()));
-                Node.Key previous = pressed;
-                pressed = null;
-                if (target != null && Objects.equals(previous, target.key) && !target.disabled)
-                    target.dispatchEvent(new ClickEvent());
-                refresh();
+                root.pointerReleased(event.getX(), event.getY());
             }
-        };
-        addMouseListener(mouse);
-        addMouseMotionListener(mouse);
-        addFocusListener(new FocusAdapter() {
+
             @Override
-            public void focusLost(FocusEvent event) {
-                if (!isSwingComponent(event.getOppositeComponent())) {
-                    focused = null;
-                    pressed = null;
-                    refresh();
-                }
+            public void mouseExited(MouseEvent event) {
+                root.pointerExited();
+            }
+        });
+        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent event) {
+                root.pointerMoved(event.getX(), event.getY());
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent event) {
+                root.pointerMoved(event.getX(), event.getY());
             }
         });
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent event) {
-                keyboard(event);
+                root.keyPressed(event.getKeyCode());
+            }
+        });
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent event) {
+                requestRefresh();
             }
         });
     }
 
-    private static void requireEdt() {
-        if (!SwingUtilities.isEventDispatchThread())
-            throw new IllegalStateException("JReactPanel must be used on the Swing event dispatch thread");
-    }
-
-    public Node tree() {
-        return root.tree();
-    }
-
-    private void schedule() {
-        if (!scheduled && !closed) {
-            scheduled = true;
-            SwingUtilities.invokeLater(() -> {
-                scheduled = false;
-                if (!closed)
-                    refresh();
-            });
-        }
-    }
-
-    public void refresh() {
-        requireEdt();
-        if (closed)
-            return;
-        Node previousTree = root.tree();
-        root.viewport(Math.max(0, getWidth()), Math.max(0, getHeight()));
-
-        // todo: move to the JReactRoot
-
-        // trigger render if the root is dirty or has no tree
-        if (root.isDirty() || root.tree() == null)
-            root.render();
-
-        Node currentTree = root.tree();
-        var reconciliation = NodeReconciler.reconcile(currentTree, previousTree);
-
-        // update pseudo classes (hover, active, focus) for all nodes
-        nodes = new LinkedHashMap<>();
-        currentTree.descendants().forEach(node -> nodes.put(node.key, node));
-        if (!nodes.containsKey(focused) || nodes.get(focused).disabled)
-            focused = null;
-        for (Node node : nodes.values()) {
-            node.hover = isAncestorOf(node, nodes.get(hovered));
-            node.active = Objects.equals(pressed, node.key) && !node.disabled;
-            node.focus = Objects.equals(focused, node.key) && !node.disabled;
-        }
-
-        // apply styles
-        Styles.resolve(currentTree);
-
-        // calculate layout
-        currentTree.layout(Math.max(0, getWidth()), Math.max(0, getHeight()));
-
-        // reconcile nodes
-        Rectangle dirty = NodeReconciler.dirtyRegion(currentTree, reconciliation);
-
-        // todo: move to JReactRoot until here
-
-        // todo: defer effects until after paint() has been called
-
-        syncComponents(currentTree);
-
-        if (layoutWidth != getWidth() || layoutHeight != getHeight()) {
-            layoutWidth = getWidth();
-            layoutHeight = getHeight();
-            repaint();
-        } else if (dirty != null) {
-            repaint(dirty.x, dirty.y, dirty.width, dirty.height);
-        }
-        currentTree.commitPaintState();
-    }
-
-    private static boolean isAncestorOf(Node ancestor, Node node) {
-        for (Node current = node; current != null; current = current.parent)
-            if (current == ancestor)
-                return true;
-        return false;
-    }
-
-    public Node hitTest(double x, double y) {
-        requireEdt();
-        var ordered = new ArrayList<>(nodes.values());
-        for (int index = ordered.size() - 1; index >= 0; index--) {
-            Node node = ordered.get(index);
-            if (node.bounds.contains(x, y))
-                return node;
-        }
-        return null;
+    public JReactRoot root() {
+        return root;
     }
 
     @Override
-    public String getToolTipText(MouseEvent event) {
-        Node target = interactive(hitTest(event.getX(), event.getY()));
-        return target == null ? null : target.accessibleName;
+    public void addNotify() {
+        super.addNotify();
+        requestRefresh();
     }
 
-    private Node interactive(Node node) {
-        for (Node current = node; current != null; current = current.parent)
-            if (current.focusable || current.hasEventListener(ClickEvent.class)
-                    || current.hasEventListener(PointerEvent.class))
-                return current;
-        return null;
+    public void requestRefresh() {
+        if (refreshScheduled)
+            return;
+        refreshScheduled = true;
+        SwingUtilities.invokeLater(() -> {
+            refreshScheduled = false;
+            refreshNow();
+        });
     }
 
-    private void hover(double x, double y) {
-        Node hit = hitTest(x, y);
-        Node.Key key = hit == null ? null : hit.key;
-        if (!Objects.equals(hovered, key)) {
-            hovered = key;
-            refresh();
-        }
-        Node target = interactive(hit);
-        setCursor(Cursor
-                .getPredefinedCursor(target != null && !target.disabled ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
-    }
+    private void refreshNow() {
+        if (getWidth() <= 0 || getHeight() <= 0)
+            return;
+        prepared = root.refresh(getWidth(), getHeight());
+        synchronizeEditors(prepared.tree());
+        paintPending = true;
 
-    private void pointer(Node node, double x) {
-        if (node.bounds.width > 0)
-            node.dispatchEvent(new PointerEvent(Math.max(0, Math.min(1, (x - node.bounds.x) / node.bounds.width))));
-    }
-
-    private void keyboard(KeyEvent event) {
-        if (event.getKeyCode() == KeyEvent.VK_TAB) {
-            List<Node> targets = nodes.values().stream().filter(node -> node.focusable && !node.disabled).toList();
-            if (!targets.isEmpty()) {
-                int current = -1;
-                for (int index = 0; index < targets.size(); index++)
-                    if (targets.get(index).key.equals(focused))
-                        current = index;
-                int next = current < 0 && event.isShiftDown() ? targets.size() - 1
-                        : Math.floorMod(current + (event.isShiftDown() ? -1 : 1), targets.size());
-                focused = targets.get(next).key;
-                Node node = nodes.get(focused);
-                if (node instanceof SwingNode swingNode && swingNode.component() != null)
-                    swingNode.component().requestFocusInWindow();
-            }
-            event.consume();
+        java.awt.geom.Rectangle2D dirty = prepared.dirtyRegion();
+        if (dirty == null || dirty.getWidth() <= 0 || dirty.getHeight() <= 0) {
+            repaint();
         } else {
-            Node node = nodes.get(focused);
-            if (node != null && !node.disabled) {
-                if ((event.getKeyCode() == KeyEvent.VK_ENTER || event.getKeyCode() == KeyEvent.VK_SPACE)
-                        && node.hasEventListener(ClickEvent.class)) {
-                    node.dispatchEvent(new ClickEvent());
-                    event.consume();
-                } else if (node.hasEventListener(PointerEvent.class)
-                        && node.hasEventListener(KeyboardEvent.class)) {
-                    node.dispatchEvent(new KeyboardEvent(event.getKeyCode()));
-                    event.consume();
-                }
-            }
+            repaint((int) Math.floor(dirty.getX()), (int) Math.floor(dirty.getY()),
+                    (int) Math.ceil(dirty.getWidth()), (int) Math.ceil(dirty.getHeight()));
         }
-        refresh();
-    }
-
-    private void syncComponents(Node tree) {
-        var currentComponents = new LinkedHashSet<JComponent>();
-        for (Node node : tree.descendants()) {
-            if (!(node instanceof SwingNode swingNode))
-                continue;
-            swingNode.ensureComponent();
-            JComponent component = swingNode.component();
-            if (component == null)
-                continue;
-            currentComponents.add(component);
-            if (component.getParent() != this) {
-                add(component);
-                attachComponentListeners(component, swingNode.key);
-            }
-            swingNode.syncComponent();
-        }
-        for (Component child : getComponents())
-            if (child instanceof JComponent component && !currentComponents.contains(component))
-                remove(component);
-    }
-
-    private void attachComponentListeners(JComponent component, Node.Key key) {
-        component.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent event) {
-                if (event.getKeyCode() == KeyEvent.VK_TAB) {
-                    keyboard(event);
-                    if (!(nodes.get(focused) instanceof SwingNode))
-                        requestFocusInWindow();
-                }
-            }
-        });
-        component.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent event) {
-                focused = key;
-                schedule();
-            }
-
-            @Override
-            public void focusLost(FocusEvent event) {
-                if (Objects.equals(focused, key))
-                    focused = null;
-                schedule();
-            }
-        });
-    }
-
-    private boolean isSwingComponent(Component component) {
-        for (Node node : nodes.values())
-            if (node instanceof SwingNode swingNode && swingNode.component() == component)
-                return true;
-        return false;
     }
 
     @Override
     protected void paintComponent(Graphics graphics) {
         super.paintComponent(graphics);
-        if (root.tree() == null || root.isDirty() || layoutWidth != getWidth() || layoutHeight != getHeight())
-            refresh();
-        if (root.tree() != null)
-            root.tree().paint((Graphics2D) graphics, 1);
+        if (prepared == null) {
+            requestRefresh();
+            return;
+        }
+
+        Graphics2D copy = (Graphics2D) graphics.create();
+        try {
+            copy.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            copy.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            paintTree(prepared.tree(), copy, graphics.getClipBounds());
+        } finally {
+            copy.dispose();
+        }
+
+        if (paintPending) {
+            paintPending = false;
+            schedulePaintCompleted();
+        }
     }
 
-    @Override
-    public void close() {
-        requireEdt();
-        if (!closed) {
-            closed = true;
-            try {
-                root.close();
-            } finally {
-                Node tree = root.tree();
-                if (tree != null)
-                    for (Node node : tree.descendants())
-                        if (node instanceof SwingNode swingNode)
-                            swingNode.disposeComponent();
-                nodes.clear();
-                removeAll();
+    private void schedulePaintCompleted() {
+        if (passiveScheduled)
+            return;
+        passiveScheduled = true;
+        SwingUtilities.invokeLater(() -> {
+            passiveScheduled = false;
+            root.paintCompleted();
+            if (root.needsRender())
+                requestRefresh();
+        });
+    }
+
+    private void synchronizeEditors(Node tree) {
+        Map<List<Node.Identity>, Node> found = new LinkedHashMap<>();
+        collectEditors(tree, found);
+
+        Iterator<Map.Entry<List<Node.Identity>, JComponent>> iterator = editors.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<List<Node.Identity>, JComponent> entry = iterator.next();
+            if (!found.containsKey(entry.getKey())) {
+                JComponent editor = entry.getValue();
+                editorNodes.remove(editor);
+                remove(editor);
+                iterator.remove();
             }
         }
+
+        syncingEditors = true;
+        try {
+            List<Map.Entry<List<Node.Identity>, Node>> entries = new ArrayList<>(found.entrySet());
+            for (Map.Entry<List<Node.Identity>, Node> entry : entries) {
+                Node node = entry.getValue();
+                JComponent editor = editors.get(entry.getKey());
+                if (editor == null && node instanceof InputNode)
+                    editor = createTextField();
+                else if (editor == null && node instanceof SelectNode)
+                    editor = createSelect();
+                if (editor == null)
+                    continue;
+                if (editors.put(entry.getKey(), editor) == null)
+                    add(editor);
+                editorNodes.put(editor, node);
+                synchronizeEditor(editor, node);
+            }
+        } finally {
+            syncingEditors = false;
+        }
+    }
+
+    private static void collectEditors(Node node, Map<List<Node.Identity>, Node> found) {
+        if (node instanceof InputNode || node instanceof SelectNode)
+            found.put(editorKey(node), node);
+        for (Node child : node.children())
+            collectEditors(child, found);
+    }
+
+    private static List<Node.Identity> editorKey(Node node) {
+        java.util.LinkedList<Node.Identity> path = new java.util.LinkedList<>();
+        for (Node current = node; current != null; current = current.parent)
+            path.addFirst(current.identity());
+        return path;
+    }
+
+    private JTextField createTextField() {
+        JTextField field = new JTextField();
+        field.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent event) {
+                textChanged(field);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent event) {
+                textChanged(field);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent event) {
+                textChanged(field);
+            }
+        });
+        return field;
+    }
+
+    @SuppressWarnings("unchecked")
+    private JComboBox<String> createSelect() {
+        JComboBox<String> select = new JComboBox<>();
+        select.addActionListener(event -> selectChanged(select));
+        return select;
+    }
+
+    private void textChanged(JTextField field) {
+        if (syncingEditors)
+            return;
+        Node node = editorNodes.get(field);
+        if (node instanceof InputNode input) {
+            String value = field.getText();
+            input.value = value;
+            input.onChange.accept(value);
+        }
+    }
+
+    private void selectChanged(JComboBox<String> select) {
+        if (syncingEditors)
+            return;
+        Node node = editorNodes.get(select);
+        if (node instanceof SelectNode selectNode) {
+            Object selected = select.getSelectedItem();
+            if (selected == null)
+                return;
+            String value = selected.toString();
+            selectNode.value = value;
+            selectNode.onChange.accept(value);
+        }
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private void synchronizeEditor(JComponent editor, Node node) {
+        if (node instanceof InputNode input && editor instanceof JTextField field) {
+            if (!field.getText().equals(input.value))
+                field.setText(input.value);
+        } else if (node instanceof SelectNode select && editor instanceof JComboBox<?> combo) {
+            boolean optionsChanged = combo.getItemCount() != select.options.size();
+            if (!optionsChanged) {
+                for (int index = 0; index < select.options.size(); index++) {
+                    if (!Objects.equals(combo.getItemAt(index), select.options.get(index))) {
+                        optionsChanged = true;
+                        break;
+                    }
+                }
+            }
+            if (optionsChanged)
+                ((JComboBox) combo).setModel(new DefaultComboBoxModel(select.options.toArray()));
+            if (!Objects.equals(combo.getSelectedItem(), select.value))
+                combo.setSelectedItem(select.value);
+        }
+
+        editor.setBounds((int) Math.round(node.bounds.x), (int) Math.round(node.bounds.y),
+                (int) Math.round(node.bounds.width), (int) Math.round(node.bounds.height));
+        editor.setFont(node.style.font());
+        editor.setForeground(node.style.color());
+        editor.setEnabled(!node.disabled);
+        editor.getAccessibleContext().setAccessibleName(node.accessibleName);
+    }
+
+    private static void paintTree(Node node, Graphics2D graphics, Rectangle clip) {
+        if (node instanceof VisualNode visual) {
+            if (visual.style.display() == Display.NONE)
+                return;
+            visual.paint(graphics, clip);
+        }
+        for (Node child : node.children())
+            paintTree(child, graphics, clip);
+    }
+
+    public void close() {
+        root.close();
+        for (JComponent editor : editors.values())
+            remove(editor);
+        editors.clear();
+        editorNodes.clear();
+        prepared = null;
     }
 }

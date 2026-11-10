@@ -10,10 +10,10 @@ import com.github.ruediste.jreact.Hooks.Hook;
  *
  * <p>
  * Writes that differ according to {@link Objects#equals(Object, Object)} are
- * validated before assignment and invalidate the owning {@link JReactRoot}.
+ * validated before assignment and mark the owning component's fiber dirty.
  * The root rejects changed-value writes from another thread or during component
- * rendering. This handle is not a scheduler: the host controls when an
- * invalidated root renders again.
+ * rendering. This handle is not a scheduler: the host controls when rendering
+ * starts again.
  *
  * <p>
  * Unmounting disables subsequent assignments through retained handles,

@@ -72,14 +72,24 @@ There are multiple triggers to schedule a refresh:
 - if a state of a component changes, that component is marked dirty
 - if user input changes the hovered node, the keyboard focus or presses the mouse button
 
-The refresh is implemented in `JReactRoot` and performs these steps:
+`JReactPanel` calls `JReactRoot.refresh` with the viewport and current interaction
+keys. The root prepares the tree without calling back into the panel:
 
-1. Rerender dirty components.
-1. Resolve and apply style rules.
-1. Calculate and apply the layout.
-1. Run layout effects
-1. Schedule painting of the UI
-1. Schedule queued effect callbacks.
+1. Rerender dirty components and publish the node tree.
+1. Reconcile nodes with the previous tree and apply interaction state.
+1. Resolve styles and calculate layout.
+1. Run `useLayoutEffect` callbacks after layout and before painting.
+1. Commit paint state and return the prepared tree, node index, valid focus key,
+   and dirty region.
+
+The panel then synchronizes native Swing components and requests repainting of
+the dirty region. After painting, it calls `paintCompleted` to run passive
+`useEffect` callbacks. Reconciliation, style resolution, layout, and layout
+effects belong to the root, not the Swing host.
+
+Both effect types clean up before replacement setup and on component unmount.
+State updates from effects invalidate the root and schedule another refresh;
+they do not start a reentrant render.
 
 # Hover and Active Pseudo Classes
 JReact supports the hover and active pseudo classes. The `JReactRoot` keeps track of the hovered nodes. 

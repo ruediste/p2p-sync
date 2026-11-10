@@ -4,6 +4,8 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import java.lang.annotation.Annotation;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -17,6 +19,7 @@ public final class JReactAgent {
     /** Set to {@code true} to require {@link JReactComponent} on each component. */
     public static final String REQUIRE_ANNOTATION_PROPERTY = "jreact.requireComponentAnnotation";
 
+    public static final ThreadLocal<Boolean> ALLOW_BODY = ThreadLocal.withInitial(() -> false);
     private static boolean installed;
 
     private JReactAgent() {
@@ -44,6 +47,14 @@ public final class JReactAgent {
     static boolean shouldTransform(TypeDescription type, MethodDescription method, boolean requireAnnotation) {
         if (!method.isMethod() || method.isAbstract() || method.isNative() || method.isSynthetic())
             return false;
+        String typeName = type.getName();
+        if (typeName.startsWith("java.") || typeName.startsWith("javax.") || typeName.startsWith("jdk.")
+                || typeName.startsWith("sun.") || typeName.startsWith("com.sun.")
+                || typeName.startsWith("net.bytebuddy.") || typeName.startsWith("com.antepod."))
+            return false;
+        if (typeName.startsWith("com.github.ruediste.jreact.")
+                && !typeName.startsWith("com.github.ruediste.jreact.storybook."))
+            return false;
         if (hasAnnotation(method, NoJReactComponent.class) || hasAnnotation(type, NoJReactComponent.class))
             return false;
         if (hasAnnotation(method, JReactComponent.class) || hasAnnotation(type, JReactComponent.class))
@@ -59,14 +70,52 @@ public final class JReactAgent {
         private ComponentAdvice() {
         }
 
-        @Advice.OnMethodEnter
-        public static Ui.ComponentScope enter(@Advice.Origin("#t.#m#d") String identity) {
-            return Ui.enterComponent(identity, null);
+        @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+        public static boolean enter(@Advice.Origin Method method, @Advice.AllArguments Object[] arguments,
+                @Advice.This(optional = true) Object self) {
+            if (ALLOW_BODY.get()) {
+                ALLOW_BODY.remove();
+                return false;
+            }
+            Object[] properties = arguments.clone();
+            Ui.component(method, properties, new ComponentBody(method, self, arguments));
+            return true;
+        }
+    }
+
+    public static final class ComponentBody implements Runnable {
+        private final Method method;
+        private final Object self;
+        private final Object[] arguments;
+
+        public ComponentBody(Method method, Object self, Object[] arguments) {
+            this.method = method;
+            this.self = self;
+            this.arguments = arguments;
         }
 
-        @Advice.OnMethodExit(onThrowable = Throwable.class)
-        public static void exit(@Advice.Enter Ui.ComponentScope scope, @Advice.Thrown Throwable failure) {
-            scope.close(failure);
+        @Override
+        public void run() {
+            JReactAgent.invokeBody(method, self, arguments);
+        }
+    }
+
+    public static void invokeBody(Method method, Object self, Object[] arguments) {
+        ALLOW_BODY.set(true);
+        try {
+            method.setAccessible(true);
+            method.invoke(self, arguments);
+        } catch (InvocationTargetException exception) {
+            Throwable cause = exception.getCause();
+            if (cause instanceof RuntimeException runtime)
+                throw runtime;
+            if (cause instanceof Error error)
+                throw error;
+            throw new RuntimeException(cause);
+        } catch (ReflectiveOperationException exception) {
+            throw new RuntimeException(exception);
+        } finally {
+            ALLOW_BODY.remove();
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.github.ruediste.jreact;
 
+import com.github.ruediste.jreact.nodes.Node;
+
 /**
  * Base class of all JReact events.
  *
@@ -9,6 +11,11 @@ package com.github.ruediste.jreact;
  */
 public class JReactEvent {
     private boolean stopPropagation;
+    public Node target;
+
+    public Node target() {
+        return target;
+    }
 
     /** Whether propagation of this event has been stopped. */
     public boolean isStopPropagation() {

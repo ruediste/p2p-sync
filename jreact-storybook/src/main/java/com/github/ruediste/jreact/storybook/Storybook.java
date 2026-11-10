@@ -1,15 +1,11 @@
 package com.github.ruediste.jreact.storybook;
 
-import static com.github.ruediste.jreact.Ui.component;
 import static com.github.ruediste.jreact.Ui.div;
-import static com.github.ruediste.jreact.Ui.select;
 import static com.github.ruediste.jreact.Ui.text;
 import static com.github.ruediste.jreact.Ui.viewportHeight;
 import static com.github.ruediste.jreact.Ui.viewportWidth;
 
-import com.antepod.taffy.style.AlignContent;
-import com.antepod.taffy.style.AlignItems;
-import com.antepod.taffy.style.FlexDirection;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -19,15 +15,15 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import com.antepod.taffy.style.FlexDirection;
 import com.github.ruediste.jreact.Hooks;
 import com.github.ruediste.jreact.JReactAgent;
 import com.github.ruediste.jreact.JReactPanel;
-import com.github.ruediste.jreact.Style;
-import com.github.ruediste.jreact.components.Components;
-import com.github.ruediste.jreact.components.Theme;
+import com.github.ruediste.jreact.State;
+import com.github.ruediste.jreact.events.ClickEvent;
 
 public final class Storybook {
-    public static final List<String> STORIES = List.of("Overview", "Buttons", "Inputs", "Feedback", "Layout",
+    public static final List<String> STORIES = List.of("Overview", "Buttons", "Inputs", "Feedback", "Layout", "Dialog",
             "Task Board");
 
     private Storybook() {
@@ -44,59 +40,43 @@ public final class Storybook {
     }
 
     private static void app(String initialStory) {
-        // --8<-- [start:storybook-state]
-        var selected = Hooks.useState(initialStory);
-        var contrast = Hooks.useState(false);
-        Theme theme = contrast.get() ? Theme.highContrast() : Theme.light();
-        Components ui = new Components(theme);
-        // --8<-- [end:storybook-state]
-        boolean narrow = viewportWidth() < 720;
-        div(style -> style.width(viewportWidth()).height(viewportHeight()).flexDirection(FlexDirection.COLUMN)
-                .backgroundColor(theme.canvas()), () -> {
-                    div(style -> style.height(68).flexShrink(0).padding(16, 20, 16, 20).backgroundColor(theme.surface())
-                            .alignItems(AlignItems.CENTER).justifyContent(AlignContent.SPACE_BETWEEN), () -> {
-                                ui.heading("JReact");
-                                ui.checkbox("High contrast", contrast.get(), false, contrast::set);
-                            });
-                    if (narrow) {
-                        select(selected.get(), STORIES, selected::set, style -> ui.typography(style).height(38)
-                                .margin(12, 20, 0, 20).backgroundColor(theme.surface())).accessibleName("Story");
-                    }
-                    div(style -> style.flexGrow(1).flexDirection(FlexDirection.ROW), () -> {
-                        if (!narrow)
-                            div(style -> style.width(190).flexShrink(0).padding(24, 12, 24, 12)
-                                    .backgroundColor(theme.surface()).flexDirection(FlexDirection.COLUMN), () -> {
-                                        ui.muted("COMPONENTS");
-                                        for (String story : STORIES)
-                                            component("navigation", story,
-                                                    () -> ui.button(story,
-                                                            story.equals(selected.get()) ? Components.Variant.PRIMARY
-                                                                : Components.Variant.SECONDARY,
-                                                            false, () -> selected.set(story),
-                                                            style -> style.width(166).margin(10, 0, 0, 0)));
-                                    });
-                        div(style -> style.flexGrow(1).padding(narrow ? 20 : 28).flexDirection(FlexDirection.COLUMN),
-                                () -> {
-                                    text(selected.get(), style -> ui.typography(style).fontSize(26).fontWeight(true)
-                                            .margin(0, 0, 22, 0));
-                                    switch (selected.get()) {
-                                        case "Overview" -> component("story", "Overview",
-                                                () -> StorybookStories.Overview(theme));
-                                        case "Buttons" -> component("story", "Buttons",
-                                                () -> StorybookStories.Buttons(theme));
-                                        case "Inputs" -> component("story", "Inputs",
-                                                () -> StorybookStories.Inputs(theme));
-                                        case "Feedback" -> component("story", "Feedback",
-                                                () -> StorybookStories.Feedback(theme));
-                                        case "Layout" -> component("story", "Layout",
-                                                () -> StorybookStories.Layout(theme));
-                                        case "Task Board" -> component("story", "Task Board",
-                                                () -> StorybookStories.Tasks(theme));
-                                        default -> throw new IllegalStateException("Unknown story");
-                                    }
-                                });
-                    });
+        State<String> selected = Hooks.useState(initialStory);
+        div(s -> s.flexDirection(FlexDirection.ROW)
+                .width(viewportWidth()).height(viewportHeight())
+                .backgroundColor(new Color(244, 246, 250)), () -> {
+                    sidebar(selected);
+                    content(selected.get());
                 });
+    }
+
+    private static void sidebar(State<String> selected) {
+        div(s -> s.width(220).height(viewportHeight())
+                .padding(18)
+                .flexDirection(FlexDirection.COLUMN)
+                .backgroundColor(new Color(31, 41, 55)), () -> {
+                    text("JReact", s -> s.fontSize(24).fontWeight(true).color(Color.WHITE));
+                    text("Component Storybook", s -> s.fontSize(12).color(new Color(156, 163, 175)));
+                    div(s -> s.height(20));
+                    for (String story : STORIES) {
+                        boolean active = story.equals(selected.get());
+                        div(s -> s
+                                .padding(10)
+                                .borderRadius(8)
+                                .margin(0, 0, 6, 0)
+                                .backgroundColor(active ? new Color(59, 130, 246) : new Color(31, 41, 55)),
+                                node -> node.on(ClickEvent.class, event -> selected.set(story)),
+                                () -> text(story, s -> s.color(active ? Color.WHITE : new Color(209, 213, 219))));
+                    }
+                });
+    }
+
+    private static void content(String story) {
+        div(s -> s.flexGrow(1).height(viewportHeight()).padding(32)
+                .flexDirection(FlexDirection.COLUMN), () -> {
+            text(story, s -> s.fontSize(28).fontWeight(true).color(new Color(17, 24, 39)));
+            div(s -> s.height(16));
+            StorybookStories.story(story);
+        });
     }
 
     public static void main(String[] args) {

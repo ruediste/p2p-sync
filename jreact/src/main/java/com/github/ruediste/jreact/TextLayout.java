@@ -12,6 +12,7 @@ import com.antepod.taffy.style.Direction;
 import com.antepod.taffy.style.Display;
 import com.antepod.taffy.tree.Layout;
 import com.antepod.taffy.style.TextAlign;
+import com.github.ruediste.jreact.nodes.Node;
 import com.github.ruediste.jreact.nodes.TextNode;
 
 /**

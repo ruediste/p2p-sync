@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import com.github.ruediste.jreact.nodes.Node;
+
 /**
  * Declares component-scoped style rules and resolves the node-tree cascade.
  *
@@ -126,6 +128,6 @@ public final class Styles {
         style.className = node.inline.className;
         node.style = style;
         node.applyLayoutDefaults();
-        node.children.forEach(Styles::resolve);
+        node.children().forEach(Styles::resolve);
     }
 }
