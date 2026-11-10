@@ -3,9 +3,11 @@ package com.github.ruediste.jreact;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.antepod.taffy.style.Display;
 import com.github.ruediste.jreact.events.ClickEvent;
@@ -22,6 +24,7 @@ public final class JReactRoot {
     private final Fiber rootFiber = new Fiber();
     private final List<Hooks.Effect> layoutEffects = new ArrayList<>();
     private final List<Hooks.Effect> passiveEffects = new ArrayList<>();
+    private final List<Set<ComponentNode>> dirtyNodes = new ArrayList<>();
 
     private ComponentNode rootNode;
     private float viewportWidth;
@@ -50,7 +53,9 @@ public final class JReactRoot {
     }
 
     public boolean needsRender() {
-        return rootNode == null || rootFiber.isSubtreeDirty();
+        if (rootNode == null || rootFiber.isDirty())
+            return true;
+        return !dirtyNodes.isEmpty();
     }
 
     public void setInvalidationCallback(Runnable callback) {
@@ -121,6 +126,7 @@ public final class JReactRoot {
         rootNode = null;
         layoutEffects.clear();
         passiveEffects.clear();
+        dirtyNodes.clear();
         invalidationCallback = () -> {
         };
     }
@@ -132,9 +138,30 @@ public final class JReactRoot {
             newRoot.fiber = rootFiber;
             Reconciler.renderRoot(newRoot, rootNode);
             rootNode = newRoot;
-        } else if (rootFiber.isSubtreeDirty()) {
-            Reconciler.reconcileDirty(rootNode, rootFiber);
+            dirtyNodes.clear();
+            return;
         }
+        processDirtyNodes();
+    }
+
+    private void processDirtyNodes() {
+        if (dirtyNodes.isEmpty())
+            return;
+        List<Set<ComponentNode>> pending = new ArrayList<>(dirtyNodes);
+        dirtyNodes.clear();
+        for (Set<ComponentNode> level : pending) {
+            for (ComponentNode component : level) {
+                if (component.fiber != null && component.fiber.isDirty())
+                    Reconciler.reconcileDirtyComponent(component);
+            }
+        }
+    }
+
+    void enqueueDirty(ComponentNode component) {
+        int depth = Math.max(0, component.depth);
+        while (dirtyNodes.size() <= depth)
+            dirtyNodes.add(new HashSet<>());
+        dirtyNodes.get(depth).add(component);
     }
 
     private static void runEffects(List<Hooks.Effect> queue) {

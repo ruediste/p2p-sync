@@ -5,16 +5,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+import com.github.ruediste.jreact.nodes.ComponentNode;
+
 public final class Fiber {
 
     private final List<Hooks.Hook> hooks = new ArrayList<>();
-    private Fiber parent;
+    private JReactRoot root;
+    private ComponentNode component;
     private int hookCursor;
     private boolean dirty;
-    private boolean subtreeDirty;
 
-    void setParent(Fiber parent) {
-        this.parent = parent;
+    void attach(JReactRoot root, ComponentNode component) {
+        this.root = root;
+        this.component = component;
     }
 
     void beginRender() {
@@ -23,21 +26,16 @@ public final class Fiber {
 
     void markDirty() {
         dirty = true;
-        for (Fiber fiber = this; fiber != null; fiber = fiber.parent)
-            fiber.subtreeDirty = true;
+        if (root != null && component != null)
+            root.enqueueDirty(component);
     }
 
     public boolean isDirty() {
         return dirty;
     }
 
-    boolean isSubtreeDirty() {
-        return subtreeDirty;
-    }
-
     void clearAfterRender() {
         dirty = false;
-        subtreeDirty = false;
     }
 
     <H extends Hooks.Hook> H use(Class<H> type, Supplier<H> factory) {
@@ -68,8 +66,8 @@ public final class Fiber {
         hooks.clear();
         hookCursor = 0;
         dirty = false;
-        subtreeDirty = false;
-        parent = null;
+        root = null;
+        component = null;
         if (failure != null)
             throw failure;
     }

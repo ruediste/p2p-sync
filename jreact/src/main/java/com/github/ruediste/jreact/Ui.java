@@ -202,7 +202,7 @@ public final class Ui {
         Context context = context();
         Consumer<Node> previousCallback = context.onNodeCreated;
         int previousKeyCounter = context.keyCounter;
-        context.onNodeCreated = node::append;
+        context.onNodeCreated = node::add;
         context.keyCounter = 0;
         try {
             children.run();

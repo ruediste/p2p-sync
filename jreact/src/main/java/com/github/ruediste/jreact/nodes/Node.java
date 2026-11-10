@@ -17,6 +17,7 @@ import com.github.ruediste.jreact.Styles;
 public class Node {
 
     public Node parent;
+    public int depth;
     public Object key;
 
     public final Style inline = new Style();
@@ -59,6 +60,7 @@ public class Node {
     public Object identityType() {
         return getClass();
     }
+
     public boolean sameIdentity(Node other) {
         return other != null && identity().equals(other.identity());
     }
@@ -67,49 +69,53 @@ public class Node {
         return Collections.unmodifiableList(children);
     }
 
-    public Node append(Node child) {
-        insert(children.size(), child);
-        return this;
-    }
-
-    public Node insert(int index, Node child) {
+    public Node add(Node child) {
         Objects.requireNonNull(child);
         if (child == this)
             throw new IllegalArgumentException("A node cannot be its own child");
-        if (index < 0 || index > children.size())
-            throw new IndexOutOfBoundsException(index);
         if (child.parent != null && child.parent != this)
             throw new IllegalArgumentException("Node already has a parent");
         if (child.parent == this) {
             children.remove(child);
-            if (index > children.size())
-                index = children.size();
         }
         child.parent = this;
-        children.add(index, child);
+        children.add(child);
+        child.updateDepth(depth + 1);
         return this;
     }
 
     public Node remove(Node child) {
-        if (children.remove(child) && child.parent == this)
+        if (children.remove(child) && child.parent == this) {
             child.parent = null;
+            child.updateDepth(0);
+        }
         return this;
     }
 
     public Node clearChildren() {
         for (Node child : children) {
-            if (child.parent == this)
+            if (child.parent == this) {
                 child.parent = null;
+                child.updateDepth(0);
+            }
         }
         children.clear();
         return this;
+    }
+
+    private void updateDepth(int newDepth) {
+        if (depth == newDepth)
+            return;
+        depth = newDepth;
+        for (Node child : children)
+            child.updateDepth(newDepth + 1);
     }
 
     public Node replaceChildren(List<? extends Node> replacement) {
         Objects.requireNonNull(replacement);
         clearChildren();
         for (Node child : replacement)
-            append(child);
+            add(child);
         return this;
     }
 

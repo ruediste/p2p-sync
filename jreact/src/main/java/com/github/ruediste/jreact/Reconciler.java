@@ -18,20 +18,23 @@ final class Reconciler {
     static void renderRoot(ComponentNode newRoot, ComponentNode oldRoot) {
         if (newRoot.fiber == null)
             newRoot.fiber = oldRoot == null || oldRoot.fiber == null ? new Fiber() : oldRoot.fiber;
-        newRoot.fiber.setParent(null);
+        newRoot.depth = 0;
+        newRoot.fiber.attach(Ui.context().root, newRoot);
 
         List<Node> oldChildren = oldRoot == null ? List.of() : new ArrayList<>(oldRoot.children());
         renderBody(newRoot, newRoot.fiber);
-        reconcileChildren(new ArrayList<>(newRoot.children()), oldChildren, newRoot.fiber);
+        reconcileChildren(new ArrayList<>(newRoot.children()), oldChildren);
         if (oldRoot != null)
             oldRoot.clearChildren();
         newRoot.fiber.clearAfterRender();
     }
 
-    static void reconcileDirty(ComponentNode root, Fiber rootFiber) {
-        List<Node> children = new ArrayList<>(root.children());
-        reconcileChildren(children, children, rootFiber);
-        rootFiber.clearAfterRender();
+    static void reconcileDirtyComponent(ComponentNode component) {
+        Fiber fiber = component.fiber;
+        List<Node> oldChildren = new ArrayList<>(component.children());
+        renderBody(component, fiber);
+        reconcileChildren(new ArrayList<>(component.children()), oldChildren);
+        fiber.clearAfterRender();
     }
 
     private static void renderBody(ComponentNode component, Fiber fiber) {
@@ -63,7 +66,7 @@ final class Reconciler {
         component.replaceChildren(produced);
     }
 
-    private static void reconcileChildren(List<Node> newChildren, List<Node> oldChildren, Fiber parentFiber) {
+    private static void reconcileChildren(List<Node> newChildren, List<Node> oldChildren) {
         normalizeComponentKeys(newChildren);
         normalizeComponentKeys(oldChildren);
         Map<Node.Identity, Node> oldByIdentity = new HashMap<>();
@@ -72,7 +75,7 @@ final class Reconciler {
 
         for (Node newChild : newChildren) {
             Node oldChild = oldByIdentity.remove(newChild.identity());
-            reconcileNode(newChild, oldChild, parentFiber);
+            reconcileNode(newChild, oldChild);
         }
 
         for (Node oldChild : oldByIdentity.values())
@@ -87,27 +90,27 @@ final class Reconciler {
         }
     }
 
-    private static void reconcileNode(Node newNode, Node oldNode, Fiber parentFiber) {
+    private static void reconcileNode(Node newNode, Node oldNode) {
         if (newNode instanceof ComponentNode newComponent) {
             ComponentNode oldComponent = oldNode instanceof ComponentNode component ? component : null;
-            reconcileComponent(newComponent, oldComponent, parentFiber);
+            reconcileComponent(newComponent, oldComponent);
             return;
         }
 
         List<Node> children = new ArrayList<>(newNode.children());
         if (newNode != oldNode) {
             List<Node> oldChildren = oldNode == null ? List.of() : new ArrayList<>(oldNode.children());
-            reconcileChildren(children, oldChildren, parentFiber);
+            reconcileChildren(children, oldChildren);
             if (oldNode != null)
                 oldNode.clearChildren();
             return;
         }
-        reconcileChildren(children, children, parentFiber);
+        reconcileChildren(children, children);
     }
 
-    private static void reconcileComponent(ComponentNode newComponent, ComponentNode oldComponent, Fiber parentFiber) {
+    private static void reconcileComponent(ComponentNode newComponent, ComponentNode oldComponent) {
         Fiber fiber = oldComponent == null || oldComponent.fiber == null ? new Fiber() : oldComponent.fiber;
-        fiber.setParent(parentFiber);
+        fiber.attach(Ui.context().root, newComponent);
         newComponent.fiber = fiber;
 
         List<Node> oldChildren = oldComponent == null ? List.of() : new ArrayList<>(oldComponent.children());
@@ -116,19 +119,13 @@ final class Reconciler {
                 || fiber.isDirty();
 
         if (!rerenderBody) {
-            if (fiber.isSubtreeDirty()) {
-                List<Node> children = new ArrayList<>(oldChildren);
-                reconcileChildren(children, children, fiber);
-                adopt(newComponent, oldComponent, children);
-            } else {
-                adopt(newComponent, oldComponent, oldChildren);
-            }
+            adopt(newComponent, oldComponent, oldChildren);
             fiber.clearAfterRender();
             return;
         }
 
         renderBody(newComponent, fiber);
-        reconcileChildren(new ArrayList<>(newComponent.children()), oldChildren, fiber);
+        reconcileChildren(new ArrayList<>(newComponent.children()), oldChildren);
         if (oldComponent != null && oldComponent != newComponent)
             oldComponent.clearChildren();
         fiber.clearAfterRender();

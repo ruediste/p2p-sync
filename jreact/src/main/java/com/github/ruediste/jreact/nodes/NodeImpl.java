@@ -13,18 +13,13 @@ public final class NodeImpl extends Node {
     }
 
     public NodeImpl add(Node child) {
-        append(child);
-        return this;
-    }
-
-    public NodeImpl add(int index, Node child) {
-        insert(index, child);
+        add(child);
         return this;
     }
 
     public NodeImpl addAll(List<? extends Node> children) {
         Objects.requireNonNull(children);
-        children.forEach(this::append);
+        children.forEach(this::add);
         return this;
     }
 
