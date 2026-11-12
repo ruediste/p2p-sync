@@ -17,9 +17,9 @@ class InteractionTest {
     void hoverActiveFocusAndEventsWork() {
         JReactRoot root = new JReactRoot(() -> div(s -> s.width(100).height(100)));
         root.refresh(200, 200);
-        Node node = root.tree().children().get(0);
-        int[] clicks = {0};
-        int[] keys = {0};
+        Node node = root.rootNode().children().get(0);
+        int[] clicks = { 0 };
+        int[] keys = { 0 };
         node.on(ClickEvent.class, event -> clicks[0]++);
         node.on(KeyboardEvent.class, event -> keys[0]++);
 

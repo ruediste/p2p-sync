@@ -35,21 +35,26 @@ public final class Selector {
         this.types = types;
     }
 
-    public static Selector type(Class<? extends Node> type) {
+    /** Empty, match-all selector. */
+    public Selector() {
+        this(node -> true, 0, 0, 0);
+    }
+
+    public Selector type(Class<? extends Node> type) {
         Objects.requireNonNull(type);
-        return new Selector(type::isInstance, 0, 0, 1);
+        return and(new Selector(type::isInstance, 0, 0, 1));
     }
 
-    public static Selector id(String id) {
+    public Selector id(String id) {
         Objects.requireNonNull(id);
-        return new Selector(node -> id.equals(node.inline.id), 1, 0, 0);
+        return and(new Selector(node -> id.equals(node.inline.id), 1, 0, 0));
     }
 
-    public static Selector className(String name) {
+    public Selector className(String name) {
         if (name == null || name.isBlank() || name.chars().anyMatch(Character::isWhitespace))
             throw new IllegalArgumentException("A selector class must be a single non-empty name");
-        return new Selector(node -> java.util.Arrays.asList(node.inline.className.split("\\s+")).contains(name), 0, 1,
-                0);
+        return and(new Selector(node -> java.util.Arrays.asList(node.inline.className.split("\\s+")).contains(name), 0, 1,
+                0));
     }
 
     public Selector and(Selector other) {
@@ -59,12 +64,12 @@ public final class Selector {
 
     public Selector pseudo(Pseudo pseudo) {
         Objects.requireNonNull(pseudo);
-        return new Selector(node -> matches(node) && switch (pseudo) {
+        return and(new Selector(node -> switch (pseudo) {
             case HOVER -> node.hover;
             case ACTIVE -> node.active;
             case FOCUS -> node.focus;
             case DISABLED -> node.disabled;
-        }, ids, classes + 1, types);
+        }, 0, 1, 0));
     }
 
     public Selector hover() {

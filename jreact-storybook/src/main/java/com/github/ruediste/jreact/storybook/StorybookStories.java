@@ -1,6 +1,5 @@
 package com.github.ruediste.jreact.storybook;
 
-import static com.github.ruediste.jreact.Ui.component;
 import static com.github.ruediste.jreact.Ui.div;
 import static com.github.ruediste.jreact.Ui.input;
 import static com.github.ruediste.jreact.Ui.select;
@@ -13,9 +12,7 @@ import java.util.List;
 import com.antepod.taffy.style.Display;
 import com.antepod.taffy.style.FlexDirection;
 import com.github.ruediste.jreact.Hooks;
-import com.github.ruediste.jreact.Selector;
 import com.github.ruediste.jreact.State;
-import com.github.ruediste.jreact.Style;
 import com.github.ruediste.jreact.Styles;
 import com.github.ruediste.jreact.events.ClickEvent;
 import com.github.ruediste.jreact.nodes.DivNode;
@@ -26,46 +23,38 @@ public final class StorybookStories {
     }
 
     public static void story(String name) {
-        component(name, name, () -> renderStory(name));
-    }
-
-    private static void renderStory(String name) {
         switch (name) {
-            case "Overview" -> overview();
-            case "Buttons" -> buttons();
-            case "Inputs" -> inputs();
-            case "Feedback" -> feedback();
-            case "Layout" -> flexLayout();
-            case "Dialog" -> customDialog();
-            case "Task Board" -> taskBoard();
+            case "Overview" -> Overview();
+            case "Buttons" -> Buttons();
+            case "Inputs" -> Inputs();
+            case "Feedback" -> Feedback();
+            case "Layout" -> FlexLayout();
+            case "Dialog" -> CustomDialog();
+            case "Task Board" -> TaskBoard();
             default -> throw new IllegalArgumentException("Unknown story: " + name);
         }
     }
 
-    private static void overview() {
+    private static void Overview() {
         div(s -> s.padding(20).borderRadius(12).backgroundColor(Color.WHITE)
                 .flexDirection(FlexDirection.COLUMN), () -> {
-            text("Primitives compose into a synchronous Java UI.");
-            div(s -> s.height(12));
-            span(() -> {
-                text("Div, ");
-                span(s -> s.fontWeight(true), () -> text("Span"));
-                text(", and Text are the base building blocks.");
-            });
-        });
+                    text("Primitives compose into a synchronous Java UI.");
+                    div(s -> s.height(12));
+                    span(() -> {
+                        text("Div, ");
+                        span(s -> s.fontWeight(true), () -> text("Span"));
+                        text(", and Text are the base building blocks.");
+                    });
+                });
     }
 
-    private static void buttons() {
+    private static void Buttons() {
         State<Integer> count = Hooks.useState(0);
-        Styles.rules(
-                Styles.rule(Selector.type(DivNode.class).className("button-primary"),
-                        s -> s.backgroundColor(new Color(59, 130, 246))),
-                Styles.rule(Selector.type(DivNode.class).className("button-primary").hover(),
-                        s -> s.backgroundColor(new Color(37, 99, 235))),
-                Styles.rule(Selector.type(DivNode.class).className("button-secondary"),
-                        s -> s.backgroundColor(new Color(229, 231, 235))),
-                Styles.rule(Selector.type(DivNode.class).className("button-secondary").hover(),
-                        s -> s.backgroundColor(new Color(209, 213, 219))));
+        Styles.type(DivNode.class).className("button-primary").style().backgroundColor(new Color(59, 130, 246));
+        Styles.type(DivNode.class).className("button-primary").hover().style().backgroundColor(new Color(37, 99, 235));
+        Styles.type(DivNode.class).className("button-secondary").style().backgroundColor(new Color(229, 231, 235));
+        Styles.type(DivNode.class).className("button-secondary").hover().style()
+                .backgroundColor(new Color(209, 213, 219));
         div(s -> s.flexDirection(FlexDirection.ROW), () -> {
             div(s -> s
                     .className("button-primary")
@@ -79,7 +68,7 @@ public final class StorybookStories {
         });
     }
 
-    private static void inputs() {
+    private static void Inputs() {
         State<String> name = Hooks.useState("JReact");
         State<String> variant = Hooks.useState("Primary");
         text("Controlled input", s -> s.fontWeight(true));
@@ -91,7 +80,7 @@ public final class StorybookStories {
         text("Variant: " + variant.get());
     }
 
-    private static void feedback() {
+    private static void Feedback() {
         div(s -> s.flexDirection(FlexDirection.ROW), () -> {
             badge("Info", new Color(219, 234, 254), new Color(30, 64, 175));
             badge("Success", new Color(220, 252, 231), new Color(22, 101, 52));
@@ -104,7 +93,7 @@ public final class StorybookStories {
                 () -> text(label, s -> s.color(foreground).fontWeight(true)));
     }
 
-    private static void flexLayout() {
+    private static void FlexLayout() {
         // --8<-- [start:flex-layout]
         div(s -> s.display(Display.FLEX)
                 .flexDirection(FlexDirection.ROW)
@@ -118,18 +107,17 @@ public final class StorybookStories {
         // --8<-- [end:flex-layout]
     }
 
-    private static void customDialog() {
+    private static void CustomDialog() {
         // --8<-- [start:custom-dialog]
-        Styles.rules(
-                Styles.rule(Selector.type(DivNode.class).className("dialog"),
-                        s -> s.padding(24).borderRadius(12).backgroundColor(Color.WHITE)),
-                Styles.rule(Selector.type(TextNode.class).className("dialog-title"),
-                        s -> s.fontSize(20).fontWeight(true)));
+        Styles.type(DivNode.class).className("dialog").style()
+                .padding(24).borderRadius(12).backgroundColor(Color.WHITE);
+        Styles.type(TextNode.class).className("dialog-title").style()
+                .fontSize(20).fontWeight(true);
         div(s -> s.className("dialog"), () -> text("Dialog title", s -> s.className("dialog-title")));
         // --8<-- [end:custom-dialog]
     }
 
-    private static void taskBoard() {
+    private static void TaskBoard() {
         State<Integer> completed = Hooks.useState(0);
         String[] tasks = { "Design data model", "Wire refresh pipeline", "Paint the tree", "Write tests" };
         for (String task : tasks) {

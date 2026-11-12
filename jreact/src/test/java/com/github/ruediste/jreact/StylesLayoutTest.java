@@ -18,8 +18,8 @@ class StylesLayoutTest {
     @Test
     void scopedRulesAndLayoutProduceBounds() {
         JReactRoot root = new JReactRoot(() -> {
-            Styles.rules(Styles.rule(Selector.type(DivNode.class).className("box"),
-                    s -> s.width(50).height(20).backgroundColor(Color.RED)));
+            Styles.type(DivNode.class).className("box").style()
+                    .width(50).height(20).backgroundColor(Color.RED);
             div(s -> s.width(200).height(100).padding(10).flexDirection(FlexDirection.ROW), () -> {
                 div(s -> s.className("box"));
                 text("hello");
@@ -27,7 +27,7 @@ class StylesLayoutTest {
         });
 
         root.refresh(200, 100);
-        Node container = root.tree().children().get(0);
+        Node container = root.rootNode().children().get(0);
         Node box = container.children().get(0);
         assertEquals(Color.RED, box.style.get(StyleProperties.BACKGROUND, null));
         assertEquals(10, box.bounds.x, 0.01);

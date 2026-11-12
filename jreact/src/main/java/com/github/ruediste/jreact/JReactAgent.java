@@ -6,6 +6,9 @@ import java.lang.annotation.Annotation;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+
+import com.github.ruediste.jreact.nodes.ComponentNode;
 
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -77,25 +80,30 @@ public final class JReactAgent {
                 ALLOW_BODY.remove();
                 return false;
             }
-            Object[] properties = arguments.clone();
-            Ui.component(method, properties, new ComponentBody(method, self, arguments));
+            Ui.addNode(new ComponentNodeImpl(method, self, arguments));
             return true;
         }
     }
 
-    public static final class ComponentBody implements Runnable {
+    public static final class ComponentNodeImpl extends ComponentNode {
         private final Method method;
         private final Object self;
         private final Object[] arguments;
 
-        public ComponentBody(Method method, Object self, Object[] arguments) {
+        public ComponentNodeImpl(Method method, Object self, Object[] arguments) {
+            super(method);
             this.method = method;
             this.self = self;
             this.arguments = arguments;
         }
 
         @Override
-        public void run() {
+        public boolean sameProperties(ComponentNode other) {
+            return Arrays.equals(arguments, ((ComponentNodeImpl) other).arguments);
+        }
+
+        @Override
+        public void render() {
             JReactAgent.invokeBody(method, self, arguments);
         }
     }

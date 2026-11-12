@@ -3,7 +3,6 @@ package com.github.ruediste.jreact;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 import com.github.ruediste.jreact.nodes.Node;
 
@@ -60,21 +59,74 @@ public final class Styles {
     private Styles() {
     }
 
-    public static Rule rule(Selector selector, Consumer<Style> style) {
-        Style result = new Style();
-        style.accept(result);
-        return new Rule(selector, result);
+    /**
+     * Begins a style rule matching nodes of the given type.
+     *
+     * <p>
+     * The returned builder accumulates selector parts (class, id, pseudo-class)
+     * and, once {@link RuleBuilder#style()} is called, registers the rule in the
+     * active component scope and returns the style for property configuration.
+     * Rules default to {@link Scope#DIRECT_CHILDREN}.
+     */
+    public static RuleBuilder type(Class<? extends Node> type) {
+        return new RuleBuilder(new Selector().type(type));
     }
 
-    public static void rules(Rule... rules) {
-        rules(Scope.DIRECT_CHILDREN, rules);
+    /** Fluent builder for component-scoped style rules. */
+    public static class RuleBuilder {
+        private Selector selector;
+
+        RuleBuilder(Selector selector) {
+            this.selector = selector;
+        }
+
+        public RuleBuilder className(String name) {
+            selector = selector.and(new Selector().className(name));
+            return this;
+        }
+
+        public RuleBuilder id(String id) {
+            selector = selector.and(new Selector().id(id));
+            return this;
+        }
+
+        public RuleBuilder hover() {
+            selector = selector.hover();
+            return this;
+        }
+
+        public RuleBuilder active() {
+            selector = selector.active();
+            return this;
+        }
+
+        public RuleBuilder focus() {
+            selector = selector.focus();
+            return this;
+        }
+
+        public RuleBuilder disabled() {
+            selector = selector.disabled();
+            return this;
+        }
+
+        /**
+         * Registers the rule in the active component scope and returns the
+         * style for further property configuration.
+         */
+        public Style style() {
+            Style style = new Style();
+            registerRule(Scope.DIRECT_CHILDREN, selector, style);
+            return style;
+        }
     }
 
-    public static void rules(Scope scope, Rule... rules) {
+    static void registerRule(Scope scope, Selector selector, Style style) {
         Objects.requireNonNull(scope);
+        Objects.requireNonNull(selector);
+        Objects.requireNonNull(style);
         var declaration = Ui.context().styleRules;
-        for (Rule rule : rules)
-            declaration.rules.add(new ScopedRule(scope, Objects.requireNonNull(rule)));
+        declaration.rules.add(new ScopedRule(scope, new Rule(selector, style)));
     }
 
     /**

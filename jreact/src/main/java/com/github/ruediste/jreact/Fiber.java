@@ -10,32 +10,12 @@ import com.github.ruediste.jreact.nodes.ComponentNode;
 public final class Fiber {
 
     private final List<Hooks.Hook> hooks = new ArrayList<>();
-    private JReactRoot root;
-    private ComponentNode component;
     private int hookCursor;
-    private boolean dirty;
-
-    void attach(JReactRoot root, ComponentNode component) {
-        this.root = root;
-        this.component = component;
-    }
+    public boolean dirty;
+    public ComponentNode component;
 
     void beginRender() {
         hookCursor = 0;
-    }
-
-    void markDirty() {
-        dirty = true;
-        if (root != null && component != null)
-            root.enqueueDirty(component);
-    }
-
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    void clearAfterRender() {
-        dirty = false;
     }
 
     <H extends Hooks.Hook> H use(Class<H> type, Supplier<H> factory) {
@@ -66,10 +46,13 @@ public final class Fiber {
         hooks.clear();
         hookCursor = 0;
         dirty = false;
-        root = null;
         component = null;
         if (failure != null)
             throw failure;
+    }
+
+    void clearAfterRender() {
+        dirty = false;
     }
 
     int hookCount() {

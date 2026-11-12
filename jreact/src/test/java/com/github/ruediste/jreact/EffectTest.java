@@ -1,6 +1,5 @@
 package com.github.ruediste.jreact;
 
-import static com.github.ruediste.jreact.Ui.component;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -19,20 +18,31 @@ class EffectTest {
         AtomicReference<State<Integer>> dependency = new AtomicReference<>();
         int[] invalidations = {0};
 
+        class Child extends Component {
+            int dependency;
+
+            Child(int dependency) {
+                this.dependency = dependency;
+            }
+
+            @Override
+            public void render() {
+                Hooks.useLayoutEffect(() -> {
+                    log.add("layout" + dependency);
+                    return () -> log.add("layout-cleanup");
+                }, dependency);
+                Hooks.useEffect(() -> {
+                    log.add("passive" + dependency);
+                    return () -> log.add("passive-cleanup");
+                }, dependency);
+            }
+        }
+
         JReactRoot root = new JReactRoot(() -> {
             show.set(Hooks.useState(true));
             dependency.set(Hooks.useState(0));
             if (show.get().get())
-                component("child", dependency.get().get(), () -> {
-                    Hooks.useLayoutEffect(() -> {
-                        log.add("layout" + dependency.get().get());
-                        return () -> log.add("layout-cleanup");
-                    }, dependency.get().get());
-                    Hooks.useEffect(() -> {
-                        log.add("passive" + dependency.get().get());
-                        return () -> log.add("passive-cleanup");
-                    }, dependency.get().get());
-                });
+                new Child(dependency.get().get());
         });
         root.setInvalidationCallback(() -> invalidations[0]++);
 

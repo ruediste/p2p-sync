@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.antepod.taffy.tree.Layout;
 import com.github.ruediste.jreact.EventListener;
@@ -38,7 +39,7 @@ public class Node {
     private final Map<Class<? extends JReactEvent>, List<EventListener<?>>> captureListeners = new HashMap<>();
     private final Map<Class<? extends JReactEvent>, List<EventListener<?>>> bubbleListeners = new HashMap<>();
 
-    private final List<Node> children = new ArrayList<>();
+    private List<Node> children = new ArrayList<>();
     private Layout layout = Layout.zero();
 
     public Node() {
@@ -73,34 +74,18 @@ public class Node {
         Objects.requireNonNull(child);
         if (child == this)
             throw new IllegalArgumentException("A node cannot be its own child");
-        if (child.parent != null && child.parent != this)
-            throw new IllegalArgumentException("Node already has a parent");
-        if (child.parent == this) {
-            children.remove(child);
-        }
         child.parent = this;
         children.add(child);
         child.updateDepth(depth + 1);
         return this;
     }
 
-    public Node remove(Node child) {
-        if (children.remove(child) && child.parent == this) {
-            child.parent = null;
-            child.updateDepth(0);
-        }
-        return this;
+    public void reconcile(Optional<Node> oldNode) {
+
     }
 
-    public Node clearChildren() {
-        for (Node child : children) {
-            if (child.parent == this) {
-                child.parent = null;
-                child.updateDepth(0);
-            }
-        }
-        children.clear();
-        return this;
+    public void afterRender() {
+
     }
 
     private void updateDepth(int newDepth) {
@@ -113,7 +98,7 @@ public class Node {
 
     public Node replaceChildren(List<? extends Node> replacement) {
         Objects.requireNonNull(replacement);
-        clearChildren();
+        children = new ArrayList<>();
         for (Node child : replacement)
             add(child);
         return this;

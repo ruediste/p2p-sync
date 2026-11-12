@@ -2,11 +2,9 @@ package com.github.ruediste.jreact;
 
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import com.antepod.taffy.style.Display;
@@ -20,42 +18,74 @@ public final class JReactRoot {
 
     private final Ui.Context context = new Ui.Context(this);
     private final Thread ownerThread = Thread.currentThread();
-    private final Runnable rootRender;
-    private final Fiber rootFiber = new Fiber();
+    private final Fiber rootFiber;
     private final List<Hooks.Effect> layoutEffects = new ArrayList<>();
-    private final List<Hooks.Effect> passiveEffects = new ArrayList<>();
-    private final List<Set<ComponentNode>> dirtyNodes = new ArrayList<>();
+    private final List<Hooks.Effect> effects = new ArrayList<>();
+    private final List<Set<Fiber>> dirtyFibers = new ArrayList<>();
+    private final Set<NodeReference> nodeReferences = new HashSet<>();
 
-    private ComponentNode rootNode;
     private float viewportWidth;
     private float viewportHeight;
     private boolean rendering;
     private Runnable invalidationCallback = () -> {
     };
-    private List<Node.Identity> hoverPath = List.of();
-    private List<Node.Identity> activePath = List.of();
-    private List<Node.Identity> focusPath = List.of();
-    private List<Node.Identity> pressPath;
+    private final NodeReference hoverRef = createReference();
+    private final NodeReference activeRef = createReference();
+    private final NodeReference focusRef = createReference();
+    private final NodeReference pressRef = createReference();
     private double pointerX;
     private double pointerY;
     private boolean pointerInside;
 
     public JReactRoot(Runnable rootRender) {
-        this.rootRender = Objects.requireNonNull(rootRender);
+        var rootComponent = new ComponentNode(JReactRoot.class) {
+
+            {
+                depth = 0;
+            }
+
+            @Override
+            public void render() {
+                rootRender.run();
+            }
+
+            @Override
+            public boolean sameProperties(ComponentNode other) {
+                return true;
+            }
+
+        };
+        rootComponent.reconcile(Optional.empty());
+        this.rootFiber = rootComponent.fiber;
+        this.markDirty(rootFiber);
+    }
+
+    private NodeReference createReference() {
+        NodeReference reference = new NodeReference();
+        nodeReferences.add(reference);
+        return reference;
+    }
+
+    void replaceNode(Node oldNode, Node newNode) {
+        for (NodeReference reference : nodeReferences)
+            reference.replace(oldNode, newNode);
+    }
+
+    void invalidateNode(Node node) {
+        for (NodeReference reference : nodeReferences)
+            reference.invalidateAt(node);
     }
 
     Ui.Context context() {
         return context;
     }
 
-    public Node tree() {
-        return rootNode;
+    public Node rootNode() {
+        return rootFiber.component;
     }
 
     public boolean needsRender() {
-        if (rootNode == null || rootFiber.isDirty())
-            return true;
-        return !dirtyNodes.isEmpty();
+        return !dirtyFibers.isEmpty();
     }
 
     public void setInvalidationCallback(Runnable callback) {
@@ -82,23 +112,25 @@ public final class JReactRoot {
             }
 
             applyInteractionState();
-            Styles.resolve(rootNode);
-            com.github.ruediste.jreact.layout.LayoutEngine.layout(rootNode, viewportWidth, viewportHeight);
+            Styles.resolve(rootNode());
+            com.github.ruediste.jreact.layout.LayoutEngine.layout(rootNode(), viewportWidth, viewportHeight);
 
             if (pointerInside) {
-                List<Node.Identity> hit = hitPath(pointerX, pointerY);
-                if (!Objects.equals(hit, hoverPath)) {
-                    hoverPath = hit;
+                List<Node> hit = hitPath(pointerX, pointerY);
+                if (!hoverRef.equalsPath(hit)) {
+                    hoverRef.setPath(hit);
                     applyInteractionState();
-                    Styles.resolve(rootNode);
-                    com.github.ruediste.jreact.layout.LayoutEngine.layout(rootNode, viewportWidth, viewportHeight);
+                    Styles.resolve(rootNode());
+                    com.github.ruediste.jreact.layout.LayoutEngine.layout(rootNode(), viewportWidth,
+                            viewportHeight);
                 }
             }
 
             runEffects(layoutEffects);
 
-            Node focused = findByPath(focusPath);
-            return new RefreshResult(rootNode, index(rootNode), focused == null ? null : focused.key,
+            Node focused = focusRef.target();
+            return new RefreshResult(rootFiber.component,
+                    focused == null ? null : focused.key,
                     new Rectangle2D.Double(0, 0, viewportWidth, viewportHeight));
         } finally {
             Ui.restoreContext(previousContext);
@@ -114,7 +146,7 @@ public final class JReactRoot {
         validateThread();
         Ui.Context previousContext = Ui.installContext(context);
         try {
-            runEffects(passiveEffects);
+            runEffects(effects);
         } finally {
             Ui.restoreContext(previousContext);
         }
@@ -122,46 +154,40 @@ public final class JReactRoot {
 
     public void close() {
         validateThread();
-        Reconciler.disposeTree(rootNode);
-        rootNode = null;
+        Reconciler.disposeTree(this, rootNode());
+
         layoutEffects.clear();
-        passiveEffects.clear();
-        dirtyNodes.clear();
+        effects.clear();
+        dirtyFibers.clear();
+        for (NodeReference reference : nodeReferences)
+            reference.clear();
         invalidationCallback = () -> {
         };
     }
 
     private void renderComponents() {
-        if (rootNode == null || rootFiber.isDirty()) {
-            ComponentNode newRoot = new ComponentNode(JReactRoot.class);
-            newRoot.render = rootRender;
-            newRoot.fiber = rootFiber;
-            Reconciler.renderRoot(newRoot, rootNode);
-            rootNode = newRoot;
-            dirtyNodes.clear();
+        if (dirtyFibers.isEmpty())
             return;
-        }
-        processDirtyNodes();
-    }
-
-    private void processDirtyNodes() {
-        if (dirtyNodes.isEmpty())
-            return;
-        List<Set<ComponentNode>> pending = new ArrayList<>(dirtyNodes);
-        dirtyNodes.clear();
-        for (Set<ComponentNode> level : pending) {
-            for (ComponentNode component : level) {
-                if (component.fiber != null && component.fiber.isDirty())
-                    Reconciler.reconcileDirtyComponent(component);
+        List<Set<Fiber>> pending = new ArrayList<>(dirtyFibers);
+        dirtyFibers.clear();
+        Reconciler.Context context = new Reconciler.Context(this);
+        for (Set<Fiber> level : pending) {
+            for (Fiber fiber : level) {
+                if (fiber.dirty && fiber.component != null)
+                    Reconciler.renderAndReconcileDirtyComponent(context, fiber);
             }
         }
     }
 
-    void enqueueDirty(ComponentNode component) {
-        int depth = Math.max(0, component.depth);
-        while (dirtyNodes.size() <= depth)
-            dirtyNodes.add(new HashSet<>());
-        dirtyNodes.get(depth).add(component);
+    void markDirty(Fiber fiber) {
+        if (fiber.component == null || fiber.dirty) {
+            return;
+        }
+        fiber.dirty = true;
+        int depth = Math.max(0, fiber.component.depth);
+        while (dirtyFibers.size() <= depth)
+            dirtyFibers.add(new HashSet<>());
+        dirtyFibers.get(depth).add(fiber);
     }
 
     private static void runEffects(List<Hooks.Effect> queue) {
@@ -185,19 +211,6 @@ public final class JReactRoot {
             throw failure;
     }
 
-    private static Map<Node.Identity, Node> index(Node root) {
-        Map<Node.Identity, Node> result = new HashMap<>();
-        if (root != null)
-            index(root, result);
-        return result;
-    }
-
-    private static void index(Node node, Map<Node.Identity, Node> result) {
-        result.put(node.identity(), node);
-        for (Node child : node.children())
-            index(child, result);
-    }
-
     public void pointerMoved(double x, double y) {
         validateThread();
         pointerX = x;
@@ -209,8 +222,8 @@ public final class JReactRoot {
     public void pointerExited() {
         validateThread();
         pointerInside = false;
-        if (!hoverPath.isEmpty()) {
-            hoverPath = List.of();
+        if (!hoverRef.isEmpty() || hoverRef.isTruncated()) {
+            hoverRef.clear();
             requestRefresh();
         }
     }
@@ -220,11 +233,11 @@ public final class JReactRoot {
         pointerX = x;
         pointerY = y;
         pointerInside = true;
-        List<Node.Identity> hit = hitPath(x, y);
-        hoverPath = hit;
-        pressPath = hit;
-        activePath = hit;
-        focusPath = hit;
+        List<Node> hit = hitPath(x, y);
+        hoverRef.setPath(hit);
+        pressRef.setPath(hit);
+        activeRef.setPath(hit);
+        focusRef.setPath(hit);
         requestRefresh();
     }
 
@@ -233,40 +246,40 @@ public final class JReactRoot {
         pointerX = x;
         pointerY = y;
         pointerInside = true;
-        List<Node.Identity> hit = hitPath(x, y);
-        hoverPath = hit;
-        if (pressPath != null && pressPath.equals(hit)) {
-            Node target = findByPath(pressPath);
+        List<Node> hit = hitPath(x, y);
+        hoverRef.setPath(hit);
+        if (pressRef.equalsPath(hit)) {
+            Node target = pressRef.target();
             if (target != null)
                 dispatch(target, new ClickEvent());
         }
-        pressPath = null;
-        activePath = List.of();
+        pressRef.clear();
+        activeRef.clear();
         requestRefresh();
     }
 
     public void keyPressed(int keyCode) {
         validateThread();
-        Node target = findByPath(focusPath);
+        Node target = focusRef.target();
         if (target != null)
             dispatch(target, new KeyboardEvent(keyCode));
     }
 
     private void updateHover() {
-        List<Node.Identity> hit = hitPath(pointerX, pointerY);
-        if (!Objects.equals(hit, hoverPath)) {
-            hoverPath = hit;
+        List<Node> hit = hitPath(pointerX, pointerY);
+        if (!hoverRef.equalsPath(hit)) {
+            hoverRef.setPath(hit);
             requestRefresh();
         }
     }
 
-    private List<Node.Identity> hitPath(double x, double y) {
-        Node hit = hitTest(rootNode, x, y);
+    private List<Node> hitPath(double x, double y) {
+        Node hit = hitTest(rootNode(), x, y);
         if (hit == null)
             return List.of();
-        List<Node.Identity> path = new ArrayList<>();
+        List<Node> path = new ArrayList<>();
         for (Node node = hit; node != null; node = node.parent)
-            path.add(node.identity());
+            path.add(node);
         java.util.Collections.reverse(path);
         return path;
     }
@@ -290,37 +303,18 @@ public final class JReactRoot {
     }
 
     private void applyInteractionState() {
-        if (rootNode != null)
-            applyInteractionState(rootNode, new ArrayList<>());
+        if (rootNode() != null)
+            applyInteractionState(rootNode(), new ArrayList<>());
     }
 
-    private void applyInteractionState(Node node, List<Node.Identity> path) {
-        path.add(node.identity());
-        node.hover = path.equals(hoverPath);
-        node.active = path.equals(activePath);
-        node.focus = path.equals(focusPath);
+    private void applyInteractionState(Node node, List<Node> path) {
+        path.add(node);
+        node.hover = hoverRef.contains(node);
+        node.active = activeRef.contains(node);
+        node.focus = focusRef.equalsPath(path);
         for (Node child : node.children())
             applyInteractionState(child, path);
         path.remove(path.size() - 1);
-    }
-
-    private Node findByPath(List<Node.Identity> path) {
-        if (rootNode == null || path.isEmpty())
-            return null;
-        return findByPath(rootNode, path, 0);
-    }
-
-    private static Node findByPath(Node node, List<Node.Identity> path, int index) {
-        if (!node.identity().equals(path.get(index)))
-            return null;
-        if (index == path.size() - 1)
-            return node;
-        for (Node child : node.children()) {
-            Node found = findByPath(child, path, index + 1);
-            if (found != null)
-                return found;
-        }
-        return null;
     }
 
     private static void dispatch(Node target, JReactEvent event) {
@@ -352,8 +346,8 @@ public final class JReactRoot {
         layoutEffects.add(effect);
     }
 
-    void enqueuePassiveEffect(Hooks.Effect effect) {
-        passiveEffects.add(effect);
+    void enqueueEffect(Hooks.Effect effect) {
+        effects.add(effect);
     }
 
     void requestRefresh() {
@@ -378,7 +372,7 @@ public final class JReactRoot {
             return;
         viewportWidth = width;
         viewportHeight = height;
-        rootFiber.markDirty();
+        markDirty(rootFiber);
     }
 
     void validateStateWrite() {

@@ -23,7 +23,7 @@ To describe how these architectural pieces work together, their specific respons
 * **Nodes** handle an individual primitive's content, styles, geometry, and callbacks, and are recreated fresh on every root render.
 * **Components** provide a render function that composes primitives and other components, getting invoked on every render while they remain present.
 * **Fibers** retain hook slots, surviving across renders until their component is eventually removed.
-* **JReactRoot** owns the root fiber, current node tree, effect queue, and invalidation callback, lasting until the host (typically a `JReactPanel`) closes it.
+* **JReactRoot** owns the root fiber, dirty fibers, current node tree, effect queue, and invalidation callback, lasting until the host (typically a `JReactPanel`) closes it.
 * **JReactPanel** hosts the root itself, surviving until the owning Swing UI disposes of it.
 
 During execution of the component render functions nodes can be created. Unlike React, nodes are not captured as values and passed to their parent. Instead, the current parent node is implicitly tracked by the runtime and created nodes are automatically added as its children. This alleviates the lack of an optimized DSL such as JSX.
@@ -69,13 +69,13 @@ instance instead.
 
 # The Refresh Process
 There are multiple triggers to schedule a refresh:
-- if a state of a component changes, that component is marked dirty
+- if a state of a component changes, its fiber is marked dirty
 - if user input changes the hovered node, the keyboard focus or presses the mouse button
 
 `JReactPanel` calls `JReactRoot.refresh` with the viewport and current interaction
 keys. The root prepares the tree without calling back into the panel:
 
-1. Rerender dirty components and publish the node tree.
+1. Rerender the components of dirty fibers and publish the node tree.
 1. Reconcile nodes with the previous tree and apply interaction state.
 1. Resolve styles and calculate layout.
 1. Run `useLayoutEffect` callbacks after layout and before painting.
@@ -160,8 +160,7 @@ component bodies when the root is otherwise clean.
 interface implemented by `Node`
 It builds a native Taffy tree through the Taffy4J bindings and computes flex and
 grid layout with the CSS box model: margins,
-padding, borders, sizing, positioning, wrapping, alignment, and gaps. The tree
-is mutated only through `NodeImpl` for standalone use; the rendered tree keeps
+padding, borders, sizing, positioning, wrapping, alignment, and gaps. The rendered tree keeps
 its children in `Node` and exposes them read-only to the engine.
 
 Each `VisibleNode` reports its paint bounding box, in which it paints on the screen. 

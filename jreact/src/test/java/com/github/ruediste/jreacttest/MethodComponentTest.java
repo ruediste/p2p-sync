@@ -26,8 +26,8 @@ class MethodComponentTest {
             }
         });
         root.refresh(100, 100);
-        assertTrue(root.tree().children().get(0) instanceof ComponentNode);
-        ComponentNode component = (ComponentNode) root.tree().children().get(0);
+        assertTrue(root.rootNode().children().get(0) instanceof ComponentNode);
+        ComponentNode component = (ComponentNode) root.rootNode().children().get(0);
         assertEquals("method component", ((TextNode) component.children().get(0)).text);
     }
 }

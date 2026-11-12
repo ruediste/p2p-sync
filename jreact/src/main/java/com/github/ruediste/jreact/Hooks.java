@@ -25,7 +25,7 @@ public final class Hooks {
         JReactRoot root = Ui.context().root;
         return (State<T>) fiber.use(State.class,
                 () -> new State<Object>(initialValue, () -> {
-                    fiber.markDirty();
+                    root.markDirty(fiber);
                     root.requestRefresh();
                 }, root::validateStateWrite));
     }
@@ -152,7 +152,7 @@ public final class Hooks {
             if (layout)
                 root.enqueueLayoutEffect(this);
             else
-                root.enqueuePassiveEffect(this);
+                root.enqueueEffect(this);
         }
 
         void run() {

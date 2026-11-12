@@ -7,7 +7,6 @@ import java.util.function.Consumer;
 
 import javax.swing.Icon;
 
-import com.github.ruediste.jreact.nodes.ComponentNode;
 import com.github.ruediste.jreact.nodes.DivNode;
 import com.github.ruediste.jreact.nodes.IconNode;
 import com.github.ruediste.jreact.nodes.InputNode;
@@ -54,23 +53,6 @@ public final class Ui {
 
     public static float viewportHeight() {
         return context().root.viewportHeight();
-    }
-
-    public static void component(Object identityType, Object properties, Consumer<Style> style, Runnable render) {
-        Objects.requireNonNull(render);
-        ComponentNode node = new ComponentNode(identityType);
-        node.properties = properties;
-        node.render = render;
-        applyStyle(node, style);
-        addNode(node);
-    }
-
-    public static void component(Object identity, Object properties, Runnable render) {
-        component(identity, properties, null, render);
-    }
-
-    public static void component(Object identity, Runnable render) {
-        component(identity, null, null, render);
     }
 
     public static void div(Consumer<Style> style, Runnable children) {
@@ -212,7 +194,12 @@ public final class Ui {
         }
     }
 
-    private static void addNode(Node node) {
+    public static void addNode(Node node, Consumer<Style> style) {
+        applyStyle(node, style);
+        addNode(node);
+    }
+
+    public static void addNode(Node node) {
         Context context = context();
         if (context.pendingKey != null) {
             node.key = context.pendingKey;

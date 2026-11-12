@@ -29,11 +29,11 @@ class ComponentClassTest {
         });
 
         root.refresh(100, 100);
-        ComponentNode component = (ComponentNode) root.tree().children().get(0);
+        ComponentNode component = (ComponentNode) root.rootNode().children().get(0);
         assertEquals("value=1", ((TextNode) component.children().get(0).children().get(0)).text);
 
         root.refresh(100, 100);
-        component = (ComponentNode) root.tree().children().get(0);
+        component = (ComponentNode) root.rootNode().children().get(0);
         assertEquals("value=1", ((TextNode) component.children().get(0).children().get(0)).text);
     }
 }
