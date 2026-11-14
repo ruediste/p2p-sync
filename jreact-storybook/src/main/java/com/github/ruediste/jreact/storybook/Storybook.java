@@ -6,7 +6,6 @@ import static com.github.ruediste.jreact.Ui.viewportHeight;
 import static com.github.ruediste.jreact.Ui.viewportWidth;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
@@ -73,10 +72,10 @@ public final class Storybook {
     private static void content(String story) {
         div(s -> s.flexGrow(1).height(viewportHeight()).padding(32)
                 .flexDirection(FlexDirection.COLUMN), () -> {
-            text(story, s -> s.fontSize(28).fontWeight(true).color(new Color(17, 24, 39)));
-            div(s -> s.height(16));
-            StorybookStories.story(story);
-        });
+                    text(story, s -> s.fontSize(28).fontWeight(true).color(new Color(17, 24, 39)));
+                    div(s -> s.height(16));
+                    StorybookStories.story(story);
+                });
     }
 
     public static void main(String[] args) {
@@ -92,8 +91,7 @@ public final class Storybook {
                 }
             });
             frame.setContentPane(panel);
-            frame.setMinimumSize(new Dimension(400, 760));
-            frame.setSize(1100, 880);
+            frame.setSize(960, 800);
             frame.setLocationByPlatform(true);
             var icon = UIManager.getIcon("FileView.computerIcon");
             if (icon instanceof javax.swing.ImageIcon image)

@@ -19,3 +19,6 @@ need to get width/height of popup component before display. use `useLayoutEffect
 
 ## Icons
 Use https://kordamp.org/ikonli/ for icons
+
+## Styling
+Likely remove the style rules. Extend inline styling with selectors/predicates, to replicate Tailwind CSS functionality.

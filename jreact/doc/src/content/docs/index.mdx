@@ -23,3 +23,26 @@ todo: show a few basic examples of JReact components and layouts
 
 ## Where to go from here
 todo: link to guides/getting started and reference
+
+## JReact UI
+On top of the core JReact framework, JReact UI provides a helpers, a theming concept, unstyled components as well as a default theme to get you started. JReact UI is inspired by Tailwind CSS, Radix UI and shadcn/ui. It has the following components
+
+- **utility**: un-opinionated utilities and basic theme concepts
+- **theme**: theming concepts semantic design tokens
+- **primitives**: unstyled components
+- **components**: combines the other three modules to provide styled components, with configurable theming
+
+Concepts of the original frameworks are mapped to the components as follows
+- Tailwind CSS: mapped to `utility`
+  - most of the purely technical utilities are provided by JReact natively, due to a more powerful inline styling system
+  - responsive breakpoints
+  - theme (https://tailwindcss.com/docs/theme)
+  - color palette (https://tailwindcss.com/docs/colrs)
+- Radix UI
+  - primitives: mapped to `primitives` (https://www.radix-ui.com/primitives/docs/overview/introduction)
+  - themes: mapped to `theme`
+  - color palettes: https://github.com/radix-ui/website/blob/main/components/generate-radix-colors.tsx
+
+
+
+
